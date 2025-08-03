@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Calendar, Phone, Mail, LogOut } from "lucide-react";
+import { VetGroomLogo } from "./VetGroomLogo";
 import type { User } from "@shared/schema";
 
 export function Header() {
@@ -25,7 +26,13 @@ export function Header() {
     <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-6">
-          <h1 className="text-2xl font-semibold text-gray-900">Tablero</h1>
+          <div className="flex items-center space-x-3">
+            <VetGroomLogo className="w-10 h-10" />
+            <div>
+              <h1 className="text-2xl font-semibold text-blue-600">VetGroom</h1>
+              <span className="text-sm text-gray-500">Gestión Veterinaria</span>
+            </div>
+          </div>
           <div className="text-sm text-gray-600">
             <Calendar className="inline w-4 h-4 mr-2" />
             {formattedDate}
