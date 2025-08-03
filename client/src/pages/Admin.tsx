@@ -60,17 +60,17 @@ export default function Admin() {
   
   // Fetch data from database
   const { data: roomsData, isLoading: roomsLoading } = useQuery({
-    queryKey: [`/api/admin/rooms/${currentTenant?.id}`],
+    queryKey: ['/api', 'admin', 'rooms', currentTenant?.id].filter(Boolean),
     enabled: !!currentTenant?.id,
   });
 
   const { data: servicesData, isLoading: servicesLoading } = useQuery({
-    queryKey: [`/api/admin/services/${currentTenant?.id}`],
+    queryKey: ['/api', 'admin', 'services', currentTenant?.id].filter(Boolean),
     enabled: !!currentTenant?.id,
   });
 
   const { data: rolesData, isLoading: rolesLoading } = useQuery({
-    queryKey: [`/api/admin/roles`],
+    queryKey: ['/api', 'admin', 'roles'],
   });
 
   useEffect(() => {
