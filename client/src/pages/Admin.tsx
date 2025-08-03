@@ -129,6 +129,10 @@ export default function Admin() {
     department: '',
     permissions: []
   });
+  
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [availableRoles, setAvailableRoles] = useState([]);
 
   // Handle edit service
   const handleEditService = (service) => {
@@ -182,6 +186,52 @@ export default function Admin() {
       toast({
         title: "Rol actualizado",
         description: "El rol ha sido actualizado exitosamente",
+      });
+    }
+  };
+
+  // Handle user role assignment
+  const handleAssignRole = (user) => {
+    setSelectedUser(user);
+    setAvailableRoles(roles);
+    setIsAssignDialogOpen(true);
+  };
+
+  // Handle save user role assignment
+  const handleSaveRoleAssignment = (newRoleName) => {
+    if (selectedUser && newRoleName) {
+      // Update user's current role
+      setUsers(prev => prev.map(user => 
+        user.id === selectedUser.id 
+          ? { ...user, currentRole: newRoleName }
+          : user
+      ));
+
+      // Update role's assigned users
+      setRoles(prev => prev.map(role => {
+        // Remove user from previous role
+        if (role.assignedUsers.includes(selectedUser.id)) {
+          return {
+            ...role,
+            assignedUsers: role.assignedUsers.filter(userId => userId !== selectedUser.id)
+          };
+        }
+        // Add user to new role
+        if (role.name === newRoleName) {
+          return {
+            ...role,
+            assignedUsers: [...role.assignedUsers, selectedUser.id]
+          };
+        }
+        return role;
+      }));
+
+      setIsAssignDialogOpen(false);
+      setSelectedUser(null);
+      
+      toast({
+        title: "Rol asignado",
+        description: `${selectedUser.name} ha sido asignado al rol ${newRoleName}`,
       });
     }
   };
@@ -492,9 +542,13 @@ export default function Admin() {
                               <Badge className={getDepartmentColor(userRole?.department || 'none')}>
                                 {userRole?.displayName || 'Sin rol'}
                               </Badge>
-                              <Button variant="outline" size="sm">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleAssignRole(user)}
+                              >
                                 <UserCheck className="w-3 h-3 mr-1" />
-                                Cambiar
+                                Asignar
                               </Button>
                             </div>
                           </div>
@@ -589,6 +643,67 @@ export default function Admin() {
                         </Button>
                       </div>
                     </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Role Assignment Dialog */}
+                <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Asignar Rol de Usuario</DialogTitle>
+                    </DialogHeader>
+                    {selectedUser && (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-blue-600 dark:text-blue-300">
+                              {selectedUser.name.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900 dark:text-gray-100">{selectedUser.name}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">{selectedUser.email}</div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label>Seleccionar Nuevo Rol</Label>
+                          <div className="space-y-2 mt-3">
+                            {availableRoles.map((role) => (
+                              <div
+                                key={role.id}
+                                className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                                  selectedUser.currentRole === role.name 
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                                    : 'border-gray-200 dark:border-gray-700'
+                                }`}
+                                onClick={() => handleSaveRoleAssignment(role.name)}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                                      {role.displayName}
+                                    </div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                      {role.department} • {role.permissions.length} permisos
+                                    </div>
+                                  </div>
+                                  <Badge className={getDepartmentColor(role.department)}>
+                                    {role.department}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)} className="flex-1">
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </DialogContent>
                 </Dialog>
               </div>
