@@ -81,9 +81,8 @@ export const userTenants = pgTable("user_tenants", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
-  roleId: varchar("role_id").references(() => roles.id),
+  role: varchar("role").notNull(), // admin, veterinarian, groomer, receptionist, delivery
   isActive: boolean("is_active").default(true),
-  assignedAt: timestamp("assigned_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

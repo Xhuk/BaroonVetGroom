@@ -110,7 +110,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserTenants(userId: string): Promise<UserTenant[]> {
-    return await db.select().from(userTenants).where(eq(userTenants.userId, userId));
+    const result = await db
+      .select({
+        id: userTenants.id,
+        userId: userTenants.userId,
+        tenantId: userTenants.tenantId,
+        role: userTenants.role,
+        isActive: userTenants.isActive,
+        createdAt: userTenants.createdAt,
+        tenant: {
+          id: tenants.id,
+          name: tenants.name,
+          subdomain: tenants.subdomain
+        }
+      })
+      .from(userTenants)
+      .innerJoin(tenants, eq(userTenants.tenantId, tenants.id))
+      .where(eq(userTenants.userId, userId));
+    
+    return result;
   }
 
   async createTenant(tenant: InsertTenant): Promise<Tenant> {
