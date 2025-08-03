@@ -90,6 +90,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes - Rooms
+  app.get('/api/admin/rooms/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const rooms = await storage.getRooms(tenantId);
+      res.json(rooms);
+    } catch (error) {
+      console.error("Error fetching rooms:", error);
+      res.status(500).json({ message: "Failed to fetch rooms" });
+    }
+  });
+
+  app.post('/api/admin/rooms/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const roomData = { ...req.body, tenantId };
+      const room = await storage.createRoom(roomData);
+      res.json(room);
+    } catch (error) {
+      console.error("Error creating room:", error);
+      res.status(500).json({ message: "Failed to create room" });
+    }
+  });
+
+  app.put('/api/admin/rooms/:roomId', isAuthenticated, async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const room = await storage.updateRoom(roomId, req.body);
+      res.json(room);
+    } catch (error) {
+      console.error("Error updating room:", error);
+      res.status(500).json({ message: "Failed to update room" });
+    }
+  });
+
+  app.delete('/api/admin/rooms/:roomId', isAuthenticated, async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      await storage.deleteRoom(roomId);
+      res.json({ message: "Room deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting room:", error);
+      res.status(500).json({ message: "Failed to delete room" });
+    }
+  });
+
+  // Admin routes - Services
+  app.get('/api/admin/services/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const services = await storage.getServices(tenantId);
+      res.json(services);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      res.status(500).json({ message: "Failed to fetch services" });
+    }
+  });
+
+  app.post('/api/admin/services/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const serviceData = { ...req.body, tenantId };
+      const service = await storage.createService(serviceData);
+      res.json(service);
+    } catch (error) {
+      console.error("Error creating service:", error);
+      res.status(500).json({ message: "Failed to create service" });
+    }
+  });
+
+  app.put('/api/admin/services/:serviceId', isAuthenticated, async (req, res) => {
+    try {
+      const { serviceId } = req.params;
+      const service = await storage.updateService(serviceId, req.body);
+      res.json(service);
+    } catch (error) {
+      console.error("Error updating service:", error);
+      res.status(500).json({ message: "Failed to update service" });
+    }
+  });
+
+  app.delete('/api/admin/services/:serviceId', isAuthenticated, async (req, res) => {
+    try {
+      const { serviceId } = req.params;
+      await storage.deleteService(serviceId);
+      res.json({ message: "Service deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      res.status(500).json({ message: "Failed to delete service" });
+    }
+  });
+
+  // Admin routes - Roles
+  app.get('/api/admin/roles', isAuthenticated, async (req, res) => {
+    try {
+      const roles = await storage.getRoles();
+      res.json(roles);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+
+  app.post('/api/admin/roles', isAuthenticated, async (req, res) => {
+    try {
+      const role = await storage.createRole(req.body);
+      res.json(role);
+    } catch (error) {
+      console.error("Error creating role:", error);
+      res.status(500).json({ message: "Failed to create role" });
+    }
+  });
+
+  app.put('/api/admin/roles/:roleId', isAuthenticated, async (req, res) => {
+    try {
+      const { roleId } = req.params;
+      const role = await storage.updateRole(roleId, req.body);
+      res.json(role);
+    } catch (error) {
+      console.error("Error updating role:", error);
+      res.status(500).json({ message: "Failed to update role" });
+    }
+  });
+
+  app.delete('/api/admin/roles/:roleId', isAuthenticated, async (req, res) => {
+    try {
+      const { roleId } = req.params;
+      await storage.deleteRole(roleId);
+      res.json({ message: "Role deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting role:", error);
+      res.status(500).json({ message: "Failed to delete role" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -9,6 +9,7 @@ import {
   pets,
   appointments,
   services,
+  roles,
   type User,
   type UpsertUser,
   type Company,
@@ -20,6 +21,7 @@ import {
   type Pet,
   type Appointment,
   type Service,
+  type Role,
   type InsertCompany,
   type InsertTenant,
   type InsertRoom,
@@ -28,6 +30,7 @@ import {
   type InsertPet,
   type InsertAppointment,
   type InsertService,
+  type InsertRole,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -51,6 +54,8 @@ export interface IStorage {
   // Room operations
   getRooms(tenantId: string): Promise<Room[]>;
   createRoom(room: InsertRoom): Promise<Room>;
+  updateRoom(roomId: string, room: Partial<InsertRoom>): Promise<Room>;
+  deleteRoom(roomId: string): Promise<void>;
   
   // Staff operations
   getStaff(tenantId: string): Promise<Staff[]>;
@@ -71,6 +76,14 @@ export interface IStorage {
   // Service operations
   getServices(tenantId: string): Promise<Service[]>;
   createService(service: InsertService): Promise<Service>;
+  updateService(serviceId: string, service: Partial<InsertService>): Promise<Service>;
+  deleteService(serviceId: string): Promise<void>;
+  
+  // Role operations
+  getRoles(): Promise<Role[]>;
+  createRole(role: InsertRole): Promise<Role>;
+  updateRole(roleId: string, role: Partial<InsertRole>): Promise<Role>;
+  deleteRole(roleId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -152,6 +165,18 @@ export class DatabaseStorage implements IStorage {
     return newRoom;
   }
 
+  async updateRoom(roomId: string, room: Partial<InsertRoom>): Promise<Room> {
+    const [updatedRoom] = await db.update(rooms)
+      .set(room)
+      .where(eq(rooms.id, roomId))
+      .returning();
+    return updatedRoom;
+  }
+
+  async deleteRoom(roomId: string): Promise<void> {
+    await db.delete(rooms).where(eq(rooms.id, roomId));
+  }
+
   // Staff operations
   async getStaff(tenantId: string): Promise<Staff[]> {
     return await db.select().from(staff).where(eq(staff.tenantId, tenantId));
@@ -184,13 +209,17 @@ export class DatabaseStorage implements IStorage {
 
   // Appointment operations
   async getAppointments(tenantId: string, date?: string): Promise<Appointment[]> {
-    let query = db.select().from(appointments).where(eq(appointments.tenantId, tenantId));
-    
     if (date) {
-      query = query.where(eq(appointments.scheduledDate, date));
+      return await db
+        .select()
+        .from(appointments)
+        .where(eq(appointments.tenantId, tenantId));
     }
     
-    return await query;
+    return await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.tenantId, tenantId));
   }
 
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
@@ -206,6 +235,40 @@ export class DatabaseStorage implements IStorage {
   async createService(service: InsertService): Promise<Service> {
     const [newService] = await db.insert(services).values(service).returning();
     return newService;
+  }
+
+  async updateService(serviceId: string, service: Partial<InsertService>): Promise<Service> {
+    const [updatedService] = await db.update(services)
+      .set(service)
+      .where(eq(services.id, serviceId))
+      .returning();
+    return updatedService;
+  }
+
+  async deleteService(serviceId: string): Promise<void> {
+    await db.delete(services).where(eq(services.id, serviceId));
+  }
+
+  // Role operations
+  async getRoles(): Promise<Role[]> {
+    return await db.select().from(roles);
+  }
+
+  async createRole(role: InsertRole): Promise<Role> {
+    const [newRole] = await db.insert(roles).values(role).returning();
+    return newRole;
+  }
+
+  async updateRole(roleId: string, role: Partial<InsertRole>): Promise<Role> {
+    const [updatedRole] = await db.update(roles)
+      .set(role)
+      .where(eq(roles.id, roleId))
+      .returning();
+    return updatedRole;
+  }
+
+  async deleteRole(roleId: string): Promise<void> {
+    await db.delete(roles).where(eq(roles.id, roleId));
   }
 }
 
