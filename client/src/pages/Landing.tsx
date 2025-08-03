@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { VetGroomLogo } from "@/components/VetGroomLogo";
 import { 
   Stethoscope, 
   Scissors, 
@@ -20,10 +21,11 @@ export default function Landing() {
       <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Stethoscope className="w-6 h-6 text-white" />
+            <VetGroomLogo className="w-12 h-12" />
+            <div>
+              <h1 className="text-2xl font-bold text-blue-600">VetGroom</h1>
+              <span className="text-sm text-gray-500">Gestión Veterinaria</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">VetGroom</h1>
           </div>
           <Button onClick={handleLogin} className="bg-blue-600 hover:bg-blue-700">
             Iniciar Sesión
@@ -167,9 +169,7 @@ export default function Landing() {
       <footer className="bg-gray-900 text-white py-12 mt-16">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Stethoscope className="w-5 h-5 text-white" />
-            </div>
+            <VetGroomLogo className="w-10 h-10" />
             <span className="text-xl font-bold">VetGroom</span>
           </div>
           <p className="text-gray-400">
