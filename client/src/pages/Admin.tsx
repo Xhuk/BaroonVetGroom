@@ -121,6 +121,14 @@ export default function Admin() {
     duration: 0,
     price: 0
   });
+  
+  const [editingRole, setEditingRole] = useState(null);
+  const [editRoleData, setEditRoleData] = useState({
+    name: '',
+    displayName: '',
+    department: '',
+    permissions: []
+  });
 
   // Handle edit service
   const handleEditService = (service) => {
@@ -146,6 +154,34 @@ export default function Admin() {
       toast({
         title: "Servicio actualizado",
         description: "El servicio ha sido actualizado exitosamente",
+      });
+    }
+  };
+
+  // Handle edit role
+  const handleEditRole = (role) => {
+    setEditingRole(role);
+    setEditRoleData({
+      name: role.name,
+      displayName: role.displayName,
+      department: role.department,
+      permissions: [...role.permissions]
+    });
+  };
+
+  // Handle save edited role
+  const handleSaveEditedRole = () => {
+    if (editingRole) {
+      setRoles(prev => prev.map(role => 
+        role.id === editingRole.id 
+          ? { ...role, ...editRoleData }
+          : role
+      ));
+      setEditingRole(null);
+      setEditRoleData({ name: '', displayName: '', department: '', permissions: [] });
+      toast({
+        title: "Rol actualizado",
+        description: "El rol ha sido actualizado exitosamente",
       });
     }
   };
@@ -413,7 +449,12 @@ export default function Admin() {
                           <span className="font-medium">{role.assignedUsers.length}</span>
                         </div>
                         <div className="flex gap-2 mt-3">
-                          <Button variant="outline" size="sm" className="flex-1">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => handleEditRole(role)}
+                          >
                             <Edit className="w-3 h-3 mr-1" />
                             Editar
                           </Button>
@@ -462,6 +503,94 @@ export default function Admin() {
                     </div>
                   </Card>
                 </div>
+
+                {/* Edit Role Dialog */}
+                <Dialog open={!!editingRole} onOpenChange={() => setEditingRole(null)}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Editar Rol</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Nombre del Rol</Label>
+                        <Input 
+                          value={editRoleData.name}
+                          onChange={(e) => setEditRoleData(prev => ({...prev, name: e.target.value}))}
+                          placeholder="Ej: recepcion" 
+                        />
+                      </div>
+                      <div>
+                        <Label>Nombre para Mostrar</Label>
+                        <Input 
+                          value={editRoleData.displayName}
+                          onChange={(e) => setEditRoleData(prev => ({...prev, displayName: e.target.value}))}
+                          placeholder="Ej: Recepción" 
+                        />
+                      </div>
+                      <div>
+                        <Label>Departamento</Label>
+                        <Select 
+                          value={editRoleData.department}
+                          onValueChange={(value) => setEditRoleData(prev => ({...prev, department: value}))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar departamento" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="reception">Recepción</SelectItem>
+                            <SelectItem value="grooming">Estética</SelectItem>
+                            <SelectItem value="medical">Médico</SelectItem>
+                            <SelectItem value="admin">Administración</SelectItem>
+                            <SelectItem value="delivery">Entregas</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Permisos</Label>
+                        <div className="space-y-2 mt-2 max-h-40 overflow-y-auto">
+                          {[
+                            'view_appointments', 'create_appointments', 'edit_appointments', 'delete_appointments',
+                            'view_clients', 'create_clients', 'edit_clients', 'delete_clients',
+                            'view_inventory', 'manage_inventory',
+                            'view_delivery_routes', 'update_delivery_status',
+                            'view_billing', 'manage_billing',
+                            'admin_access', 'all_permissions'
+                          ].map((permission) => (
+                            <label key={permission} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={editRoleData.permissions.includes(permission)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setEditRoleData(prev => ({
+                                      ...prev, 
+                                      permissions: [...prev.permissions, permission]
+                                    }));
+                                  } else {
+                                    setEditRoleData(prev => ({
+                                      ...prev, 
+                                      permissions: prev.permissions.filter(p => p !== permission)
+                                    }));
+                                  }
+                                }}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{permission.replace(/_/g, ' ')}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={handleSaveEditedRole} className="flex-1">
+                          Guardar Cambios
+                        </Button>
+                        <Button variant="outline" onClick={() => setEditingRole(null)} className="flex-1">
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </TabsContent>
 
