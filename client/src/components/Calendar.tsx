@@ -67,6 +67,17 @@ export function Calendar({ className }: CalendarProps) {
     });
   };
 
+  // Calculate dynamic row height based on appointments
+  const getRowHeight = (timeSlot: string) => {
+    const slotAppointments = getAppointmentsForSlot(timeSlot);
+    const minHeight = 60; // Minimum height for empty slots
+    const appointmentHeight = 35; // Height per appointment
+    const padding = 10; // Extra padding
+    
+    if (slotAppointments.length === 0) return minHeight;
+    return Math.max(minHeight, slotAppointments.length * appointmentHeight + padding);
+  };
+
   const getCurrentTimeLine = () => {
     const now = currentTime;
     const hours = now.getHours();
@@ -128,41 +139,62 @@ export function Calendar({ className }: CalendarProps) {
           </div>
 
           {/* Time slots and calendar cells */}
-          <div className="grid w-full" style={{ gridTemplateColumns: "80px 1fr", gridTemplateRows: `repeat(${timeSlots.length}, 60px)` }}>
-            {timeSlots.map((timeSlot, timeIndex) => (
-              <div key={timeSlot} className="contents">
-                {/* Time label */}
-                <div className="bg-blue-50 dark:bg-slate-800 border-r border-b border-blue-200 dark:border-slate-600 flex items-center justify-center text-xs text-blue-600 dark:text-slate-300 font-medium">
-                  {timeSlot}
-                </div>
-                
-                {/* Day cell */}
-                <div className="border-r border-b border-blue-200 dark:border-slate-600 relative cursor-pointer hover:bg-blue-25 dark:hover:bg-slate-800 bg-blue-25 dark:bg-slate-900 w-full">
-                  {getAppointmentsForSlot(timeSlot).map((appointment: Appointment, aptIndex: number) => (
-                    <div
-                      key={appointment.id}
-                      className={cn(
-                        "absolute left-1 right-1 rounded text-xs p-1 overflow-hidden shadow-sm",
-                        getAppointmentStyle(appointment)
-                      )}
-                      style={{
-                        top: `${aptIndex * 15 + 2}px`,
-                        height: "20px"
-                      }}
-                    >
-                      <div className="font-medium truncate">
-                        {appointment.type === 'grooming' && 'Estética'}
-                        {appointment.type === 'medical' && 'Consulta'}
-                        {appointment.type === 'vaccination' && 'Vacuna'}
+          <div className="w-full">
+            {timeSlots.map((timeSlot, timeIndex) => {
+              const slotAppointments = getAppointmentsForSlot(timeSlot);
+              const rowHeight = getRowHeight(timeSlot);
+              
+              return (
+                <div key={timeSlot} className="grid w-full" style={{ gridTemplateColumns: "80px 1fr", minHeight: `${rowHeight}px` }}>
+                  {/* Time label */}
+                  <div 
+                    className="bg-blue-50 dark:bg-slate-800 border-r border-b border-blue-200 dark:border-slate-600 flex items-center justify-center text-xs text-blue-600 dark:text-slate-300 font-medium"
+                    style={{ minHeight: `${rowHeight}px` }}
+                  >
+                    <span className="transform -rotate-0 font-semibold">{timeSlot}</span>
+                  </div>
+                  
+                  {/* Day cell with flexible layout */}
+                  <div 
+                    className="border-r border-b border-blue-200 dark:border-slate-600 relative cursor-pointer hover:bg-blue-25 dark:hover:bg-slate-800 bg-blue-25 dark:bg-slate-900 w-full p-2"
+                    style={{ minHeight: `${rowHeight}px` }}
+                  >
+                    {slotAppointments.length === 0 ? (
+                      <div className="flex items-center justify-center h-full text-gray-400 dark:text-slate-500 text-sm">
+                        Disponible
                       </div>
-                      <div className="text-xs opacity-90 truncate">
-                        {appointment.roomId ? `Sala ${appointment.roomId.slice(-2)}` : 'Sin sala'}
+                    ) : (
+                      <div className="grid gap-2 h-full" style={{ 
+                        gridTemplateColumns: slotAppointments.length > 3 ? 'repeat(auto-fit, minmax(200px, 1fr))' : `repeat(${Math.min(slotAppointments.length, 3)}, 1fr)`,
+                        alignContent: 'start'
+                      }}>
+                        {slotAppointments.map((appointment: Appointment, aptIndex: number) => (
+                          <div
+                            key={appointment.id}
+                            className={cn(
+                              "rounded text-xs p-2 shadow-sm border min-h-[30px] flex flex-col justify-center",
+                              getAppointmentStyle(appointment)
+                            )}
+                          >
+                            <div className="font-bold text-center mb-1">
+                              {appointment.type === 'grooming' && 'ESTÉTICA'}
+                              {appointment.type === 'medical' && 'CONSULTA'}
+                              {appointment.type === 'vaccination' && 'VACUNA'}
+                            </div>
+                            <div className="text-center text-xs opacity-90">
+                              {appointment.roomId ? `Sala ${appointment.roomId.slice(-2)}` : 'Sin sala'}
+                            </div>
+                            <div className="text-center text-xs font-medium mt-1">
+                              Staff: {appointment.staffId?.slice(-2) || 'N/A'}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                  ))}
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Current time line */}
