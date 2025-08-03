@@ -603,33 +603,43 @@ export default function Admin() {
                         <Label>Permisos</Label>
                         <div className="space-y-2 mt-2 max-h-40 overflow-y-auto">
                           {[
-                            'view_appointments', 'create_appointments', 'edit_appointments', 'delete_appointments',
-                            'view_clients', 'create_clients', 'edit_clients', 'delete_clients',
-                            'view_inventory', 'manage_inventory',
-                            'view_delivery_routes', 'update_delivery_status',
-                            'view_billing', 'manage_billing',
-                            'admin_access', 'all_permissions'
+                            { key: 'view_appointments', label: 'Ver citas' },
+                            { key: 'create_appointments', label: 'Crear citas' },
+                            { key: 'edit_appointments', label: 'Editar citas' },
+                            { key: 'delete_appointments', label: 'Eliminar citas' },
+                            { key: 'view_clients', label: 'Ver clientes' },
+                            { key: 'create_clients', label: 'Crear clientes' },
+                            { key: 'edit_clients', label: 'Editar clientes' },
+                            { key: 'delete_clients', label: 'Eliminar clientes' },
+                            { key: 'view_inventory', label: 'Ver inventario' },
+                            { key: 'manage_inventory', label: 'Gestionar inventario' },
+                            { key: 'view_delivery_routes', label: 'Ver rutas de entrega' },
+                            { key: 'update_delivery_status', label: 'Actualizar estado de entregas' },
+                            { key: 'view_billing', label: 'Ver facturación' },
+                            { key: 'manage_billing', label: 'Gestionar facturación' },
+                            { key: 'admin_access', label: 'Acceso administrativo' },
+                            { key: 'all_permissions', label: 'Todos los permisos' }
                           ].map((permission) => (
-                            <label key={permission} className="flex items-center space-x-2">
+                            <label key={permission.key} className="flex items-center space-x-2">
                               <input
                                 type="checkbox"
-                                checked={editRoleData.permissions.includes(permission)}
+                                checked={editRoleData.permissions.includes(permission.key)}
                                 onChange={(e) => {
                                   if (e.target.checked) {
                                     setEditRoleData(prev => ({
                                       ...prev, 
-                                      permissions: [...prev.permissions, permission]
+                                      permissions: [...prev.permissions, permission.key]
                                     }));
                                   } else {
                                     setEditRoleData(prev => ({
                                       ...prev, 
-                                      permissions: prev.permissions.filter(p => p !== permission)
+                                      permissions: prev.permissions.filter(p => p !== permission.key)
                                     }));
                                   }
                                 }}
                                 className="rounded"
                               />
-                              <span className="text-sm">{permission.replace(/_/g, ' ')}</span>
+                              <span className="text-sm">{permission.label}</span>
                             </label>
                           ))}
                         </div>
