@@ -199,7 +199,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteStaff(staffId: string): Promise<void> {
-    await db.delete(staff).where(eq(staff.id, staffId));
+    try {
+      await db.delete(staff).where(eq(staff.id, staffId));
+    } catch (error: any) {
+      if (error.code === '23503') {
+        // Foreign key constraint violation
+        throw new Error("No se puede eliminar este miembro del equipo porque tiene citas asignadas. Primero reasigna o elimina las citas asociadas.");
+      }
+      throw error;
+    }
   }
 
   // Client operations

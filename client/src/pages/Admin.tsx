@@ -390,7 +390,7 @@ export default function Admin() {
 
   // Handle delete staff
   const handleDeleteStaff = (staffId: string, staffName: string) => {
-    if (window.confirm(`¿Estás seguro de que quieres eliminar a "${staffName}" del equipo?`)) {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar a "${staffName}" del equipo?\n\nNota: Si este miembro tiene citas asignadas, primero deberás reasignarlas o eliminarlas.`)) {
       deleteStaffMutation.mutate(staffId);
     }
   };
