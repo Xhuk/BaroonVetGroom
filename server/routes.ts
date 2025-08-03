@@ -101,14 +101,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/staff/:staffId/reassign', isAuthenticated, async (req: any, res) => {
+    try {
+      const { staffId } = req.params;
+      const { newStaffId } = req.body;
+      await storage.reassignStaffAppointments(staffId, newStaffId);
+      await storage.deleteStaff(staffId);
+      res.json({ message: "Staff member deleted and appointments reassigned successfully" });
+    } catch (error) {
+      console.error("Error reassigning and deleting staff:", error);
+      res.status(500).json({ message: "Failed to reassign appointments and delete staff member" });
+    }
+  });
+
   app.delete('/api/staff/:staffId', isAuthenticated, async (req: any, res) => {
     try {
       const { staffId } = req.params;
       await storage.deleteStaff(staffId);
       res.json({ message: "Staff member deleted successfully" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting staff:", error);
-      res.status(500).json({ message: "Failed to delete staff member" });
+      if (error.message === "APPOINTMENTS_ASSIGNED") {
+        res.status(409).json({ 
+          message: "Staff member has appointments assigned",
+          code: "APPOINTMENTS_ASSIGNED"
+        });
+      } else {
+        res.status(500).json({ message: "Failed to delete staff member" });
+      }
     }
   });
 

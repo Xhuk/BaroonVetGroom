@@ -130,6 +130,9 @@ export default function Admin() {
     specialization: ''
   });
   
+  const [deletingStaff, setDeletingStaff] = useState(null);
+  const [replacementStaffId, setReplacementStaffId] = useState('');
+  
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [availableRoles, setAvailableRoles] = useState([]);
@@ -264,8 +267,9 @@ export default function Admin() {
         description: "El miembro del equipo ha sido eliminado exitosamente.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api', 'staff', currentTenant?.id] });
+      setDeletingStaff(null);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "No autorizado",
@@ -277,9 +281,51 @@ export default function Admin() {
         }, 500);
         return;
       }
+      
+      if (error.message?.includes('409') || error.message?.includes('APPOINTMENTS_ASSIGNED')) {
+        // Staff has appointments, show replacement dialog
+        return; // Don't show error toast, let the dialog handle it
+      }
+      
       toast({
         title: "Error",
         description: error.message || "No se pudo eliminar el miembro del equipo",
+        variant: "destructive",
+      });
+      setDeletingStaff(null);
+    },
+  });
+
+  // Reassign and delete staff mutation
+  const reassignStaffMutation = useMutation({
+    mutationFn: async ({ staffId, newStaffId }: { staffId: string; newStaffId: string }) => {
+      return apiRequest('POST', `/api/staff/${staffId}/reassign`, { newStaffId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Miembro del equipo eliminado",
+        description: "Las citas han sido reasignadas y el miembro del equipo eliminado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api', 'staff', currentTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api', 'appointments', currentTenant?.id] });
+      setDeletingStaff(null);
+      setReplacementStaffId('');
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para reasignar citas",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo reasignar las citas y eliminar el miembro del equipo",
         variant: "destructive",
       });
     },
@@ -389,9 +435,26 @@ export default function Admin() {
   };
 
   // Handle delete staff
-  const handleDeleteStaff = (staffId: string, staffName: string) => {
-    if (window.confirm(`¿Estás seguro de que quieres eliminar a "${staffName}" del equipo?\n\nNota: Si este miembro tiene citas asignadas, primero deberás reasignarlas o eliminarlas.`)) {
-      deleteStaffMutation.mutate(staffId);
+  const handleDeleteStaff = async (staffId: string, staffName: string) => {
+    // First try to delete directly
+    try {
+      await deleteStaffMutation.mutateAsync(staffId);
+    } catch (error: any) {
+      // If staff has appointments, show replacement dialog
+      if (error.message?.includes('409') || error.message?.includes('APPOINTMENTS_ASSIGNED')) {
+        const staffMember = staff?.find(s => s.id === staffId);
+        setDeletingStaff(staffMember);
+      }
+    }
+  };
+
+  // Handle reassign and delete staff
+  const handleReassignAndDelete = () => {
+    if (deletingStaff && replacementStaffId) {
+      reassignStaffMutation.mutate({
+        staffId: deletingStaff.id,
+        newStaffId: replacementStaffId
+      });
     }
   };
 
@@ -968,6 +1031,52 @@ export default function Admin() {
                       <Button 
                         variant="outline" 
                         onClick={() => setEditingStaff(null)} 
+                        className="flex-1"
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Staff Replacement Dialog */}
+              <Dialog open={!!deletingStaff} onOpenChange={() => { setDeletingStaff(null); setReplacementStaffId(''); }}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Reasignar Citas del Personal</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <strong>{deletingStaff?.name}</strong> tiene citas asignadas. 
+                      Selecciona a quién se reasignarán sus citas antes de eliminarlo del equipo.
+                    </p>
+                    <div>
+                      <Label className="text-sm font-medium">Reasignar citas a:</Label>
+                      <Select value={replacementStaffId} onValueChange={setReplacementStaffId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar miembro del equipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {staff?.filter(s => s.id !== deletingStaff?.id && s.isActive).map((member) => (
+                            <SelectItem key={member.id} value={member.id}>
+                              {member.name} ({member.role})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={handleReassignAndDelete} 
+                        className="flex-1"
+                        disabled={!replacementStaffId || reassignStaffMutation.isPending}
+                      >
+                        {reassignStaffMutation.isPending ? 'Reasignando...' : 'Reasignar y Eliminar'}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => { setDeletingStaff(null); setReplacementStaffId(''); }} 
                         className="flex-1"
                       >
                         Cancelar

@@ -62,6 +62,8 @@ export interface IStorage {
   createStaff(staff: InsertStaff): Promise<Staff>;
   updateStaff(staffId: string, staff: Partial<InsertStaff>): Promise<Staff>;
   deleteStaff(staffId: string): Promise<void>;
+  reassignStaffAppointments(oldStaffId: string, newStaffId: string): Promise<void>;
+  reassignStaffAppointments(oldStaffId: string, newStaffId: string): Promise<void>;
   
   // Client operations
   getClients(tenantId: string): Promise<Client[]>;
@@ -204,10 +206,17 @@ export class DatabaseStorage implements IStorage {
     } catch (error: any) {
       if (error.code === '23503') {
         // Foreign key constraint violation
-        throw new Error("No se puede eliminar este miembro del equipo porque tiene citas asignadas. Primero reasigna o elimina las citas asociadas.");
+        throw new Error("APPOINTMENTS_ASSIGNED");
       }
       throw error;
     }
+  }
+
+  async reassignStaffAppointments(oldStaffId: string, newStaffId: string): Promise<void> {
+    await db
+      .update(appointments)
+      .set({ staffId: newStaffId })
+      .where(eq(appointments.staffId, oldStaffId));
   }
 
   // Client operations
