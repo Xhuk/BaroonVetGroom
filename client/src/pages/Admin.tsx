@@ -183,7 +183,7 @@ export default function Admin() {
       displayName: formData.get('displayName'),
       department: formData.get('department'),
       description: formData.get('description'),
-      permissions: JSON.stringify([]) // Default empty permissions array
+      permissions: [] // Default empty permissions array
     };
 
     if (!data.name || !data.displayName || !data.department) {
