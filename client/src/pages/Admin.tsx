@@ -173,6 +173,38 @@ export default function Admin() {
     },
   });
 
+  // Delete role mutation
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      return apiRequest('DELETE', `/api/admin/roles/${roleId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Rol eliminado",
+        description: "El rol ha sido eliminado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api', 'admin', 'roles'] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para eliminar roles",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo eliminar el rol",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle create role
   const handleCreateRole = (e) => {
     e.preventDefault();
@@ -196,6 +228,13 @@ export default function Admin() {
     }
 
     createRoleMutation.mutate(data);
+  };
+
+  // Handle delete role
+  const handleDeleteRole = (roleId: string, roleName: string) => {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar el rol "${roleName}"?`)) {
+      deleteRoleMutation.mutate(roleId);
+    }
   };
 
   // Handle edit service
@@ -704,7 +743,13 @@ export default function Admin() {
                             <Edit className="w-3 h-3 mr-1" />
                             Editar
                           </Button>
-                          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDeleteRole(role.id, role.displayName)}
+                            disabled={deleteRoleMutation.isPending}
+                          >
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
