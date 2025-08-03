@@ -112,6 +112,43 @@ export default function Admin() {
   const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  
+  // Edit states
+  const [editingService, setEditingService] = useState(null);
+  const [editServiceData, setEditServiceData] = useState({
+    name: '',
+    type: '',
+    duration: 0,
+    price: 0
+  });
+
+  // Handle edit service
+  const handleEditService = (service) => {
+    setEditingService(service);
+    setEditServiceData({
+      name: service.name,
+      type: service.type,
+      duration: service.duration,
+      price: service.price
+    });
+  };
+
+  // Handle save edited service
+  const handleSaveEditedService = () => {
+    if (editingService) {
+      setServices(prev => prev.map(service => 
+        service.id === editingService.id 
+          ? { ...service, ...editServiceData }
+          : service
+      ));
+      setEditingService(null);
+      setEditServiceData({ name: '', type: '', duration: 0, price: 0 });
+      toast({
+        title: "Servicio actualizado",
+        description: "El servicio ha sido actualizado exitosamente",
+      });
+    }
+  };
 
   // Helper function for room type icons
   const getRoomTypeIcon = (type: string) => {
@@ -505,7 +542,11 @@ export default function Admin() {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEditService(service)}
+                          >
                             <Edit className="w-3 h-3 mr-1" />
                             Editar
                           </Button>
@@ -518,6 +559,69 @@ export default function Admin() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Edit Service Dialog */}
+              <Dialog open={!!editingService} onOpenChange={() => setEditingService(null)}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Editar Servicio</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Nombre del Servicio</Label>
+                      <Input 
+                        value={editServiceData.name}
+                        onChange={(e) => setEditServiceData(prev => ({...prev, name: e.target.value}))}
+                        placeholder="Ej: Limpieza Dental" 
+                      />
+                    </div>
+                    <div>
+                      <Label>Tipo de Servicio</Label>
+                      <Select 
+                        value={editServiceData.type}
+                        onValueChange={(value) => setEditServiceData(prev => ({...prev, type: value}))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="medical">Médico</SelectItem>
+                          <SelectItem value="grooming">Estética</SelectItem>
+                          <SelectItem value="vaccination">Vacunación</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Duración (minutos)</Label>
+                        <Input 
+                          type="number" 
+                          value={editServiceData.duration}
+                          onChange={(e) => setEditServiceData(prev => ({...prev, duration: parseInt(e.target.value) || 0}))}
+                          placeholder="60" 
+                        />
+                      </div>
+                      <div>
+                        <Label>Precio (MXN)</Label>
+                        <Input 
+                          type="number" 
+                          value={editServiceData.price}
+                          onChange={(e) => setEditServiceData(prev => ({...prev, price: parseFloat(e.target.value) || 0}))}
+                          placeholder="350" 
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={handleSaveEditedService} className="flex-1">
+                        Guardar Cambios
+                      </Button>
+                      <Button variant="outline" onClick={() => setEditingService(null)} className="flex-1">
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
 
             {/* Statistics Tab */}
