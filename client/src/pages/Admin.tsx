@@ -123,6 +123,13 @@ export default function Admin() {
     permissions: []
   });
   
+  const [editingStaff, setEditingStaff] = useState(null);
+  const [editStaffData, setEditStaffData] = useState({
+    name: '',
+    role: '',
+    specialization: ''
+  });
+  
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [availableRoles, setAvailableRoles] = useState([]);
@@ -278,6 +285,40 @@ export default function Admin() {
     },
   });
 
+  // Update staff mutation
+  const updateStaffMutation = useMutation({
+    mutationFn: async ({ staffId, data }) => {
+      return apiRequest('PUT', `/api/staff/${staffId}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Miembro del equipo actualizado",
+        description: "El miembro del equipo ha sido actualizado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api', 'staff', currentTenant?.id] });
+      setEditingStaff(null);
+      setEditStaffData({ name: '', role: '', specialization: '' });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para actualizar miembros del equipo",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el miembro del equipo",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle create role
   const handleCreateRole = (e) => {
     e.preventDefault();
@@ -325,6 +366,26 @@ export default function Admin() {
     }
 
     createStaffMutation.mutate(data);
+  };
+
+  // Handle edit staff
+  const handleEditStaff = (staffMember) => {
+    setEditingStaff(staffMember);
+    setEditStaffData({
+      name: staffMember.name,
+      role: staffMember.role,
+      specialization: staffMember.specialization || ''
+    });
+  };
+
+  // Handle save edited staff
+  const handleSaveEditedStaff = () => {
+    if (editingStaff) {
+      updateStaffMutation.mutate({
+        staffId: editingStaff.id,
+        data: editStaffData
+      });
+    }
   };
 
   // Handle delete staff
@@ -830,7 +891,12 @@ export default function Admin() {
                           </div>
                         )}
                         <div className="flex gap-2 mt-4">
-                          <Button variant="outline" size="sm" className="flex-1">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => handleEditStaff(member)}
+                          >
                             <Edit className="w-3 h-3 mr-1" />
                             Editar
                           </Button>
@@ -849,6 +915,67 @@ export default function Admin() {
                   </Card>
                 ))}
               </div>
+
+              {/* Edit Staff Dialog */}
+              <Dialog open={!!editingStaff} onOpenChange={() => setEditingStaff(null)}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Editar Miembro del Equipo</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium">Nombre Completo</Label>
+                      <Input 
+                        value={editStaffData.name}
+                        onChange={(e) => setEditStaffData(prev => ({...prev, name: e.target.value}))}
+                        placeholder="Ej: Dr. Ana García" 
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Cargo</Label>
+                      <Select 
+                        value={editStaffData.role}
+                        onValueChange={(value) => setEditStaffData(prev => ({...prev, role: value}))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar cargo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="veterinarian">Veterinario/a</SelectItem>
+                          <SelectItem value="groomer">Estilista</SelectItem>
+                          <SelectItem value="technician">Técnico/a</SelectItem>
+                          <SelectItem value="receptionist">Recepcionista</SelectItem>
+                          <SelectItem value="assistant">Asistente</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Especialización</Label>
+                      <Input 
+                        value={editStaffData.specialization}
+                        onChange={(e) => setEditStaffData(prev => ({...prev, specialization: e.target.value}))}
+                        placeholder="Ej: Medicina Interna, Cirugía, etc." 
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={handleSaveEditedStaff} 
+                        className="flex-1"
+                        disabled={updateStaffMutation.isPending}
+                      >
+                        {updateStaffMutation.isPending ? 'Guardando...' : 'Guardar Cambios'}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setEditingStaff(null)} 
+                        className="flex-1"
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
 
             {/* Roles Management Tab */}
