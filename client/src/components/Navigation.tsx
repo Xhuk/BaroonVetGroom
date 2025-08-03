@@ -1,11 +1,10 @@
 import { cn } from "@/lib/utils";
 import { 
   BarChart3, 
-  Scissors, 
-  Stethoscope, 
+  Calendar,
+  Users,
   Package, 
   Truck, 
-  TrendingUp, 
   DollarSign, 
   Settings, 
   Crown 
@@ -18,12 +17,11 @@ interface NavigationProps {
 export function Navigation({ className }: NavigationProps) {
   const navigationItems = [
     { icon: BarChart3, label: "Tablero", href: "/", active: true },
-    { icon: Scissors, label: "Estética", href: "/grooming" },
-    { icon: Stethoscope, label: "Visitas Médicas", href: "/medical" },
+    { icon: Calendar, label: "Citas", href: "/appointments" },
+    { icon: Users, label: "Clientes", href: "/clients" },
     { icon: Package, label: "Inventario", href: "/inventory" },
     { icon: Truck, label: "Plan de Entregas", href: "/delivery" },
-    { icon: TrendingUp, label: "Reportes", href: "/reports" },
-    { icon: DollarSign, label: "Financiero", href: "/billing" },
+    { icon: DollarSign, label: "Facturación", href: "/billing" },
   ];
 
   const adminItems = [

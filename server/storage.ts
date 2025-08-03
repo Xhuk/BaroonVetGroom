@@ -11,6 +11,10 @@ import {
   fraccionamientos,
   deliveryRoutes,
   deliveryStops,
+  services,
+  inventoryItems,
+  inventoryTransactions,
+  payments,
   type User,
   type UpsertUser,
   type Company,
@@ -24,6 +28,10 @@ import {
   type Fraccionamiento,
   type DeliveryRoute,
   type DeliveryStop,
+  type Service,
+  type InventoryItem,
+  type InventoryTransaction,
+  type Payment,
   type InsertCompany,
   type InsertTenant,
   type InsertRoom,
@@ -34,6 +42,10 @@ import {
   type InsertFraccionamiento,
   type InsertDeliveryRoute,
   type InsertDeliveryStop,
+  type InsertService,
+  type InsertInventoryItem,
+  type InsertInventoryTransaction,
+  type InsertPayment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc, asc } from "drizzle-orm";
@@ -77,6 +89,7 @@ export interface IStorage {
   
   // Pet operations
   getPetsForClient(clientId: string): Promise<Pet[]>;
+  getPetsForTenant(tenantId: string): Promise<Pet[]>;
   getPet(id: string): Promise<Pet | undefined>;
   createPet(pet: InsertPet): Promise<Pet>;
   
@@ -86,6 +99,24 @@ export interface IStorage {
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointment(id: string, appointment: Partial<InsertAppointment>): Promise<Appointment>;
   deleteAppointment(id: string): Promise<void>;
+  
+  // Service operations
+  getServicesForTenant(tenantId: string): Promise<Service[]>;
+  getService(id: string): Promise<Service | undefined>;
+  createService(service: InsertService): Promise<Service>;
+  
+  // Inventory operations
+  getInventoryItemsForTenant(tenantId: string): Promise<InventoryItem[]>;
+  getInventoryItem(id: string): Promise<InventoryItem | undefined>;
+  createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem>;
+  
+  getInventoryTransactionsForTenant(tenantId: string): Promise<InventoryTransaction[]>;
+  createInventoryTransaction(transaction: InsertInventoryTransaction): Promise<InventoryTransaction>;
+  
+  // Payment operations
+  getPaymentsForTenant(tenantId: string): Promise<Payment[]>;
+  getPayment(id: string): Promise<Payment | undefined>;
+  createPayment(payment: InsertPayment): Promise<Payment>;
   
   // Fraccionamiento operations
   getFraccionamientosForTenant(tenantId: string): Promise<Fraccionamiento[]>;
@@ -330,6 +361,67 @@ export class DatabaseStorage implements IStorage {
   async createDeliveryStop(stop: InsertDeliveryStop): Promise<DeliveryStop> {
     const [newStop] = await db.insert(deliveryStops).values(stop).returning();
     return newStop;
+  }
+
+  // Missing Pet operations
+  async getPetsForTenant(tenantId: string): Promise<Pet[]> {
+    return await db.select().from(pets).where(eq(pets.tenantId, tenantId));
+  }
+
+  // Service operations
+  async getServicesForTenant(tenantId: string): Promise<Service[]> {
+    return await db.select().from(services).where(eq(services.tenantId, tenantId));
+  }
+
+  async getService(id: string): Promise<Service | undefined> {
+    const [service] = await db.select().from(services).where(eq(services.id, id));
+    return service;
+  }
+
+  async createService(service: InsertService): Promise<Service> {
+    const [newService] = await db.insert(services).values(service).returning();
+    return newService;
+  }
+
+  // Inventory operations
+  async getInventoryItemsForTenant(tenantId: string): Promise<InventoryItem[]> {
+    return await db.select().from(inventoryItems).where(eq(inventoryItems.tenantId, tenantId));
+  }
+
+  async getInventoryItem(id: string): Promise<InventoryItem | undefined> {
+    const [item] = await db.select().from(inventoryItems).where(eq(inventoryItems.id, id));
+    return item;
+  }
+
+  async createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem> {
+    const [newItem] = await db.insert(inventoryItems).values(item).returning();
+    return newItem;
+  }
+
+  async getInventoryTransactionsForTenant(tenantId: string): Promise<InventoryTransaction[]> {
+    return await db.select().from(inventoryTransactions).where(eq(inventoryTransactions.tenantId, tenantId))
+      .orderBy(desc(inventoryTransactions.createdAt));
+  }
+
+  async createInventoryTransaction(transaction: InsertInventoryTransaction): Promise<InventoryTransaction> {
+    const [newTransaction] = await db.insert(inventoryTransactions).values(transaction).returning();
+    return newTransaction;
+  }
+
+  // Payment operations
+  async getPaymentsForTenant(tenantId: string): Promise<Payment[]> {
+    return await db.select().from(payments).where(eq(payments.tenantId, tenantId))
+      .orderBy(desc(payments.createdAt));
+  }
+
+  async getPayment(id: string): Promise<Payment | undefined> {
+    const [payment] = await db.select().from(payments).where(eq(payments.id, id));
+    return payment;
+  }
+
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const [newPayment] = await db.insert(payments).values(payment).returning();
+    return newPayment;
   }
 }
 

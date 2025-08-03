@@ -10,6 +10,11 @@ import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import Admin from "@/pages/Admin";
 import SuperAdmin from "@/pages/SuperAdmin";
+import Appointments from "@/pages/Appointments";
+import Clients from "@/pages/Clients";
+import Inventory from "@/pages/Inventory";
+import DeliveryPlan from "@/pages/DeliveryPlan";
+import Billing from "@/pages/Billing";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -21,6 +26,11 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Dashboard} />
+          <Route path="/appointments" component={Appointments} />
+          <Route path="/clients" component={Clients} />
+          <Route path="/inventory" component={Inventory} />
+          <Route path="/delivery" component={DeliveryPlan} />
+          <Route path="/billing" component={Billing} />
           <Route path="/admin" component={Admin} />
           <Route path="/superadmin" component={SuperAdmin} />
         </>
