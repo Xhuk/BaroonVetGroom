@@ -63,9 +63,9 @@ export default function Dashboard() {
       <Navigation />
       
       {/* Main Content */}
-      <main className="lg:ml-64 p-6 pb-40">
+      <main className="lg:ml-64 pb-40">
         {/* Action Buttons */}
-        <div className="mb-6 flex flex-wrap gap-4">
+        <div className="mb-6 flex flex-wrap gap-4 px-6">
           <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 shadow-md">
             <Plus className="w-4 h-4 mr-2" />
             Crear Nueva Cita

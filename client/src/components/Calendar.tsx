@@ -103,19 +103,17 @@ export function Calendar({ className }: CalendarProps) {
 
   if (isLoading) {
     return (
-      <Card className={cn("h-full", className)}>
-        <CardContent className="p-0">
-          <div className="h-96 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className={cn("h-full w-full", className)}>
+        <div className="h-96 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className={cn("h-full", className)}>
-      <CardHeader className="bg-blue-100 dark:bg-slate-800 text-blue-800 dark:text-slate-200 p-4 border-b border-blue-200 dark:border-slate-600">
+    <div className={cn("h-full w-full", className)}>
+      <div className="bg-blue-100 dark:bg-slate-800 text-blue-800 dark:text-slate-200 p-4 border-b border-blue-200 dark:border-slate-600 w-full">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">
             Calendario de Hoy - {todayName}, {today.getDate()} de {todayMonth} {today.getFullYear()}
@@ -124,9 +122,9 @@ export function Calendar({ className }: CalendarProps) {
             <span className="text-sm font-medium">Vista Diaria</span>
           </div>
         </div>
-      </CardHeader>
+      </div>
       
-      <CardContent className="p-0">
+      <div className="w-full">
         <div className="calendar-grid bg-white dark:bg-slate-900 relative w-full" style={{ height: "600px", overflow: "auto" }}>
           {/* Header row */}
           <div className="grid w-full sticky top-0 bg-white dark:bg-slate-900 z-10 border-b-2 border-blue-200 dark:border-slate-600" style={{ gridTemplateColumns: "80px 1fr" }}>
@@ -205,7 +203,7 @@ export function Calendar({ className }: CalendarProps) {
             />
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
