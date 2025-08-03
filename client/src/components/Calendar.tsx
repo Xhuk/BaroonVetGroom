@@ -43,7 +43,16 @@ export function Calendar({ className }: CalendarProps) {
   const endDate = weekDates[6].toISOString().split('T')[0];
 
   const { data: appointments = [], isLoading } = useQuery<Appointment[]>({
-    queryKey: ["/api/appointments", currentTenant?.id, { startDate, endDate }],
+    queryKey: [`/api/appointments/${currentTenant?.id}`, startDate, endDate],
+    queryFn: async () => {
+      const response = await fetch(`/api/appointments/${currentTenant?.id}?startDate=${startDate}&endDate=${endDate}`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
     enabled: !!currentTenant?.id,
     refetchInterval: 30000,
   });
@@ -51,7 +60,7 @@ export function Calendar({ className }: CalendarProps) {
   // Generate time slots (8 AM to 6 PM)
   const timeSlots = Array.from({ length: 11 }, (_, i) => {
     const hour = 8 + i;
-    return `${hour}:00`;
+    return `${hour.toString().padStart(2, '0')}:00`;
   });
 
   const getAppointmentStyle = (appointment: Appointment) => {
@@ -96,7 +105,7 @@ export function Calendar({ className }: CalendarProps) {
     setCurrentWeek(newWeek);
   };
 
-  const dayNames = ["Sáb", "Dom", "Lun", "Mar", "Mié", "Jue", "Vie"];
+  const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
   const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
   if (isLoading) {
