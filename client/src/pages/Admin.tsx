@@ -267,6 +267,16 @@ export default function Admin() {
     });
   };
 
+  // Handle delete room
+  const handleDeleteRoom = (roomId, roomName) => {
+    setRooms(prev => prev.filter(room => room.id !== roomId));
+    toast({
+      title: "Sala eliminada",
+      description: `La sala ${roomName} ha sido eliminada del sistema`,
+      variant: "destructive",
+    });
+  };
+
   // Helper function for room type icons
   const getRoomTypeIcon = (type: string) => {
     switch (type) {
@@ -478,7 +488,12 @@ export default function Admin() {
                             <Edit className="w-3 h-3 mr-1" />
                             Editar
                           </Button>
-                          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDeleteRoom(room.id, room.name)}
+                          >
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
