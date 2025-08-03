@@ -42,7 +42,7 @@ export function Calendar({ className }: CalendarProps) {
   const startDate = weekDates[0].toISOString().split('T')[0];
   const endDate = weekDates[6].toISOString().split('T')[0];
 
-  const { data: appointments = [], isLoading } = useQuery({
+  const { data: appointments = [], isLoading } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments", currentTenant?.id, { startDate, endDate }],
     enabled: !!currentTenant?.id,
     refetchInterval: 30000,
@@ -65,7 +65,7 @@ export function Calendar({ className }: CalendarProps) {
 
   const getAppointmentsForSlot = (date: Date, timeSlot: string) => {
     const dateStr = date.toISOString().split('T')[0];
-    return appointments.filter(apt => {
+    return appointments.filter((apt: Appointment) => {
       const aptDate = apt.scheduledDate;
       const aptTime = apt.scheduledTime;
       return aptDate === dateStr && aptTime?.substring(0, 5) === timeSlot;
@@ -183,7 +183,7 @@ export function Calendar({ className }: CalendarProps) {
                         isToday ? "bg-blue-25" : "bg-white"
                       )}
                     >
-                      {slotAppointments.map((appointment, aptIndex) => (
+                      {slotAppointments.map((appointment: Appointment, aptIndex: number) => (
                         <div
                           key={appointment.id}
                           className={cn(

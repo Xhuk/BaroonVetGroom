@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Calendar, Phone, Mail, LogOut } from "lucide-react";
+import type { User } from "@shared/schema";
 
 export function Header() {
   const { user } = useAuth();

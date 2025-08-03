@@ -100,15 +100,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vaccinationRooms = rooms.filter(room => room.type === 'vaccination');
       
       // Calculate room availability
-      const groomingRoomAvailability = Math.max(0, groomingRooms.reduce((sum, room) => sum + room.capacity, 0) - groomingAppointments.length);
-      const medicalRoomAvailability = Math.max(0, medicalRooms.reduce((sum, room) => sum + room.capacity, 0) - medicalAppointments.length);
-      const vaccinationRoomAvailability = Math.max(0, vaccinationRooms.reduce((sum, room) => sum + room.capacity, 0) - vaccinationAppointments.length);
+      const groomingRoomAvailability = Math.max(0, groomingRooms.reduce((sum, room) => sum + (room.capacity || 1), 0) - groomingAppointments.length);
+      const medicalRoomAvailability = Math.max(0, medicalRooms.reduce((sum, room) => sum + (room.capacity || 1), 0) - medicalAppointments.length);
+      const vaccinationRoomAvailability = Math.max(0, vaccinationRooms.reduce((sum, room) => sum + (room.capacity || 1), 0) - vaccinationAppointments.length);
       
       // Calculate total delivery weight
       const totalDeliveryWeight = deliveryRoutes.reduce((sum, route) => sum + (parseFloat(route.totalWeight?.toString() || '0')), 0);
       
       // Calculate room utilization
-      const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
+      const totalCapacity = rooms.reduce((sum, room) => sum + (room.capacity || 1), 0);
       const totalBookedSlots = appointments.length;
       const roomUtilization = totalCapacity > 0 ? Math.round((totalBookedSlots / totalCapacity) * 100) : 0;
       

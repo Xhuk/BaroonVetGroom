@@ -240,19 +240,18 @@ export class DatabaseStorage implements IStorage {
 
   // Appointment operations
   async getAppointmentsForTenant(tenantId: string, startDate?: string, endDate?: string): Promise<Appointment[]> {
-    let query = db.select().from(appointments).where(eq(appointments.tenantId, tenantId));
-    
     if (startDate && endDate) {
-      query = query.where(
+      return await db.select().from(appointments).where(
         and(
           eq(appointments.tenantId, tenantId),
           gte(appointments.scheduledDate, startDate),
           lte(appointments.scheduledDate, endDate)
         )
-      );
+      ).orderBy(asc(appointments.scheduledDate), asc(appointments.scheduledTime));
     }
     
-    return await query.orderBy(asc(appointments.scheduledDate), asc(appointments.scheduledTime));
+    return await db.select().from(appointments).where(eq(appointments.tenantId, tenantId))
+      .orderBy(asc(appointments.scheduledDate), asc(appointments.scheduledTime));
   }
 
   async getAppointment(id: string): Promise<Appointment | undefined> {
@@ -295,19 +294,18 @@ export class DatabaseStorage implements IStorage {
 
   // Delivery operations
   async getDeliveryRoutesForTenant(tenantId: string, startDate?: string, endDate?: string): Promise<DeliveryRoute[]> {
-    let query = db.select().from(deliveryRoutes).where(eq(deliveryRoutes.tenantId, tenantId));
-    
     if (startDate && endDate) {
-      query = query.where(
+      return await db.select().from(deliveryRoutes).where(
         and(
           eq(deliveryRoutes.tenantId, tenantId),
           gte(deliveryRoutes.scheduledDate, startDate),
           lte(deliveryRoutes.scheduledDate, endDate)
         )
-      );
+      ).orderBy(asc(deliveryRoutes.scheduledDate));
     }
     
-    return await query.orderBy(asc(deliveryRoutes.scheduledDate));
+    return await db.select().from(deliveryRoutes).where(eq(deliveryRoutes.tenantId, tenantId))
+      .orderBy(asc(deliveryRoutes.scheduledDate));
   }
 
   async getDeliveryRoute(id: string): Promise<DeliveryRoute | undefined> {

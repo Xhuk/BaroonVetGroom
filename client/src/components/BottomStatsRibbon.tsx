@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { StatsCard } from "@/components/ui/stats-card";
+import type { DashboardStats } from "@shared/schema";
 import { 
   Scissors, 
   Stethoscope, 
@@ -14,7 +15,7 @@ import {
 export function BottomStatsRibbon() {
   const { currentTenant } = useTenant();
 
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats", currentTenant?.id],
     enabled: !!currentTenant?.id,
     refetchInterval: 30000, // Refresh every 30 seconds

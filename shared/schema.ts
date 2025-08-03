@@ -388,3 +388,20 @@ export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type InsertFraccionamiento = z.infer<typeof insertFraccionamientoSchema>;
 export type InsertDeliveryRoute = z.infer<typeof insertDeliveryRouteSchema>;
 export type InsertDeliveryStop = z.infer<typeof insertDeliveryStopSchema>;
+
+// Dashboard Stats type
+export interface DashboardStats {
+  groomingAppointments: number;
+  medicalAppointments: number;
+  vaccinationAppointments: number;
+  scheduledDeliveries: number;
+  groomingRoomAvailability: number;
+  medicalRoomAvailability: number;
+  vaccinationRoomAvailability: number;
+  totalDeliveryWeight: number;
+  teamMembers: number;
+  activeStaffToday: number;
+  roomUtilization: number;
+  totalRooms: number;
+  currentDate: string;
+}

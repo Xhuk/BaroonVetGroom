@@ -16,12 +16,12 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
 
-  const { data: userTenants = [], isLoading: isLoadingTenants } = useQuery({
+  const { data: userTenants = [], isLoading: isLoadingTenants } = useQuery<UserTenant[]>({
     queryKey: ["/api/tenants/user"],
     enabled: isAuthenticated,
   });
 
-  const { data: tenant, isLoading: isLoadingCurrentTenant } = useQuery({
+  const { data: tenant, isLoading: isLoadingCurrentTenant } = useQuery<Tenant>({
     queryKey: ["/api/tenants", currentTenant?.id],
     enabled: !!currentTenant?.id,
   });
