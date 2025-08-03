@@ -137,17 +137,14 @@ export default function Admin() {
   // API Mutations
   const createRoleMutation = useMutation({
     mutationFn: async (data) => {
-      return apiRequest('/api/admin/roles', {
-        method: 'POST',
-        body: JSON.stringify({ ...data, tenantId: currentTenant?.id }),
-      });
+      return apiRequest('POST', '/api/admin/roles', { ...data, tenantId: currentTenant?.id });
     },
     onSuccess: () => {
       toast({
         title: "Rol creado",
         description: "El nuevo rol se ha creado exitosamente.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/roles'] });
+      queryClient.invalidateQueries({ queryKey: ['/api', 'admin', 'roles'] });
       setIsRoleDialogOpen(false);
       setNewRoleData({
         name: '',
