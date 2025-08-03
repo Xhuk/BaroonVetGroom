@@ -251,7 +251,8 @@ export class DatabaseStorage implements IStorage {
 
   // Role operations
   async getRoles(): Promise<Role[]> {
-    return await db.select().from(roles);
+    const result = await db.select().from(roles);
+    return result;
   }
 
   async createRole(role: InsertRole): Promise<Role> {
