@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+
+  /* Veterinary theme colors */
+  --vet-blue: hsl(207, 90%, 54%);
+  --vet-green: hsl(142, 71%, 45%);
+  --vet-orange: hsl(25, 95%, 53%);
+  --vet-gray: hsl(0, 0%, 46%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+  }
+  
+  .time-slot {
+    @apply border-r border-b border-gray-200 flex items-center justify-center text-xs text-gray-500 bg-gray-50;
+  }
+  
+  .day-header {
+    @apply border-r border-b-2 border-blue-600 flex items-center justify-center font-medium bg-gray-50;
+  }
+  
+  .calendar-cell {
+    @apply border-r border-b border-gray-200 relative bg-white cursor-pointer hover:bg-gray-50;
+    min-height: 60px;
+  }
+  
+  .appointment-block {
+    @apply absolute left-1 right-1 rounded text-white text-xs p-1 overflow-hidden;
+  }
+  
+  .current-time-line {
+    @apply absolute left-0 right-0 h-0.5 bg-red-500 z-10 pointer-events-none;
+  }
+  
+  .bottom-ribbon {
+    @apply fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 z-20;
+  }
+}
+
+@layer utilities {
+  .blue-25 {
+    background-color: hsl(207, 90%, 97%);
+  }
+}
