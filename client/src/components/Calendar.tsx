@@ -40,11 +40,20 @@ export function Calendar({ className }: CalendarProps) {
     refetchInterval: 30000,
   });
 
-  // Generate time slots (8 AM to 6 PM)
-  const timeSlots = Array.from({ length: 11 }, (_, i) => {
-    const hour = 8 + i;
-    return `${hour.toString().padStart(2, '0')}:00`;
-  });
+  // Generate 30-minute time slots for the entire day (like your reference)
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let h = 6; h < 22; h++) { // 6 AM to 10 PM for veterinary clinic
+      for (let m = 0; m < 60; m += 30) {
+        const hour = String(h).padStart(2, '0');
+        const minute = String(m).padStart(2, '0');
+        slots.push(`${hour}:${minute}`);
+      }
+    }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
 
   const getAppointmentStyle = (appointment: Appointment) => {
     const typeStyles = {
@@ -62,20 +71,32 @@ export function Calendar({ className }: CalendarProps) {
       
       return (
         appointmentDate.toDateString() === today.toDateString() &&
-        appointmentTime === timeSlot
+        appointmentTime && appointmentTime.substring(0, 5) === timeSlot
       );
     });
   };
 
-  // Calculate dynamic row height based on appointments
-  const getRowHeight = (timeSlot: string) => {
-    const slotAppointments = getAppointmentsForSlot(timeSlot);
-    const minHeight = 60; // Minimum height for empty slots
-    const appointmentHeight = 35; // Height per appointment
-    const padding = 10; // Extra padding
+  // Check if appointment is currently ongoing (like your reference)
+  const isOngoing = (appointment: Appointment) => {
+    if (!appointment || !appointment.startTime) return false;
     
-    if (slotAppointments.length === 0) return minHeight;
-    return Math.max(minHeight, slotAppointments.length * appointmentHeight + padding);
+    const appStart = new Date(`${today.toLocaleDateString('en-CA')}T${appointment.startTime}`);
+    const duration = 60; // Default 60 minutes duration
+    const appEnd = new Date(appStart.getTime() + duration * 60 * 1000);
+    const now = new Date();
+    
+    return now >= appStart && now < appEnd;
+  };
+
+  // Check if current time slot is active
+  const isCurrentSlot = (timeSlot: string) => {
+    const [hour, minute] = timeSlot.split(':').map(Number);
+    const now = currentTime;
+    return (
+      now.getHours() === hour &&
+      now.getMinutes() >= minute &&
+      now.getMinutes() < minute + 30
+    );
   };
 
   const getCurrentTimeLine = () => {
@@ -125,69 +146,79 @@ export function Calendar({ className }: CalendarProps) {
       </div>
       
       <div className="w-full">
-        <div className="calendar-grid bg-white dark:bg-slate-900 relative w-full" style={{ height: "600px", overflow: "auto" }}>
-          {/* Header row */}
-          <div className="grid w-full sticky top-0 bg-white dark:bg-slate-900 z-10 border-b-2 border-blue-200 dark:border-slate-600" style={{ gridTemplateColumns: "80px 1fr" }}>
-            <div className="bg-blue-50 dark:bg-slate-800 border-r border-blue-200 dark:border-slate-600 h-10 flex items-center justify-center font-medium text-blue-600 dark:text-slate-300">
-              Hora
-            </div>
-            <div className="bg-blue-100 dark:bg-slate-700 text-blue-700 dark:text-slate-200 h-10 flex items-center justify-center font-medium">
-              {todayName} {today.getDate()}
-            </div>
-          </div>
-
-          {/* Time slots and calendar cells */}
-          <div className="w-full">
-            {timeSlots.map((timeSlot, timeIndex) => {
+        <div className="bg-white dark:bg-slate-900 relative w-full" style={{ height: "600px", overflow: "auto" }}>
+          {/* Time slots in single column layout like your reference */}
+          <div className="w-full h-full overflow-y-auto pr-2">
+            {timeSlots.map((timeSlot) => {
               const slotAppointments = getAppointmentsForSlot(timeSlot);
-              const rowHeight = getRowHeight(timeSlot);
+              const isActive = isCurrentSlot(timeSlot);
               
               return (
-                <div key={timeSlot} className="grid w-full" style={{ gridTemplateColumns: "80px 1fr", minHeight: `${rowHeight}px` }}>
-                  {/* Time label */}
-                  <div 
-                    className="bg-blue-50 dark:bg-slate-800 border-r border-b border-blue-200 dark:border-slate-600 flex items-center justify-center text-xs text-blue-600 dark:text-slate-300 font-medium"
-                    style={{ minHeight: `${rowHeight}px` }}
-                  >
-                    <span className="transform -rotate-0 font-semibold">{timeSlot}</span>
+                <div 
+                  key={timeSlot} 
+                  className={cn(
+                    "flex items-start py-3 border-b border-gray-200 dark:border-slate-600 last:border-b-0 w-full",
+                    isActive ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                  )}
+                >
+                  {/* Time label - fixed width */}
+                  <div className="w-20 text-right pr-4 text-sm text-gray-500 dark:text-slate-400 font-medium flex-shrink-0">
+                    {new Date(`2000-01-01T${timeSlot}`).toLocaleTimeString('es-ES', { 
+                      hour: '2-digit', 
+                      minute: '2-digit', 
+                      hour12: true 
+                    })}
                   </div>
                   
-                  {/* Day cell with flexible layout */}
-                  <div 
-                    className="border-r border-b border-blue-200 dark:border-slate-600 relative cursor-pointer hover:bg-blue-25 dark:hover:bg-slate-800 bg-blue-25 dark:bg-slate-900 w-full p-2"
-                    style={{ minHeight: `${rowHeight}px` }}
-                  >
-                    {slotAppointments.length === 0 ? (
-                      <div className="flex items-center justify-center h-full text-gray-400 dark:text-slate-500 text-sm">
-                        Disponible
-                      </div>
-                    ) : (
-                      <div className="grid gap-2 h-full" style={{ 
-                        gridTemplateColumns: slotAppointments.length > 3 ? 'repeat(auto-fit, minmax(200px, 1fr))' : `repeat(${Math.min(slotAppointments.length, 3)}, 1fr)`,
-                        alignContent: 'start'
+                  {/* Appointments section - takes remaining width */}
+                  <div className="flex-1 pl-4 w-full">
+                    {slotAppointments.length > 0 ? (
+                      <div className="grid gap-2 w-full" style={{
+                        gridTemplateColumns: slotAppointments.length === 1 
+                          ? '1fr' 
+                          : slotAppointments.length === 2 
+                          ? '1fr 1fr' 
+                          : slotAppointments.length === 3
+                          ? '1fr 1fr 1fr'
+                          : 'repeat(auto-fit, minmax(250px, 1fr))'
                       }}>
-                        {slotAppointments.map((appointment: Appointment, aptIndex: number) => (
+                        {slotAppointments.map((appointment: Appointment) => (
                           <div
                             key={appointment.id}
                             className={cn(
-                              "rounded text-xs p-2 shadow-sm border min-h-[30px] flex flex-col justify-center",
-                              getAppointmentStyle(appointment)
+                              "flex items-center justify-between p-3 rounded-lg shadow-sm cursor-pointer transition duration-200 ease-in-out border-l-4 w-full",
+                              appointment.type === 'grooming' 
+                                ? "bg-purple-50 dark:bg-purple-900/20 border-purple-500 hover:bg-purple-100 dark:hover:bg-purple-900/30" 
+                                : appointment.type === 'medical'
+                                ? "bg-green-50 dark:bg-green-900/20 border-green-500 hover:bg-green-100 dark:hover:bg-green-900/30"
+                                : "bg-blue-50 dark:bg-blue-900/20 border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/30",
+                              isOngoing(appointment) ? "ring-2 ring-red-500 ring-offset-2" : ""
                             )}
                           >
-                            <div className="font-bold text-center mb-1">
-                              {appointment.type === 'grooming' && 'ESTÉTICA'}
-                              {appointment.type === 'medical' && 'CONSULTA'}
-                              {appointment.type === 'vaccination' && 'VACUNA'}
+                            <div className="flex items-center flex-1">
+                              <span className="mr-3 text-xl">
+                                {appointment.type === 'grooming' ? '🐾' : appointment.type === 'medical' ? '🩺' : '💉'}
+                              </span>
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
+                                  {appointment.type === 'grooming' && 'Estética'}
+                                  {appointment.type === 'medical' && 'Consulta Médica'}
+                                  {appointment.type === 'vaccination' && 'Vacunación'}
+                                </p>
+                                <p className="text-gray-600 dark:text-gray-400 text-xs">
+                                  {appointment.roomId ? `Sala ${appointment.roomId.slice(-2)}` : 'Sin sala'} • 
+                                  Staff: {appointment.staffId?.slice(-2) || 'N/A'}
+                                </p>
+                              </div>
                             </div>
-                            <div className="text-center text-xs opacity-90">
-                              {appointment.roomId ? `Sala ${appointment.roomId.slice(-2)}` : 'Sin sala'}
-                            </div>
-                            <div className="text-center text-xs font-medium mt-1">
-                              Staff: {appointment.staffId?.slice(-2) || 'N/A'}
-                            </div>
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                              Programada
+                            </span>
                           </div>
                         ))}
                       </div>
+                    ) : (
+                      <p className="text-gray-400 dark:text-gray-500 text-sm italic">Disponible</p>
                     )}
                   </div>
                 </div>
@@ -195,10 +226,10 @@ export function Calendar({ className }: CalendarProps) {
             })}
           </div>
 
-          {/* Current time line */}
+          {/* Current time line - positioned within scrollable area */}
           {currentTimeLine.show && (
             <div
-              className="absolute left-0 right-0 h-0.5 bg-rose-400 dark:bg-rose-500 z-10 pointer-events-none shadow-sm"
+              className="absolute left-20 right-4 h-0.5 bg-rose-400 dark:bg-rose-500 z-10 pointer-events-none shadow-sm"
               style={{ top: currentTimeLine.top }}
             />
           )}
