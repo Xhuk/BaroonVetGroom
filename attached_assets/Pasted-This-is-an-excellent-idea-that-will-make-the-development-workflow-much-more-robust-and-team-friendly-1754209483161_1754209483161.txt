@@ -1,0 +1,178 @@
+This is an excellent idea that will make the development workflow much more robust and team-friendly. Ensuring the Python scripts work seamlessly on both Windows and Unix systems is a key part of building a professional application.
+
+Instead of a specialized tool like crossenv, the standard and most reliable approach is to use Python's built-in venv for virtual environments and provide simple, platform-specific activation scripts. This approach is lightweight, doesn't require extra tools, and is widely understood.
+
+I have updated the project prompt to reflect this new requirement, and I have provided the necessary scripts to implement this cross-platform workflow.
+
+Updated Prompt: VetGroom SaaS Platform Specification (Version 11.0)
+1. Project & Business Overview
+
+Develop a complete, subscription-based (SaaS) platform named "VetGroom" for veterinary clinics and pet grooming businesses. The platform will serve as a single source of truth for client, pet, appointment, and inventory management, with a focus on administrative efficiency and customer communication.
+
+2. Core Technology Stack
+
+Frontend: React with Vite, Tailwind CSS (for styling), and react-router-dom (for routing).
+
+Backend & Database: Supabase as a full SaaS solution, including PostgreSQL, Auth, Storage, and Edge Functions.
+
+External Services:
+
+Payments: Stripe or MercadoPago for subscription billing.
+
+Automation: N8N for building and executing automated workflows.
+
+Mapping: OpenStreetMap for address confirmation and route planning.
+
+Email/SMS: Resend and Twilio (or similar) for notifications.
+
+3. Key Features & Modules
+
+A. User Authentication & Security
+
+Multi-tenant Hierarchy: The system will operate on a Compañia (Company) -> Site (Branch/Location) structure. All data is isolated by site_id.
+
+Multi-tenant Roles: The system must support at least three roles: client, admin (scoped to a site), and superadmin (scoped to all companies/sites).
+
+Subscription-Based Access Control: Access for all users (clients, admins, team members) is conditionally granted based on the subscription_status of their parent Compañia. If the subscription expires, all access is locked for that company.
+
+Login Flow:
+
+client and admin users will log in via the main application and be directed to the site they belong to.
+
+A dedicated, direct login endpoint at /admin for administrators.
+
+A secure registration process for new clients.
+
+Password Management: Implement secure password hashing and reset functionality.
+
+Security: Enforce role-based access control (RBAC) to restrict access to specific pages and API endpoints.
+
+B. Client-Facing Frontend (Multilingual & Themed)
+
+Dashboard (/): A dynamic landing page with a calendar-like view of upcoming appointments for the current day/week.
+
+Calendar View: Must be an Outlook-style interactive calendar.
+
+Smart Booking Logic: When a booking slot is unavailable, the system should automatically suggest three alternative available slots.
+
+Configurable Durations: Appointment durations (e.g., Grooming: 60 min, Medical: 45 min) must be configurable by the admin.
+
+Appointments (/appointments):
+
+Create, edit, and cancel appointments with a user-friendly interface.
+
+Logistics Selection: The appointment form must include a field to select if the service is pickup (we go for it on a van) or delivered (the owner brings the pet). This is a required field for all bookings.
+
+Clients & Pets (/clients):
+
+A central directory for clients and pets with a comprehensive history.
+
+Medical & Grooming History: Dedicated sections with a media gallery.
+
+Media Gallery: Upload, view, and manage images/videos. Generate a QR code for each pet's profile for quick mobile access and for uploading new media.
+
+Inventory Management (/inventory):
+
+Track medication and supply stock levels with audit and physical count capabilities.
+
+Delivery Planning (/delivery-plan):
+
+A map view showing all appointments requiring pickup or delivered status.
+
+Weighted Routes: The route optimization logic must consider configurable weights assigned to each "fraccionamiento." This allows the admin to prioritize or de-prioritize certain areas.
+
+Billing (/billing):
+
+Link payments to specific appointments.
+
+Use N8N to send a secure payment URL to the customer's phone.
+
+Generate and print detailed financial reports (reporte contable).
+
+C. Reporting & Analytics
+
+Automated Reports: The /admin dashboard should have a tool to trigger the generation of various reports.
+
+inventory_cost_report: Calculates total inventory value.
+
+sales_report: Summarizes sales by service type.
+
+appointment_report: Provides insights into appointment volume and status.
+
+Real-time Dashboard Metrics: The main dashboard should display key business metrics in real-time.
+
+D. Automated Communications
+
+Appointment Reminders: Automatically send appointment reminders via email or SMS.
+
+Payment Notifications: Send payment confirmation emails and SMS.
+
+Team Communication: Ability for an admin to send notifications to team members via WhatsApp using an n8n workflow.
+
+E. Admin & Super-Admin Interfaces
+
+Admin Dashboard (/admin):
+
+A settings page to manage all API keys and secrets securely.
+
+Service Configuration: A form to configure the name and duration (in minutes) for each service.
+
+Working Hours & Shifts: A dedicated section to set working days and hours, and to assign team members to specific shifts/turns.
+
+Weighted Fraccionamientos: A form to add, edit, and assign a numeric weight to each "fraccionamiento" (neighborhood) for use in route planning.
+
+Team Member Management:
+
+List View: A table showing all team members, their roles, and status (active/inactive).
+
+Adding Members: A form to add a new member. This process should create a user account and send an invitation.
+
+Editing Members: The ability to update personal details, contact information, and role.
+
+Deactivating Members: When a person leaves the team, the admin should be able to deactivate their account. This will prevent them from logging in or being assigned new shifts, but their historical data will be preserved for audits and reporting.
+
+Tools to trigger report calculations.
+
+Super-Admin Dashboard (/superadmin):
+
+A dedicated page for managing system-level tasks.
+
+Company & Site Management: The super admin can create, edit, and manage Compañías and their associated Sites.
+
+Subscription & Access Management: A new dashboard page to manage subscriptions for all companies.
+
+Functionality: View all companies, their current subscription status, start/end dates, and a tool to manually update a subscription.
+
+Features for system-wide monitoring.
+
+4. Global Requirements
+
+UI/UX: The design must be responsive for mobile, use the provided prototype, and include dark/light mode.
+
+Eye-Catching Validation & Error Handling: All forms must provide clear, immediate, and visually distinct feedback for validation errors.
+
+Localization: Fully translatable (Spanish and English). Default language: Spanish.
+
+Monetary: Default currency: Mexican Pesos (MXN).
+
+Architecture: All data must be isolated by site_id. Leverage Supabase Edge Functions for all heavy-duty computations to offload the server and improve performance.
+
+Cross-Platform Scripting: All Python scripts (e.g., database seeding) must be made cross-platform, allowing for a consistent development experience on both Windows and Unix-like systems. The use of a simple virtual environment activation script is the preferred method.
+
+5. Deliverables
+
+Project Structure: A complete file/directory structure.
+
+Code Examples:
+
+A sample React component with react-big-calendar and Tailwind CSS.
+
+A detailed Supabase Edge Function (e.g., for propose-slots).
+
+Complete SQL Schema: The full SQL script to create all tables.
+
+Database Seeder: A Python script to populate the database with realistic sample data.
+
+Cross-Platform Scripts: A simple set of scripts to initialize and run the Python environment on Windows and Unix.
+
+Setup Guide: Comprehensive instructions for setting up the project, configuring the database, and deploying an Edge Function.
