@@ -113,6 +113,38 @@ export default function Admin() {
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
 
+  // Helper function for room type icons
+  const getRoomTypeIcon = (type: string) => {
+    switch (type) {
+      case 'medical': return '🩺';
+      case 'grooming': return '✂️';
+      case 'vaccination': return '💉';
+      default: return '🏠';
+    }
+  };
+
+  // Helper function for room type colors
+  const getRoomTypeColor = (type: string) => {
+    switch (type) {
+      case 'medical': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'grooming': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'vaccination': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    }
+  };
+
+  // Helper function for department colors
+  const getDepartmentColor = (department: string) => {
+    switch (department) {
+      case 'reception': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'grooming': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'medical': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'admin': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'delivery': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    }
+  };
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

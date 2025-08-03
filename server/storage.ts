@@ -45,6 +45,7 @@ export interface IStorage {
   // Tenant operations
   getTenants(): Promise<Tenant[]>;
   getUserTenants(userId: string): Promise<UserTenant[]>;
+  getTenant(tenantId: string): Promise<Tenant | undefined>;
   createTenant(tenant: InsertTenant): Promise<Tenant>;
   
   // Room operations
@@ -129,6 +130,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userTenants.userId, userId));
     
     return result;
+  }
+
+  async getTenant(tenantId: string): Promise<Tenant | undefined> {
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId));
+    return tenant;
   }
 
   async createTenant(tenant: InsertTenant): Promise<Tenant> {
