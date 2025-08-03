@@ -90,6 +90,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dashboard stats route - Based on real database data
+  app.get('/api/dashboard/stats/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Get real data from database
+      const [appointments, clients, rooms, services, staff] = await Promise.all([
+        storage.getAppointments(tenantId, today),
+        storage.getClients(tenantId),
+        storage.getRooms(tenantId),
+        storage.getServices(tenantId),
+        storage.getStaff(tenantId)
+      ]);
+
+      // Calculate statistics based on real data
+      const groomingAppointments = appointments.filter(apt => apt.type === 'grooming').length;
+      const medicalAppointments = appointments.filter(apt => apt.type === 'medical').length;
+      const vaccinationAppointments = appointments.filter(apt => apt.type === 'vaccination').length;
+      
+      // Calculate today's revenue from appointments
+      const todayRevenue = appointments.reduce((sum, apt) => 
+        sum + (parseFloat(apt.totalCost?.toString() || '0') || 0), 0
+      );
+
+      // Calculate occupancy rate
+      const activeRooms = rooms.filter(room => room.isActive);
+      const occupiedSlots = appointments.length;
+      const totalSlots = activeRooms.reduce((sum, room) => sum + (room.capacity || 1), 0) * 8; // 8 hours per day
+      const occupancyRate = totalSlots > 0 ? Math.round((occupiedSlots / totalSlots) * 100) : 0;
+
+      const stats = {
+        appointmentsToday: appointments.length,
+        groomingAppointments,
+        medicalAppointments,
+        vaccinationAppointments,
+        totalClients: clients.length,
+        totalRevenue: todayRevenue,
+        occupancyRate,
+        activeRooms: activeRooms.length,
+        totalServices: services.filter(s => s.isActive).length,
+        teamMembers: staff.filter(s => s.isActive).length,
+        roomsInUse: Math.min(appointments.length, activeRooms.length)
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error calculating stats:", error);
+      // Return basic structure with zeros if there's an error
+      res.json({
+        appointmentsToday: 0,
+        groomingAppointments: 0,
+        medicalAppointments: 0,
+        vaccinationAppointments: 0,
+        totalClients: 0,
+        totalRevenue: 0,
+        occupancyRate: 0,
+        activeRooms: 0,
+        totalServices: 0,
+        teamMembers: 0,
+        roomsInUse: 0
+      });
+    }
+  });
+
   // Admin routes - Rooms
   app.get('/api/admin/rooms/:tenantId', isAuthenticated, async (req, res) => {
     try {
@@ -222,6 +287,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting role:", error);
       res.status(500).json({ message: "Failed to delete role" });
+    }
+  });
+
+  // Admin routes for rooms, services, and roles
+  app.get('/api/admin/rooms/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const rooms = await storage.getRooms(tenantId);
+      res.json(rooms);
+    } catch (error) {
+      console.error("Error fetching admin rooms:", error);
+      res.status(500).json({ message: "Failed to fetch rooms" });
+    }
+  });
+
+  app.post('/api/admin/rooms/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const roomData = { ...req.body, tenantId };
+      const newRoom = await storage.createRoom(roomData);
+      res.json(newRoom);
+    } catch (error) {
+      console.error("Error creating room:", error);
+      res.status(500).json({ message: "Failed to create room" });
+    }
+  });
+
+  app.delete('/api/admin/rooms/:roomId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { roomId } = req.params;
+      await storage.deleteRoom(roomId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting room:", error);
+      res.status(500).json({ message: "Failed to delete room" });
+    }
+  });
+
+  app.get('/api/admin/services/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const services = await storage.getServices(tenantId);
+      res.json(services);
+    } catch (error) {
+      console.error("Error fetching admin services:", error);
+      res.status(500).json({ message: "Failed to fetch services" });
+    }
+  });
+
+  app.post('/api/admin/services/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const serviceData = { ...req.body, tenantId };
+      const newService = await storage.createService(serviceData);
+      res.json(newService);
+    } catch (error) {
+      console.error("Error creating service:", error);
+      res.status(500).json({ message: "Failed to create service" });
+    }
+  });
+
+  app.delete('/api/admin/services/:serviceId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { serviceId } = req.params;
+      await storage.deleteService(serviceId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      res.status(500).json({ message: "Failed to delete service" });
+    }
+  });
+
+  app.get('/api/admin/roles', isAuthenticated, async (req: any, res) => {
+    try {
+      const roles = await storage.getRoles();
+      res.json(roles);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      res.status(500).json({ message: "Failed to fetch roles" });
     }
   });
 

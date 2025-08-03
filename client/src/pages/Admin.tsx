@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
@@ -35,67 +36,33 @@ export default function Admin() {
   const { isAuthenticated, isLoading } = useAuth();
   const { currentTenant, isLoading: tenantLoading } = useTenant();
   
-  // State for room management
-  const [rooms, setRooms] = useState([
-    { id: 'r1', name: 'Consulta 1', type: 'medical', capacity: 1, isActive: true },
-    { id: 'r2', name: 'Consulta 2', type: 'medical', capacity: 1, isActive: true },
-    { id: 'r3', name: 'Estética 1', type: 'grooming', capacity: 2, isActive: true },
-    { id: 'r4', name: 'Estética 2', type: 'grooming', capacity: 1, isActive: false },
-    { id: 'r5', name: 'Vacunación', type: 'vaccination', capacity: 3, isActive: true },
-  ]);
+  // Data from database
+  const [rooms, setRooms] = useState([]);
+  const [services, setServices] = useState([]);
+  
+  // Fetch data from database
+  const { data: roomsData, isLoading: roomsLoading } = useQuery({
+    queryKey: [`/api/admin/rooms/${currentTenant?.id}`],
+    enabled: !!currentTenant?.id,
+  });
 
-  // State for services configuration
-  const [services, setServices] = useState([
-    { id: 's1', name: 'Consulta General', type: 'medical', duration: 60, price: 350 },
-    { id: 's2', name: 'Baño Completo', type: 'grooming', duration: 90, price: 250 },
-    { id: 's3', name: 'Corte de Uñas', type: 'grooming', duration: 15, price: 50 },
-    { id: 's4', name: 'Vacuna Múltiple', type: 'vaccination', duration: 30, price: 400 },
-    { id: 's5', name: 'Desparasitación', type: 'medical', duration: 20, price: 180 },
-  ]);
+  const { data: servicesData, isLoading: servicesLoading } = useQuery({
+    queryKey: [`/api/admin/services/${currentTenant?.id}`],
+    enabled: !!currentTenant?.id,
+  });
 
-  // State for roles and permissions
-  const [roles, setRoles] = useState([
-    { 
-      id: 'role1', 
-      name: 'recepcion', 
-      displayName: 'Recepción', 
-      department: 'reception',
-      permissions: ['view_appointments', 'create_appointments', 'manage_clients'],
-      assignedUsers: ['user1', 'user2']
-    },
-    { 
-      id: 'role2', 
-      name: 'grooming', 
-      displayName: 'Estética', 
-      department: 'grooming',
-      permissions: ['view_appointments', 'update_grooming_status', 'upload_photos'],
-      assignedUsers: ['user3', 'user4']
-    },
-    { 
-      id: 'role3', 
-      name: 'medical', 
-      displayName: 'Médico', 
-      department: 'medical',
-      permissions: ['view_appointments', 'medical_records', 'prescriptions'],
-      assignedUsers: ['user5']
-    },
-    { 
-      id: 'role4', 
-      name: 'admin', 
-      displayName: 'Administrador', 
-      department: 'admin',
-      permissions: ['all_permissions'],
-      assignedUsers: ['user6']
-    },
-    { 
-      id: 'role5', 
-      name: 'autoentregas', 
-      displayName: 'Entregas', 
-      department: 'delivery',
-      permissions: ['view_delivery_routes', 'update_delivery_status'],
-      assignedUsers: ['user7']
-    }
-  ]);
+  const { data: rolesData, isLoading: rolesLoading } = useQuery({
+    queryKey: [`/api/admin/roles`],
+  });
+
+  useEffect(() => {
+    if (roomsData) setRooms(roomsData);
+    if (servicesData) setServices(servicesData);
+    if (rolesData) setRoles(rolesData);
+  }, [roomsData, servicesData, rolesData]);
+
+  // State for roles (loaded from database)
+  const [roles, setRoles] = useState([]);
 
   // State for users
   const [users, setUsers] = useState([
@@ -246,35 +213,64 @@ export default function Admin() {
   };
 
   // Handle create new room
-  const handleCreateRoom = () => {
-    const newRoom = {
-      id: `room-${Date.now()}`,
-      name: newRoomData.name,
-      type: newRoomData.type,
-      capacity: newRoomData.capacity,
-      location: newRoomData.location,
-      equipment: newRoomData.equipment ? newRoomData.equipment.split(',').map(e => e.trim()) : [],
-      isActive: true
-    };
+  const handleCreateRoom = async () => {
+    try {
+      const roomData = {
+        name: newRoomData.name,
+        type: newRoomData.type,
+        capacity: newRoomData.capacity,
+        equipment: newRoomData.equipment ? newRoomData.equipment.split(',').map(e => e.trim()) : [],
+        isActive: true
+      };
 
-    setRooms(prev => [...prev, newRoom]);
-    setNewRoomData({ name: '', type: 'medical', capacity: 1, location: '', equipment: '' });
-    setIsRoomDialogOpen(false);
-    
-    toast({
-      title: "Sala creada",
-      description: `La sala ${newRoom.name} ha sido creada exitosamente`,
-    });
+      const response = await fetch(`/api/admin/rooms/${currentTenant.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(roomData)
+      });
+
+      if (!response.ok) throw new Error('Failed to create room');
+      
+      const newRoom = await response.json();
+      setRooms(prev => [...prev, newRoom]);
+      setNewRoomData({ name: '', type: 'medical', capacity: 1, location: '', equipment: '' });
+      setIsRoomDialogOpen(false);
+      
+      toast({
+        title: "Sala creada",
+        description: `La sala ${newRoom.name} ha sido creada exitosamente`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo crear la sala",
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle delete room
-  const handleDeleteRoom = (roomId, roomName) => {
-    setRooms(prev => prev.filter(room => room.id !== roomId));
-    toast({
-      title: "Sala eliminada",
-      description: `La sala ${roomName} ha sido eliminada del sistema`,
-      variant: "destructive",
-    });
+  const handleDeleteRoom = async (roomId, roomName) => {
+    try {
+      const response = await fetch(`/api/admin/rooms/${roomId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Failed to delete room');
+      
+      setRooms(prev => prev.filter(room => room.id !== roomId));
+      toast({
+        title: "Sala eliminada",
+        description: `La sala ${roomName} ha sido eliminada del sistema`,
+        variant: "destructive",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la sala",
+        variant: "destructive",
+      });
+    }
   };
 
   // Helper function for room type icons
