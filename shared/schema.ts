@@ -71,7 +71,7 @@ export const roles = pgTable("roles", {
   name: varchar("name").notNull(), // recepcion, grooming, medical, admin, autoentregas
   displayName: varchar("display_name").notNull(),
   description: text("description"),
-  permissions: jsonb("permissions").notNull(), // array of permissions like ['view_appointments', 'manage_clients']
+  permissions: varchar("permissions").array().notNull(), // array of permissions like ['view_appointments', 'manage_clients']
   department: varchar("department").notNull(), // reception, grooming, medical, admin, delivery
   createdAt: timestamp("created_at").defaultNow(),
 });
