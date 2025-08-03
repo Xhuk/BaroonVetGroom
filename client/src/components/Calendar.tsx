@@ -65,11 +65,11 @@ export function Calendar({ className }: CalendarProps) {
 
   const getAppointmentStyle = (appointment: Appointment) => {
     const typeStyles = {
-      grooming: "bg-green-500",
-      medical: "bg-blue-500", 
-      vaccination: "bg-purple-500",
+      grooming: "bg-green-200 text-green-800 border border-green-300",
+      medical: "bg-blue-200 text-blue-800 border border-blue-300", 
+      vaccination: "bg-purple-200 text-purple-800 border border-purple-300",
     };
-    return typeStyles[appointment.type as keyof typeof typeStyles] || "bg-gray-500";
+    return typeStyles[appointment.type as keyof typeof typeStyles] || "bg-gray-200 text-gray-800 border border-gray-300";
   };
 
   const getAppointmentsForSlot = (date: Date, timeSlot: string) => {
@@ -122,7 +122,7 @@ export function Calendar({ className }: CalendarProps) {
 
   return (
     <Card className={cn("h-full", className)}>
-      <CardHeader className="bg-blue-600 text-white p-4">
+      <CardHeader className="bg-blue-100 text-blue-800 p-4 border-b border-blue-200">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">
             Calendario de Citas - Semana del {weekDates[0].getDate()} al {weekDates[6].getDate()} de {monthNames[weekDates[0].getMonth()]} {weekDates[0].getFullYear()}
@@ -131,16 +131,16 @@ export function Calendar({ className }: CalendarProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:text-blue-200"
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               onClick={() => navigateWeek('prev')}
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="text-sm">Vista Semanal</span>
+            <span className="text-sm font-medium">Vista Semanal</span>
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:text-blue-200"
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               onClick={() => navigateWeek('next')}
             >
               <ChevronRight className="w-4 h-4" />
@@ -152,16 +152,16 @@ export function Calendar({ className }: CalendarProps) {
       <CardContent className="p-0">
         <div className="calendar-grid bg-white relative" style={{ height: "600px", overflow: "auto" }}>
           {/* Header row */}
-          <div className="grid grid-cols-8 sticky top-0 bg-white z-10 border-b-2 border-blue-600">
-            <div className="bg-gray-100 border-r border-gray-200 h-10"></div>
+          <div className="grid grid-cols-8 sticky top-0 bg-white z-10 border-b-2 border-blue-200">
+            <div className="bg-blue-50 border-r border-blue-200 h-10"></div>
             {weekDates.map((date, index) => {
               const isToday = date.toDateString() === new Date().toDateString();
               return (
                 <div
                   key={index}
                   className={cn(
-                    "border-r border-gray-200 h-10 flex items-center justify-center font-medium",
-                    isToday ? "bg-blue-50 text-blue-600" : "bg-gray-50"
+                    "border-r border-blue-200 h-10 flex items-center justify-center font-medium",
+                    isToday ? "bg-blue-100 text-blue-700" : "bg-blue-50 text-blue-600"
                   )}
                 >
                   {dayNames[index]} {date.getDate()}
@@ -175,7 +175,7 @@ export function Calendar({ className }: CalendarProps) {
             {timeSlots.map((timeSlot, timeIndex) => (
               <div key={timeSlot} className="contents">
                 {/* Time label */}
-                <div className="bg-gray-50 border-r border-b border-gray-200 flex items-center justify-center text-xs text-gray-500">
+                <div className="bg-blue-50 border-r border-b border-blue-200 flex items-center justify-center text-xs text-blue-600 font-medium">
                   {timeSlot}
                 </div>
                 
@@ -188,7 +188,7 @@ export function Calendar({ className }: CalendarProps) {
                     <div
                       key={`${timeIndex}-${dayIndex}`}
                       className={cn(
-                        "border-r border-b border-gray-200 relative cursor-pointer hover:bg-gray-50",
+                        "border-r border-b border-blue-200 relative cursor-pointer hover:bg-blue-25",
                         isToday ? "bg-blue-25" : "bg-white"
                       )}
                     >
@@ -196,7 +196,7 @@ export function Calendar({ className }: CalendarProps) {
                         <div
                           key={appointment.id}
                           className={cn(
-                            "absolute left-1 right-1 rounded text-white text-xs p-1 overflow-hidden",
+                            "absolute left-1 right-1 rounded text-xs p-1 overflow-hidden shadow-sm",
                             getAppointmentStyle(appointment)
                           )}
                           style={{
@@ -224,7 +224,7 @@ export function Calendar({ className }: CalendarProps) {
           {/* Current time line */}
           {currentTimeLine.show && (
             <div
-              className="absolute left-0 right-0 h-0.5 bg-red-500 z-10 pointer-events-none"
+              className="absolute left-0 right-0 h-0.5 bg-rose-300 z-10 pointer-events-none shadow-sm"
               style={{ top: currentTimeLine.top }}
             />
           )}
