@@ -116,9 +116,9 @@ export function Calendar({ className }: CalendarProps) {
       </CardHeader>
       
       <CardContent className="p-0">
-        <div className="calendar-grid bg-white dark:bg-slate-900 relative" style={{ height: "600px", overflow: "auto" }}>
+        <div className="calendar-grid bg-white dark:bg-slate-900 relative w-full" style={{ height: "600px", overflow: "auto" }}>
           {/* Header row */}
-          <div className="grid grid-cols-2 sticky top-0 bg-white dark:bg-slate-900 z-10 border-b-2 border-blue-200 dark:border-slate-600">
+          <div className="grid w-full sticky top-0 bg-white dark:bg-slate-900 z-10 border-b-2 border-blue-200 dark:border-slate-600" style={{ gridTemplateColumns: "80px 1fr" }}>
             <div className="bg-blue-50 dark:bg-slate-800 border-r border-blue-200 dark:border-slate-600 h-10 flex items-center justify-center font-medium text-blue-600 dark:text-slate-300">
               Hora
             </div>
@@ -128,7 +128,7 @@ export function Calendar({ className }: CalendarProps) {
           </div>
 
           {/* Time slots and calendar cells */}
-          <div className="grid grid-cols-2" style={{ gridTemplateRows: `repeat(${timeSlots.length}, 60px)` }}>
+          <div className="grid w-full" style={{ gridTemplateColumns: "80px 1fr", gridTemplateRows: `repeat(${timeSlots.length}, 60px)` }}>
             {timeSlots.map((timeSlot, timeIndex) => (
               <div key={timeSlot} className="contents">
                 {/* Time label */}
@@ -137,7 +137,7 @@ export function Calendar({ className }: CalendarProps) {
                 </div>
                 
                 {/* Day cell */}
-                <div className="border-r border-b border-blue-200 dark:border-slate-600 relative cursor-pointer hover:bg-blue-25 dark:hover:bg-slate-800 bg-blue-25 dark:bg-slate-900">
+                <div className="border-r border-b border-blue-200 dark:border-slate-600 relative cursor-pointer hover:bg-blue-25 dark:hover:bg-slate-800 bg-blue-25 dark:bg-slate-900 w-full">
                   {getAppointmentsForSlot(timeSlot).map((appointment: Appointment, aptIndex: number) => (
                     <div
                       key={appointment.id}
