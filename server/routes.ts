@@ -78,6 +78,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/staff', isAuthenticated, async (req: any, res) => {
+    try {
+      const staffData = req.body;
+      const newStaff = await storage.createStaff(staffData);
+      res.json(newStaff);
+    } catch (error) {
+      console.error("Error creating staff:", error);
+      res.status(500).json({ message: "Failed to create staff member" });
+    }
+  });
+
+  app.delete('/api/staff/:staffId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { staffId } = req.params;
+      await storage.deleteStaff(staffId);
+      res.json({ message: "Staff member deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting staff:", error);
+      res.status(500).json({ message: "Failed to delete staff member" });
+    }
+  });
+
   app.get('/api/appointments/:tenantId', isAuthenticated, async (req: any, res) => {
     try {
       const { tenantId } = req.params;

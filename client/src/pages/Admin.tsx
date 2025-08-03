@@ -57,6 +57,7 @@ export default function Admin() {
   // Data from database
   const [rooms, setRooms] = useState([]);
   const [services, setServices] = useState([]);
+  const [staff, setStaff] = useState([]);
   
   // Fetch data from database
   const { data: roomsData, isLoading: roomsLoading } = useQuery({
@@ -73,11 +74,17 @@ export default function Admin() {
     queryKey: ['/api', 'admin', 'roles'],
   });
 
+  const { data: staffData, isLoading: staffLoading } = useQuery({
+    queryKey: ['/api', 'staff', currentTenant?.id].filter(Boolean),
+    enabled: !!currentTenant?.id,
+  });
+
   useEffect(() => {
     if (roomsData) setRooms(roomsData);
     if (servicesData) setServices(servicesData);
     if (rolesData) setRoles(rolesData);
-  }, [roomsData, servicesData, rolesData]);
+    if (staffData) setStaff(staffData);
+  }, [roomsData, servicesData, rolesData, staffData]);
 
   // State for roles (loaded from database)
   const [roles, setRoles] = useState([]);
@@ -97,6 +104,7 @@ export default function Admin() {
   const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isStaffDialogOpen, setIsStaffDialogOpen] = useState(false);
   
   // Edit states
   const [editingService, setEditingService] = useState(null);
@@ -205,6 +213,71 @@ export default function Admin() {
     },
   });
 
+  // Create staff mutation
+  const createStaffMutation = useMutation({
+    mutationFn: async (data) => {
+      return apiRequest('POST', '/api/staff', { ...data, tenantId: currentTenant?.id });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Miembro del equipo creado",
+        description: "El miembro del equipo ha sido creado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api', 'staff', currentTenant?.id] });
+      setIsStaffDialogOpen(false);
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para crear miembros del equipo",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo crear el miembro del equipo",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete staff mutation
+  const deleteStaffMutation = useMutation({
+    mutationFn: async (staffId: string) => {
+      return apiRequest('DELETE', `/api/staff/${staffId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Miembro del equipo eliminado",
+        description: "El miembro del equipo ha sido eliminado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api', 'staff', currentTenant?.id] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para eliminar miembros del equipo",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo eliminar el miembro del equipo",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle create role
   const handleCreateRole = (e) => {
     e.preventDefault();
@@ -228,6 +301,37 @@ export default function Admin() {
     }
 
     createRoleMutation.mutate(data);
+  };
+
+  // Handle create staff
+  const handleCreateStaff = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    const data = {
+      name: formData.get('name'),
+      role: formData.get('role'),
+      specialization: formData.get('specialization') || null,
+      isActive: true
+    };
+
+    if (!data.name || !data.role) {
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los campos requeridos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createStaffMutation.mutate(data);
+  };
+
+  // Handle delete staff
+  const handleDeleteStaff = (staffId: string, staffName: string) => {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar a "${staffName}" del equipo?`)) {
+      deleteStaffMutation.mutate(staffId);
+    }
   };
 
   // Handle delete role
@@ -473,7 +577,7 @@ export default function Admin() {
           </div>
 
           <Tabs defaultValue="rooms" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="rooms" className="flex items-center gap-2">
                 <DoorOpen className="w-4 h-4" />
                 Salas
@@ -481,6 +585,10 @@ export default function Admin() {
               <TabsTrigger value="roles" className="flex items-center gap-2">
                 <Shield className="w-4 h-4" />
                 Roles
+              </TabsTrigger>
+              <TabsTrigger value="staff" className="flex items-center gap-2">
+                <UserCheck className="w-4 h-4" />
+                Equipo
               </TabsTrigger>
               <TabsTrigger value="services" className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
@@ -617,6 +725,121 @@ export default function Admin() {
                             size="sm" 
                             className="text-red-600 hover:text-red-700"
                             onClick={() => handleDeleteRoom(room.id, room.name)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Staff Management Tab */}
+            <TabsContent value="staff" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Equipo</h2>
+                <Dialog open={isStaffDialogOpen} onOpenChange={setIsStaffDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Nuevo Miembro
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Agregar Nuevo Miembro del Equipo</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleCreateStaff} className="space-y-4">
+                      <div>
+                        <Label htmlFor="name" className="text-sm font-medium">Nombre Completo *</Label>
+                        <Input 
+                          name="name"
+                          placeholder="Ej: Dr. Ana García" 
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="role" className="text-sm font-medium">Cargo *</Label>
+                        <Select name="role" required>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar cargo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="veterinarian">Veterinario/a</SelectItem>
+                            <SelectItem value="groomer">Estilista</SelectItem>
+                            <SelectItem value="technician">Técnico/a</SelectItem>
+                            <SelectItem value="receptionist">Recepcionista</SelectItem>
+                            <SelectItem value="assistant">Asistente</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="specialization" className="text-sm font-medium">Especialización</Label>
+                        <Input 
+                          name="specialization"
+                          placeholder="Ej: Medicina Interna, Cirugía, etc." 
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={createStaffMutation.isPending}>
+                        {createStaffMutation.isPending ? 'Creando...' : 'Crear Miembro'}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {(staff || []).map((member) => (
+                  <Card key={member.id} className="relative">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-blue-600 dark:text-blue-300">
+                              {member.name.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg">{member.name}</CardTitle>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{member.role}</p>
+                          </div>
+                        </div>
+                        <Badge variant={member.isActive ? "default" : "secondary"}>
+                          {member.isActive ? (
+                            <>
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Activo
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Inactivo
+                            </>
+                          )}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {member.specialization && (
+                          <div className="text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">Especialización: </span>
+                            <span className="font-medium">{member.specialization}</span>
+                          </div>
+                        )}
+                        <div className="flex gap-2 mt-4">
+                          <Button variant="outline" size="sm" className="flex-1">
+                            <Edit className="w-3 h-3 mr-1" />
+                            Editar
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDeleteStaff(member.id, member.name)}
+                            disabled={deleteStaffMutation.isPending}
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>

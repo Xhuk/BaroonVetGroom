@@ -60,6 +60,8 @@ export interface IStorage {
   // Staff operations
   getStaff(tenantId: string): Promise<Staff[]>;
   createStaff(staff: InsertStaff): Promise<Staff>;
+  updateStaff(staffId: string, staff: Partial<InsertStaff>): Promise<Staff>;
+  deleteStaff(staffId: string): Promise<void>;
   
   // Client operations
   getClients(tenantId: string): Promise<Client[]>;
@@ -185,6 +187,19 @@ export class DatabaseStorage implements IStorage {
   async createStaff(staffMember: InsertStaff): Promise<Staff> {
     const [newStaff] = await db.insert(staff).values(staffMember).returning();
     return newStaff;
+  }
+
+  async updateStaff(staffId: string, staffData: Partial<InsertStaff>): Promise<Staff> {
+    const [updatedStaff] = await db
+      .update(staff)
+      .set(staffData)
+      .where(eq(staff.id, staffId))
+      .returning();
+    return updatedStaff;
+  }
+
+  async deleteStaff(staffId: string): Promise<void> {
+    await db.delete(staff).where(eq(staff.id, staffId));
   }
 
   // Client operations
