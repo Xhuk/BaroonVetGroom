@@ -34,6 +34,21 @@ import {
   XCircle
 } from "lucide-react";
 
+// Helper function to get room type icons
+function getRoomTypeIcon(type: string) {
+  switch (type) {
+    case 'medical':
+      return '🏥';
+    case 'grooming':
+      return '✂️';
+    case 'vaccination':
+      return '💉';
+    default:
+      return '🏠';
+  }
+}
+
+
 export default function Admin() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
