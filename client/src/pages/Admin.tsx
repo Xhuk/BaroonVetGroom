@@ -133,6 +133,15 @@ export default function Admin() {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [availableRoles, setAvailableRoles] = useState([]);
+  
+  // New room data
+  const [newRoomData, setNewRoomData] = useState({
+    name: '',
+    type: 'medical',
+    capacity: 1,
+    location: '',
+    equipment: ''
+  });
 
   // Handle edit service
   const handleEditService = (service) => {
@@ -234,6 +243,28 @@ export default function Admin() {
         description: `${selectedUser.name} ha sido asignado al rol ${newRoleName}`,
       });
     }
+  };
+
+  // Handle create new room
+  const handleCreateRoom = () => {
+    const newRoom = {
+      id: `room-${Date.now()}`,
+      name: newRoomData.name,
+      type: newRoomData.type,
+      capacity: newRoomData.capacity,
+      location: newRoomData.location,
+      equipment: newRoomData.equipment ? newRoomData.equipment.split(',').map(e => e.trim()) : [],
+      isActive: true
+    };
+
+    setRooms(prev => [...prev, newRoom]);
+    setNewRoomData({ name: '', type: 'medical', capacity: 1, location: '', equipment: '' });
+    setIsRoomDialogOpen(false);
+    
+    toast({
+      title: "Sala creada",
+      description: `La sala ${newRoom.name} ha sido creada exitosamente`,
+    });
   };
 
   // Helper function for room type icons
@@ -345,11 +376,18 @@ export default function Admin() {
                     <div className="space-y-4">
                       <div>
                         <Label>Nombre de la Sala</Label>
-                        <Input placeholder="Ej: Consulta 3" />
+                        <Input 
+                          value={newRoomData.name}
+                          onChange={(e) => setNewRoomData(prev => ({...prev, name: e.target.value}))}
+                          placeholder="Ej: Consulta 3" 
+                        />
                       </div>
                       <div>
                         <Label>Tipo de Sala</Label>
-                        <Select>
+                        <Select 
+                          value={newRoomData.type}
+                          onValueChange={(value) => setNewRoomData(prev => ({...prev, type: value}))}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Seleccionar tipo" />
                           </SelectTrigger>
@@ -362,9 +400,36 @@ export default function Admin() {
                       </div>
                       <div>
                         <Label>Capacidad</Label>
-                        <Input type="number" placeholder="1" />
+                        <Input 
+                          type="number" 
+                          value={newRoomData.capacity}
+                          onChange={(e) => setNewRoomData(prev => ({...prev, capacity: parseInt(e.target.value) || 1}))}
+                          placeholder="1" 
+                        />
                       </div>
-                      <Button className="w-full">Crear Sala</Button>
+                      <div>
+                        <Label>Ubicación (Opcional)</Label>
+                        <Input 
+                          value={newRoomData.location}
+                          onChange={(e) => setNewRoomData(prev => ({...prev, location: e.target.value}))}
+                          placeholder="Ej: Planta Baja, Ala Sur" 
+                        />
+                      </div>
+                      <div>
+                        <Label>Equipamiento (Opcional)</Label>
+                        <Input 
+                          value={newRoomData.equipment}
+                          onChange={(e) => setNewRoomData(prev => ({...prev, equipment: e.target.value}))}
+                          placeholder="Ej: Mesa quirúrgica, Lámpara LED, Monitor" 
+                        />
+                      </div>
+                      <Button 
+                        className="w-full"
+                        onClick={handleCreateRoom}
+                        disabled={!newRoomData.name.trim()}
+                      >
+                        Crear Sala
+                      </Button>
                     </div>
                   </DialogContent>
                 </Dialog>
