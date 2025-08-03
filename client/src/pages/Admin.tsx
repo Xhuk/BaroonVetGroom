@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   Building2, 
   Users, 
@@ -101,6 +103,12 @@ export default function Admin() {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [availableRoles, setAvailableRoles] = useState([]);
+  const [newRoleData, setNewRoleData] = useState({
+    name: '',
+    displayName: '',
+    department: '',
+    description: ''
+  });
   
   // New room data
   const [newRoomData, setNewRoomData] = useState({
@@ -110,6 +118,73 @@ export default function Admin() {
     location: '',
     equipment: ''
   });
+
+  // API Mutations
+  const createRoleMutation = useMutation({
+    mutationFn: async (data) => {
+      return apiRequest('/api/admin/roles', {
+        method: 'POST',
+        body: JSON.stringify({ ...data, tenantId: currentTenant?.id }),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Rol creado",
+        description: "El nuevo rol se ha creado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/roles'] });
+      setIsRoleDialogOpen(false);
+      setNewRoleData({
+        name: '',
+        displayName: '',
+        department: '',
+        description: ''
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para crear roles",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo crear el rol",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle create role
+  const handleCreateRole = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    const data = {
+      name: formData.get('name'),
+      displayName: formData.get('displayName'),
+      department: formData.get('department'),
+      description: formData.get('description'),
+      permissions: JSON.stringify([]) // Default empty permissions array
+    };
+
+    if (!data.name || !data.displayName || !data.department) {
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los campos requeridos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createRoleMutation.mutate(data);
+  };
 
   // Handle edit service
   const handleEditService = (service) => {
@@ -517,20 +592,36 @@ export default function Admin() {
                     <DialogHeader>
                       <DialogTitle>Crear Nuevo Rol</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <form onSubmit={handleCreateRole} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>Nombre del Rol</Label>
-                          <Input placeholder="Ej: supervisor" />
+                          <Label htmlFor="name" className="text-sm font-medium">Nombre del Rol *</Label>
+                          <Input 
+                            name="name"
+                            placeholder="Ej: supervisor" 
+                            required
+                            value={newRoleData.name}
+                            onChange={(e) => setNewRoleData(prev => ({ ...prev, name: e.target.value }))}
+                          />
                         </div>
                         <div>
-                          <Label>Nombre para Mostrar</Label>
-                          <Input placeholder="Ej: Supervisor" />
+                          <Label htmlFor="displayName" className="text-sm font-medium">Nombre para Mostrar *</Label>
+                          <Input 
+                            name="displayName"
+                            placeholder="Ej: Supervisor" 
+                            required
+                            value={newRoleData.displayName}
+                            onChange={(e) => setNewRoleData(prev => ({ ...prev, displayName: e.target.value }))}
+                          />
                         </div>
                       </div>
                       <div>
-                        <Label>Departamento</Label>
-                        <Select>
+                        <Label htmlFor="department" className="text-sm font-medium">Departamento *</Label>
+                        <Select 
+                          name="department" 
+                          value={newRoleData.department}
+                          onValueChange={(value) => setNewRoleData(prev => ({ ...prev, department: value }))}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Seleccionar departamento" />
                           </SelectTrigger>
@@ -543,8 +634,23 @@ export default function Admin() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <Button className="w-full">Crear Rol</Button>
-                    </div>
+                      <div>
+                        <Label htmlFor="description" className="text-sm font-medium">Descripción</Label>
+                        <Textarea 
+                          name="description"
+                          placeholder="Describe las responsabilidades de este rol"
+                          value={newRoleData.description}
+                          onChange={(e) => setNewRoleData(prev => ({ ...prev, description: e.target.value }))}
+                        />
+                      </div>
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={createRoleMutation.isPending}
+                      >
+                        {createRoleMutation.isPending ? "Creando..." : "Crear Rol"}
+                      </Button>
+                    </form>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -553,7 +659,7 @@ export default function Admin() {
                 {/* Roles List */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Roles Disponibles</h3>
-                  {roles.map((role) => (
+                  {(roles || []).map((role) => (
                     <Card key={role.id} className="p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -570,11 +676,11 @@ export default function Admin() {
                       <div className="space-y-2">
                         <div className="text-sm">
                           <span className="text-gray-600 dark:text-gray-400">Permisos: </span>
-                          <span className="font-medium">{role.permissions.length}</span>
+                          <span className="font-medium">{Array.isArray(role.permissions) ? role.permissions.length : 0}</span>
                         </div>
                         <div className="text-sm">
                           <span className="text-gray-600 dark:text-gray-400">Usuarios asignados: </span>
-                          <span className="font-medium">{role.assignedUsers.length}</span>
+                          <span className="font-medium">{(users || []).filter(u => u.currentRole === role.name).length}</span>
                         </div>
                         <div className="flex gap-2 mt-3">
                           <Button 
@@ -773,7 +879,7 @@ export default function Admin() {
                                       {role.displayName}
                                     </div>
                                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                                      {role.department} • {role.permissions.length} permisos
+                                      {role.department} • {Array.isArray(role.permissions) ? role.permissions.length : 0} permisos
                                     </div>
                                   </div>
                                   <Badge className={getDepartmentColor(role.department)}>
@@ -968,9 +1074,9 @@ export default function Admin() {
                     <Building2 className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{rooms.filter(r => r.isActive).length}</div>
+                    <div className="text-2xl font-bold">{(rooms || []).filter(r => r.isActive).length}</div>
                     <p className="text-xs text-muted-foreground">
-                      de {rooms.length} totales
+                      de {(rooms || []).length} totales
                     </p>
                   </CardContent>
                 </Card>
@@ -981,9 +1087,9 @@ export default function Admin() {
                     <Users className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{users.length}</div>
+                    <div className="text-2xl font-bold">{(users || []).length}</div>
                     <p className="text-xs text-muted-foreground">
-                      {roles.length} roles configurados
+                      {(roles || []).length} roles configurados
                     </p>
                   </CardContent>
                 </Card>
@@ -994,9 +1100,9 @@ export default function Admin() {
                     <BarChart3 className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{services.length}</div>
+                    <div className="text-2xl font-bold">{(services || []).length}</div>
                     <p className="text-xs text-muted-foreground">
-                      Duración promedio: {Math.round(services.reduce((acc, s) => acc + s.duration, 0) / services.length)} min
+                      Duración promedio: {(services && services.length > 0) ? Math.round(services.reduce((acc, s) => acc + s.duration, 0) / services.length) : 0} min
                     </p>
                   </CardContent>
                 </Card>
@@ -1007,7 +1113,7 @@ export default function Admin() {
                     <Settings className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">${Math.round(services.reduce((acc, s) => acc + s.price, 0) / services.length)}</div>
+                    <div className="text-2xl font-bold">${(services && services.length > 0) ? Math.round(services.reduce((acc, s) => acc + s.price, 0) / services.length) : 0}</div>
                     <p className="text-xs text-muted-foreground">
                       MXN por servicio
                     </p>
@@ -1023,8 +1129,8 @@ export default function Admin() {
                 <CardContent>
                   <div className="space-y-4">
                     {['medical', 'grooming', 'vaccination'].map((type) => {
-                      const typeRooms = rooms.filter(r => r.type === type);
-                      const percentage = Math.round((typeRooms.length / rooms.length) * 100);
+                      const typeRooms = (rooms || []).filter(r => r.type === type);
+                      const percentage = (rooms && rooms.length > 0) ? Math.round((typeRooms.length / rooms.length) * 100) : 0;
                       return (
                         <div key={type} className="flex items-center gap-4">
                           <div className="flex items-center gap-2 w-32">
@@ -1062,7 +1168,7 @@ export default function Admin() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {roles.map((role) => (
+                    {(roles || []).map((role) => (
                       <div key={role.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center gap-3">
                           <Badge className={getDepartmentColor(role.department)}>
@@ -1074,13 +1180,13 @@ export default function Admin() {
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-sm font-medium">
-                            {role.assignedUsers.length} usuarios
+                            {(users || []).filter(u => u.currentRole === role.name).length} usuarios
                           </span>
                           <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                             <div 
                               className="h-2 bg-blue-500 rounded-full"
                               style={{ 
-                                width: `${Math.round((role.assignedUsers.length / users.length) * 100)}%` 
+                                width: `${users && users.length > 0 ? Math.round(((users || []).filter(u => u.currentRole === role.name).length / users.length) * 100) : 0}%` 
                               }}
                             />
                           </div>
