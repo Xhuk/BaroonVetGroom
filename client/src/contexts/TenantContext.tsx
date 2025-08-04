@@ -81,7 +81,6 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     if (userTenants.length > 0 && !currentTenant && !debugMode) {
       // console.log('Loading regular tenant assignments for user');
       // Fetch full tenant data for all user tenants
-      // Fetch full tenant data for all user tenants
       Promise.all(
         userTenants.map(ut => 
           fetch(`/api/tenants/${ut.tenantId}`)

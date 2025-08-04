@@ -2,7 +2,7 @@
 
 VetGroom is a comprehensive SaaS platform designed for veterinary clinics that provides multi-tenant functionality for managing veterinary operations including appointments, grooming services, medical visits, inventory, and delivery logistics. The application features a modern web interface built with React and TypeScript, backed by a Node.js/Express server with PostgreSQL database integration.
 
-## Recent Changes (January 2025)
+## Recent Changes (August 2025)
 - **Smart Breed Caching**: Implemented intelligent pet breed filtering with browser memory caching to reduce database calls
 - **Enhanced Map Markers**: Fixed customer location markers to appear precisely at right-click position without repositioning
 - **Dynamic Pet Forms**: Breed dropdown now automatically filters based on selected species with comprehensive database integration
@@ -44,6 +44,9 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Endpoint Route Ordering**: Fixed API route precedence to prevent tenant-specific middleware from blocking system admin endpoints
 - **Comprehensive Error System**: Implemented automatic debug info copying with red error popups that instantly copy full debug context to clipboard
 - **Enhanced Error Toast**: All error messages now automatically copy complete debugging information including stack traces, user context, and browser details
+- **Role Impersonation System**: Complete implementation of "View As" dropdown for debug mode with seamless role switching without authentication changes
+- **Debug User Authentication Fix**: Resolved tenant context logic to properly handle users with both debug privileges and regular tenant assignments
+- **Enhanced Tenant Context**: Fixed priority-based tenant selection logic that correctly handles debug users, regular assignments, and debug mode activation
 
 # User Preferences
 
