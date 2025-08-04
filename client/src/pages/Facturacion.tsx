@@ -361,7 +361,9 @@ _Mensaje generado automáticamente por VetGroom_`;
       <Header />
       
       <div className="container mx-auto px-4 py-6">
-        <BackButton />
+        <div className="mb-6">
+          <BackButton />
+        </div>
         
         <div className="flex justify-between items-center mb-6">
           <div>
