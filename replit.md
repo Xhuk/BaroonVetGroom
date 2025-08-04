@@ -28,6 +28,7 @@ Preferred communication style: Simple, everyday language.
 - **Session Storage**: PostgreSQL-backed session store for authentication persistence
 - **Multi-tenant Schema**: Companies contain multiple tenants, users can belong to multiple tenants
 - **Core Entities**: Rooms, Staff, Clients, Pets, Appointments with proper foreign key relationships
+- **Seeded Data**: Pre-populated with common veterinary services (consultations, vaccinations, grooming, surgeries)
 - **Business Logic**: Support for grooming appointments, medical visits, and delivery route management
 - **Data Validation**: Zod schemas shared between client and server for consistent validation
 
