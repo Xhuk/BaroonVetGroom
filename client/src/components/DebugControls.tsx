@@ -13,7 +13,7 @@ import {
 import { useState, useEffect } from "react";
 
 export function DebugControls() {
-  const { canDebugTenants } = useAccessControl();
+  const { isLoading, accessInfo } = useAccessControl();
   const { isDebugMode, currentTenant, showDebugSelector, exitDebugMode } = useTenant();
   const [viewAsRole, setViewAsRole] = useState<string>("");
 
@@ -24,6 +24,9 @@ export function DebugControls() {
       setViewAsRole(storedRole);
     }
   }, []);
+
+  // Use the original access info directly to avoid role impersonation interference
+  const hasDebugAccess = accessInfo?.canDebugTenants || false;
 
   // Save role impersonation to sessionStorage when changed
   const handleRoleChange = (role: string) => {
@@ -50,7 +53,12 @@ export function DebugControls() {
     window.location.reload();
   };
 
-  if (!canDebugTenants) {
+  // Show loading state or return null if no debug access
+  if (isLoading) {
+    return <div className="text-xs text-gray-400">Loading...</div>;
+  }
+  
+  if (!hasDebugAccess) {
     return null;
   }
 
