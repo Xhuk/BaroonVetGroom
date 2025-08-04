@@ -31,7 +31,10 @@ import {
   Shield,
   GripVertical,
   CheckCircle,
-  XCircle
+  XCircle,
+  Truck,
+  MapPin,
+  AlertTriangle
 } from "lucide-react";
 
 // Helper function to get room type icons
@@ -72,6 +75,23 @@ export default function Admin() {
 
   const { data: rolesData, isLoading: rolesLoading } = useQuery({
     queryKey: ['/api', 'admin', 'roles'],
+  });
+
+  // Check if current user is VetGroom developer account
+  const { user } = useAuth();
+  const isVetGroomDeveloper = user?.email?.includes('vetgroom') || currentTenant?.companyId === 'vetgroom-company';
+
+  // Delivery tracking for VetGroom developers only
+  const { data: activeDeliveries, refetch: refetchDeliveries } = useQuery({
+    queryKey: ["/api/delivery-tracking", currentTenant?.id],
+    enabled: !!currentTenant?.id && isVetGroomDeveloper,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  const { data: deliveryAlerts, refetch: refetchAlerts } = useQuery({
+    queryKey: ["/api/delivery-alerts", currentTenant?.id],
+    enabled: !!currentTenant?.id && isVetGroomDeveloper,
+    refetchInterval: 30000,
   });
 
   const { data: staffData, isLoading: staffLoading } = useQuery({
@@ -815,7 +835,7 @@ export default function Admin() {
           </div>
 
           <Tabs defaultValue="rooms" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-6' : 'grid-cols-5'}`}>
               <TabsTrigger value="rooms" className="flex items-center gap-2">
                 <DoorOpen className="w-4 h-4" />
                 Salas
@@ -836,6 +856,13 @@ export default function Admin() {
                 <BarChart3 className="w-4 h-4" />
                 Estadísticas
               </TabsTrigger>
+              {isVetGroomDeveloper && (
+                <TabsTrigger value="delivery-tracking" className="flex items-center gap-2">
+                  <Truck className="w-4 h-4" />
+                  <Badge variant="secondary" className="ml-1 text-xs">BETA</Badge>
+                  Entregas
+                </TabsTrigger>
+              )}
             </TabsList>
 
             {/* Rooms Management Tab */}
@@ -1856,6 +1883,158 @@ export default function Admin() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Delivery Tracking Tab - VetGroom Developer Only */}
+            {isVetGroomDeveloper && (
+              <TabsContent value="delivery-tracking" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                      <Truck className="w-6 h-6" />
+                      Seguimiento de Entregas
+                      <Badge variant="secondary" className="text-xs">BETA</Badge>
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                      Monitoreo en tiempo real exclusivo para desarrolladores VetGroom
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Active Deliveries */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin className="w-5 h-5" />
+                        Entregas Activas ({activeDeliveries?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {activeDeliveries?.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          No hay entregas activas en este momento
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {activeDeliveries?.map((delivery: any) => (
+                            <div key={delivery.id} className="border rounded-lg p-4 space-y-2">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="font-medium">{delivery.vanName}</div>
+                                  <div className="text-sm text-gray-600">{delivery.driverName}</div>
+                                </div>
+                                <Badge className={`${
+                                  delivery.status === 'en_route' ? 'bg-green-100 text-green-800' :
+                                  delivery.status === 'delayed' ? 'bg-yellow-100 text-yellow-800' :
+                                  delivery.status === 'emergency' ? 'bg-red-100 text-red-800' :
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {delivery.status === 'en_route' ? 'En Ruta' :
+                                   delivery.status === 'delayed' ? 'Retrasado' :
+                                   delivery.status === 'emergency' ? 'Emergencia' :
+                                   'Preparando'}
+                                </Badge>
+                              </div>
+                              
+                              <div className="text-sm text-gray-600">
+                                <div>Ruta: {delivery.route?.name}</div>
+                                <div>Paradas: {delivery.route?.completedStops || 0} / {delivery.route?.totalStops || 0}</div>
+                              </div>
+
+                              {delivery.estimatedReturnTime && (
+                                <div className="text-sm">
+                                  <span className="text-gray-600">Retorno estimado: </span>
+                                  <span className="font-medium">
+                                    {new Date(delivery.estimatedReturnTime).toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Delivery Alerts */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5" />
+                        Alertas de Entrega ({deliveryAlerts?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {deliveryAlerts?.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          No hay alertas activas
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {deliveryAlerts?.map((alert: any) => (
+                            <div key={alert.id} className="border rounded-lg p-4 space-y-2">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="font-medium">{alert.title}</div>
+                                  <div className="text-sm text-gray-600 mt-1">{alert.message}</div>
+                                </div>
+                                <Badge className={`ml-2 ${
+                                  alert.severity === 'critical' ? 'bg-red-100 text-red-800' :
+                                  alert.severity === 'high' ? 'bg-orange-100 text-orange-800' :
+                                  alert.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {alert.severity === 'critical' ? 'Crítico' :
+                                   alert.severity === 'high' ? 'Alto' :
+                                   alert.severity === 'medium' ? 'Medio' : 'Bajo'}
+                                </Badge>
+                              </div>
+                              
+                              <div className="text-xs text-gray-500">
+                                {new Date(alert.createdAt).toLocaleString()}
+                              </div>
+
+                              {!alert.isResolved && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="mt-2"
+                                  onClick={() => {
+                                    // Resolve alert functionality would go here
+                                    toast({
+                                      title: "Funcionalidad BETA",
+                                      description: "Resolución de alertas disponible próximamente",
+                                    });
+                                  }}
+                                >
+                                  Resolver
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="text-blue-600 text-lg">ℹ️</div>
+                    <div>
+                      <h3 className="font-medium text-blue-900">Funcionalidad BETA - Solo Desarrolladores</h3>
+                      <p className="text-sm text-blue-700 mt-1">
+                        Esta funcionalidad está restringida a cuentas de desarrollador VetGroom para pruebas y validación. 
+                        El sistema incluye monitoreo automático cada 5 minutos con alertas WhatsApp y gestión escalada de emergencias.
+                      </p>
+                      <p className="text-xs text-blue-600 mt-2">
+                        Optimizado para 1000+ tenants con procesamiento por lotes y arquitectura escalable.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </main>
