@@ -1,0 +1,1401 @@
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useTenant } from "@/contexts/TenantContext";
+import { BackButton } from "@/components/BackButton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { 
+  Phone, 
+  MapPin, 
+  Clock, 
+  Calendar, 
+  User, 
+  CheckCircle, 
+  AlertCircle,
+  ArrowRight,
+  ArrowLeft,
+  Users,
+  Navigation,
+  Plus,
+  Minus
+} from "lucide-react";
+
+import markerIconPath from "@assets/marker-icon_1754279780257.png";
+import blueMarkerIconPath from "@assets/marker-icon_1754283680600.png";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+
+// Leaflet imports
+import { lazy, Suspense } from 'react';
+import 'leaflet/dist/leaflet.css';
+import type { Client, Pet, Service } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
+
+// Lazy load LeafletMap component
+const LeafletMap = lazy(() => import('@/components/LeafletMap'));
+
+export default function BookingWizard() {
+  const { currentTenant } = useTenant();
+  const { isAuthenticated, isLoading } = useAuth();
+  const { toast } = useToast();
+  
+  // Wizard state
+  const [currentStep, setCurrentStep] = useState(1);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
+  
+  // Form data
+  const [customerData, setCustomerData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    address: "",
+    postalCode: "",
+    fraccionamiento: "",
+    latitude: "",
+    longitude: ""
+  });
+  
+  const [petData, setPetData] = useState({
+    name: "",
+    species: "",
+    breed: "",
+    age: 0,
+    weight: ""
+  });
+  
+  const [bookingData, setBookingData] = useState({
+    serviceId: "",
+    requestedDate: "",
+    requestedTime: "17:00", // 5 PM as requested
+    logistics: "pickup",
+    notes: ""
+  });
+  
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<string>("");
+  const [reservedSlots, setReservedSlots] = useState<string[]>([]);
+  const [tenantLocation, setTenantLocation] = useState({ lat: 25.74055709021775, lng: -100.407349161356 });
+  const [geocodeTimeout, setGeocodeTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([25.74055709021775, -100.407349161356]);
+  const mapRef = useRef<any>(null);
+  
+  // Pet breeds cache - stored in browser memory
+  const [breedsCache, setBreedsCache] = useState<Record<string, string[]>>({});
+  const [filteredBreeds, setFilteredBreeds] = useState<string[]>([]);
+
+  // Queries
+  const { data: services } = useQuery<any[]>({
+    queryKey: ["/api/services", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
+
+  // Load pet breeds for the tenant (cached in browser memory)
+  const { data: petBreeds } = useQuery<Record<string, string[]>>({
+    queryKey: ["/api/pet-breeds", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+    gcTime: 60 * 60 * 1000, // Keep in memory for 1 hour
+  });
+
+  // Remove staff query - not needed for delivery planning
+
+  // Load existing appointment data if editing
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const appointmentId = urlParams.get('edit');
+    
+    if (appointmentId && currentTenant?.id) {
+      // Load appointment data and set customer location
+      const storedLocation = localStorage.getItem(`customerLocation_${currentTenant.id}`);
+      if (storedLocation) {
+        const locationData = JSON.parse(storedLocation);
+        setCustomerData(prev => ({
+          ...prev,
+          latitude: locationData.lat.toString(),
+          longitude: locationData.lng.toString(),
+          address: locationData.address,
+          fraccionamiento: locationData.fraccionamiento,
+          name: locationData.clientName
+        }));
+        setPetData(prev => ({
+          ...prev,
+          name: locationData.petName
+        }));
+      }
+    }
+  }, [currentTenant?.id]);
+
+  // Update breeds cache when data loads
+  useEffect(() => {
+    if (petBreeds) {
+      setBreedsCache(petBreeds);
+    }
+  }, [petBreeds]);
+
+  // Filter breeds when species changes
+  useEffect(() => {
+    if (petData.species && breedsCache[petData.species]) {
+      setFilteredBreeds(breedsCache[petData.species]);
+    } else {
+      // Fallback breeds if not in cache
+      const fallbackBreeds = {
+        perro: ['Labrador', 'Golden Retriever', 'Pastor Alemán', 'Bulldog', 'Chihuahua', 'Mestizo', 'Otro'],
+        gato: ['Persa', 'Siamés', 'Maine Coon', 'Británico', 'Mestizo', 'Otro'],
+        ave: ['Canario', 'Periquito', 'Cacatúa', 'Loro', 'Otro'],
+        reptil: ['Iguana', 'Tortuga', 'Gecko', 'Serpiente', 'Otro'],
+        conejo: ['Holandés', 'Angora', 'Enano', 'Mestizo', 'Otro'],
+        otro: ['Otro']
+      };
+      setFilteredBreeds(fallbackBreeds[petData.species as keyof typeof fallbackBreeds] || ['Otro']);
+    }
+    
+    // Auto-select "Otro" breed when "Otro" species is selected
+    if (petData.species === 'otro') {
+      setPetData(prev => ({ ...prev, breed: 'otro' }));
+      // Focus next field (age) after brief delay
+      setTimeout(() => {
+        const ageInput = document.querySelector('input[placeholder="Edad en años"]') as HTMLInputElement;
+        if (ageInput) {
+          ageInput.focus();
+        }
+      }, 100);
+    } else {
+      // Reset breed selection when species changes (except for "otro")
+      if (petData.breed && filteredBreeds.length > 0 && !filteredBreeds.includes(petData.breed)) {
+        setPetData(prev => ({ ...prev, breed: '' }));
+      }
+    }
+  }, [petData.species, breedsCache]);
+
+  // Update tenant location when currentTenant changes
+  useEffect(() => {
+    if (currentTenant?.latitude && currentTenant?.longitude) {
+      const tenantLat = parseFloat(currentTenant.latitude);
+      const tenantLng = parseFloat(currentTenant.longitude);
+      setTenantLocation({ lat: tenantLat, lng: tenantLng });
+    }
+  }, [currentTenant]);
+
+  // Store customer location data for use across pages
+  useEffect(() => {
+    if (customerData.latitude && customerData.longitude && customerData.name && petData.name) {
+      const locationData = {
+        lat: parseFloat(customerData.latitude),
+        lng: parseFloat(customerData.longitude),
+        address: customerData.address,
+        fraccionamiento: customerData.fraccionamiento,
+        clientName: customerData.name,
+        petName: petData.name,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(`customerLocation_${currentTenant?.id}`, JSON.stringify(locationData));
+    }
+  }, [customerData, petData.name, currentTenant?.id]);
+
+  // Debounced geocoding function for address with postal code fallback
+  const geocodeAddress = async (address: string, fraccionamiento: string, postalCode?: string) => {
+    if (!address || !fraccionamiento) return null;
+    
+    try {
+      console.log("Geocoding address:", address, fraccionamiento, postalCode);
+      
+      // Try with full address first
+      let fullAddress = `${address}, ${fraccionamiento}, Monterrey, Nuevo León, México`;
+      let response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=mx&addressdetails=1`
+      );
+      let data = await response.json();
+      console.log("First geocoding attempt:", data);
+      
+      // If no results and we have postal code, try with postal code
+      if (data.length === 0 && postalCode) {
+        console.log("Trying with postal code:", postalCode);
+        fullAddress = `${postalCode}, Monterrey, Nuevo León, México`;
+        response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=mx&addressdetails=1`
+        );
+        data = await response.json();
+        console.log("Postal code geocoding attempt:", data);
+      }
+      
+      if (data.length > 0) {
+        const { lat, lon } = data[0];
+        console.log("Setting coordinates:", { lat: parseFloat(lat), lng: parseFloat(lon) });
+        setCustomerData(prev => ({
+          ...prev,
+          latitude: lat,
+          longitude: lon
+        }));
+        return { lat: parseFloat(lat), lng: parseFloat(lon) };
+      } else {
+        // Use tenant default coordinates or fallback
+        console.log("No geocoding results found, using default coordinates");
+        const defaultCoords = {
+          lat: currentTenant?.latitude ? parseFloat(currentTenant.latitude) : 25.740586082849077,
+          lng: currentTenant?.longitude ? parseFloat(currentTenant.longitude) : -100.40735989019088
+        };
+        // Coordinates will be used directly by customer data
+        setCustomerData(prev => ({
+          ...prev,
+          latitude: defaultCoords.lat.toString(),
+          longitude: defaultCoords.lng.toString()
+        }));
+        // Silent fallback - no toast for cleaner UX
+        return defaultCoords;
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      // Use default coordinates on error
+      const defaultCoords = {
+        lat: currentTenant?.latitude ? parseFloat(currentTenant.latitude) : 25.740586082849077,
+        lng: currentTenant?.longitude ? parseFloat(currentTenant.longitude) : -100.40735989019088
+      };
+      // Default coordinates handled by Leaflet
+      // Silent fallback - no error toast for better UX
+      return defaultCoords;
+    }
+  };
+
+  // Debounced geocoding function with 1 second delay
+  const debouncedGeocode = (address: string, fraccionamiento: string, postalCode?: string) => {
+    // Clear existing timeout
+    if (geocodeTimeout) {
+      clearTimeout(geocodeTimeout);
+    }
+    
+    // Set new timeout for 1 second
+    const timeout = setTimeout(() => {
+      geocodeAddress(address, fraccionamiento, postalCode);
+    }, 1000);
+    
+    setGeocodeTimeout(timeout);
+  };
+
+  // Check available slots when service and date are selected
+  const checkAvailableSlots = async () => {
+    if (!bookingData.serviceId || !bookingData.requestedDate) return;
+    
+    try {
+      const response = await apiRequest('GET', `/api/appointments/check-availability/${currentTenant?.id}?date=${bookingData.requestedDate}&serviceId=${bookingData.serviceId}&time=${bookingData.requestedTime}`);
+      const data = await response.json() as { available: boolean; alternativeSlots: string[] };
+      
+      if (data.available) {
+        setAvailableSlots([bookingData.requestedTime]);
+      } else {
+        setAvailableSlots(data.alternativeSlots || []);
+        toast({
+          title: "Horario no disponible",
+          description: `Lo siento, no tenemos disponibilidad a las ${bookingData.requestedTime}. Te mostramos horarios alternativos.`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error checking availability:", error);
+      setAvailableSlots([]);
+    }
+  };
+
+  // Reserve a time slot temporarily
+  const reserveSlotMutation = useMutation({
+    mutationFn: async (slotTime: string) => {
+      return apiRequest('POST', `/api/appointments/reserve-slot/${currentTenant?.id}`, {
+        sessionId,
+        scheduledDate: bookingData.requestedDate,
+        scheduledTime: slotTime,
+        serviceId: bookingData.serviceId
+      });
+    },
+    onSuccess: (data, slotTime) => {
+      setReservedSlots([slotTime]);
+      setSelectedSlot(slotTime);
+      toast({
+        title: "Horario reservado temporalmente",
+        description: "Tienes 10 minutos para confirmar la cita.",
+      });
+      
+      // Auto-expire reservation after 10 minutes
+      setTimeout(() => {
+        setReservedSlots([]);
+        setSelectedSlot("");
+        toast({
+          title: "Reserva expirada",
+          description: "La reserva temporal ha expirado. Por favor selecciona otro horario.",
+          variant: "destructive",
+        });
+      }, 10 * 60 * 1000); // 10 minutes
+    },
+    onError: (error: any) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para reservar horarios",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo reservar el horario",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create appointment mutation
+  const createAppointmentMutation = useMutation({
+    mutationFn: async () => {
+      // First create/find client
+      let clientResponse: Client;
+      try {
+        const clientRes = await apiRequest('POST', `/api/clients/${currentTenant?.id}`, customerData);
+        clientResponse = await clientRes.json() as Client;
+      } catch (error) {
+        // If client exists, try to get by phone
+        const clientRes = await apiRequest('GET', `/api/clients/by-phone/${currentTenant?.id}/${customerData.phone}`);
+        clientResponse = await clientRes.json() as Client;
+      }
+      
+      // Create pet
+      const petRes = await apiRequest('POST', `/api/pets`, {
+        ...petData,
+        clientId: clientResponse.id
+      });
+      const petResponse = await petRes.json() as Pet;
+      
+      // Create appointment
+      const selectedService = (services || []).find((s: Service) => s.id === bookingData.serviceId);
+      const appointmentData = {
+        clientId: clientResponse.id,
+        petId: petResponse.id,
+        serviceId: bookingData.serviceId,
+        scheduledDate: bookingData.requestedDate,
+        scheduledTime: selectedSlot,
+        logistics: bookingData.logistics,
+        notes: bookingData.notes,
+        status: 'scheduled',
+        type: selectedService?.type || 'grooming'
+      };
+      
+      return apiRequest('POST', `/api/appointments/${currentTenant?.id}`, appointmentData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "¡Cita programada exitosamente!",
+        description: `Cita confirmada para ${customerData.name} el ${bookingData.requestedDate} a las ${selectedSlot}`,
+      });
+      
+      // Clear reserved slots
+      setReservedSlots([]);
+      queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+      
+      // Reset form or redirect
+      setCurrentStep(5); // Success step
+    },
+    onError: (error: any) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para crear citas",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo crear la cita",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle next step
+  const nextStep = async () => {
+    if (currentStep === 2 && customerData.address && customerData.fraccionamiento) {
+      await geocodeAddress(customerData.address, customerData.fraccionamiento, customerData.postalCode);
+    }
+    if (currentStep === 4 && bookingData.serviceId && bookingData.requestedDate) {
+      checkAvailableSlots();
+    }
+    setCurrentStep(prev => Math.min(prev + 1, 5));
+  };
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "No autorizado",
+        description: "Debes iniciar sesión para acceder al sistema de citas",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando sistema de citas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const steps = [
+    "Información Completa",
+    "Selección de Servicio y Horario",
+    "Confirmación"
+  ];
+
+  return (
+    <div className="container mx-auto p-6 max-w-4xl">
+      <BackButton className="mb-4" />
+      
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-blue-800 mb-2">Programar Nueva Cita</h1>
+        <p className="text-gray-600">Completa los siguientes pasos para programar la cita</p>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="flex justify-between mb-8">
+        {steps.map((step, index) => (
+          <div key={index} className="flex flex-col items-center">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
+              index + 1 <= currentStep 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-200 text-gray-600'
+            }`}>
+              {index + 1 <= currentStep ? <CheckCircle className="w-5 h-5" /> : index + 1}
+            </div>
+            <span className="text-xs mt-1 text-center max-w-20">{step}</span>
+          </div>
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{steps[currentStep - 1]}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Step 1: Complete Information (Customer, Address, Pet) */}
+          {currentStep === 1 && (
+            <div className="space-y-8">
+              {/* Customer Information Section */}
+              <div className="bg-white p-6 rounded-lg border border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                  <User className="mr-2 h-5 w-5 text-blue-600" />
+                  Información del Cliente
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="name">Nombre completo *</Label>
+                    <Input
+                      id="name"
+                      value={customerData.name}
+                      onChange={(e) => setCustomerData(prev => ({ ...prev, name: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
+                      placeholder="María González"
+                      required
+                      className="capitalize"
+                      data-testid="input-customer-name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Teléfono *</Label>
+                    <Input
+                      id="phone"
+                      value={customerData.phone}
+                      onChange={(e) => setCustomerData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="000 000 0000"
+                      required
+                      data-testid="input-customer-phone"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={customerData.email}
+                      onChange={(e) => setCustomerData(prev => ({ ...prev, email: e.target.value.toLowerCase() }))}
+                      placeholder="maria@ejemplo.com"
+                      className="lowercase"
+                      data-testid="input-customer-email"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="address">Dirección completa *</Label>
+                    <Input
+                      id="address"
+                      value={customerData.address}
+                      onChange={(e) => {
+                        const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+                        setCustomerData(prev => ({ ...prev, address: formattedValue }));
+                        // Trigger geocoding with debounce
+                        debouncedGeocode(formattedValue, customerData.fraccionamiento || '', customerData.postalCode || '');
+                      }}
+                      placeholder="Calle Gracias 345"
+                      required
+                      className="capitalize"
+                      data-testid="input-customer-address"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="fraccionamiento">Fraccionamiento *</Label>
+                    <Input
+                      id="fraccionamiento"
+                      value={customerData.fraccionamiento}
+                      onChange={(e) => {
+                        const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+                        setCustomerData(prev => ({ ...prev, fraccionamiento: formattedValue }));
+                        // Trigger geocoding with debounce
+                        debouncedGeocode(customerData.address || '', formattedValue, customerData.postalCode || '');
+                      }}
+                      placeholder="Valle De Cumbres"
+                      required
+                      className="capitalize"
+                      data-testid="input-customer-fraccionamiento"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="postalCode">Código Postal</Label>
+                    <Input
+                      id="postalCode"
+                      value={customerData.postalCode}
+                      onChange={(e) => {
+                        setCustomerData(prev => ({ ...prev, postalCode: e.target.value }));
+                        // Trigger geocoding with debounce
+                        debouncedGeocode(customerData.address || '', customerData.fraccionamiento || '', e.target.value);
+                      }}
+                      placeholder="66260"
+                      data-testid="input-customer-postal-code"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Pet Information Section */}
+              <div className="bg-white p-6 rounded-lg border border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                  <Heart className="mr-2 h-5 w-5 text-green-600" />
+                  Información de la Mascota
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <Label htmlFor="petName">Nombre de la mascota *</Label>
+                    <Input
+                      id="petName"
+                      value={petData.name}
+                      onChange={(e) => setPetData(prev => ({ ...prev, name: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
+                      placeholder="Frodo"
+                      required
+                      className="capitalize"
+                      data-testid="input-pet-name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="species">Especie *</Label>
+                    <Select 
+                      value={petData.species} 
+                      onValueChange={(value) => {
+                        setPetData(prev => ({ ...prev, species: value }));
+                        // Auto-select "Otro" breed for "Otro" species
+                        if (value === 'otro') {
+                          setPetData(prev => ({ ...prev, breed: 'otro' }));
+                          // Focus on age field after auto-selection
+                          setTimeout(() => {
+                            const ageInput = document.getElementById('age');
+                            if (ageInput) ageInput.focus();
+                          }, 100);
+                        }
+                      }}
+                    >
+                      <SelectTrigger data-testid="select-pet-species">
+                        <SelectValue placeholder="Seleccionar especie" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="perro">🐕 Perro</SelectItem>
+                        <SelectItem value="gato">🐱 Gato</SelectItem>
+                        <SelectItem value="ave">🦜 Ave</SelectItem>
+                        <SelectItem value="reptil">🦎 Reptil</SelectItem>
+                        <SelectItem value="conejo">🐰 Conejo</SelectItem>
+                        <SelectItem value="otro">🐾 Otro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="breed">Raza *</Label>
+                    <Select 
+                      value={petData.breed} 
+                      onValueChange={(value) => setPetData(prev => ({ ...prev, breed: value }))}
+                    >
+                      <SelectTrigger data-testid="select-pet-breed">
+                        <SelectValue placeholder="Seleccionar raza" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredBreeds.length > 0 ? (
+                          filteredBreeds.map((breed) => (
+                            <SelectItem key={breed} value={breed.toLowerCase().replace(/\s+/g, '-')}>
+                              {breed}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="placeholder" disabled>
+                            Selecciona una especie primero
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="age">Edad (años) *</Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      value={petData.age}
+                      onChange={(e) => setPetData(prev => ({ ...prev, age: parseInt(e.target.value) || 0 }))}
+                      placeholder="3"
+                      required
+                      data-testid="input-pet-age"
+                    />
+                  </div>
+                  <div className="md:col-span-2 lg:col-span-1">
+                    <Label htmlFor="weight">Peso *</Label>
+                    <Input
+                      id="weight"
+                      value={petData.weight}
+                      onChange={(e) => setPetData(prev => ({ ...prev, weight: e.target.value }))}
+                      placeholder="5.5 kg"
+                      required
+                      data-testid="input-pet-weight"
+                    />
+                  </div>
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <Label htmlFor="medicalHistory">Historial médico / Notas especiales</Label>
+                    <Input
+                      id="medicalHistory"
+                      value={petData.medicalHistory}
+                      onChange={(e) => setPetData(prev => ({ ...prev, medicalHistory: e.target.value }))}
+                      placeholder="Condiciones médicas, alergias, comportamiento especial..."
+                      data-testid="input-pet-medical-history"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Location and Map Section */}
+              <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 p-6 rounded-lg border-2 border-dashed border-blue-200">
+                <h3 className="font-semibold text-blue-900 mb-4 flex items-center">
+                  <MapPin className="mr-2 h-5 w-5 text-blue-600" />
+                  📍 Ubicación GPS del Cliente
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Haz clic derecho en el mapa para establecer la ubicación exacta del cliente. 
+                  Esto ayudará a planificar las rutas de entrega.
+                </p>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <div className="h-96 rounded-lg overflow-hidden border-2 border-gray-200 shadow-md">
+                      <LeafletMap
+                        center={mapCenter}
+                        zoom={13}
+                        tenantLocation={tenantLocation}
+                        customerLocation={
+                          customerData.latitude && customerData.longitude && 
+                          !isNaN(parseFloat(customerData.latitude)) && 
+                          !isNaN(parseFloat(customerData.longitude))
+                            ? {
+                                lat: parseFloat(customerData.latitude),
+                                lng: parseFloat(customerData.longitude),
+                                address: customerData.address,
+                                fraccionamiento: customerData.fraccionamiento,
+                                clientName: customerData.name,
+                                petName: petData.name
+                              }
+                            : null
+                        }
+                        onMapClick={(lat, lng) => {
+                          // Set coordinates immediately without any delay
+                          const exactLat = lat.toFixed(6);
+                          const exactLng = lng.toFixed(6);
+                          
+                          setCustomerData(prev => ({
+                            ...prev,
+                            latitude: exactLat,
+                            longitude: exactLng
+                          }));
+                          
+                          toast({
+                            title: "Ubicación del cliente establecida",
+                            description: `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+                            variant: "default"
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                      <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                        🏥 Información de la Clínica
+                      </h4>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p><strong>Ubicación:</strong> Centro del mapa</p>
+                        <p><strong>GPS:</strong> {tenantLocation.lat.toFixed(4)}, {tenantLocation.lng.toFixed(4)}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 w-full"
+                        onClick={() => {
+                          setMapCenter([tenantLocation.lat, tenantLocation.lng]);
+                          if (mapRef.current) {
+                            mapRef.current.setView([tenantLocation.lat, tenantLocation.lng], 15);
+                          }
+                        }}
+                        data-testid="button-view-clinic"
+                      >
+                        <Building className="mr-1 h-4 w-4" />
+                        Ver clínica
+                      </Button>
+                    </div>
+                    
+                    {customerData.latitude && customerData.longitude && (
+                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <h4 className="font-medium text-green-900 mb-3 flex items-center">
+                          🐾 Ubicación del Cliente
+                        </h4>
+                        <div className="text-sm text-green-700 space-y-1">
+                          <p><strong>GPS:</strong> {parseFloat(customerData.latitude).toFixed(4)}, {parseFloat(customerData.longitude).toFixed(4)}</p>
+                          {customerData.address && <p><strong>Dir:</strong> {customerData.address}</p>}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 w-full border-green-300 text-green-700 hover:bg-green-100"
+                          onClick={() => {
+                            const lat = parseFloat(customerData.latitude);
+                            const lng = parseFloat(customerData.longitude);
+                            setMapCenter([lat, lng]);
+                            if (mapRef.current) {
+                              mapRef.current.setView([lat, lng], 16);
+                            }
+                          }}
+                          data-testid="button-view-customer"
+                        >
+                          <MapPin className="mr-1 h-4 w-4" />
+                          Ver cliente
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate(-1)}
+                  data-testid="button-cancel"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    // Validation for customer data
+                    if (!customerData.name.trim()) {
+                      toast({
+                        title: "Campo requerido",
+                        description: "Por favor ingresa el nombre del cliente",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    if (!customerData.phone.trim()) {
+                      toast({
+                        title: "Campo requerido", 
+                        description: "Por favor ingresa el teléfono del cliente",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    if (!customerData.address.trim()) {
+                      toast({
+                        title: "Campo requerido",
+                        description: "Por favor ingresa la dirección del cliente",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    if (!customerData.fraccionamiento.trim()) {
+                      toast({
+                        title: "Campo requerido",
+                        description: "Por favor ingresa el fraccionamiento/colonia",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    
+                    // Validation for pet data
+                    if (!petData.name.trim()) {
+                      toast({
+                        title: "Campo requerido",
+                        description: "Por favor ingresa el nombre de la mascota",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    if (!petData.species) {
+                      toast({
+                        title: "Campo requerido",
+                        description: "Por favor selecciona la especie de la mascota",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    if (!petData.breed) {
+                      toast({
+                        title: "Campo requerido",
+                        description: "Por favor selecciona la raza de la mascota",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    if (!petData.age) {
+                      toast({
+                        title: "Campo requerido",
+                        description: "Por favor ingresa la edad de la mascota",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    if (!petData.weight?.trim()) {
+                      toast({
+                        title: "Campo requerido",
+                        description: "Por favor ingresa el peso de la mascota",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    
+                    setCurrentStep(2);
+                  }}
+                  data-testid="button-next-to-service"
+                >
+                  Siguiente: Seleccionar Servicio
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Service Selection */}
+          {currentStep === 2 && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <Label htmlFor="address">Dirección completa *</Label>
+                  <Input
+                    id="address"
+                    value={customerData.address}
+                    onChange={(e) => {
+                      const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+                      setCustomerData(prev => ({ ...prev, address: formattedValue }));
+                      // Auto-geocode after both fields are filled
+                      if (formattedValue && customerData.fraccionamiento) {
+                        setTimeout(() => geocodeAddress(formattedValue, customerData.fraccionamiento, customerData.postalCode), 1000);
+                      }
+                    }}
+                    placeholder="Calle Gracias 345"
+                    required
+                    className="capitalize"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="fraccionamiento">Fraccionamiento *</Label>
+                  <Input
+                    id="fraccionamiento"
+                    value={customerData.fraccionamiento}
+                    onChange={(e) => {
+                      const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+                      setCustomerData(prev => ({ ...prev, fraccionamiento: formattedValue }));
+                      // Note: Auto-geocoding removed - users will use right-click on map to place marker
+                    }}
+                    placeholder="Valle De Cumbres"
+                    required
+                    className="capitalize"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="postalCode">Código Postal</Label>
+                  <Input
+                    id="postalCode"
+                    value={customerData.postalCode}
+                    onChange={(e) => setCustomerData(prev => ({ ...prev, postalCode: e.target.value }))}
+                    placeholder="66260"
+                  />
+                </div>
+              </div>
+              
+              {/* Advanced Interactive Map with Staff Tracking */}
+              <div className="mt-4">
+                <Label>Mapa de ubicación para entrega</Label>
+                <div className="border rounded-lg overflow-hidden bg-gray-50">
+                  {/* Map is always displayed when tenant coordinates are available */}
+                  {(tenantLocation.lat && tenantLocation.lng) ? (
+                    <div>
+                      {/* Leaflet Map with Stable Marker Positioning */}
+                      <div className="h-80 relative border-b">
+                        <Suspense fallback={<div className="h-full w-full bg-gray-100 flex items-center justify-center">Cargando mapa...</div>}>
+                          <LeafletMap
+                            center={mapCenter}
+                            zoom={13}
+                            tenantLocation={tenantLocation}
+                            customerLocation={
+                              customerData.latitude && customerData.longitude && 
+                              !isNaN(parseFloat(customerData.latitude)) && 
+                              !isNaN(parseFloat(customerData.longitude))
+                                ? {
+                                    lat: parseFloat(customerData.latitude),
+                                    lng: parseFloat(customerData.longitude),
+                                    address: customerData.address,
+                                    fraccionamiento: customerData.fraccionamiento,
+                                    clientName: customerData.name,
+                                    petName: petData.name
+                                  }
+                                : null
+                            }
+                            tenantName={currentTenant?.name}
+                            onMapClick={(lat, lng) => {
+                              // Set coordinates immediately without any delay
+                              const exactLat = lat.toFixed(6);
+                              const exactLng = lng.toFixed(6);
+                              
+                              setCustomerData(prev => ({
+                                ...prev,
+                                latitude: exactLat,
+                                longitude: exactLng
+                              }));
+                              
+                              toast({
+                                title: "Ubicación del cliente establecida",
+                                description: `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+                                variant: "default"
+                              });
+                            }}
+                            onMapMove={() => {}} // Remove map move tracking
+                            onCenterChange={setMapCenter}
+                          />
+                        </Suspense>
+                      </div>
+                      
+                      {/* Enhanced Map Info with Legend */}
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 text-sm text-green-700 mb-3">
+                          <MapPin className="w-4 h-4" />
+                          <span className="font-medium">Ubicación confirmada</span>
+                        </div>
+                        
+                        <p className="text-sm text-gray-700 mb-3">
+                          {customerData.address}, {customerData.fraccionamiento}
+                        </p>
+
+                        {/* Map Legend */}
+                        <div className="flex justify-center gap-6 mb-3 text-xs">
+                          <div className="flex items-center gap-1">
+                            <span className="text-green-600">🐾</span>
+                            <span>Cliente</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <img src={blueMarkerIconPath} alt="" className="w-3 h-3" />
+                            <span>Clínica</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs text-gray-500">
+                            <p>Centro: {tenantLocation.lat.toFixed(6)}, {tenantLocation.lng.toFixed(6)}</p>
+                            <p>Vista clínica | {customerData.address ? 'Cliente ubicado' : 'Sin cliente'}</p>
+                          </div>
+                          <div className="flex gap-2">
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                // Center map on customer location if available
+                                if (customerData.latitude && customerData.longitude) {
+                                  const customerLat = parseFloat(customerData.latitude);
+                                  const customerLng = parseFloat(customerData.longitude);
+                                  setMapCenter([customerLat, customerLng]);
+                                  toast({
+                                    title: "Vista centrada en cliente",
+                                    description: "Mapa centrado en la dirección del cliente.",
+                                  });
+                                }
+                              }}
+                              className="text-xs"
+                              disabled={!customerData.latitude || !customerData.longitude}
+                            >
+                              <MapPin className="w-3 h-3 mr-1" />
+                              Ver cliente
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                // Center map on clinic location
+                                setMapCenter([tenantLocation.lat, tenantLocation.lng]);
+                                toast({
+                                  title: "Vista centrada en clínica",
+                                  description: "Mapa centrado en las coordenadas de la clínica.",
+                                });
+                              }}
+                              className="text-xs"
+                            >
+                              <Navigation className="w-3 h-3 mr-1" />
+                              Ver clínica
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-32 flex items-center justify-center text-gray-500">
+                      <div className="text-center">
+                        <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm">Ingresa la dirección para ver la ubicación</p>
+
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Pet Information */}
+          {currentStep === 3 && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="petName">Nombre de la mascota *</Label>
+                  <Input
+                    id="petName"
+                    value={petData.name}
+                    onChange={(e) => setPetData(prev => ({ ...prev, name: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
+                    placeholder="Frodo"
+                    required
+                    className="capitalize"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="species">Especie *</Label>
+                  <Select 
+                    value={petData.species} 
+                    onValueChange={(value) => setPetData(prev => ({ ...prev, species: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar especie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="perro">Perro</SelectItem>
+                      <SelectItem value="gato">Gato</SelectItem>
+                      <SelectItem value="conejo">Conejo</SelectItem>
+                      <SelectItem value="otro">Otro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="breed">Raza *</Label>
+                  <Select 
+                    value={petData.breed} 
+                    onValueChange={(value) => setPetData(prev => ({ ...prev, breed: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar raza" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredBreeds.length > 0 ? (
+                        filteredBreeds.map((breed) => (
+                          <SelectItem key={breed} value={breed.toLowerCase().replace(/\s+/g, '-')}>
+                            {breed}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="placeholder" disabled>
+                          Selecciona una especie primero
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="age">Edad (años) *</Label>
+                  <Input
+                    id="age"
+                    type="number"
+                    value={petData.age}
+                    onChange={(e) => setPetData(prev => ({ ...prev, age: parseInt(e.target.value) || 0 }))}
+                    placeholder="3"
+                    required
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Label htmlFor="weight">Peso (kg) *</Label>
+                  <Input
+                    id="weight"
+                    value={petData.weight}
+                    onChange={(e) => setPetData(prev => ({ ...prev, weight: e.target.value }))}
+                    placeholder="25.5"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Service and Time Selection */}
+          {currentStep === 4 && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="service">Servicio *</Label>
+                  <Select 
+                    value={bookingData.serviceId} 
+                    onValueChange={(value) => setBookingData(prev => ({ ...prev, serviceId: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar servicio" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {services && services.length > 0 ? (
+                        services.map((service: any) => (
+                          <SelectItem key={service.id} value={service.id}>
+                            {service.name} - ${service.price} ({service.duration} min)
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          Cargando servicios...
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="date">Fecha *</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={bookingData.requestedDate}
+                    onChange={(e) => setBookingData(prev => ({ ...prev, requestedDate: e.target.value }))}
+                    min={new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
+              </div>
+
+              {availableSlots.length > 0 && (
+                <div>
+                  <Label>Horarios disponibles</Label>
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-2">
+                    {availableSlots.map((slot) => (
+                      <Button
+                        key={slot}
+                        variant={selectedSlot === slot ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => reserveSlotMutation.mutate(slot)}
+                        disabled={reserveSlotMutation.isPending}
+                        className={`${selectedSlot === slot ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                      >
+                        {slot}
+                        {selectedSlot === slot && <CheckCircle className="w-3 h-3 ml-1" />}
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  {selectedSlot && (
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <span className="font-medium text-green-800">
+                          Horario reservado: {selectedSlot}
+                        </span>
+                      </div>
+                      <p className="text-sm text-green-600 mt-1">
+                        Esta reserva expira en 10 minutos. Completa la cita para confirmar.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="logistics">Tipo de servicio *</Label>
+                <Select 
+                  value={bookingData.logistics} 
+                  onValueChange={(value) => setBookingData(prev => ({ ...prev, logistics: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tipo de servicio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pickup">🚐 Recogemos en su domicilio</SelectItem>
+                    <SelectItem value="delivered">🏠 Cliente trae la mascota</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="notes">Notas adicionales</Label>
+                <Textarea
+                  id="notes"
+                  value={bookingData.notes || ''}
+                  onChange={(e) => setBookingData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Instrucciones especiales, alergias, medicamentos, comportamiento de la mascota, etc."
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Step 5: Confirmation */}
+          {currentStep === 5 && (
+            <div className="space-y-6">
+              {createAppointmentMutation.isSuccess ? (
+                <div className="text-center py-8">
+                  <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold text-green-800 mb-2">¡Cita Confirmada!</h3>
+                  <p className="text-gray-600 mb-4">
+                    La cita para {petData.name} ha sido programada exitosamente.
+                  </p>
+                  <div className="bg-gray-50 rounded-lg p-4 text-left max-w-md mx-auto">
+                    <h4 className="font-semibold mb-2">Detalles de la cita:</h4>
+                    <div className="space-y-1 text-sm">
+                      <p><strong>Cliente:</strong> {customerData.name}</p>
+                      <p><strong>Mascota:</strong> {petData.name}</p>
+                      <p><strong>Fecha:</strong> {bookingData.requestedDate}</p>
+                      <p><strong>Hora:</strong> {selectedSlot}</p>
+                      <p><strong>Servicio:</strong> {services?.find(s => s.id === bookingData.serviceId)?.name}</p>
+                      <p><strong>Dirección:</strong> {customerData.address}, {customerData.fraccionamiento}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">Confirmar detalles de la cita</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Cliente
+                      </h4>
+                      <div className="text-sm space-y-1">
+                        <p>{customerData.name}</p>
+                        <p>{customerData.phone}</p>
+                        <p>{customerData.address}, {customerData.fraccionamiento}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium mb-2">Mascota</h4>
+                      <div className="text-sm space-y-1">
+                        <p>{petData.name} ({petData.species})</p>
+                        {petData.breed && <p>Raza: {petData.breed}</p>}
+                        {petData.age > 0 && <p>Edad: {petData.age} años</p>}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        Fecha y Hora
+                      </h4>
+                      <div className="text-sm space-y-1">
+                        <p>{bookingData.requestedDate}</p>
+                        <p>{selectedSlot}</p>
+                        <Badge variant="outline">
+                          {bookingData.logistics === 'pickup' ? 'Recogemos' : 'Cliente trae'}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium mb-2">Servicio</h4>
+                      <div className="text-sm space-y-1">
+                        <p>{(services || []).find((s: Service) => s.id === bookingData.serviceId)?.name}</p>
+                        <p>${(services || []).find((s: Service) => s.id === bookingData.serviceId)?.price}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-8">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentStep(prev => Math.max(prev - 1, 1))}
+              disabled={currentStep === 1 || createAppointmentMutation.isSuccess}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Anterior
+            </Button>
+            
+            {currentStep < 5 ? (
+              <Button
+                onClick={nextStep}
+                disabled={
+                  (currentStep === 1 && (!customerData.name || !customerData.phone)) ||
+                  (currentStep === 2 && (!customerData.address || !customerData.fraccionamiento || !customerData.latitude || !customerData.longitude)) ||
+                  (currentStep === 3 && (!petData.name || !petData.species || !petData.breed || !petData.age || !petData.weight)) ||
+                  (currentStep === 4 && (!selectedSlot || !bookingData.serviceId || !bookingData.logistics))
+                }
+              >
+                Siguiente
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              !createAppointmentMutation.isSuccess && (
+                <Button
+                  onClick={() => createAppointmentMutation.mutate()}
+                  disabled={createAppointmentMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {createAppointmentMutation.isPending ? 'Confirmando...' : 'Confirmar Cita'}
+                </Button>
+              )
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
