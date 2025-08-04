@@ -19,6 +19,8 @@ import BookingWizard from "@/pages/BookingWizard";
 import Clients from "@/pages/Clients";
 import Inventory from "@/pages/Inventory";
 import DeliveryPlan from "@/pages/DeliveryPlan";
+import RoutePlanMap from "@/pages/RoutePlanMap";
+import AdminVanConfig from "@/pages/AdminVanConfig";
 import Billing from "@/pages/Billing";
 
 function Router() {
@@ -35,11 +37,13 @@ function Router() {
           <Route path="/booking" component={BookingWizard} />
           <Route path="/clients" component={Clients} />
           <Route path="/inventory" component={Inventory} />
-          <Route path="/delivery" component={DeliveryPlan} />
+          <Route path="/delivery-plan" component={DeliveryPlan} />
+          <Route path="/route-map" component={RoutePlanMap} />
           <Route path="/billing" component={Billing} />
           <Route path="/admin" component={Admin} />
           <Route path="/admin/settings" component={AdminSettings} />
           <Route path="/admin/business-hours" component={AdminBusinessHours} />
+          <Route path="/admin/van-config" component={AdminVanConfig} />
           <Route path="/superadmin" component={SuperAdmin} />
           <Route path="/superadmin/monitoring" component={SuperAdminMonitoring} />
         </>

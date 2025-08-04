@@ -13,6 +13,7 @@ import {
   tempSlotReservations,
   webhookErrorLogs,
   webhookMonitoring,
+  vans,
   type User,
   type UpsertUser,
   type Company,
@@ -40,6 +41,8 @@ import {
   type InsertWebhookErrorLog,
   type WebhookMonitoring,
   type InsertWebhookMonitoring,
+  type Van,
+  type InsertVan,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte } from "drizzle-orm";
@@ -641,6 +644,45 @@ export class DatabaseStorage implements IStorage {
         eq(webhookMonitoring.tenantId, tenantId),
         eq(webhookMonitoring.webhookType, webhookType)
       ));
+  }
+
+  // Van management operations
+  async getVans(tenantId: string): Promise<Van[]> {
+    const results = await db
+      .select()
+      .from(vans)
+      .where(eq(vans.tenantId, tenantId))
+      .orderBy(vans.createdAt);
+    return results;
+  }
+
+  async createVan(vanData: InsertVan): Promise<Van> {
+    const [newVan] = await db
+      .insert(vans)
+      .values({
+        ...vanData,
+        id: undefined, // Let DB generate ID
+      })
+      .returning();
+    return newVan;
+  }
+
+  async updateVan(vanId: string, updates: Partial<InsertVan>): Promise<Van> {
+    const [updatedVan] = await db
+      .update(vans)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(vans.id, vanId))
+      .returning();
+    return updatedVan;
+  }
+
+  async deleteVan(vanId: string): Promise<void> {
+    await db
+      .delete(vans)
+      .where(eq(vans.id, vanId));
   }
 }
 

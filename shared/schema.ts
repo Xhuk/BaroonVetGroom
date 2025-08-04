@@ -271,3 +271,27 @@ export type WebhookErrorLog = typeof webhookErrorLogs.$inferSelect;
 export type InsertWebhookErrorLog = typeof webhookErrorLogs.$inferInsert;
 export type WebhookMonitoring = typeof webhookMonitoring.$inferSelect;
 export type InsertWebhookMonitoring = typeof webhookMonitoring.$inferInsert;
+
+// Van management for delivery routes
+export const vans = pgTable("vans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  name: varchar("name", { length: 100 }).notNull(),
+  capacity: varchar("capacity", { length: 10 }).notNull().default("medium"), // small, medium, large
+  maxPets: integer("max_pets").notNull().default(15),
+  maxWeight: integer("max_weight").notNull().default(100), // kg
+  dailyRoutes: integer("daily_routes").notNull().default(2),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const vansRelations = relations(vans, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [vans.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
+export type InsertVan = typeof vans.$inferInsert;
+export type Van = typeof vans.$inferSelect;

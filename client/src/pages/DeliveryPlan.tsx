@@ -441,7 +441,12 @@ export default function DeliveryPlan() {
                     <br />
                     y las rutas de entrega optimizadas.
                   </p>
-                  <Button variant="outline" className="mt-3">
+                  <Button 
+                    variant="outline" 
+                    className="mt-3"
+                    onClick={() => setLocation("/route-map")}
+                    data-testid="button-open-full-map"
+                  >
                     <Map className="w-4 h-4 mr-2" />
                     Abrir Mapa Completo
                   </Button>

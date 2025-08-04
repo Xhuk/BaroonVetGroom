@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookMonitor } from "./webhookMonitor";
+import { optimizeDeliveryRoute, generateOptimizationPrompt } from "./routeOptimizer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -1023,6 +1024,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching roles:", error);
       res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+
+  // Route optimization endpoint
+  app.post('/api/optimize-route', isAuthenticated, async (req, res) => {
+    try {
+      const { appointments, vanCapacity, fraccionamientoWeights, clinicLocation } = req.body;
+      
+      if (!appointments || !Array.isArray(appointments)) {
+        return res.status(400).json({ message: "Valid appointments array is required" });
+      }
+
+      const result = optimizeDeliveryRoute({
+        appointments,
+        vanCapacity: vanCapacity || 'medium',
+        fraccionamientoWeights: fraccionamientoWeights || {},
+        clinicLocation: clinicLocation || [25.6866, -100.3161] // Monterrey default
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error optimizing route:", error);
+      
+      // Fallback: simple distance-based optimization
+      const appointments = req.body.appointments || [];
+      const fallbackRoute = appointments.sort((a: any, b: any) => {
+        const weightA = req.body.fraccionamientoWeights?.[a.client?.fraccionamiento] || 5;
+        const weightB = req.body.fraccionamientoWeights?.[b.client?.fraccionamiento] || 5;
+        return weightA - weightB;
+      });
+
+      res.json({
+        optimizedRoute: fallbackRoute,
+        totalDistance: 0,
+        estimatedTime: fallbackRoute.length * 15, // 15 minutes per stop
+        efficiency: 75,
+        fallback: true
+      });
+    }
+  });
+
+  // Van management endpoints
+  app.get('/api/vans/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const vans = await storage.getVans(tenantId);
+      res.json(vans);
+    } catch (error) {
+      console.error("Error fetching vans:", error);
+      res.status(500).json({ message: "Failed to fetch vans" });
+    }
+  });
+
+  app.post('/api/vans', isAuthenticated, async (req, res) => {
+    try {
+      const vanData = req.body;
+      const newVan = await storage.createVan(vanData);
+      res.json(newVan);
+    } catch (error) {
+      console.error("Error creating van:", error);
+      res.status(500).json({ message: "Failed to create van" });
+    }
+  });
+
+  app.patch('/api/vans/:vanId', isAuthenticated, async (req, res) => {
+    try {
+      const { vanId } = req.params;
+      const updates = req.body;
+      const updatedVan = await storage.updateVan(vanId, updates);
+      res.json(updatedVan);
+    } catch (error) {
+      console.error("Error updating van:", error);
+      res.status(500).json({ message: "Failed to update van" });
+    }
+  });
+
+  app.delete('/api/vans/:vanId', isAuthenticated, async (req, res) => {
+    try {
+      const { vanId } = req.params;
+      await storage.deleteVan(vanId);
+      res.json({ message: "Van deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting van:", error);
+      res.status(500).json({ message: "Failed to delete van" });
     }
   });
 
