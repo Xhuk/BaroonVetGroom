@@ -552,7 +552,7 @@ export default function BookingWizard() {
 
                         {/* Base OpenStreetMap with pan and zoom controls */}
                         <iframe
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-(mapDiameterKm/111.32)},${mapCoordinates.lat-(mapDiameterKm/110.54)},${mapCoordinates.lng+(mapDiameterKm/111.32)},${mapCoordinates.lat+(mapDiameterKm/110.54)}&layer=mapnik&marker=${mapCoordinates.lat},${mapCoordinates.lng}`}
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-(mapDiameterKm/111.32)},${mapCoordinates.lat-(mapDiameterKm/110.54)},${mapCoordinates.lng+(mapDiameterKm/111.32)},${mapCoordinates.lat+(mapDiameterKm/110.54)}&layer=mapnik`}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
