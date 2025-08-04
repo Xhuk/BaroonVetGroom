@@ -501,32 +501,36 @@ export default function BookingWizard() {
                       <div className="h-80 relative border-b">
                         {/* Custom Overlay Layer for Interactive Markers */}
                         <div className="absolute inset-0 z-20 pointer-events-none">
-                          {/* Client Location - Red Pin (positioned at customer GPS coordinates when available) */}
-                          {customerData.address && customerData.latitude && customerData.longitude && (
-                            <div 
-                              className="absolute transform -translate-x-1/2 -translate-y-full group z-40"
-                              style={{
-                                left: `${50 + ((parseFloat(customerData.longitude) - mapCoordinates.lng) / (mapDiameterKm / 111.32)) * 50}%`,
-                                top: `${50 - ((parseFloat(customerData.latitude) - mapCoordinates.lat) / (mapDiameterKm / 110.54)) * 50}%`,
-                                display: (
-                                  Math.abs(parseFloat(customerData.longitude) - mapCoordinates.lng) <= mapDiameterKm / 111.32 && 
-                                  Math.abs(parseFloat(customerData.latitude) - mapCoordinates.lat) <= mapDiameterKm / 110.54
-                                ) ? 'block' : 'none'
-                              }}
-                            >
-                              <MapPin className="w-8 h-8 text-red-600 drop-shadow-lg animate-bounce" />
-                              <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-red-50 px-3 py-2 rounded shadow text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-red-200">
-                                <div className="font-semibold text-red-700">Dirección del Cliente</div>
-                                <div className="text-red-600">{customerData.address}</div>
-                                <div className="text-red-600">{customerData.fraccionamiento}</div>
-                                <div className="text-xs text-gray-500">GPS: {parseFloat(customerData.latitude).toFixed(4)}, {parseFloat(customerData.longitude).toFixed(4)}</div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Clinic Location - Blue Marker (Precisely positioned at tenant GPS coordinates) */}
+                          {/* Right-click overlay for placing customer marker */}
                           <div 
-                            className="absolute transform -translate-x-1/2 -translate-y-full group"
+                            className="absolute inset-0 z-10 pointer-events-auto"
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const x = (e.clientX - rect.left) / rect.width;
+                              const y = (e.clientY - rect.top) / rect.height;
+                              
+                              // Convert screen coordinates to GPS coordinates
+                              const lng = (mapCoordinates.lng - mapDiameterKm/111.32) + (x * (mapDiameterKm/111.32) * 2);
+                              const lat = (mapCoordinates.lat + mapDiameterKm/110.54) - (y * (mapDiameterKm/110.54) * 2);
+                              
+                              // Update customer coordinates
+                              setCustomerData(prev => ({
+                                ...prev,
+                                latitude: lat.toString(),
+                                longitude: lng.toString()
+                              }));
+                              
+                              toast({
+                                title: "Ubicación del cliente establecida",
+                                description: `Coordenadas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+                              });
+                            }}
+                          />
+                          
+                          {/* Clinic Location - Blue Marker (Bound to tenant GPS coordinates) */}
+                          <div 
+                            className="absolute transform -translate-x-1/2 -translate-y-full group pointer-events-none"
                             style={{
                               left: `${((tenantLocation.lng - (mapCoordinates.lng - mapDiameterKm/111.32)) / ((mapDiameterKm/111.32) * 2)) * 100}%`,
                               top: `${((mapCoordinates.lat + mapDiameterKm/110.54 - tenantLocation.lat) / ((mapDiameterKm/110.54) * 2)) * 100}%`,
@@ -544,6 +548,27 @@ export default function BookingWizard() {
                               <div className="text-xs text-gray-500">GPS: {tenantLocation.lat.toFixed(4)}, {tenantLocation.lng.toFixed(4)}</div>
                             </div>
                           </div>
+                          
+                          {/* Customer Location - Red Pin (placed by right-click) */}
+                          {customerData.latitude && customerData.longitude && (
+                            <div 
+                              className="absolute transform -translate-x-1/2 -translate-y-full group z-40 pointer-events-none"
+                              style={{
+                                left: `${((parseFloat(customerData.longitude) - (mapCoordinates.lng - mapDiameterKm/111.32)) / ((mapDiameterKm/111.32) * 2)) * 100}%`,
+                                top: `${((mapCoordinates.lat + mapDiameterKm/110.54 - parseFloat(customerData.latitude)) / ((mapDiameterKm/110.54) * 2)) * 100}%`
+                              }}
+                            >
+                              <MapPin className="w-8 h-8 text-red-600 drop-shadow-lg animate-bounce" />
+                              <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-red-50 px-3 py-2 rounded shadow text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-red-200">
+                                <div className="font-semibold text-red-700">Ubicación del Cliente</div>
+                                <div className="text-red-600">{customerData.address || 'Ubicación manual'}</div>
+                                <div className="text-red-600">{customerData.fraccionamiento || 'Clic derecho en mapa'}</div>
+                                <div className="text-xs text-gray-500">GPS: {parseFloat(customerData.latitude).toFixed(4)}, {parseFloat(customerData.longitude).toFixed(4)}</div>
+                              </div>
+                            </div>
+                          )}
+
+
                         </div>
 
                         {/* Base OpenStreetMap with pan and zoom controls */}
@@ -560,7 +585,7 @@ export default function BookingWizard() {
                         
                         {/* Map navigation instructions */}
                         <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded text-xs text-gray-600">
-                          Arrastra para mover • Rueda para zoom
+                          Arrastra para mover • Rueda para zoom • Clic derecho para ubicar cliente
                         </div>
                       </div>
                       
