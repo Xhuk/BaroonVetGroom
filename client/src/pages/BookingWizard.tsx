@@ -756,11 +756,17 @@ export default function BookingWizard() {
                       <SelectValue placeholder="Seleccionar servicio" />
                     </SelectTrigger>
                     <SelectContent>
-                      {(services || []).map((service: Service) => (
-                        <SelectItem key={service.id} value={service.id}>
-                          {service.name} - ${service.price} ({service.duration} min)
+                      {services && services.length > 0 ? (
+                        services.map((service: any) => (
+                          <SelectItem key={service.id} value={service.id}>
+                            {service.name} - ${service.price} ({service.duration} min)
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          Cargando servicios...
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -819,7 +825,7 @@ export default function BookingWizard() {
                   onValueChange={(value) => setBookingData(prev => ({ ...prev, logistics: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Seleccionar tipo de servicio" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pickup">🚐 Recogemos en su domicilio</SelectItem>
@@ -828,14 +834,14 @@ export default function BookingWizard() {
                 </Select>
               </div>
 
-              <div>
+              <div className="md:col-span-2">
                 <Label htmlFor="notes">Notas adicionales</Label>
                 <Textarea
                   id="notes"
-                  value={bookingData.notes}
-                  onChange={(e) => setBookingData(prev => ({ ...prev, notes: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
-                  placeholder="Información adicional sobre la mascota o el servicio..."
-                  className="capitalize"
+                  value={bookingData.notes || ''}
+                  onChange={(e) => setBookingData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Instrucciones especiales, alergias, medicamentos, comportamiento de la mascota, etc."
+                  rows={3}
                 />
               </div>
             </div>
@@ -933,7 +939,7 @@ export default function BookingWizard() {
                   (currentStep === 1 && (!customerData.name || !customerData.phone)) ||
                   (currentStep === 2 && (!customerData.address || !customerData.fraccionamiento || !customerData.latitude || !customerData.longitude)) ||
                   (currentStep === 3 && (!petData.name || !petData.species || !petData.breed || !petData.age || !petData.weight)) ||
-                  (currentStep === 4 && (!selectedSlot || !bookingData.serviceId))
+                  (currentStep === 4 && (!selectedSlot || !bookingData.serviceId || !bookingData.logistics))
                 }
               >
                 Siguiente
