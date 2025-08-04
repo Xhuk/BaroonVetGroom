@@ -1485,6 +1485,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug endpoint for system admins to access all tenants
+  app.get('/api/debug/all-tenants', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!isSystemAdmin(req)) {
+        return res.status(403).json({ message: "Debug access requires system admin role" });
+      }
+      
+      const tenants = await storage.getAllTenantsWithCompany();
+      res.json(tenants);
+    } catch (error) {
+      console.error("Error fetching all tenants for debug:", error);
+      res.status(500).json({ message: "Failed to fetch tenants" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

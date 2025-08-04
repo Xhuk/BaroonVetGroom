@@ -35,6 +35,10 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **BETA Feature Control**: Super admin can enable/disable delivery tracking per company and tenant with usage analytics
 - **Route Optimization Caching**: Saves optimized routes to avoid recalculation unless new delivery points are added
 - **Smart Route Management**: Automatically detects when route needs recalculation based on appointment changes
+- **Comprehensive RBAC System**: Full role-based access control with system roles, company roles, and page-level permissions
+- **Debug Tenant Selection**: VetGroom developers can access any tenant through debug mode with secure session management
+- **System Admin Dashboard**: Super admin interface for role management, user assignments, and debug access control
+- **Multi-Level Access Control**: Hierarchical system from VetGroom sysadmin → supertenant → tenant users with debug capabilities
 
 # User Preferences
 
@@ -50,6 +54,7 @@ Preferred communication style: Simple, everyday language.
 - **Styling**: Tailwind CSS with custom veterinary theme colors and CSS variables
 - **State Management**: TanStack Query for server state and React Context for tenant management
 - **Form Handling**: React Hook Form with Zod validation schemas
+- **Debug System**: Tenant selection interface for VetGroom developers with session-based switching
 
 ## Backend Architecture
 - **Express.js**: RESTful API server with middleware for logging and error handling
@@ -72,6 +77,8 @@ Preferred communication style: Simple, everyday language.
 - **Session Management**: PostgreSQL-backed sessions with configurable TTL
 - **Multi-tenant Access Control**: Users can switch between authorized tenants
 - **Route Protection**: Server-side middleware and client-side guards for protected resources
+- **RBAC System**: Complete role-based access control with system roles, company roles, and page permissions
+- **Debug Access**: Secure tenant selection system for VetGroom developers and system administrators
 
 ## Multi-tenancy Implementation
 - **Tenant Context**: React context provider for current tenant state management

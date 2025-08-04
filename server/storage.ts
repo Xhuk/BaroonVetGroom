@@ -195,7 +195,7 @@ export class DatabaseStorage implements IStorage {
         id: userTenants.id,
         userId: userTenants.userId,
         tenantId: userTenants.tenantId,
-        role: userTenants.role,
+        roleId: userTenants.roleId,
         isActive: userTenants.isActive,
         createdAt: userTenants.createdAt,
         tenant: {
@@ -1011,6 +1011,26 @@ export class DatabaseStorage implements IStorage {
       isActive: true,
     }).returning();
     return assignment;
+  }
+
+  async getAllTenantsWithCompany(): Promise<any[]> {
+    return await db
+      .select({
+        id: tenants.id,
+        name: tenants.name,
+        subdomain: tenants.subdomain,
+        address: tenants.address,
+        phone: tenants.phone,
+        email: tenants.email,
+        openTime: tenants.openTime,
+        closeTime: tenants.closeTime,
+        deliveryTrackingEnabled: tenants.deliveryTrackingEnabled,
+        companyId: tenants.companyId,
+        companyName: companies.name,
+      })
+      .from(tenants)
+      .leftJoin(companies, eq(tenants.companyId, companies.id))
+      .orderBy(companies.name, tenants.name);
   }
 }
 
