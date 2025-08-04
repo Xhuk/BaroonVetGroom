@@ -80,24 +80,7 @@ export default function BookingWizard() {
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [reservedSlots, setReservedSlots] = useState<string[]>([]);
-  const [mapCoordinates, setMapCoordinates] = useState({ lat: 25.6866, lng: -100.3161 }); // Monterrey default
   const [tenantLocation, setTenantLocation] = useState({ lat: 25.74055709021775, lng: -100.407349161356 });
-  const [mapDiameterKm, setMapDiameterKm] = useState(8); // Configurable from admin
-  const [maxZoomRange, setMaxZoomRange] = useState(8); // Admin-configured zoom limit
-  const [minZoomLevel] = useState(0.5); // Enhanced minimum zoom for detailed view
-  
-  // Load map settings from localStorage (admin configuration)
-  useEffect(() => {
-    if (currentTenant?.id) {
-      const savedSettings = localStorage.getItem(`mapSettings_${currentTenant.id}`);
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        const adminRange = settings.diameterKm || 8;
-        setMapDiameterKm(adminRange);
-        setMaxZoomRange(adminRange);
-      }
-    }
-  }, [currentTenant?.id]);
 
   // Queries
   const { data: services } = useQuery({
@@ -107,21 +90,14 @@ export default function BookingWizard() {
 
   // Remove staff query - not needed for delivery planning
 
-  // Update tenant location and center map when currentTenant changes
+  // Update tenant location when currentTenant changes
   useEffect(() => {
     if (currentTenant?.latitude && currentTenant?.longitude) {
       const tenantLat = parseFloat(currentTenant.latitude);
       const tenantLng = parseFloat(currentTenant.longitude);
       setTenantLocation({ lat: tenantLat, lng: tenantLng });
-      // Always center map on tenant location
-      setMapCoordinates({ lat: tenantLat, lng: tenantLng });
     }
   }, [currentTenant]);
-
-  // Initialize map centered on tenant location for delivery planning
-  useEffect(() => {
-    setMapCoordinates(tenantLocation);
-  }, [tenantLocation]);
 
   // Geocoding function for address with postal code fallback
   const geocodeAddress = async (address: string, fraccionamiento: string, postalCode?: string) => {
@@ -151,9 +127,7 @@ export default function BookingWizard() {
       
       if (data.length > 0) {
         const { lat, lon } = data[0];
-        const newCoords = { lat: parseFloat(lat), lng: parseFloat(lon) };
-        console.log("Setting coordinates:", newCoords);
-        setMapCoordinates(newCoords);
+        console.log("Setting coordinates:", { lat: parseFloat(lat), lng: parseFloat(lon) });
         setCustomerData(prev => ({
           ...prev,
           latitude: lat,
@@ -167,7 +141,7 @@ export default function BookingWizard() {
           lat: currentTenant?.latitude ? parseFloat(currentTenant.latitude) : 25.740586082849077,
           lng: currentTenant?.longitude ? parseFloat(currentTenant.longitude) : -100.40735989019088
         };
-        setMapCoordinates(defaultCoords);
+        // Coordinates will be used directly by customer data
         setCustomerData(prev => ({
           ...prev,
           latitude: defaultCoords.lat.toString(),
@@ -187,7 +161,7 @@ export default function BookingWizard() {
         lat: currentTenant?.latitude ? parseFloat(currentTenant.latitude) : 25.740586082849077,
         lng: currentTenant?.longitude ? parseFloat(currentTenant.longitude) : -100.40735989019088
       };
-      setMapCoordinates(defaultCoords);
+      // Default coordinates handled by Leaflet
       toast({
         title: "Error de geocodificación",
         description: "Error al buscar la ubicación. Se usa la ubicación por defecto.",
@@ -515,8 +489,8 @@ export default function BookingWizard() {
                       <div className="h-80 relative border-b">
                         <Suspense fallback={<div className="h-full w-full bg-gray-100 flex items-center justify-center">Cargando mapa...</div>}>
                           <LeafletMap
-                            center={[mapCoordinates.lat, mapCoordinates.lng]}
-                            zoom={15 - Math.floor(mapDiameterKm / 2)}
+                            center={[tenantLocation.lat, tenantLocation.lng]}
+                            zoom={13}
                             tenantLocation={tenantLocation}
                             customerLocation={
                               customerData.latitude && customerData.longitude
@@ -541,9 +515,7 @@ export default function BookingWizard() {
                                 variant: "default"
                               });
                             }}
-                            onMapMove={(lat, lng) => {
-                              setMapCoordinates({ lat, lng });
-                            }}
+                            onMapMove={() => {}} // Remove map move tracking
                           />
                         </Suspense>
                       </div>
@@ -573,8 +545,8 @@ export default function BookingWizard() {
 
                         <div className="flex items-center justify-between">
                           <div className="text-xs text-gray-500">
-                            <p>Centro: {mapCoordinates.lat.toFixed(6)}, {mapCoordinates.lng.toFixed(6)}</p>
-                            <p>Radio: {mapDiameterKm}km | {customerData.address ? 'Cliente ubicado' : 'Vista clínica'}</p>
+                            <p>Centro: {tenantLocation.lat.toFixed(6)}, {tenantLocation.lng.toFixed(6)}</p>
+                            <p>Vista clínica | {customerData.address ? 'Cliente ubicado' : 'Sin cliente'}</p>
                           </div>
                           <div className="flex gap-2">
                             <Button
@@ -593,10 +565,7 @@ export default function BookingWizard() {
                               onClick={() => {
                                 // Center map on customer location if available
                                 if (customerData.latitude && customerData.longitude) {
-                                  setMapCoordinates({
-                                    lat: parseFloat(customerData.latitude),
-                                    lng: parseFloat(customerData.longitude)
-                                  });
+                                  // Map will center on customer location automatically
                                   toast({
                                     title: "Vista centrada en cliente",
                                     description: "Mapa centrado en la dirección del cliente.",
@@ -613,8 +582,7 @@ export default function BookingWizard() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                // Center map on clinic
-                                setMapCoordinates(tenantLocation);
+                                // Map stays centered on clinic
                                 toast({
                                   title: "Vista centrada en clínica",
                                   description: "Mapa centrado en las coordenadas de la clínica.",
@@ -650,44 +618,32 @@ export default function BookingWizard() {
                 </div>
                 
                 {/* Manual Coordinates Input */}
-                {mapCoordinates.lat !== 25.6866 && (
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <div>
-                      <Label htmlFor="latitude" className="text-xs">Latitud (opcional)</Label>
-                      <Input
-                        id="latitude"
-                        value={customerData.latitude}
-                        onChange={(e) => {
-                          setCustomerData(prev => ({ ...prev, latitude: e.target.value }));
-                          const lat = parseFloat(e.target.value);
-                          const lng = parseFloat(customerData.longitude);
-                          if (!isNaN(lat) && !isNaN(lng)) {
-                            setMapCoordinates({ lat, lng });
-                          }
-                        }}
-                        placeholder="25.6866"
-                        className="text-xs"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="longitude" className="text-xs">Longitud (opcional)</Label>
-                      <Input
-                        id="longitude"
-                        value={customerData.longitude}
-                        onChange={(e) => {
-                          setCustomerData(prev => ({ ...prev, longitude: e.target.value }));
-                          const lat = parseFloat(customerData.latitude);
-                          const lng = parseFloat(e.target.value);
-                          if (!isNaN(lat) && !isNaN(lng)) {
-                            setMapCoordinates({ lat, lng });
-                          }
-                        }}
-                        placeholder="-100.3161"
-                        className="text-xs"
-                      />
-                    </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="latitude" className="text-xs">Latitud (opcional)</Label>
+                    <Input
+                      id="latitude"
+                      value={customerData.latitude}
+                      onChange={(e) => {
+                        setCustomerData(prev => ({ ...prev, latitude: e.target.value }));
+                      }}
+                      placeholder="25.6866"
+                      className="text-xs"
+                    />
                   </div>
-                )}
+                  <div>
+                    <Label htmlFor="longitude" className="text-xs">Longitud (opcional)</Label>
+                    <Input
+                      id="longitude"
+                      value={customerData.longitude}
+                      onChange={(e) => {
+                        setCustomerData(prev => ({ ...prev, longitude: e.target.value }));
+                      }}
+                      placeholder="-100.3161"
+                      className="text-xs"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}

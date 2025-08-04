@@ -14,21 +14,17 @@ interface LeafletMapProps {
   } | null;
   tenantName?: string;
   onMapClick: (lat: number, lng: number) => void;
-  onMapMove: (lat: number, lng: number) => void;
+  onMapMove?: (lat: number, lng: number) => void;
 }
 
-// Map Click Handler Component for Leaflet
-function MapClickHandler({ onMapClick, onMapMove }: { 
+// Map Click Handler Component for Leaflet - Right click only
+function MapClickHandler({ onMapClick }: { 
   onMapClick: (lat: number, lng: number) => void;
-  onMapMove: (lat: number, lng: number) => void;
 }) {
   const map = useMapEvents({
-    click(e) {
+    contextmenu(e) {
+      e.originalEvent.preventDefault();
       onMapClick(e.latlng.lat, e.latlng.lng);
-    },
-    moveend(e) {
-      const center = e.target.getCenter();
-      onMapMove(center.lat, center.lng);
     }
   });
   return null;
@@ -62,7 +58,6 @@ export default function LeafletMap({
       {/* Map Click Handler */}
       <MapClickHandler 
         onMapClick={onMapClick}
-        onMapMove={onMapMove}
       />
       
       {/* Clinic Marker - Blue */}
