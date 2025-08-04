@@ -411,7 +411,38 @@ export const vans = pgTable("vans", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Medical Records - patient medical history and diagnoses
+// Medical Appointments - comprehensive appointment-based workflow
+export const medicalAppointments = pgTable("medical_appointments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  appointmentId: varchar("appointment_id").references(() => appointments.id),
+  petId: varchar("pet_id").notNull().references(() => pets.id),
+  clientId: varchar("client_id").notNull().references(() => clients.id),
+  veterinarianId: varchar("veterinarian_id").notNull().references(() => staff.id),
+  roomId: varchar("room_id").references(() => rooms.id),
+  visitDate: timestamp("visit_date").notNull(),
+  visitType: varchar("visit_type").notNull(), // consultation, checkup, surgery, emergency, follow_up
+  chiefComplaint: text("chief_complaint"),
+  symptoms: text("symptoms").array().default(sql`ARRAY[]::text[]`),
+  diagnosis: text("diagnosis"),
+  treatment: text("treatment"),
+  treatmentPlan: text("treatment_plan"),
+  medicines: jsonb("medicines"), // Array of prescribed medicines with dosage
+  followUpInstructions: text("follow_up_instructions"),
+  notes: text("notes"),
+  vitals: jsonb("vitals"), // temperature, weight, heart_rate, etc.
+  followUpRequired: boolean("follow_up_required").default(false),
+  followUpDate: timestamp("follow_up_date"),
+  status: varchar("status").default("scheduled"), // scheduled, in_progress, completed, cancelled
+  isConfirmed: boolean("is_confirmed").default(false),
+  confirmedAt: timestamp("confirmed_at"),
+  confirmedBy: varchar("confirmed_by").references(() => staff.id),
+  invoiceGenerated: boolean("invoice_generated").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Keep medical records for compatibility
 export const medicalRecords = pgTable("medical_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
@@ -539,6 +570,72 @@ export type InsertGroomingRecord = typeof groomingRecords.$inferInsert;
 export type PetHealthProfile = typeof petHealthProfiles.$inferSelect;
 export type InsertPetHealthProfile = typeof petHealthProfiles.$inferInsert;
 
+// Medical appointment documents/images
+export const medicalDocuments = pgTable("medical_documents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  medicalAppointmentId: varchar("medical_appointment_id").notNull().references(() => medicalAppointments.id),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  fileName: varchar("file_name").notNull(),
+  fileType: varchar("file_type").notNull(),
+  fileSize: integer("file_size"),
+  fileUrl: varchar("file_url").notNull(),
+  documentType: varchar("document_type", { 
+    enum: ["x_ray", "lab_result", "prescription", "photo", "form", "report", "other"] 
+  }).notNull(),
+  description: text("description"),
+  uploadedBy: varchar("uploaded_by").notNull().references(() => staff.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Invoice queue for confirmed services
+export const invoiceQueue = pgTable("invoice_queue", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  clientId: varchar("client_id").notNull().references(() => clients.id),
+  serviceType: varchar("service_type", { enum: ["medical", "grooming", "product", "medicine"] }).notNull(),
+  serviceId: varchar("service_id").notNull(), // ID of the service (medical appointment, grooming, etc.)
+  serviceName: varchar("service_name").notNull(),
+  serviceDescription: text("service_description"),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  status: varchar("status", { enum: ["pending", "invoiced", "paid", "cancelled"] }).default("pending"),
+  confirmedBy: varchar("confirmed_by").references(() => staff.id),
+  confirmedAt: timestamp("confirmed_at"),
+  invoicedAt: timestamp("invoiced_at"),
+  paidAt: timestamp("paid_at"),
+  paymentMethod: varchar("payment_method", { enum: ["cash", "card", "transfer", "advance"] }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Staff room assignments (for tracking room changes)
+export const staffRoomAssignments = pgTable("staff_room_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  staffId: varchar("staff_id").notNull().references(() => staff.id),
+  roomId: varchar("room_id").notNull().references(() => rooms.id),
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  assignedBy: varchar("assigned_by").references(() => staff.id),
+  shiftStart: timestamp("shift_start"),
+  shiftEnd: timestamp("shift_end"),
+  isActive: boolean("is_active").default(true),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// New type exports
+export type MedicalAppointment = typeof medicalAppointments.$inferSelect;
+export type InsertMedicalAppointment = typeof medicalAppointments.$inferInsert;
+
+export type MedicalDocument = typeof medicalDocuments.$inferSelect;
+export type InsertMedicalDocument = typeof medicalDocuments.$inferInsert;
+
+export type InvoiceQueue = typeof invoiceQueue.$inferSelect;
+export type InsertInvoiceQueue = typeof invoiceQueue.$inferInsert;
+
+export type StaffRoomAssignment = typeof staffRoomAssignments.$inferSelect;
+export type InsertStaffRoomAssignment = typeof staffRoomAssignments.$inferInsert;
+
 // Route optimization configuration for companies
 export const routeOptimizationConfig = pgTable("route_optimization_config", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -665,6 +762,7 @@ export const driverCheckInsRelations = relations(driverCheckIns, ({ one }) => ({
 export type DeliveryTracking = typeof deliveryTracking.$inferSelect;
 export type InsertDeliveryTracking = typeof deliveryTracking.$inferInsert;
 export type DeliveryAlert = typeof deliveryAlerts.$inferSelect;
-export type InsertDeliveryAlert = typeof deliveryAlerts.$inferInsert;
+export type InsertDeliveryAlert = typeof deliveryAlerts.$inferInsert;  
 export type DriverCheckIn = typeof driverCheckIns.$inferSelect;
 export type InsertDriverCheckIn = typeof driverCheckIns.$inferInsert;
+

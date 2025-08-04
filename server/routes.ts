@@ -1881,6 +1881,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Medical Appointments routes
+  app.get('/api/medical-appointments/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const appointments = await storage.getMedicalAppointments(tenantId);
+      res.json(appointments);
+    } catch (error) {
+      console.error("Error fetching medical appointments:", error);
+      res.status(500).json({ message: "Failed to fetch medical appointments" });
+    }
+  });
+
+  app.post('/api/medical-appointments/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const appointmentData = { ...req.body, tenantId };
+      const appointment = await storage.createMedicalAppointment(appointmentData);
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error creating medical appointment:", error);
+      res.status(500).json({ message: "Failed to create medical appointment" });
+    }
+  });
+
+  app.put('/api/medical-appointments/:tenantId/:appointmentId', isAuthenticated, async (req, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const appointment = await storage.updateMedicalAppointment(appointmentId, req.body);
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error updating medical appointment:", error);
+      res.status(500).json({ message: "Failed to update medical appointment" });
+    }
+  });
+
+  // Invoice Queue routes
+  app.get('/api/invoice-queue/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const items = await storage.getInvoiceQueueByTenant(tenantId);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching invoice queue:", error);
+      res.status(500).json({ message: "Failed to fetch invoice queue" });
+    }
+  });
+
+  app.post('/api/invoice-queue/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const itemData = { ...req.body, tenantId };
+      const item = await storage.createInvoiceQueueItem(itemData);
+      res.json(item);
+    } catch (error) {
+      console.error("Error creating invoice queue item:", error);
+      res.status(500).json({ message: "Failed to create invoice queue item" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

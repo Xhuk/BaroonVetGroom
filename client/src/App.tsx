@@ -28,6 +28,7 @@ import DeliveryTracking from "@/pages/DeliveryTracking";
 import AdminVanConfig from "@/pages/AdminVanConfig";
 import Billing from "@/pages/Billing";
 import MedicalRecords from "@/pages/MedicalRecords";
+import MedicalAppointments from "@/pages/MedicalAppointments";
 import GroomingServices from "@/pages/GroomingServices";
 
 function Router() {
@@ -44,6 +45,7 @@ function Router() {
           <Route path="/booking" component={BookingWizard} />
           <Route path="/clients" component={Clients} />
           <Route path="/medical-records" component={MedicalRecords} />
+          <Route path="/medical-appointments" component={MedicalAppointments} />
           <Route path="/grooming-services" component={GroomingServices} />
           <Route path="/inventory" component={Inventory} />
           <Route path="/delivery-plan" component={DeliveryPlan} />

@@ -21,10 +21,10 @@ export function Navigation({ className }: NavigationProps) {
   const { canAccessAdmin, canAccessSuperAdmin } = useAccessControl();
 
   const navigationItems = [
-    { icon: BarChart3, label: "Tablero", href: "/", active: true },
+    { icon: BarChart3, label: "Tablero", href: "/" },
     { icon: Calendar, label: "Citas", href: "/appointments" },
     { icon: Users, label: "Clientes", href: "/clients" },
-    { icon: Stethoscope, label: "Expedientes", href: "/medical-records" },
+    { icon: Stethoscope, label: "Medical", href: "/medical-appointments" },
     { icon: Scissors, label: "Estética", href: "/grooming-services" },
     { icon: Package, label: "Inventario", href: "/inventory" },
     { icon: Truck, label: "Plan de Entregas", href: "/delivery-plan" },
@@ -50,12 +50,7 @@ export function Navigation({ className }: NavigationProps) {
             <li key={item.href}>
               <a
                 href={item.href}
-                className={cn(
-                  "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium",
-                  item.active
-                    ? "text-blue-600 bg-blue-50"
-                    : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                )}
+                className="flex items-center space-x-3 px-3 py-2 rounded-lg font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
               >
                 <item.icon className="w-5 h-5" />
                 <span>{item.label}</span>

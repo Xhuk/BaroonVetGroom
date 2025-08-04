@@ -24,6 +24,10 @@ import {
   deliveryAlerts,
   driverCheckIns,
   medicalRecords,
+  medicalAppointments,
+  medicalDocuments,
+  invoiceQueue,
+  staffRoomAssignments,
   prescriptions,
   vaccinationRecords,
   groomingRecords,
@@ -70,6 +74,14 @@ import {
   type InsertDriverCheckIn,
   type MedicalRecord,
   type InsertMedicalRecord,
+  type MedicalAppointment,
+  type InsertMedicalAppointment,
+  type MedicalDocument,
+  type InsertMedicalDocument,
+  type InvoiceQueue,
+  type InsertInvoiceQueue,
+  type StaffRoomAssignment,
+  type InsertStaffRoomAssignment,
   type Prescription,
   type InsertPrescription,
   type VaccinationRecord,
@@ -181,6 +193,16 @@ export interface IStorage {
   getMedicalRecord(recordId: string): Promise<MedicalRecord | undefined>;
   createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord>;
   updateMedicalRecord(recordId: string, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord>;
+  
+  // Medical Appointments operations
+  getMedicalAppointments(tenantId: string): Promise<MedicalAppointment[]>;
+  getMedicalAppointment(appointmentId: string): Promise<MedicalAppointment | undefined>;
+  createMedicalAppointment(appointment: InsertMedicalAppointment): Promise<MedicalAppointment>;
+  updateMedicalAppointment(appointmentId: string, appointment: Partial<InsertMedicalAppointment>): Promise<MedicalAppointment>;
+  
+  // Invoice Queue operations
+  createInvoiceQueueItem(item: InsertInvoiceQueue): Promise<InvoiceQueue>;
+  getInvoiceQueueByTenant(tenantId: string): Promise<InvoiceQueue[]>;
   
   // Grooming Records operations
   getGroomingRecords(tenantId: string): Promise<GroomingRecord[]>;
@@ -1174,6 +1196,50 @@ export class DatabaseStorage implements IStorage {
       .where(eq(medicalRecords.id, recordId))
       .returning();
     return updatedRecord;
+  }
+
+  // Medical Appointments operations
+  async getMedicalAppointments(tenantId: string): Promise<MedicalAppointment[]> {
+    const appointments = await db.select().from(medicalAppointments)
+      .where(eq(medicalAppointments.tenantId, tenantId))
+      .orderBy(desc(medicalAppointments.visitDate));
+    return appointments;
+  }
+
+  async getMedicalAppointment(appointmentId: string): Promise<MedicalAppointment | undefined> {
+    const [appointment] = await db.select().from(medicalAppointments)
+      .where(eq(medicalAppointments.id, appointmentId));
+    return appointment;
+  }
+
+  async createMedicalAppointment(appointment: InsertMedicalAppointment): Promise<MedicalAppointment> {
+    const [newAppointment] = await db.insert(medicalAppointments)
+      .values(appointment)
+      .returning();
+    return newAppointment;
+  }
+
+  async updateMedicalAppointment(appointmentId: string, appointment: Partial<InsertMedicalAppointment>): Promise<MedicalAppointment> {
+    const [updatedAppointment] = await db.update(medicalAppointments)
+      .set({ ...appointment, updatedAt: new Date() })
+      .where(eq(medicalAppointments.id, appointmentId))
+      .returning();
+    return updatedAppointment;
+  }
+
+  // Invoice Queue operations
+  async createInvoiceQueueItem(item: InsertInvoiceQueue): Promise<InvoiceQueue> {
+    const [newItem] = await db.insert(invoiceQueue)
+      .values(item)
+      .returning();
+    return newItem;
+  }
+
+  async getInvoiceQueueByTenant(tenantId: string): Promise<InvoiceQueue[]> {
+    const items = await db.select().from(invoiceQueue)
+      .where(eq(invoiceQueue.tenantId, tenantId))
+      .orderBy(desc(invoiceQueue.createdAt));
+    return items;
   }
 
   // Grooming Records operations
