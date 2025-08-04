@@ -23,13 +23,11 @@ export const customBlueIcon = new L.Icon({
   shadowAnchor: [13, 41]
 });
 
-// Custom green paw customer marker - eye-catching and bouncing
+// Custom green paw customer marker - eye-catching and bouncing (no shadow)
 export const customRedIcon = new L.Icon({
   iconUrl: pawMarkerIcon,
   iconSize: [40, 40], // Square paw icon
   iconAnchor: [20, 20], // Center anchor for circular icon
-  popupAnchor: [0, -20],
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  shadowSize: [50, 50],
-  shadowAnchor: [25, 25]
+  popupAnchor: [0, -20]
+  // No shadow for cleaner look
 });

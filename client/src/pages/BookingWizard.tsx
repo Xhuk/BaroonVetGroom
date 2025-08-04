@@ -617,33 +617,7 @@ export default function BookingWizard() {
                   )}
                 </div>
                 
-                {/* Manual Coordinates Input */}
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <div>
-                    <Label htmlFor="latitude" className="text-xs">Latitud (opcional)</Label>
-                    <Input
-                      id="latitude"
-                      value={customerData.latitude}
-                      onChange={(e) => {
-                        setCustomerData(prev => ({ ...prev, latitude: e.target.value }));
-                      }}
-                      placeholder="25.6866"
-                      className="text-xs"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="longitude" className="text-xs">Longitud (opcional)</Label>
-                    <Input
-                      id="longitude"
-                      value={customerData.longitude}
-                      onChange={(e) => {
-                        setCustomerData(prev => ({ ...prev, longitude: e.target.value }));
-                      }}
-                      placeholder="-100.3161"
-                      className="text-xs"
-                    />
-                  </div>
-                </div>
+
               </div>
             </div>
           )}

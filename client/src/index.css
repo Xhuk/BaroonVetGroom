@@ -2,16 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Bounce animation for customer markers */
+/* Bounce animation for customer markers - exactly 2 bounces */
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
+  0% {
     transform: translateY(0);
   }
-  40% {
+  12.5% {
     transform: translateY(-20px);
   }
-  60% {
-    transform: translateY(-10px);
+  25% {
+    transform: translateY(0);
+  }
+  37.5% {
+    transform: translateY(-15px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(0);
   }
 }
 

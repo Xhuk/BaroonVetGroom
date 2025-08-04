@@ -87,10 +87,10 @@ export default function LeafletMap({
           ref={customerMarkerRef}
           eventHandlers={{
             add: (e) => {
-              // Add CSS bounce animation when marker is added
+              // Add CSS bounce animation when marker is added - exactly 2 bounces
               const marker = e.target;
               if (marker._icon) {
-                marker._icon.style.animation = 'bounce 0.6s ease-in-out 2';
+                marker._icon.style.animation = 'bounce 1s ease-in-out 1';
               }
             }
           }}
