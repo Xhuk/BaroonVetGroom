@@ -33,16 +33,10 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   // Check if user has debug access
   const isDebugUser = user?.email?.includes('vetgroom') || false;
 
-  // Check if we're on Replit domain to decide which endpoint to use
-  const isReplitDomain = window.location.hostname.includes('replit.dev');
-  const tenantsEndpoint = isReplitDomain ? "/api/preview/tenants" : "/api/tenants/user";
-  
-  const { data: finalTenants = [], isLoading: isLoadingTenants } = useQuery<UserTenant[]>({
-    queryKey: [tenantsEndpoint],
+  const { data: userTenants = [], isLoading: isLoadingTenants } = useQuery<UserTenant[]>({
+    queryKey: ["/api/tenants/user"],
     enabled: isAuthenticated,
   });
-
-  console.log("TenantContext - Tenants:", { finalTenants, isLoadingTenants, isAuthenticated });
 
   const { data: tenant, isLoading: isLoadingCurrentTenant } = useQuery<Tenant>({
     queryKey: ["/api/tenants", currentTenant?.id],
@@ -78,10 +72,10 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     }
     
     // Normal tenant selection logic for non-debug users
-    if (finalTenants.length > 0 && !currentTenant && !debugMode) {
+    if (userTenants.length > 0 && !currentTenant && !debugMode) {
       // Fetch full tenant data for all user tenants
       Promise.all(
-        finalTenants.map(ut => 
+        userTenants.map(ut => 
           fetch(`/api/tenants/${ut.tenantId}`)
             .then(res => res.json())
             .catch(console.error)
@@ -103,7 +97,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         }
       });
     }
-  }, [finalTenants, currentTenant, user, isDebugUser]);
+  }, [userTenants, currentTenant, user, isDebugUser]);
 
   const handleTenantSelect = (selectedTenant: Tenant) => {
     setCurrentTenant(selectedTenant);
@@ -138,7 +132,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     currentTenant: tenant || currentTenant,
-    userTenants: finalTenants,
+    userTenants,
     setCurrentTenant,
     isLoading: isLoadingTenants || isLoadingCurrentTenant,
     showTenantSelector,

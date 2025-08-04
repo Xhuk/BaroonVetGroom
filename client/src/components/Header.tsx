@@ -59,7 +59,7 @@ export function Header() {
   ];
   
   // Check if user has debug access
-  const isDebugUser = user?.email?.includes('dongadgetoshop') || user?.email?.includes('vetgroom') || canDebugTenants;
+  const isDebugUser = user?.email?.includes('vetgroom') || false;
 
   const currentDate = new Date();
   const dateOptions: Intl.DateTimeFormatOptions = {
@@ -137,25 +137,17 @@ export function Header() {
           )}
           
           <div className="flex items-center space-x-3">
-            {/* Debug Mode Activation - Only for authorized users */}
+            {/* Debug Mode Activation - Only for VetGroom users */}
             {isDebugUser && !isDebugMode && (
               <Button
                 onClick={activateDebugMode}
                 variant="outline"
                 size="sm"
-                className="text-orange-600 border-orange-300 hover:bg-orange-50 animate-pulse"
-                data-testid="button-debug-mode"
+                className="text-orange-600 border-orange-300 hover:bg-orange-50"
               >
                 <Bug className="w-3 h-3 mr-1" />
                 Debug Mode
               </Button>
-            )}
-
-            {/* Debug Mode Status - When active */}
-            {isDebugMode && (
-              <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs">
-                🔧 Debug Active
-              </Badge>
             )}
             
             <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">

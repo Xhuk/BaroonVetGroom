@@ -50,16 +50,9 @@ export default function Dashboard() {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
             No hay tenant asignado
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600">
             Contacta al administrador para obtener acceso a un tenant.
           </p>
-          <a 
-            href="/api/login"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            data-testid="link-login"
-          >
-            Iniciar sesión nuevamente
-          </a>
         </div>
       </div>
     );

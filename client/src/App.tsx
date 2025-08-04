@@ -28,10 +28,7 @@ import AdminVanConfig from "@/pages/AdminVanConfig";
 import Billing from "@/pages/Billing";
 
 function Router() {
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  // Debug logging for authentication state
-  console.log("Auth state:", { isAuthenticated, isLoading, user });
+  const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
