@@ -75,6 +75,18 @@ export default function BookingWizard() {
   const [tenantLocation, setTenantLocation] = useState({ lat: 25.740586082849077, lng: -100.40735989019088 });
   const [isDraggingTenant, setIsDraggingTenant] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [mapDiameterKm, setMapDiameterKm] = useState(8); // Configurable from admin
+  
+  // Load map settings from localStorage (admin configuration)
+  useEffect(() => {
+    if (currentTenant?.id) {
+      const savedSettings = localStorage.getItem(`mapSettings_${currentTenant.id}`);
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        setMapDiameterKm(settings.diameterKm || 8);
+      }
+    }
+  }, [currentTenant?.id]);
 
   // Queries
   const { data: services } = useQuery({
@@ -87,13 +99,14 @@ export default function BookingWizard() {
     enabled: !!currentTenant?.id,
   });
 
-  // Update tenant location when currentTenant changes
+  // Update tenant location and center map when currentTenant changes
   useEffect(() => {
     if (currentTenant?.latitude && currentTenant?.longitude) {
-      setTenantLocation({
-        lat: parseFloat(currentTenant.latitude),
-        lng: parseFloat(currentTenant.longitude)
-      });
+      const tenantLat = parseFloat(currentTenant.latitude);
+      const tenantLng = parseFloat(currentTenant.longitude);
+      setTenantLocation({ lat: tenantLat, lng: tenantLng });
+      // Always center map on tenant location
+      setMapCoordinates({ lat: tenantLat, lng: tenantLng });
     }
   }, [currentTenant]);
 
@@ -499,7 +512,8 @@ export default function BookingWizard() {
               <div className="mt-4">
                 <Label>Mapa inteligente con personal en tiempo real</Label>
                 <div className="border rounded-lg overflow-hidden bg-gray-50">
-                  {(currentTenant && currentTenant.latitude && currentTenant.longitude) ? (
+                  {/* Map is always displayed when tenant coordinates are available */}
+                  {(tenantLocation.lat && tenantLocation.lng) ? (
                     <div>
                       {/* Professional Interactive Map with Custom Drag Support */}
                       <div className="h-80 relative border-b">
@@ -613,13 +627,13 @@ export default function BookingWizard() {
                           ))}
                         </div>
 
-                        {/* Base OpenStreetMap */}
+                        {/* Base OpenStreetMap - Always centered on tenant with configurable diameter */}
                         <iframe
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${tenantLocation.lng-0.008},${tenantLocation.lat-0.008},${tenantLocation.lng+0.008},${tenantLocation.lat+0.008}&layer=mapnik`}
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${tenantLocation.lng-(mapDiameterKm/111.32)},${tenantLocation.lat-(mapDiameterKm/110.54)},${tenantLocation.lng+(mapDiameterKm/111.32)},${tenantLocation.lat+(mapDiameterKm/110.54)}&layer=mapnik`}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
-                          title="Mapa interactivo con personal en tiempo real"
+                          title={`Mapa de ${mapDiameterKm}km centrado en clínica`}
                           className="rounded-t-lg"
                           loading="lazy"
                         />
@@ -653,9 +667,10 @@ export default function BookingWizard() {
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <p className="text-xs text-gray-500">
-                            GPS: {mapCoordinates.lat.toFixed(6)}, {mapCoordinates.lng.toFixed(6)}
-                          </p>
+                          <div className="text-xs text-gray-500">
+                            <p>Clínica: {tenantLocation.lat.toFixed(6)}, {tenantLocation.lng.toFixed(6)}</p>
+                            <p>Radio: {mapDiameterKm}km | Personal: {staffLocations.length}</p>
+                          </div>
                           <div className="flex gap-2">
                             <Button
                               variant="outline"

@@ -11,6 +11,7 @@ import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import Admin from "@/pages/Admin";
 import SuperAdmin from "@/pages/SuperAdmin";
+import AdminSettings from "@/pages/AdminSettings";
 import Appointments from "@/pages/Appointments";
 import BookingWizard from "@/pages/BookingWizard";
 import Clients from "@/pages/Clients";
@@ -35,6 +36,7 @@ function Router() {
           <Route path="/delivery" component={DeliveryPlan} />
           <Route path="/billing" component={Billing} />
           <Route path="/admin" component={Admin} />
+          <Route path="/admin/settings" component={AdminSettings} />
           <Route path="/superadmin" component={SuperAdmin} />
         </>
       )}
