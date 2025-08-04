@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Scissors, Plus, Search, Star, Camera, Clock, DollarSign, Heart } from "lucide-react";
+import { Scissors, Plus, Search, Star, Camera, Clock, DollarSign, Heart, Eye, Play, Pause, Square, Check } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useForm } from "react-hook-form";
@@ -18,6 +18,8 @@ import { z } from "zod";
 import { useTenant } from "@/contexts/TenantContext";
 import { BackButton } from "@/components/BackButton";
 import { DebugControls } from "@/components/DebugControls";
+import { QRCodeGenerator } from "@/components/QRCodeGenerator";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import type { GroomingRecord, InsertGroomingRecord, Pet, Staff } from "@shared/schema";
@@ -68,7 +70,45 @@ export default function GroomingServices() {
   const [selectedPet, setSelectedPet] = useState<string>("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<GroomingRecord | null>(null);
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [currentGrooming, setCurrentGrooming] = useState<GroomingRecord | null>(null);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const queryClient = useQueryClient();
+
+  // Timer functionality
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isTimerRunning && sessionStartTime) {
+      interval = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - sessionStartTime.getTime()) / 1000));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerRunning, sessionStartTime]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const startTimer = () => {
+    setSessionStartTime(new Date());
+    setIsTimerRunning(true);
+    setElapsedTime(0);
+  };
+
+  const pauseTimer = () => {
+    setIsTimerRunning(false);
+  };
+
+  const stopTimer = () => {
+    setIsTimerRunning(false);
+    setShowConfirmation(true);
+  };
 
   const { data: groomingRecords = [], isLoading } = useQuery<GroomingRecord[]>({
     queryKey: ["/api/grooming-records", currentTenant?.id],
@@ -526,9 +566,9 @@ export default function GroomingServices() {
               <Card key={record.id} className="hover:shadow-md transition-shadow cursor-pointer" 
                     onClick={() => setSelectedRecord(record)} data-testid={`card-grooming-${record.id}`}>
                 <CardContent className="pt-6">
-                  <div className="flex justify-between items-start">
+                  <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
+                      <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
                           <Scissors className="w-5 h-5 text-pink-600" />
                         </div>
@@ -541,73 +581,87 @@ export default function GroomingServices() {
                           </p>
                         </div>
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 mb-3">
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">Servicios:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {record.servicesProvided.slice(0, 3).map((service) => (
-                              <Badge key={service} variant="secondary" className="text-xs">
-                                {serviceLabels[service as keyof typeof serviceLabels]}
-                              </Badge>
-                            ))}
-                            {record.servicesProvided.length > 3 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{record.servicesProvided.length - 3} más
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-1">
-                          {record.coatCondition && (
-                            <div className="flex items-center space-x-2">
-                              <span className="text-xs text-gray-600">Pelaje:</span>
-                              <Badge className={cn("text-xs", getConditionColor(record.coatCondition, 'coat'))}>
-                                {getConditionLabel(record.coatCondition, 'coat')}
-                              </Badge>
-                            </div>
-                          )}
-                          {record.skinCondition && (
-                            <div className="flex items-center space-x-2">
-                              <span className="text-xs text-gray-600">Piel:</span>
-                              <Badge className={cn("text-xs", getConditionColor(record.skinCondition, 'skin'))}>
-                                {getConditionLabel(record.skinCondition, 'skin')}
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          {record.duration && (
-                            <div className="flex items-center text-gray-600 text-sm">
-                              <Clock className="w-4 h-4 mr-1" />
-                              {record.duration} min
-                            </div>
-                          )}
-                          {record.totalCost && (
-                            <div className="flex items-center text-green-600 text-sm">
-                              <DollarSign className="w-4 h-4 mr-1" />
-                              {record.totalCost}
-                            </div>
-                          )}
-                          {record.clientSatisfaction && (
-                            <div className="flex items-center text-yellow-600 text-sm">
-                              <Star className="w-4 h-4 mr-1 fill-current" />
-                              {record.clientSatisfaction}/5
-                            </div>
-                          )}
-                        </div>
-                        
-                        {record.nextGroomingDate && (
-                          <div className="text-xs text-blue-600">
-                            Próxima: {format(new Date(record.nextGroomingDate), "dd/MM/yyyy")}
-                          </div>
+                    </div>
+                    
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentGrooming(record);
+                        setShowServiceModal(true);
+                      }}
+                      className="bg-green-500 hover:bg-green-600 text-white"
+                      data-testid={`button-start-grooming-${record.id}`}
+                    >
+                      <Play className="w-4 h-4 mr-1" />
+                      Iniciar Sesión
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Servicios:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {record.servicesProvided.slice(0, 3).map((service) => (
+                          <Badge key={service} variant="secondary" className="text-xs">
+                            {serviceLabels[service as keyof typeof serviceLabels]}
+                          </Badge>
+                        ))}
+                        {record.servicesProvided.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{record.servicesProvided.length - 3} más
+                          </Badge>
                         )}
                       </div>
                     </div>
+                    
+                    <div className="space-y-1">
+                      {record.coatCondition && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-600">Pelaje:</span>
+                          <Badge className={cn("text-xs", getConditionColor(record.coatCondition, 'coat'))}>
+                            {getConditionLabel(record.coatCondition, 'coat')}
+                          </Badge>
+                        </div>
+                      )}
+                      {record.skinCondition && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-600">Piel:</span>
+                          <Badge className={cn("text-xs", getConditionColor(record.skinCondition, 'skin'))}>
+                            {getConditionLabel(record.skinCondition, 'skin')}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      {record.duration && (
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Clock className="w-4 h-4 mr-1" />
+                          {record.duration} min
+                        </div>
+                      )}
+                      {record.totalCost && (
+                        <div className="flex items-center text-green-600 text-sm">
+                          <DollarSign className="w-4 h-4 mr-1" />
+                          {record.totalCost}
+                        </div>
+                      )}
+                      {record.clientSatisfaction && (
+                        <div className="flex items-center text-yellow-600 text-sm">
+                          <Star className="w-4 h-4 mr-1 fill-current" />
+                          {record.clientSatisfaction}/5
+                        </div>
+                      )}
+                    </div>
+                    
+                    {record.nextGroomingDate && (
+                      <div className="text-xs text-blue-600">
+                        Próxima: {format(new Date(record.nextGroomingDate), "dd/MM/yyyy")}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -745,6 +799,215 @@ export default function GroomingServices() {
                 </div>
               )}
             </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Focused Visual Grooming Service Modal */}
+      {showServiceModal && currentGrooming && (
+        <Dialog open={showServiceModal} onOpenChange={() => {
+          setShowServiceModal(false);
+          setIsTimerRunning(false);
+          setShowConfirmation(false);
+          setCurrentGrooming(null);
+        }}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-pink-50 to-purple-50">
+            <DialogHeader className="pb-6">
+              <DialogTitle className="flex items-center justify-center space-x-3 text-2xl font-bold text-pink-700">
+                <Scissors className="w-8 h-8" />
+                <span>Sesión de Estética en Progreso</span>
+              </DialogTitle>
+            </DialogHeader>
+
+            {!showConfirmation ? (
+              <div className="space-y-6">
+                {/* Pet Info Header */}
+                <div className="bg-white rounded-xl p-6 shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-16 h-16 bg-pink-200 rounded-full flex items-center justify-center">
+                        <Heart className="w-8 h-8 text-pink-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-800">
+                          {pets.find(p => p.id === currentGrooming.petId)?.name}
+                        </h3>
+                        <p className="text-lg text-gray-600">
+                          Estilista: {groomers.find(g => g.id === currentGrooming.groomerId)?.name}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Timer Display */}
+                    <div className="text-center">
+                      <div className="text-4xl font-mono font-bold text-green-600 bg-green-50 px-6 py-3 rounded-xl border-2 border-green-200">
+                        {formatTime(elapsedTime)}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">Tiempo transcurrido</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Timer Controls */}
+                <div className="flex justify-center space-x-4">
+                  {!isTimerRunning && elapsedTime === 0 && (
+                    <Button 
+                      onClick={startTimer}
+                      size="lg"
+                      className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 text-xl"
+                      data-testid="button-start-timer"
+                    >
+                      <Play className="w-6 h-6 mr-2" />
+                      Iniciar Sesión
+                    </Button>
+                  )}
+                  
+                  {isTimerRunning && (
+                    <>
+                      <Button 
+                        onClick={pauseTimer}
+                        size="lg"
+                        variant="outline"
+                        className="px-8 py-4 text-xl border-2"
+                        data-testid="button-pause-timer"
+                      >
+                        <Pause className="w-6 h-6 mr-2" />
+                        Pausar
+                      </Button>
+                      <Button 
+                        onClick={stopTimer}
+                        size="lg"
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 text-xl"
+                        data-testid="button-stop-timer"
+                      >
+                        <Square className="w-6 h-6 mr-2" />
+                        Finalizar
+                      </Button>
+                    </>
+                  )}
+                  
+                  {!isTimerRunning && elapsedTime > 0 && (
+                    <>
+                      <Button 
+                        onClick={() => setIsTimerRunning(true)}
+                        size="lg"
+                        className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 text-xl"
+                        data-testid="button-resume-timer"
+                      >
+                        <Play className="w-6 h-6 mr-2" />
+                        Continuar
+                      </Button>
+                      <Button 
+                        onClick={stopTimer}
+                        size="lg"
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 text-xl"
+                        data-testid="button-finish-timer"
+                      >
+                        <Check className="w-6 h-6 mr-2" />
+                        Finalizar
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                {/* Service Details */}
+                <div className="bg-white rounded-xl p-6 shadow-lg">
+                  <h4 className="text-xl font-semibold text-gray-800 mb-4">Servicios Programados</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {currentGrooming.servicesProvided.map((service) => (
+                      <div key={service} className="bg-pink-100 text-pink-800 px-4 py-3 rounded-lg font-medium text-center">
+                        {serviceLabels[service as keyof typeof serviceLabels]}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="bg-white rounded-xl p-6 shadow-lg">
+                  <h4 className="text-xl font-semibold text-gray-800 mb-4">Acciones Rápidas</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Document Upload */}
+                    <div className="text-center">
+                      <h5 className="text-lg font-medium text-gray-700 mb-3">Imágenes y Documentos</h5>
+                      <div className="space-y-3">
+                        <QRCodeGenerator 
+                          uploadUrl={`/mobile-upload?groomingId=${currentGrooming.id}&type=grooming`}
+                          label="Escanear para subir fotos"
+                        />
+                        <ObjectUploader
+                          maxNumberOfFiles={5}
+                          maxFileSize={10485760}
+                          onGetUploadParameters={async () => {
+                            const response = await fetch('/api/objects/upload', { method: 'POST' });
+                            const data = await response.json();
+                            return { method: 'PUT' as const, url: data.uploadURL };
+                          }}
+                          onComplete={(result) => {
+                            console.log('Files uploaded:', result);
+                          }}
+                          buttonClassName="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 text-lg"
+                        >
+                          <Camera className="w-5 h-5 mr-2" />
+                          Subir Archivos
+                        </ObjectUploader>
+                      </div>
+                    </div>
+
+                    {/* Notes Section */}
+                    <div>
+                      <h5 className="text-lg font-medium text-gray-700 mb-3">Notas Rápidas</h5>
+                      <textarea 
+                        className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none"
+                        placeholder="Anota observaciones durante el servicio..."
+                        data-testid="textarea-session-notes"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Confirmation Screen */
+              <div className="text-center space-y-6">
+                <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                  <Check className="w-12 h-12 text-green-600" />
+                </div>
+                
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                    ¡Sesión Completada!
+                  </h3>
+                  <p className="text-lg text-gray-600">
+                    Tiempo total: <span className="font-mono font-bold text-green-600">{formatTime(elapsedTime)}</span>
+                  </p>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 shadow-lg">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4">Resumen del Servicio</h4>
+                  <div className="space-y-3">
+                    <p><strong>Mascota:</strong> {pets.find(p => p.id === currentGrooming.petId)?.name}</p>
+                    <p><strong>Duración:</strong> {Math.floor(elapsedTime / 60)} minutos</p>
+                    <p><strong>Servicios:</strong> {currentGrooming.servicesProvided.length} servicios completados</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-center space-x-4">
+                  <Button 
+                    onClick={() => {
+                      setShowServiceModal(false);
+                      setShowConfirmation(false);
+                      setCurrentGrooming(null);
+                      setElapsedTime(0);
+                    }}
+                    size="lg"
+                    className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 text-xl"
+                    data-testid="button-confirm-complete"
+                  >
+                    <Check className="w-6 h-6 mr-2" />
+                    Confirmar y Cerrar
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       )}

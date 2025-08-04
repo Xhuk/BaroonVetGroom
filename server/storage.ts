@@ -1368,8 +1368,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .select({
         id: medicalAppointments.id,
-        appointmentDate: medicalAppointments.appointmentDate,
-        appointmentTime: medicalAppointments.appointmentTime,
+        visitDate: medicalAppointments.visitDate,
         followUpRequired: medicalAppointments.followUpRequired,
         followUpDate: medicalAppointments.followUpDate,
         isConfirmed: medicalAppointments.isConfirmed,
@@ -1405,7 +1404,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(asc(medicalAppointments.followUpDate), asc(medicalAppointments.appointmentDate));
+      .orderBy(asc(medicalAppointments.followUpDate), asc(medicalAppointments.visitDate));
 
     return result;
   }

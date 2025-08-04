@@ -519,7 +519,6 @@ export const groomingRecords = pgTable("grooming_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
   petId: varchar("pet_id").notNull().references(() => pets.id),
-  appointmentId: varchar("appointment_id").references(() => appointments.id),
   groomerId: varchar("groomer_id").notNull().references(() => staff.id),
   groomingDate: date("grooming_date").notNull(),
   servicesProvided: varchar("services_provided").array().notNull(), // bath, haircut, nail_trim, ear_cleaning, etc.
