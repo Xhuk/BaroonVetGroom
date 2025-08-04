@@ -18,7 +18,6 @@ import { useToast } from '@/hooks/use-toast';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { WhatsAppCopyModal } from '@/components/WhatsAppCopyModal';
 import { Header } from '@/components/Header';
-import { DebugControls } from '@/components/DebugControls';
 
 interface PendingInvoice {
   id: string;
@@ -359,7 +358,6 @@ _Mensaje generado automáticamente por VetGroom_`;
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
-      <DebugControls />
       
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
