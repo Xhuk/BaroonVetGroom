@@ -146,13 +146,38 @@ export default function SuperAdminMonitoring() {
           <h1 className="text-2xl font-bold text-blue-800">Super Admin - Webhook Monitoring</h1>
           <p className="text-gray-600">Monitor and manage webhook integrations across all tenants</p>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/superadmin"] })}
-        >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh All
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/superadmin"] })}
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh All
+          </Button>
+          <Button 
+            variant="outline"
+            className="bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+            onClick={async () => {
+              try {
+                const response = await apiRequest('POST', '/api/test-webhook-monitoring');
+                toast({
+                  title: "Test Completed",
+                  description: "Webhook monitoring test error logged",
+                });
+                queryClient.invalidateQueries({ queryKey: ["/api/superadmin"] });
+              } catch (error: any) {
+                toast({
+                  title: "Test Failed",
+                  description: error.message,
+                  variant: "destructive",
+                });
+              }
+            }}
+          >
+            <AlertTriangle className="w-4 h-4 mr-2" />
+            Test Monitoring
+          </Button>
+        </div>
       </div>
 
       {/* Stats Overview */}

@@ -759,6 +759,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test webhook monitoring (for demonstration)
+  app.post('/api/test-webhook-monitoring', isAuthenticated, async (req: any, res) => {
+    try {
+      const tenantId = req.user?.claims?.sub || 'test-tenant';
+      
+      // Simulate a webhook failure
+      await webhookMonitor.logError(
+        tenantId,
+        'whatsapp',
+        'https://test-n8n-webhook.example.com',
+        new Error('Test webhook failure - n8n en mantenimiento'),
+        { phone: '+1234567890', message: 'Test message', type: 'test' }
+      );
+      
+      res.json({ 
+        success: true, 
+        message: 'Test webhook error logged successfully' 
+      });
+    } catch (error) {
+      console.error("Error testing webhook monitoring:", error);
+      res.status(500).json({ message: "Failed to test webhook monitoring" });
+    }
+  });
+
   // Super Admin Routes - Webhook Monitoring
   app.get('/api/superadmin/webhook-stats', isAuthenticated, async (req: any, res) => {
     try {
