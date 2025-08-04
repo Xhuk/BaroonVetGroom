@@ -81,6 +81,7 @@ export default function BookingWizard() {
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [reservedSlots, setReservedSlots] = useState<string[]>([]);
   const [tenantLocation, setTenantLocation] = useState({ lat: 25.74055709021775, lng: -100.407349161356 });
+  const [geocodeTimeout, setGeocodeTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Queries
   const { data: services } = useQuery({
@@ -115,7 +116,7 @@ export default function BookingWizard() {
     }
   }, [customerData, petData.name, currentTenant?.id]);
 
-  // Geocoding function for address with postal code fallback
+  // Debounced geocoding function for address with postal code fallback
   const geocodeAddress = async (address: string, fraccionamiento: string, postalCode?: string) => {
     if (!address || !fraccionamiento) return null;
     
@@ -185,6 +186,21 @@ export default function BookingWizard() {
       });
       return defaultCoords;
     }
+  };
+
+  // Debounced geocoding function with 1 second delay
+  const debouncedGeocode = (address: string, fraccionamiento: string, postalCode?: string) => {
+    // Clear existing timeout
+    if (geocodeTimeout) {
+      clearTimeout(geocodeTimeout);
+    }
+    
+    // Set new timeout for 1 second
+    const timeout = setTimeout(() => {
+      geocodeAddress(address, fraccionamiento, postalCode);
+    }, 1000);
+    
+    setGeocodeTimeout(timeout);
   };
 
   // Check available slots when service and date are selected
@@ -473,9 +489,9 @@ export default function BookingWizard() {
                     onChange={(e) => {
                       const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
                       setCustomerData(prev => ({ ...prev, fraccionamiento: formattedValue }));
-                      // Auto-geocode after both fields are filled
+                      // Auto-geocode after both fields are filled with 1 second debounce
                       if (customerData.address && formattedValue) {
-                        setTimeout(() => geocodeAddress(customerData.address, formattedValue, customerData.postalCode), 1000);
+                        debouncedGeocode(customerData.address, formattedValue, customerData.postalCode);
                       }
                     }}
                     placeholder="Valle De Cumbres"
@@ -570,7 +586,7 @@ export default function BookingWizard() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => geocodeAddress(customerData.address, customerData.fraccionamiento, customerData.postalCode)}
+                              onClick={() => debouncedGeocode(customerData.address, customerData.fraccionamiento, customerData.postalCode)}
                               className="text-xs"
                               disabled={!customerData.address || !customerData.fraccionamiento}
                             >
@@ -624,7 +640,7 @@ export default function BookingWizard() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => geocodeAddress(customerData.address, customerData.fraccionamiento, customerData.postalCode)}
+                            onClick={() => debouncedGeocode(customerData.address, customerData.fraccionamiento, customerData.postalCode)}
                             className="mt-2"
                           >
                             Buscar ubicación
