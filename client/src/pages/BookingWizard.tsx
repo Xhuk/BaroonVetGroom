@@ -103,8 +103,8 @@ export default function BookingWizard() {
   }, [currentTenant]);
 
   // Fetch services
-  const { data: services } = useQuery({
-    queryKey: ['/api/services', currentTenant?.id],
+  const { data: services, isLoading: servicesLoading, error: servicesError } = useQuery({
+    queryKey: [`/api/services/${currentTenant?.id}`],
     enabled: !!currentTenant?.id
   });
 
@@ -928,9 +928,17 @@ export default function BookingWizard() {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Selección de Servicio y Horario</h2>
               
-              {!services || services.length === 0 ? (
+              {servicesLoading ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500">Cargando servicios disponibles...</p>
+                </div>
+              ) : servicesError ? (
+                <div className="text-center py-8">
+                  <p className="text-red-500">Error al cargar servicios: {servicesError.message}</p>
+                </div>
+              ) : !services || services.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No hay servicios disponibles</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

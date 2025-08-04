@@ -346,6 +346,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Services endpoint for booking form
+  app.get('/api/services/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const services = await storage.getServices(tenantId);
+      res.json(services);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      res.status(500).json({ message: "Failed to fetch services" });
+    }
+  });
+
   // Admin routes - Services
   app.get('/api/admin/services/:tenantId', isAuthenticated, async (req, res) => {
     try {
