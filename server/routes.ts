@@ -1443,7 +1443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "System admin access required" });
       }
       
-      const tenants = await storage.getTenants();
+      const tenants = await storage.getAllTenantsWithCompany();
       res.json(tenants);
     } catch (error) {
       console.error("Error fetching all tenants:", error);
