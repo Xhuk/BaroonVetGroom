@@ -524,12 +524,12 @@ export default function BookingWizard() {
                             </div>
                           )}
 
-                          {/* Clinic Location - Blue Marker (Always bound to tenant GPS coordinates) */}
+                          {/* Clinic Location - Blue Marker (Precisely positioned at tenant GPS coordinates) */}
                           <div 
                             className="absolute transform -translate-x-1/2 -translate-y-full group"
                             style={{
-                              left: `${50 + ((tenantLocation.lng - mapCoordinates.lng) / (mapDiameterKm / 111.32)) * 50}%`,
-                              top: `${50 - ((tenantLocation.lat - mapCoordinates.lat) / (mapDiameterKm / 110.54)) * 50}%`,
+                              left: `${((tenantLocation.lng - (mapCoordinates.lng - mapDiameterKm/111.32)) / ((mapDiameterKm/111.32) * 2)) * 100}%`,
+                              top: `${((mapCoordinates.lat + mapDiameterKm/110.54 - tenantLocation.lat) / ((mapDiameterKm/110.54) * 2)) * 100}%`,
                               zIndex: 30
                             }}
                           >
