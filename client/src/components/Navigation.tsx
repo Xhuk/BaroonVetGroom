@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useAccessControl } from "@/hooks/useAccessControl";
 import { 
   BarChart3, 
   Calendar,
@@ -7,7 +8,8 @@ import {
   Truck, 
   DollarSign, 
   Settings, 
-  Crown 
+  Crown,
+  Shield 
 } from "lucide-react";
 
 interface NavigationProps {
@@ -15,6 +17,8 @@ interface NavigationProps {
 }
 
 export function Navigation({ className }: NavigationProps) {
+  const { canAccessAdmin, canAccessSuperAdmin } = useAccessControl();
+
   const navigationItems = [
     { icon: BarChart3, label: "Tablero", href: "/", active: true },
     { icon: Calendar, label: "Citas", href: "/appointments" },
@@ -25,8 +29,11 @@ export function Navigation({ className }: NavigationProps) {
   ];
 
   const adminItems = [
-    { icon: Settings, label: "Admin Dashboard", href: "/admin" },
-    { icon: Crown, label: "Super-Admin Dashboard", href: "/superadmin" },
+    ...(canAccessAdmin ? [{ icon: Settings, label: "Admin Dashboard", href: "/admin" }] : []),
+    ...(canAccessSuperAdmin ? [
+      { icon: Crown, label: "Super-Admin Dashboard", href: "/superadmin" },
+      { icon: Shield, label: "RBAC Management", href: "/superadmin/rbac" }
+    ] : []),
   ];
 
   return (
@@ -54,18 +61,20 @@ export function Navigation({ className }: NavigationProps) {
             </li>
           ))}
           
-          <li className="border-t pt-2 mt-4">
-            {adminItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 hover:bg-gray-50 px-3 py-2 rounded-lg mb-2"
-              >
-                <item.icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </a>
-            ))}
-          </li>
+          {adminItems.length > 0 && (
+            <li className="border-t pt-2 mt-4">
+              {adminItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 hover:bg-gray-50 px-3 py-2 rounded-lg mb-2"
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </a>
+              ))}
+            </li>
+          )}
         </ul>
       </div>
     </nav>

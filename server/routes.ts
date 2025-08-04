@@ -1435,6 +1435,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all tenants for debug users
+  app.get('/api/tenants/all', isAuthenticated, async (req: any, res) => {
+    try {
+      const hasDebug = await hasDebugAccess(req);
+      if (!hasDebug) {
+        return res.status(403).json({ message: "Debug access required" });
+      }
+      
+      const tenants = await storage.getTenants();
+      res.json(tenants);
+    } catch (error) {
+      console.error("Error fetching all tenants:", error);
+      res.status(500).json({ message: "Failed to fetch tenants" });
+    }
+  });
+
   // Get all companies for SuperAdmin
   app.get('/api/superadmin/companies', isAuthenticated, async (req: any, res) => {
     try {

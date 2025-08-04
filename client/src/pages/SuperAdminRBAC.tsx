@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { CompanyTenantSelector } from "@/components/CompanyTenantSelector";
 import { 
   Shield, 
   Users, 
@@ -225,12 +226,15 @@ export default function SuperAdminRBAC() {
             </p>
           </div>
 
+          {/* Debug Company/Tenant Selector */}
+          {canDebugTenants && <CompanyTenantSelector />}
+
           {/* Company Selection */}
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="w-5 h-5" />
-                Seleccionar Compañía
+                Seleccionar Compañía para Gestión RBAC
               </CardTitle>
             </CardHeader>
             <CardContent>
