@@ -30,8 +30,30 @@ import {
 import markerIconPath from "@assets/marker-icon_1754279780257.png";
 import blueMarkerIconPath from "@assets/marker-icon_1754283680600.png";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+
+// Leaflet imports
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { customBlueIcon, customRedIcon } from '@/lib/leafletIcons';
+import 'leaflet/dist/leaflet.css';
 import type { Client, Pet, Service } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
+
+// Map Click Handler Component for Leaflet
+function MapClickHandler({ onMapClick, onMapMove }: { 
+  onMapClick: (lat: number, lng: number) => void;
+  onMapMove: (lat: number, lng: number) => void;
+}) {
+  useMapEvents({
+    click(e) {
+      onMapClick(e.latlng.lat, e.latlng.lng);
+    },
+    move(e) {
+      const center = e.target.getCenter();
+      onMapMove(center.lat, center.lng);
+    }
+  });
+  return null;
+}
 
 export default function BookingWizard() {
   const { currentTenant } = useTenant();
@@ -78,8 +100,6 @@ export default function BookingWizard() {
   const [mapDiameterKm, setMapDiameterKm] = useState(8); // Configurable from admin
   const [maxZoomRange, setMaxZoomRange] = useState(8); // Admin-configured zoom limit
   const [minZoomLevel] = useState(0.5); // Enhanced minimum zoom for detailed view
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0, lat: 0, lng: 0 });
   
   // Load map settings from localStorage (admin configuration)
   useEffect(() => {
@@ -506,260 +526,76 @@ export default function BookingWizard() {
                   {/* Map is always displayed when tenant coordinates are available */}
                   {(tenantLocation.lat && tenantLocation.lng) ? (
                     <div>
-                      {/* Professional Interactive Map with Custom Drag Support */}
+                      {/* Leaflet Map with Stable Marker Positioning */}
                       <div className="h-80 relative border-b">
-                        {/* Custom Overlay Layer for Interactive Markers */}
-                        <div className="absolute inset-0 z-20 pointer-events-none">
-                          {/* Interactive overlay for mouse events */}
-                          <div 
-                            className="absolute inset-0 z-10 pointer-events-auto cursor-grab active:cursor-grabbing"
-                            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-                            onContextMenu={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const x = (e.clientX - rect.left) / rect.width;
-                              const y = (e.clientY - rect.top) / rect.height;
-                              
-                              // Convert screen coordinates to GPS coordinates
-                              const lng = (mapCoordinates.lng - mapDiameterKm/111.32) + (x * (mapDiameterKm/111.32) * 2);
-                              const lat = (mapCoordinates.lat + mapDiameterKm/110.54) - (y * (mapDiameterKm/110.54) * 2);
-                              
-                              // Update customer coordinates
+                        <MapContainer
+                          center={[mapCoordinates.lat, mapCoordinates.lng]}
+                          zoom={15 - Math.floor(mapDiameterKm / 2)}
+                          style={{ height: '100%', width: '100%' }}
+                          className="rounded-lg"
+                          key={`${mapCoordinates.lat}-${mapCoordinates.lng}`}
+                        >
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          />
+                          
+                          {/* Map Click Handler */}
+                          <MapClickHandler 
+                            onMapClick={(lat, lng) => {
                               setCustomerData(prev => ({
                                 ...prev,
-                                latitude: lat.toString(),
-                                longitude: lng.toString()
+                                latitude: lat.toFixed(6),
+                                longitude: lng.toFixed(6)
                               }));
-                              
                               toast({
                                 title: "Ubicación del cliente establecida",
-                                description: `Coordenadas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+                                description: `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+                                variant: "default"
                               });
                             }}
-                            onWheel={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              
-                              // Zoom in/out based on wheel direction (respecting admin limits + enhanced range)
-                              if (e.deltaY < 0) {
-                                // Zoom in (wheel up) - added ultra-close zoom level
-                                if (mapDiameterKm > minZoomLevel) {
-                                  setMapDiameterKm(prev => Math.max(minZoomLevel, prev - 0.5));
-                                }
-                              } else {
-                                // Zoom out (wheel down) - extended max range with additional layer
-                                if (mapDiameterKm < maxZoomRange * 3) {
-                                  setMapDiameterKm(prev => Math.min(maxZoomRange * 3, prev + 0.5));
-                                }
-                              }
-                            }}
-                            onDoubleClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const x = (e.clientX - rect.left) / rect.width;
-                              const y = (e.clientY - rect.top) / rect.height;
-                              
-                              // Convert screen coordinates to GPS coordinates for centering with improved precision
-                              const latDegPerKm = 1 / 110.54;
-                              const lngDegPerKm = 1 / (111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180));
-                              const lng = (mapCoordinates.lng - mapDiameterKm * lngDegPerKm) + (x * (mapDiameterKm * lngDegPerKm) * 2);
-                              const lat = (mapCoordinates.lat + mapDiameterKm * latDegPerKm) - (y * (mapDiameterKm * latDegPerKm) * 2);
-                              
-                              // Center map on double-click location and zoom in with enhanced precision
+                            onMapMove={(lat, lng) => {
                               setMapCoordinates({ lat, lng });
-                              if (mapDiameterKm > minZoomLevel) {
-                                setMapDiameterKm(prev => Math.max(minZoomLevel, prev - 0.5));
-                              }
-                              
-                              toast({
-                                title: "Mapa centrado y ampliado",
-                                description: `Centrado en: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-                              });
-                            }}
-                            onMouseDown={(e) => {
-                              if (e.button === 0) { // Left mouse button only
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setIsDragging(true);
-                                setDragStart({
-                                  x: e.clientX,
-                                  y: e.clientY,
-                                  lat: mapCoordinates.lat,
-                                  lng: mapCoordinates.lng
-                                });
-                              }
-                            }}
-                            onMouseMove={(e) => {
-                              if (isDragging) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                const deltaX = e.clientX - dragStart.x;
-                                const deltaY = e.clientY - dragStart.y;
-                                
-                                // Convert pixel movement to coordinate movement with improved precision
-                                const latDegPerKm = 1 / 110.54;
-                                const lngDegPerKm = 1 / (111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180));
-                                const latPerPixel = (mapDiameterKm * 2 * latDegPerKm) / rect.height;
-                                const lngPerPixel = (mapDiameterKm * 2 * lngDegPerKm) / rect.width;
-                                
-                                const newLat = dragStart.lat + (deltaY * latPerPixel);
-                                const newLng = dragStart.lng - (deltaX * lngPerPixel);
-                                
-                                setMapCoordinates({ lat: newLat, lng: newLng });
-                              }
-                            }}
-                            onMouseUp={() => {
-                              setIsDragging(false);
-                            }}
-                            onMouseLeave={() => {
-                              setIsDragging(false);
                             }}
                           />
                           
-                          {/* Clinic Location - Blue Marker (Zoom-stable positioning) */}
-                          {currentTenant?.latitude && currentTenant?.longitude && (() => {
-                            const tenantLat = parseFloat(currentTenant.latitude);
-                            const tenantLng = parseFloat(currentTenant.longitude);
-                            
-                            // Ultra-precise coordinate conversion with zoom stability
-                            const latDegPerKm = 1 / 110.54;
-                            const lngDegPerKm = 1 / (111.32 * Math.cos(tenantLat * Math.PI / 180));
-                            
-                            // Calculate exact map boundaries using tenant coordinates for reference
-                            const mapWestBound = mapCoordinates.lng - (mapDiameterKm * lngDegPerKm);
-                            const mapEastBound = mapCoordinates.lng + (mapDiameterKm * lngDegPerKm);
-                            const mapNorthBound = mapCoordinates.lat + (mapDiameterKm * latDegPerKm);
-                            const mapSouthBound = mapCoordinates.lat - (mapDiameterKm * latDegPerKm);
-                            
-                            // Enhanced percentage calculation with sub-pixel precision
-                            const leftPercent = ((tenantLng - mapWestBound) / (mapEastBound - mapWestBound)) * 100;
-                            const topPercent = ((mapNorthBound - tenantLat) / (mapNorthBound - mapSouthBound)) * 100;
-                            
-                            // Marker positioning calculations complete
-                            
-                            return (
-                              <div 
-                                className="absolute transform -translate-x-1/2 -translate-y-full group pointer-events-none"
-                                style={{
-                                  left: `${leftPercent}%`,
-                                  top: `${topPercent}%`,
-                                  zIndex: 30,
-                                  opacity: (leftPercent >= -5 && leftPercent <= 105 && topPercent >= -5 && topPercent <= 105) ? 1 : 0.3
-                                }}
-                              >
-                              <img 
-                                src={blueMarkerIconPath} 
-                                alt="Clínica" 
-                                className="w-8 h-8 drop-shadow-lg"
-                              />
-                              <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-blue-100 px-3 py-2 rounded shadow text-xs whitespace-nowrap border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="font-semibold">Clínica Veterinaria</div>
-                                <div className="text-blue-600">{currentTenant?.name}</div>
-                                <div className="text-xs text-gray-500">GPS: {parseFloat(currentTenant.latitude).toFixed(6)}, {parseFloat(currentTenant.longitude).toFixed(6)}</div>
-                                <div className="text-xs text-blue-600">Ubicación del Tenant</div>
-                              </div>
-                              </div>
-                            );
-                          })()}
-                          
-                          {/* Customer Location - Red Pin (Zoom-stable positioning) */}
-                          {customerData.latitude && customerData.longitude && (() => {
-                            const customerLat = parseFloat(customerData.latitude);
-                            const customerLng = parseFloat(customerData.longitude);
-                            
-                            // Precise coordinate calculation matching clinic marker system
-                            const latDegPerKm = 1 / 110.54;
-                            const lngDegPerKm = 1 / (111.32 * Math.cos(customerLat * Math.PI / 180));
-                            
-                            // Map boundaries calculated with consistent precision
-                            const mapWestBound = mapCoordinates.lng - (mapDiameterKm * lngDegPerKm);
-                            const mapEastBound = mapCoordinates.lng + (mapDiameterKm * lngDegPerKm);
-                            const mapNorthBound = mapCoordinates.lat + (mapDiameterKm * latDegPerKm);
-                            const mapSouthBound = mapCoordinates.lat - (mapDiameterKm * latDegPerKm);
-                            
-                            // Stable positioning calculation with enhanced accuracy
-                            const leftPercent = ((customerLng - mapWestBound) / (mapEastBound - mapWestBound)) * 100;
-                            const topPercent = ((mapNorthBound - customerLat) / (mapNorthBound - mapSouthBound)) * 100;
-                            
-                            return (
-                            <div 
-                              className="absolute transform -translate-x-1/2 -translate-y-full group z-40 pointer-events-none"
-                              style={{
-                                left: `${leftPercent}%`,
-                                top: `${topPercent}%`,
-                                opacity: (leftPercent >= -5 && leftPercent <= 105 && topPercent >= -5 && topPercent <= 105) ? 1 : 0.3
-                              }}
+                          {/* Clinic Marker - Blue */}
+                          {tenantLocation.lat && tenantLocation.lng && (
+                            <Marker
+                              position={[tenantLocation.lat, tenantLocation.lng]}
+                              icon={customBlueIcon}
                             >
-                              <MapPin className="w-8 h-8 text-red-600 drop-shadow-lg animate-bounce" />
-                              <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-red-50 px-3 py-2 rounded shadow text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-red-200">
-                                <div className="font-semibold text-red-700">Ubicación del Cliente</div>
-                                <div className="text-red-600">{customerData.address || 'Ubicación manual'}</div>
-                                <div className="text-red-600">{customerData.fraccionamiento || 'Clic derecho en mapa'}</div>
-                                <div className="text-xs text-gray-500">GPS: {parseFloat(customerData.latitude).toFixed(4)}, {parseFloat(customerData.longitude).toFixed(4)}</div>
-                              </div>
-                            </div>
-                            );
-                          })()}
-
-
-                        </div>
-
-                        {/* Base OpenStreetMap with interactive controls */}
-                        <iframe
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-(mapDiameterKm/(111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180)))},${mapCoordinates.lat-(mapDiameterKm/110.54)},${mapCoordinates.lng+(mapDiameterKm/(111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180)))},${mapCoordinates.lat+(mapDiameterKm/110.54)}&layer=mapnik`}
-                          width="100%"
-                          height="100%"
-                          style={{ border: 0 }}
-                          title="Mapa navegable para planificación de entrega"
-                          className="rounded-t-lg"
-                          loading="lazy"
-                          key={`${mapCoordinates.lat}-${mapCoordinates.lng}-${mapDiameterKm}`}
-                        />
-                        
-                        {/* Right-side Zoom Controls */}
-                        <div className="absolute top-2 right-2 flex flex-col gap-1 z-30">
-                          <button
-                            onClick={() => {
-                              if (mapDiameterKm > minZoomLevel) {
-                                setMapDiameterKm(prev => Math.max(minZoomLevel, prev - 0.5));
-                              }
-                            }}
-                            className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 rounded flex items-center justify-center text-gray-700 hover:text-gray-900 shadow-sm"
-                            title="Acercar (Nueva capa de zoom detallado)"
-                            data-testid="button-zoom-in"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (mapDiameterKm < maxZoomRange * 3) {
-                                setMapDiameterKm(prev => Math.min(maxZoomRange * 3, prev + 0.5));
-                              }
-                            }}
-                            className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 rounded flex items-center justify-center text-gray-700 hover:text-gray-900 shadow-sm"
-                            title="Alejar (Rango extendido)"
-                            data-testid="button-zoom-out"
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
-                        </div>
-                        
-
-
-                        {/* Enhanced Map navigation instructions with zoom level */}
-                        <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded text-xs text-gray-600 max-w-sm">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-blue-600">Zoom: {mapDiameterKm}km</span>
-                            <span className="text-gray-400">|</span>
-                            <span className="text-green-600">Rango: {minZoomLevel}-{maxZoomRange * 3}km</span>
-                          </div>
-                          <div>Arrastra para mover • Rueda para zoom • Doble clic para centrar • Clic derecho para ubicar cliente</div>
-                        </div>
+                              <Popup>
+                                <div className="text-center">
+                                  <div className="font-semibold">Clínica Veterinaria</div>
+                                  <div className="text-blue-600">{currentTenant?.name}</div>
+                                  <div className="text-xs text-gray-500">
+                                    GPS: {tenantLocation.lat}, {tenantLocation.lng}
+                                  </div>
+                                </div>
+                              </Popup>
+                            </Marker>
+                          )}
+                          
+                          {/* Customer Marker - Red */}
+                          {customerData.latitude && customerData.longitude && (
+                            <Marker
+                              position={[parseFloat(customerData.latitude), parseFloat(customerData.longitude)]}
+                              icon={customRedIcon}
+                            >
+                              <Popup>
+                                <div className="text-center">
+                                  <div className="font-semibold text-red-700">Ubicación del Cliente</div>
+                                  <div className="text-red-600">{customerData.address || 'Ubicación manual'}</div>
+                                  <div className="text-red-600">{customerData.fraccionamiento || 'Clic en mapa'}</div>
+                                  <div className="text-xs text-gray-500">
+                                    GPS: {parseFloat(customerData.latitude).toFixed(4)}, {parseFloat(customerData.longitude).toFixed(4)}
+                                  </div>
+                                </div>
+                              </Popup>
+                            </Marker>
+                          )}
+                        </MapContainer>
                       </div>
                       
                       {/* Enhanced Map Info with Legend */}
