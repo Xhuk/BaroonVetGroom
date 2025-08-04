@@ -190,17 +190,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Get service type for appointment
+      const service = await storage.getService(appointmentData.serviceId);
+      
       // Create the appointment with proper client and pet IDs
       const newAppointment = await storage.createAppointment({
         tenantId,
         clientId: client.id,
         petId: pet.id,
         serviceId: appointmentData.serviceId,
-        requestedDate: appointmentData.requestedDate,
-        requestedTime: appointmentData.requestedTime,
+        scheduledDate: appointmentData.requestedDate,
+        scheduledTime: appointmentData.requestedTime,
+        type: service?.type || "medical", // Use service type or default to medical
         logistics: appointmentData.logistics,
         notes: appointmentData.notes,
-        status: appointmentData.status || "pending"
+        status: appointmentData.status || "scheduled"
       });
       
       res.json(newAppointment);
