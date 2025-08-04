@@ -20,7 +20,11 @@ interface Tenant {
   companyId: string;
 }
 
-export function CompanyTenantSelector() {
+interface CompanyTenantSelectorProps {
+  hideAccessCheck?: boolean;
+}
+
+export function CompanyTenantSelector({ hideAccessCheck = false }: CompanyTenantSelectorProps) {
   const { canDebugTenants } = useAccessControl();
   const { toast } = useToast();
   const [selectedCompany, setSelectedCompany] = useState<string>("");
@@ -39,7 +43,7 @@ export function CompanyTenantSelector() {
 
   const filteredTenants = allTenants?.filter(t => !selectedCompany || t.companyId === selectedCompany);
 
-  if (!canDebugTenants) {
+  if (!hideAccessCheck && !canDebugTenants) {
     return null;
   }
 
@@ -143,11 +147,21 @@ export function CompanyTenantSelector() {
           <Button 
             onClick={() => {
               if (selectedCompany && selectedTenant) {
+                // Set debug mode and selected tenant
+                sessionStorage.setItem('debugMode', 'true');
+                sessionStorage.setItem('selectedTenantId', selectedTenant);
+                sessionStorage.setItem('selectedCompanyId', selectedCompany);
+                
                 setIsConfirmed(true);
                 toast({
                   title: "Configuración confirmada",
                   description: `Debug activo para ${companies?.find(c => c.id === selectedCompany)?.name} - ${allTenants?.find(t => t.id === selectedTenant)?.name}`,
                 });
+                
+                // Refresh the app view
+                setTimeout(() => {
+                  window.location.reload();
+                }, 1000);
               } else {
                 toast({
                   title: "Selección incompleta",
@@ -164,10 +178,10 @@ export function CompanyTenantSelector() {
             {isConfirmed ? (
               <>
                 <Check className="w-4 h-4 mr-1" />
-                Confirmado
+                Confirmado - Recargando...
               </>
             ) : (
-              "Confirmar Selección"
+              "Confirmar y Cambiar Vista"
             )}
           </Button>
         </div>

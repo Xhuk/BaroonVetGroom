@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Building2, Crown, Settings } from "lucide-react";
-import { DebugTenantSelector } from "@/components/DebugTenantSelector";
+import { CompanyTenantSelector } from "@/components/CompanyTenantSelector";
 
 interface TenantContextType {
   currentTenant: Tenant | null;
@@ -49,15 +49,15 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
   // Check for debug mode and stored tenant selection
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     const debugMode = sessionStorage.getItem('debugMode') === 'true';
     const storedTenantId = sessionStorage.getItem('selectedTenantId');
-    
-    // console.log('TenantContext useEffect - Debug mode:', debugMode, 'storedTenantId:', storedTenantId, 'isDebugUser:', isDebugUser, 'userTenants.length:', userTenants.length, 'currentTenant:', currentTenant);
     
     setIsDebugMode(debugMode);
     
     // Priority 1: Handle stored debug tenant selection (memory-based)
-    if (debugMode && isDebugUser && storedTenantId) {
+    if (debugMode && isDebugUser && storedTenantId && !currentTenant) {
       // Create tenant object from memory instead of API call
       const debugTenants = [
         {
@@ -112,14 +112,13 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     }
     
     // Priority 2: Show debug selector for debug mode without stored tenant
-    if (debugMode && isDebugUser && !storedTenantId) {
+    if (debugMode && isDebugUser && !storedTenantId && !showDebugTenantSelector) {
       setShowDebugTenantSelector(true);
       return;
     }
     
     // Priority 3: Handle regular tenant assignments (including debug users with normal assignments)
-    if (userTenants.length > 0 && !currentTenant && !debugMode) {
-      // console.log('Loading regular tenant assignments for user');
+    if (userTenants.length > 0 && !currentTenant && !debugMode && availableTenants.length === 0) {
       // Fetch full tenant data for all user tenants
       Promise.all(
         userTenants.map(ut => 
@@ -144,7 +143,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         }
       });
     }
-  }, [userTenants, currentTenant, user, isDebugUser, accessInfo]);
+  }, [isAuthenticated, userTenants, currentTenant, isDebugUser, availableTenants.length, showDebugTenantSelector]);
 
   const handleTenantSelect = (selectedTenant: Tenant) => {
     setCurrentTenant(selectedTenant);
@@ -228,11 +227,22 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       )}
       
       {/* Debug Tenant Selector */}
-      <DebugTenantSelector
-        isOpen={showDebugTenantSelector}
-        onClose={() => setShowDebugTenantSelector(false)}
-        onTenantSelect={handleDebugTenantSelect}
-      />
+      {showDebugTenantSelector && (
+        <Dialog open={showDebugTenantSelector} onOpenChange={() => setShowDebugTenantSelector(false)}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-yellow-600" />
+                Debug: Seleccionar Empresa y Tenant
+                <Badge variant="destructive" className="text-xs">
+                  MODO DEBUG
+                </Badge>
+              </DialogTitle>
+            </DialogHeader>
+            <CompanyTenantSelector hideAccessCheck={true} />
+          </DialogContent>
+        </Dialog>
+      )}
       
       {/* Normal Tenant Selector */}
       {showTenantSelector && (
