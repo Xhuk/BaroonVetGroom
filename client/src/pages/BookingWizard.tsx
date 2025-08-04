@@ -508,6 +508,7 @@ export default function BookingWizard() {
                             className="absolute inset-0 z-10 pointer-events-auto"
                             onContextMenu={(e) => {
                               e.preventDefault();
+                              e.stopPropagation();
                               const rect = e.currentTarget.getBoundingClientRect();
                               const x = (e.clientX - rect.left) / rect.width;
                               const y = (e.clientY - rect.top) / rect.height;
@@ -528,6 +529,7 @@ export default function BookingWizard() {
                                 description: `Coordenadas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
                               });
                             }}
+                            onMouseDown={(e) => e.stopPropagation()}
                           />
                           
                           {/* Clinic Location - Blue Marker (Bound to tenant GPS coordinates) */}
@@ -573,17 +575,49 @@ export default function BookingWizard() {
 
                         </div>
 
-                        {/* Base OpenStreetMap with pan and zoom controls */}
-                        <iframe
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-(mapDiameterKm/111.32)},${mapCoordinates.lat-(mapDiameterKm/110.54)},${mapCoordinates.lng+(mapDiameterKm/111.32)},${mapCoordinates.lat+(mapDiameterKm/110.54)}&layer=mapnik`}
-                          width="100%"
-                          height="100%"
-                          style={{ border: 0 }}
-                          title="Mapa navegable para planificación de entrega"
-                          className="rounded-t-lg"
-                          loading="lazy"
-                          key={`${mapCoordinates.lat}-${mapCoordinates.lng}-${mapDiameterKm}`}
-                        />
+                        {/* Base OpenStreetMap with custom drag controls */}
+                        <div
+                          className="w-full h-full relative cursor-move bg-gray-100 rounded-t-lg overflow-hidden"
+                          onMouseDown={(e) => {
+                            const startX = e.clientX;
+                            const startY = e.clientY;
+                            const startLng = mapCoordinates.lng;
+                            const startLat = mapCoordinates.lat;
+                            
+                            const handleMouseMove = (moveEvent: MouseEvent) => {
+                              const deltaX = moveEvent.clientX - startX;
+                              const deltaY = moveEvent.clientY - startY;
+                              
+                              // Convert pixel movement to GPS coordinates
+                              const lngDelta = (deltaX / 400) * (mapDiameterKm / 111.32);
+                              const latDelta = (deltaY / 400) * (mapDiameterKm / 110.54);
+                              
+                              setMapCoordinates({
+                                lng: startLng - lngDelta,
+                                lat: startLat + latDelta
+                              });
+                            };
+                            
+                            const handleMouseUp = () => {
+                              document.removeEventListener('mousemove', handleMouseMove);
+                              document.removeEventListener('mouseup', handleMouseUp);
+                            };
+                            
+                            document.addEventListener('mousemove', handleMouseMove);
+                            document.addEventListener('mouseup', handleMouseUp);
+                          }}
+                        >
+                          <iframe
+                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-(mapDiameterKm/111.32)},${mapCoordinates.lat-(mapDiameterKm/110.54)},${mapCoordinates.lng+(mapDiameterKm/111.32)},${mapCoordinates.lat+(mapDiameterKm/110.54)}&layer=mapnik&marker=${tenantLocation.lat}%2C${tenantLocation.lng}`}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0, pointerEvents: 'none' }}
+                            title="Mapa navegable para planificación de entrega"
+                            className="rounded-t-lg"
+                            loading="lazy"
+                            key={`${mapCoordinates.lat}-${mapCoordinates.lng}-${mapDiameterKm}`}
+                          />
+                        </div>
                         
                         {/* Zoom Controls */}
                         <div className="absolute top-2 right-2 flex flex-col gap-1 z-30">
