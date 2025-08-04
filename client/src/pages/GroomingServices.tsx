@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Scissors, Plus, Search, Star, Camera, Clock, DollarSign, Heart, Eye, Play, Pause, Square, Check } from "lucide-react";
+import { Scissors, Plus, Search, Star, Camera, Clock, DollarSign, Heart, Eye, Play, Pause, Square, Check, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useForm } from "react-hook-form";
@@ -602,33 +602,33 @@ export default function GroomingServices() {
                     <div>
                       <p className="text-sm font-medium text-gray-700">Servicios:</p>
                       <div className="flex flex-wrap gap-1">
-                        {record.servicesProvided.slice(0, 3).map((service) => (
+                        {record.services?.slice(0, 3).map((service) => (
                           <Badge key={service} variant="secondary" className="text-xs">
                             {serviceLabels[service as keyof typeof serviceLabels]}
                           </Badge>
                         ))}
-                        {record.servicesProvided.length > 3 && (
+                        {record.services && record.services.length > 3 && (
                           <Badge variant="secondary" className="text-xs">
-                            +{record.servicesProvided.length - 3} más
+                            +{record.services.length - 3} más
                           </Badge>
                         )}
                       </div>
                     </div>
                     
                     <div className="space-y-1">
-                      {record.coatCondition && (
+                      {record.totalCost && (
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-600">Pelaje:</span>
-                          <Badge className={cn("text-xs", getConditionColor(record.coatCondition, 'coat'))}>
-                            {getConditionLabel(record.coatCondition, 'coat')}
+                          <span className="text-xs text-gray-600">Costo:</span>
+                          <Badge variant="outline" className="text-xs">
+                            ${record.totalCost}
                           </Badge>
                         </div>
                       )}
-                      {record.skinCondition && (
+                      {record.nextAppointmentDate && (
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-600">Piel:</span>
-                          <Badge className={cn("text-xs", getConditionColor(record.skinCondition, 'skin'))}>
-                            {getConditionLabel(record.skinCondition, 'skin')}
+                          <span className="text-xs text-gray-600">Próxima:</span>
+                          <Badge variant="outline" className="text-xs">
+                            {format(new Date(record.nextAppointmentDate), "dd/MM/yyyy")}
                           </Badge>
                         </div>
                       )}
@@ -637,29 +637,23 @@ export default function GroomingServices() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      {record.duration && (
+                      {record.notes && (
                         <div className="flex items-center text-gray-600 text-sm">
-                          <Clock className="w-4 h-4 mr-1" />
-                          {record.duration} min
+                          <FileText className="w-4 h-4 mr-1" />
+                          Notas disponibles
                         </div>
                       )}
-                      {record.totalCost && (
-                        <div className="flex items-center text-green-600 text-sm">
-                          <DollarSign className="w-4 h-4 mr-1" />
-                          {record.totalCost}
-                        </div>
-                      )}
-                      {record.clientSatisfaction && (
-                        <div className="flex items-center text-yellow-600 text-sm">
-                          <Star className="w-4 h-4 mr-1 fill-current" />
-                          {record.clientSatisfaction}/5
+                      {record.beforePhotos && record.beforePhotos.length > 0 && (
+                        <div className="flex items-center text-blue-600 text-sm">
+                          <Camera className="w-4 h-4 mr-1" />
+                          {record.beforePhotos.length} fotos
                         </div>
                       )}
                     </div>
                     
-                    {record.nextGroomingDate && (
-                      <div className="text-xs text-blue-600">
-                        Próxima: {format(new Date(record.nextGroomingDate), "dd/MM/yyyy")}
+                    {record.nextAppointmentRecommended && (
+                      <div className="text-xs text-green-600">
+                        ✓ Seguimiento recomendado
                       </div>
                     )}
                   </div>

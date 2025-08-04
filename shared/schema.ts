@@ -521,19 +521,13 @@ export const groomingRecords = pgTable("grooming_records", {
   petId: varchar("pet_id").notNull().references(() => pets.id),
   groomerId: varchar("groomer_id").notNull().references(() => staff.id),
   groomingDate: date("grooming_date").notNull(),
-  servicesProvided: varchar("services_provided").array().notNull(), // bath, haircut, nail_trim, ear_cleaning, etc.
-  coatCondition: varchar("coat_condition"), // excellent, good, fair, poor
-  skinCondition: varchar("skin_condition"), // healthy, dry, irritated, infected
-  behaviorNotes: text("behavior_notes"),
-  specialInstructions: text("special_instructions"),
-  productsUsed: jsonb("products_used"), // shampoos, conditioners, tools
+  services: varchar("services").array().notNull(), // bath, haircut, nail_trim, ear_cleaning, etc.
+  notes: text("notes"),
   beforePhotos: text("before_photos").array().default(sql`ARRAY[]::text[]`),
   afterPhotos: text("after_photos").array().default(sql`ARRAY[]::text[]`),
-  duration: integer("duration"), // minutes spent
   totalCost: decimal("total_cost", { precision: 10, scale: 2 }),
-  clientSatisfaction: integer("client_satisfaction"), // 1-5 rating
-  notes: text("notes"),
-  nextGroomingDate: date("next_grooming_date"),
+  nextAppointmentRecommended: boolean("next_appointment_recommended").default(false),
+  nextAppointmentDate: date("next_appointment_date"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
