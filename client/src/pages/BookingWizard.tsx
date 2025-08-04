@@ -633,17 +633,7 @@ export default function BookingWizard() {
                             const leftPercent = ((tenantLng - (mapCoordinates.lng - mapDiameterKm * lngDegPerKm)) / (mapDiameterKm * lngDegPerKm * 2)) * 100;
                             const topPercent = ((mapCoordinates.lat + mapDiameterKm * latDegPerKm - tenantLat) / (mapDiameterKm * latDegPerKm * 2)) * 100;
                             
-                            // Debug logging for marker positioning
-                            console.log('Blue Marker Debug:', {
-                              tenantLat,
-                              tenantLng,
-                              mapLat: mapCoordinates.lat,
-                              mapLng: mapCoordinates.lng,
-                              diameter: mapDiameterKm,
-                              leftPercent,
-                              topPercent,
-                              isVisible: leftPercent >= -5 && leftPercent <= 105 && topPercent >= -5 && topPercent <= 105
-                            });
+                            // Marker positioning calculations complete
                             
                             return (
                               <div 
