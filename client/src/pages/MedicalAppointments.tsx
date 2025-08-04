@@ -842,35 +842,51 @@ export default function MedicalAppointments() {
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-center">
-                        <Button
-                          type="button"
-                          variant={field.value ? "default" : "outline"}
-                          size="lg"
+                        <div 
+                          className="relative flex items-center gap-3 cursor-pointer group"
                           onClick={() => field.onChange(!field.value)}
-                          className={cn(
-                            "w-full max-w-md h-16 text-lg font-semibold transition-all duration-300",
-                            field.value 
-                              ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform scale-105 animate-pulse" 
-                              : "border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-                          )}
-                          data-testid="button-followup-required"
                         >
-                          <Eye className={cn("w-6 h-6 mr-3", field.value ? "text-white" : "text-gray-500")} />
-                          {field.value ? (
-                            <span className="flex items-center gap-2">
-                              <Zap className="w-5 h-5" />
-                              Seguimiento Requerido
-                              <Zap className="w-5 h-5" />
-                            </span>
-                          ) : (
-                            "¿Requiere Seguimiento?"
-                          )}
-                        </Button>
+                          <div className="relative">
+                            <div className={cn(
+                              "w-6 h-6 rounded border-2 transition-all duration-300 flex items-center justify-center",
+                              field.value 
+                                ? "bg-green-500 border-green-500 shadow-lg shadow-green-200" 
+                                : "border-green-300 hover:border-green-400 group-hover:shadow-sm group-hover:shadow-green-100"
+                            )}>
+                              {field.value && (
+                                <svg 
+                                  className="w-4 h-4 text-white animate-bounce" 
+                                  fill="currentColor" 
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path 
+                                    fillRule="evenodd" 
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                                    clipRule="evenodd" 
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                            {field.value && (
+                              <div className="absolute -inset-1 bg-green-400/30 rounded animate-ping"></div>
+                            )}
+                          </div>
+                          
+                          <span className={cn(
+                            "text-sm font-medium transition-all duration-300",
+                            field.value 
+                              ? "text-green-600" 
+                              : "text-gray-600 group-hover:text-green-600"
+                          )}>
+                            Requiere seguimiento
+                          </span>
+                        </div>
                       </div>
+                      
                       {field.value && (
-                        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                          <p className="text-sm text-blue-800 text-center">
-                            📋 Este paciente será añadido a las tareas de seguimiento del equipo médico
+                        <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200 animate-fade-in">
+                          <p className="text-xs text-green-700 text-center">
+                            ✓ Este paciente será añadido a las tareas de seguimiento del equipo médico
                           </p>
                         </div>
                       )}
