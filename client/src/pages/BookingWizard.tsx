@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, CheckCircle, MapPin, Building, User, Heart } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, MapPin, Building, User, Heart, Clock } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { debounce } from "lodash";
 
@@ -90,6 +90,8 @@ export default function BookingWizard() {
   const [showPetSelection, setShowPetSelection] = useState(false);
   const [availablePets, setAvailablePets] = useState<any[]>([]);
   const [selectedPetId, setSelectedPetId] = useState<string>("");
+  const [currentReservationId, setCurrentReservationId] = useState<string | null>(null);
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
 
   // Get tenant location
   const tenantLocation = useMemo(() => {
@@ -813,6 +815,39 @@ export default function BookingWizard() {
                 </div>
               </div>
 
+              {/* Appointment Time Section */}
+              <div className="bg-gradient-to-br from-green-50 via-white to-blue-50 p-6 rounded-lg border-2 border-dashed border-green-200">
+                <h3 className="font-semibold text-green-900 mb-4 flex items-center">
+                  <Clock className="mr-2 h-5 w-5 text-green-600" />
+                  🕐 Fecha y Hora de la Cita
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="requestedDate">Fecha preferida *</Label>
+                    <Input
+                      id="requestedDate"
+                      type="date"
+                      value={bookingData.requestedDate}
+                      onChange={(e) => setBookingData(prev => ({ ...prev, requestedDate: e.target.value }))}
+                      min={new Date().toISOString().split('T')[0]}
+                      required
+                      data-testid="input-requested-date"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="requestedTime">Hora preferida *</Label>
+                    <Input
+                      id="requestedTime"
+                      type="time"
+                      value={bookingData.requestedTime}
+                      onChange={(e) => setBookingData(prev => ({ ...prev, requestedTime: e.target.value }))}
+                      required
+                      data-testid="input-requested-time"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-between">
                 <Button
                   type="button"
@@ -901,6 +936,22 @@ export default function BookingWizard() {
                       });
                       return;
                     }
+                    if (!bookingData.requestedDate) {
+                      toast({
+                        title: "Campo requerido",
+                        description: "Por favor selecciona una fecha para la cita",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    if (!bookingData.requestedTime) {
+                      toast({
+                        title: "Campo requerido",
+                        description: "Por favor selecciona una hora para la cita",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
                     
                     // If showing pet selection, ensure one is selected
                     if (showPetSelection && !selectedPetId) {
@@ -912,6 +963,10 @@ export default function BookingWizard() {
                       return;
                     }
                     
+                    // Check availability for the selected date/time
+                    setIsCheckingAvailability(true);
+                    
+                    // For now, go to service selection. We'll add availability checking after service selection
                     setCurrentStep(2);
                   }}
                   data-testid="button-next-to-service"

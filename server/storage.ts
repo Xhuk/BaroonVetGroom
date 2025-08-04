@@ -32,9 +32,11 @@ import {
   type InsertAppointment,
   type InsertService,
   type InsertRole,
+  type TempSlotReservation,
+  type InsertTempSlotReservation,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, lt, gte } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -64,7 +66,6 @@ export interface IStorage {
   updateStaff(staffId: string, staff: Partial<InsertStaff>): Promise<Staff>;
   deleteStaff(staffId: string): Promise<void>;
   reassignStaffAppointments(oldStaffId: string, newStaffId: string): Promise<void>;
-  reassignStaffAppointments(oldStaffId: string, newStaffId: string): Promise<void>;
   
   // Client operations
   getClients(tenantId: string): Promise<Client[]>;
@@ -82,7 +83,10 @@ export interface IStorage {
   deleteAppointment(appointmentId: string): Promise<void>;
   getAvailableSlots(tenantId: string, date: string, serviceId: string): Promise<string[]>;
   checkAvailability(tenantId: string, date: string, time: string, serviceId: string): Promise<{ available: boolean; alternativeSlots: string[] }>;
-  reserveSlot(reservation: any): Promise<any>;
+  reserveSlot(reservation: InsertTempSlotReservation): Promise<TempSlotReservation>;
+  releaseSlot(reservationId: string): Promise<void>;
+  cleanupExpiredReservations(): Promise<void>;
+  getTenantReservationTimeout(tenantId: string): Promise<number>;
   getClientByPhone(tenantId: string, phone: string): Promise<Client | undefined>;
   
   // Service operations
@@ -428,6 +432,26 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRole(roleId: string): Promise<void> {
     await db.delete(roles).where(eq(roles.id, roleId));
+  }
+
+  // Slot reservation operations
+  async reserveSlot(reservation: InsertTempSlotReservation): Promise<TempSlotReservation> {
+    const [newReservation] = await db.insert(tempSlotReservations).values(reservation).returning();
+    return newReservation;
+  }
+
+  async releaseSlot(reservationId: string): Promise<void> {
+    await db.delete(tempSlotReservations).where(eq(tempSlotReservations.id, reservationId));
+  }
+
+  async cleanupExpiredReservations(): Promise<void> {
+    const now = new Date();
+    await db.delete(tempSlotReservations).where(lt(tempSlotReservations.expiresAt, now));
+  }
+
+  async getTenantReservationTimeout(tenantId: string): Promise<number> {
+    // Default to 5 minutes, could be made configurable per tenant
+    return 5;
   }
 }
 

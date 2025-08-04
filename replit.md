@@ -11,6 +11,9 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Customer Auto-Fill**: System now auto-fills customer information when name, phone, and email match existing records
 - **Service Selection Enhancement**: Fixed service loading and display in booking wizard with proper error handling
 - **CSS Import Order**: Resolved Leaflet map rendering by correcting CSS import precedence over Tailwind
+- **Enhanced Booking Workflow**: Added appointment time selection to step 1 with date/time validation
+- **Slot Reservation System**: Implemented temporary slot reservation with UUID tracking and auto-cleanup
+- **Missing Services Endpoint**: Added `/api/services/:tenantId` endpoint to fix empty service selection
 
 # User Preferences
 

@@ -416,6 +416,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Slot reservation endpoints for booking flow
+  app.post('/api/slot-reservation/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { scheduledDate, scheduledTime, serviceId } = req.body;
+      
+      // Clean up expired reservations first
+      await storage.cleanupExpiredReservations();
+      
+      // Get tenant-specific timeout (default 5 minutes)
+      const timeoutMinutes = await storage.getTenantReservationTimeout(tenantId);
+      const expiresAt = new Date(Date.now() + timeoutMinutes * 60 * 1000);
+      
+      // Create reservation with session ID
+      const sessionId = req.sessionID || 'unknown';
+      const reservation = await storage.reserveSlot({
+        tenantId,
+        sessionId,
+        scheduledDate,
+        scheduledTime,
+        serviceId,
+        expiresAt
+      });
+      
+      res.json({ 
+        reservationId: reservation.id, 
+        expiresAt: reservation.expiresAt,
+        timeoutMinutes 
+      });
+    } catch (error) {
+      console.error("Error reserving slot:", error);
+      res.status(500).json({ message: "Failed to reserve slot" });
+    }
+  });
+
+  app.delete('/api/slot-reservation/:reservationId', isAuthenticated, async (req, res) => {
+    try {
+      const { reservationId } = req.params;
+      await storage.releaseSlot(reservationId);
+      res.json({ message: "Slot released successfully" });
+    } catch (error) {
+      console.error("Error releasing slot:", error);
+      res.status(500).json({ message: "Failed to release slot" });
+    }
+  });
+
+  // Enhanced availability check with alternatives
+  app.get('/api/availability/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { date, time, serviceId } = req.query;
+      
+      // Clean up expired reservations
+      await storage.cleanupExpiredReservations();
+      
+      const result = await storage.checkAvailability(
+        tenantId, 
+        date as string, 
+        time as string, 
+        serviceId as string
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error checking availability:", error);
+      res.status(500).json({ message: "Failed to check availability" });
+    }
+  });
+
   app.post('/api/admin/services/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;
