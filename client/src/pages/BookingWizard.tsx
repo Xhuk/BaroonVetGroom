@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, CheckCircle, MapPin, Building, User, Heart, Clock } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, MapPin, Building, User, Heart, Clock, Loader2 } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { debounce } from "lodash";
 
@@ -357,22 +357,6 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
         title: "Error",
         description: "No se pudo crear la cita",
         variant: "destructive",
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
-      toast({
-        title: "Cita creada exitosamente",
-        description: "La cita ha sido programada correctamente",
-        variant: "default"
-      });
-      setLocation('/appointments');
-    },
-    onError: (error) => {
-      toast({
-        title: "Error al crear la cita",
-        description: "Hubo un problema al crear la cita. Inténtalo de nuevo.",
-        variant: "destructive"
       });
     }
   });

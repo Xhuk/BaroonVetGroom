@@ -148,9 +148,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/appointments/:tenantId', isAuthenticated, async (req: any, res) => {
     try {
       const { tenantId } = req.params;
-      const appointmentData = { ...req.body, tenantId };
-      const appointment = await storage.createAppointment(appointmentData);
-      res.json(appointment);
+      const appointmentData = req.body;
+      
+      // First, create or find the client
+      let client = await storage.findCustomerByInfo(
+        appointmentData.customerName,
+        appointmentData.customerPhone,
+        appointmentData.customerEmail
+      );
+      
+      if (!client) {
+        // Create new client
+        client = await storage.createClient({
+          tenantId,
+          name: appointmentData.customerName,
+          phone: appointmentData.customerPhone,
+          email: appointmentData.customerEmail,
+          address: appointmentData.customerAddress,
+          fraccionamiento: appointmentData.customerFraccionamiento,
+          postalCode: appointmentData.customerPostalCode,
+          latitude: appointmentData.customerLatitude,
+          longitude: appointmentData.customerLongitude
+        });
+      }
+      
+      // Create or find the pet
+      let pet;
+      const existingPets = await storage.getPets(client.id);
+      pet = existingPets.find(p => p.name.toLowerCase() === appointmentData.petName.toLowerCase());
+      
+      if (!pet) {
+        // Create new pet
+        pet = await storage.createPet({
+          clientId: client.id,
+          name: appointmentData.petName,
+          species: appointmentData.petSpecies,
+          breed: appointmentData.petBreed,
+          age: appointmentData.petAge,
+          weight: appointmentData.petWeight,
+          medicalHistory: appointmentData.petMedicalHistory
+        });
+      }
+      
+      // Create the appointment with proper client and pet IDs
+      const newAppointment = await storage.createAppointment({
+        tenantId,
+        clientId: client.id,
+        petId: pet.id,
+        serviceId: appointmentData.serviceId,
+        requestedDate: appointmentData.requestedDate,
+        requestedTime: appointmentData.requestedTime,
+        logistics: appointmentData.logistics,
+        notes: appointmentData.notes,
+        status: appointmentData.status || "pending"
+      });
+      
+      res.json(newAppointment);
     } catch (error) {
       console.error("Error creating appointment:", error);
       res.status(500).json({ message: "Failed to create appointment" });
@@ -594,11 +647,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Send to n8n webhook for WhatsApp processing
+      // Send to n8n webhook for WhatsApp processing with JWT
       const response = await fetch(n8nWebhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.N8N_JWT_TOKEN || 'default-token'}`
         },
         body: JSON.stringify({
           phone: phone,
