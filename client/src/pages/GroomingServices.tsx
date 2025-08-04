@@ -28,21 +28,11 @@ const groomingRecordSchema = z.object({
   petId: z.string().min(1, "Debe seleccionar una mascota"),
   groomerId: z.string().min(1, "Debe seleccionar un estilista"),
   groomingDate: z.string().min(1, "Debe seleccionar una fecha"),
-  servicesProvided: z.array(z.string()).min(1, "Debe seleccionar al menos un servicio"),
-  coatCondition: z.enum(["excellent", "good", "fair", "poor"]).optional(),
-  skinCondition: z.enum(["healthy", "dry", "irritated", "infected"]).optional(),
-  behaviorNotes: z.string().optional(),
-  specialInstructions: z.string().optional(),
-  productsUsed: z.object({
-    shampoo: z.string().optional(),
-    conditioner: z.string().optional(),
-    tools: z.array(z.string()).optional(),
-  }).optional(),
-  duration: z.coerce.number().optional(),
+  services: z.array(z.string()).min(1, "Debe seleccionar al menos un servicio"),
   totalCost: z.string().optional(),
-  clientSatisfaction: z.coerce.number().min(1).max(5).optional(),
   notes: z.string().optional(),
-  nextGroomingDate: z.string().optional(),
+  nextAppointmentRecommended: z.boolean().optional(),
+  nextAppointmentDate: z.string().optional(),
 });
 
 type GroomingRecordFormData = z.infer<typeof groomingRecordSchema>;
@@ -158,11 +148,7 @@ export default function GroomingServices() {
   const form = useForm<GroomingRecordFormData>({
     resolver: zodResolver(groomingRecordSchema),
     defaultValues: {
-      servicesProvided: [],
-      coatCondition: "good",
-      skinCondition: "healthy",
-      clientSatisfaction: 5,
-      productsUsed: { tools: [] },
+      services: [],
     },
   });
 
@@ -194,7 +180,7 @@ export default function GroomingServices() {
       ...data,
       tenantId: currentTenant.id,
       totalCost: data.totalCost || undefined,
-      nextGroomingDate: data.nextGroomingDate || undefined,
+      nextAppointmentDate: data.nextAppointmentDate || undefined,
     };
     
     createMutation.mutate(insertData);
@@ -355,18 +341,18 @@ export default function GroomingServices() {
 
                   <FormField
                     control={form.control}
-                    name="servicesProvided"
+                    name="services"
                     render={() => (
                       <FormItem>
                         <div className="mb-4">
                           <FormLabel className="text-base">Servicios Realizados *</FormLabel>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
-                          {groomingServices.map((service) => (
+                          {Object.keys(serviceLabels).map((service) => (
                             <FormField
                               key={service}
                               control={form.control}
-                              name="servicesProvided"
+                              name="services"
                               render={({ field }) => {
                                 return (
                                   <FormItem
@@ -402,133 +388,32 @@ export default function GroomingServices() {
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="coatCondition"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Condición del Pelaje</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-coat-condition">
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="excellent">Excelente</SelectItem>
-                              <SelectItem value="good">Bueno</SelectItem>
-                              <SelectItem value="fair">Regular</SelectItem>
-                              <SelectItem value="poor">Malo</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="skinCondition"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Condición de la Piel</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-skin-condition">
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="healthy">Saludable</SelectItem>
-                              <SelectItem value="dry">Seca</SelectItem>
-                              <SelectItem value="irritated">Irritada</SelectItem>
-                              <SelectItem value="infected">Infectada</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="behaviorNotes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notas de Comportamiento</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Cómo se comportó la mascota durante el servicio..." {...field} data-testid="textarea-behavior-notes" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="specialInstructions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Instrucciones Especiales</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Instrucciones especiales del cliente..." {...field} data-testid="textarea-special-instructions" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="clientSatisfaction"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Satisfacción del Cliente (1-5)</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-satisfaction">
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="1">1 - Muy Insatisfecho</SelectItem>
-                              <SelectItem value="2">2 - Insatisfecho</SelectItem>
-                              <SelectItem value="3">3 - Neutral</SelectItem>
-                              <SelectItem value="4">4 - Satisfecho</SelectItem>
-                              <SelectItem value="5">5 - Muy Satisfecho</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="nextGroomingDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Próxima Cita Sugerida</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} data-testid="input-next-grooming-date" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
                   <FormField
                     control={form.control}
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notas Adicionales</FormLabel>
+                        <FormLabel>Notas del Servicio</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Observaciones adicionales..." {...field} data-testid="textarea-notes" />
+                          <Textarea 
+                            placeholder="Observaciones sobre el servicio realizado..."
+                            {...field}
+                            data-testid="textarea-notes"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="nextAppointmentDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Próxima Cita Sugerida</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} data-testid="input-next-appointment-date" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -728,15 +613,15 @@ export default function GroomingServices() {
                   <p>{groomers.find(g => g.id === selectedRecord.groomerId)?.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Duración</p>
-                  <p>{selectedRecord.duration ? `${selectedRecord.duration} minutos` : 'No especificada'}</p>
+                  <p className="text-sm font-medium text-gray-700">Costo Total</p>
+                  <p>{selectedRecord.totalCost ? `$${selectedRecord.totalCost}` : 'No especificado'}</p>
                 </div>
               </div>
 
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">Servicios Realizados</p>
                 <div className="flex flex-wrap gap-2">
-                  {selectedRecord.servicesProvided.map((service) => (
+                  {selectedRecord.services.map((service) => (
                     <Badge key={service} className="bg-pink-100 text-pink-800">
                       {serviceLabels[service as keyof typeof serviceLabels]}
                     </Badge>
@@ -744,36 +629,10 @@ export default function GroomingServices() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                {selectedRecord.coatCondition && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Condición del Pelaje</p>
-                    <Badge className={cn("px-2 py-1", getConditionColor(selectedRecord.coatCondition, 'coat'))}>
-                      {getConditionLabel(selectedRecord.coatCondition, 'coat')}
-                    </Badge>
-                  </div>
-                )}
-                {selectedRecord.skinCondition && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Condición de la Piel</p>
-                    <Badge className={cn("px-2 py-1", getConditionColor(selectedRecord.skinCondition, 'skin'))}>
-                      {getConditionLabel(selectedRecord.skinCondition, 'skin')}
-                    </Badge>
-                  </div>
-                )}
-              </div>
-
-              {selectedRecord.behaviorNotes && (
+              {selectedRecord.notes && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Notas de Comportamiento</p>
-                  <p className="p-3 bg-blue-50 rounded-lg">{selectedRecord.behaviorNotes}</p>
-                </div>
-              )}
-
-              {selectedRecord.specialInstructions && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Instrucciones Especiales</p>
-                  <p className="p-3 bg-yellow-50 rounded-lg">{selectedRecord.specialInstructions}</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Notas del Servicio</p>
+                  <p className="p-3 bg-blue-50 rounded-lg">{selectedRecord.notes}</p>
                 </div>
               )}
 
@@ -787,27 +646,7 @@ export default function GroomingServices() {
                     </div>
                   </div>
                 )}
-                {selectedRecord.clientSatisfaction && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Satisfacción del Cliente</p>
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          className={cn(
-                            "w-4 h-4",
-                            i < selectedRecord.clientSatisfaction! 
-                              ? "text-yellow-400 fill-current" 
-                              : "text-gray-300"
-                          )} 
-                        />
-                      ))}
-                      <span className="ml-2 text-sm text-gray-600">
-                        ({selectedRecord.clientSatisfaction}/5)
-                      </span>
-                    </div>
-                  </div>
-                )}
+
               </div>
 
               {selectedRecord.notes && (
@@ -817,12 +656,12 @@ export default function GroomingServices() {
                 </div>
               )}
 
-              {selectedRecord.nextGroomingDate && (
+              {selectedRecord.nextAppointmentDate && (
                 <div className="flex items-center p-3 bg-blue-50 rounded-lg text-blue-800">
                   <Clock className="w-5 h-5 mr-2" />
                   <span className="font-medium">Próxima cita sugerida:</span>
                   <span className="ml-2">
-                    {format(new Date(selectedRecord.nextGroomingDate), "dd 'de' MMMM, yyyy", { locale: es })}
+                    {format(new Date(selectedRecord.nextAppointmentDate), "dd 'de' MMMM, yyyy", { locale: es })}
                   </span>
                 </div>
               )}
@@ -942,7 +781,7 @@ export default function GroomingServices() {
                 <div className="bg-white rounded-xl p-6 shadow-lg">
                   <h4 className="text-xl font-semibold text-gray-800 mb-4">Servicios Programados</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {currentGrooming.servicesProvided.map((service) => (
+                    {currentGrooming.services.map((service) => (
                       <div key={service} className="bg-pink-100 text-pink-800 px-4 py-3 rounded-lg font-medium text-center">
                         {serviceLabels[service as keyof typeof serviceLabels]}
                       </div>
@@ -1014,7 +853,7 @@ export default function GroomingServices() {
                   <div className="space-y-3">
                     <p><strong>Mascota:</strong> {pets.find(p => p.id === currentGrooming.petId)?.name}</p>
                     <p><strong>Duración:</strong> {Math.floor(elapsedTime / 60)} minutos</p>
-                    <p><strong>Servicios:</strong> {currentGrooming.servicesProvided.length} servicios completados</p>
+                    <p><strong>Servicios:</strong> {currentGrooming.services.length} servicios completados</p>
                   </div>
                 </div>
 
