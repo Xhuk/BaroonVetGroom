@@ -48,6 +48,11 @@ export const companies = pgTable("companies", {
   subscriptionEndDate: timestamp("subscription_end_date"),
   subscriptionPlan: varchar("subscription_plan").default("basic"), // basic, pro, enterprise
   deliveryTrackingEnabled: boolean("delivery_tracking_enabled").default(false), // BETA feature control
+  // Follow-up notification settings (configurable by super admin)
+  followUpNormalThreshold: integer("follow_up_normal_threshold").default(10), // Slow heart beat when count >= this
+  followUpUrgentThreshold: integer("follow_up_urgent_threshold").default(20), // Fast heart beat when count >= this
+  followUpHeartBeatEnabled: boolean("follow_up_heart_beat_enabled").default(true), // Enable/disable beating heart
+  followUpShowCount: boolean("follow_up_show_count").default(true), // Show count badge
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

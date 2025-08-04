@@ -753,6 +753,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get follow-up count for notifications
+  app.get('/api/medical-appointments/follow-up-count/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const count = await storage.getFollowUpCount(tenantId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error getting follow-up count:", error);
+      res.status(500).json({ message: "Failed to get follow-up count" });
+    }
+  });
+
+  // Get company follow-up configuration
+  app.get('/api/company/follow-up-config/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const config = await storage.getCompanyFollowUpConfig(companyId);
+      res.json(config);
+    } catch (error) {
+      console.error("Error getting follow-up config:", error);
+      res.status(500).json({ message: "Failed to get follow-up configuration" });
+    }
+  });
+
+  // Update company follow-up configuration (Super Admin only)
+  app.put('/api/company/follow-up-config/:companyId', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user has super admin access
+      const userAccess = await storage.getUserAccessInfo(req.user.id);
+      if (userAccess?.accessLevel !== 'system_admin') {
+        return res.status(403).json({ message: "Super admin access required" });
+      }
+
+      const { companyId } = req.params;
+      const { 
+        followUpNormalThreshold, 
+        followUpUrgentThreshold, 
+        followUpHeartBeatEnabled, 
+        followUpShowCount 
+      } = req.body;
+
+      const updatedConfig = await storage.updateCompanyFollowUpConfig(companyId, {
+        followUpNormalThreshold,
+        followUpUrgentThreshold,
+        followUpHeartBeatEnabled,
+        followUpShowCount
+      });
+
+      res.json(updatedConfig);
+    } catch (error) {
+      console.error("Error updating follow-up config:", error);
+      res.status(500).json({ message: "Failed to update follow-up configuration" });
+    }
+  });
+
   app.put('/api/admin/business-hours/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;

@@ -5,6 +5,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { Calendar, Phone, Mail, LogOut, Moon, Sun } from "lucide-react";
 import { VetGroomLogo } from "./VetGroomLogo";
 import { DebugControls } from "./DebugControls";
+import { FollowUpNotification } from "./FollowUpNotification";
 
 export function Header() {
   const { user } = useAuth();
@@ -56,6 +57,12 @@ export function Header() {
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* Follow-up Notification */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600 dark:text-slate-300">Seguimientos:</span>
+              <FollowUpNotification />
+            </div>
+            
             {/* Debug Controls */}
             <DebugControls />
             

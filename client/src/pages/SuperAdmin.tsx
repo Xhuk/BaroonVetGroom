@@ -13,7 +13,8 @@ import {
   Server,
   Plus,
   Settings,
-  Activity
+  Activity,
+  Heart
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,7 @@ export default function SuperAdmin() {
               <CardTitle className="text-lg text-gray-900">Acciones Rápidas</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
                 <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
                   <Database className="w-5 h-5 text-blue-600" />
                   <span className="text-sm font-medium">Backup BD</span>
@@ -86,6 +87,13 @@ export default function SuperAdmin() {
                   <Shield className="w-5 h-5 text-red-600" />
                   <span className="text-sm font-medium">Auditoría</span>
                 </Button>
+                
+                <Link href="/admin/follow-up-config" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-red-50 hover:bg-red-100 border-red-300">
+                    <Heart className="w-5 h-5 text-red-600" />
+                    <span className="text-sm font-medium text-red-700">Seguimientos</span>
+                  </Button>
+                </Link>
                 
                 <Link href="/superadmin/monitoring" className="block">
                   <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-blue-50 hover:bg-blue-100 border-blue-300">

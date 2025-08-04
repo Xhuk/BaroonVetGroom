@@ -33,6 +33,7 @@ import GroomingServices from "@/pages/GroomingServices";
 import MobileUpload from "@/pages/MobileUpload";
 import FollowUpTasks from "@/pages/FollowUpTasks";
 import AdminPaymentGateways from "@/pages/AdminPaymentGateways";
+import AdminFollowUpConfig from "@/pages/AdminFollowUpConfig";
 import Facturacion from "@/pages/Facturacion";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
 
@@ -67,6 +68,7 @@ function Router() {
           <Route path="/admin/business-hours" component={AdminBusinessHours} />
           <Route path="/admin/billing-config" component={AdminBillingConfig} />
           <Route path="/admin/payment-gateways" component={AdminPaymentGateways} />
+          <Route path="/admin/follow-up-config" component={AdminFollowUpConfig} />
           <Route path="/admin/van-config" component={AdminVanConfig} />
           <Route path="/facturacion" component={Facturacion} />
           <Route path="/superadmin" component={SuperAdmin} />

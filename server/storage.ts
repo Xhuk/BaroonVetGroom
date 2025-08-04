@@ -268,6 +268,11 @@ export interface IStorage {
   // Subscription promotions
   getActivePromotions(): Promise<SubscriptionPromotion[]>;
   validatePromotionCode(code: string): Promise<SubscriptionPromotion | undefined>;
+
+  // Follow-up notification operations
+  getFollowUpCount(tenantId: string): Promise<number>;
+  getCompanyFollowUpConfig(companyId: string): Promise<any>;
+  updateCompanyFollowUpConfig(companyId: string, config: any): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1579,6 +1584,54 @@ export class DatabaseStorage implements IStorage {
         )
       );
     return promotion;
+  }
+
+  // Follow-up notification operations
+  async getFollowUpCount(tenantId: string): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(medicalAppointments)
+      .where(
+        and(
+          eq(medicalAppointments.tenantId, tenantId),
+          eq(medicalAppointments.followUpRequired, true),
+          lte(medicalAppointments.followUpDate, new Date())
+        )
+      );
+    return result[0]?.count || 0;
+  }
+
+  async getCompanyFollowUpConfig(companyId: string): Promise<any> {
+    const [company] = await db
+      .select({
+        followUpNormalThreshold: companies.followUpNormalThreshold,
+        followUpUrgentThreshold: companies.followUpUrgentThreshold,
+        followUpHeartBeatEnabled: companies.followUpHeartBeatEnabled,
+        followUpShowCount: companies.followUpShowCount,
+      })
+      .from(companies)
+      .where(eq(companies.id, companyId));
+    return company;
+  }
+
+  async updateCompanyFollowUpConfig(companyId: string, config: any): Promise<any> {
+    const [updatedCompany] = await db
+      .update(companies)
+      .set({
+        followUpNormalThreshold: config.followUpNormalThreshold,
+        followUpUrgentThreshold: config.followUpUrgentThreshold,
+        followUpHeartBeatEnabled: config.followUpHeartBeatEnabled,
+        followUpShowCount: config.followUpShowCount,
+        updatedAt: new Date(),
+      })
+      .where(eq(companies.id, companyId))
+      .returning({
+        followUpNormalThreshold: companies.followUpNormalThreshold,
+        followUpUrgentThreshold: companies.followUpUrgentThreshold,
+        followUpHeartBeatEnabled: companies.followUpHeartBeatEnabled,
+        followUpShowCount: companies.followUpShowCount,
+      });
+    return updatedCompany;
   }
 }
 
