@@ -60,6 +60,50 @@ export default function SuperAdmin() {
             <p className="text-gray-600">Gestión a nivel de plataforma: empresas, infraestructura y configuraciones globales</p>
           </div>
 
+          {/* Quick Access Ribbon */}
+          <Card className="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg text-gray-900">Acciones Rápidas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
+                  <Database className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-medium">Backup BD</span>
+                </Button>
+                
+                <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
+                  <Settings className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm font-medium">Config Global</span>
+                </Button>
+                
+                <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-medium">Reportes</span>
+                </Button>
+                
+                <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
+                  <Shield className="w-5 h-5 text-red-600" />
+                  <span className="text-sm font-medium">Auditoría</span>
+                </Button>
+                
+                <Link href="/superadmin/monitoring" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-blue-50 hover:bg-blue-100 border-blue-300">
+                    <Activity className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-700">Monitoring</span>
+                  </Button>
+                </Link>
+                
+                <Link href="/superadmin/rbac" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-purple-50 hover:bg-purple-100 border-purple-300">
+                    <Shield className="w-5 h-5 text-purple-600" />
+                    <span className="text-sm font-medium text-purple-700">RBAC</span>
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Platform Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
@@ -281,43 +325,33 @@ export default function SuperAdmin() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Acciones Rápidas</CardTitle>
+                <CardTitle className="text-lg">Alertas Críticas</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start">
-                    <Database className="w-4 h-4 mr-2" />
-                    Backup de BD
-                  </Button>
+                  <div className="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-yellow-800">Alto uso de CPU en servidor principal</p>
+                      <p className="text-xs text-yellow-600">Hace 5 minutos</p>
+                    </div>
+                  </div>
                   
-                  <Button variant="outline" className="w-full justify-start">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Config Global
-                  </Button>
+                  <div className="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-green-800">Backup completado exitosamente</p>
+                      <p className="text-xs text-green-600">Hace 2 horas</p>
+                    </div>
+                  </div>
                   
-                  <Button variant="outline" className="w-full justify-start">
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    Reportes Ejecutivos
-                  </Button>
-                  
-                  <Button variant="outline" className="w-full justify-start">
-                    <Shield className="w-4 h-4 mr-2" />
-                    Auditoría de Seguridad
-                  </Button>
-                  
-                  <Link href="/superadmin/monitoring">
-                    <Button variant="outline" className="w-full justify-start bg-blue-50 hover:bg-blue-100 border-blue-200">
-                      <Activity className="w-4 h-4 mr-2 text-blue-600" />
-                      <span className="text-blue-700">Webhook Monitoring</span>
-                    </Button>
-                  </Link>
-                  
-                  <Link href="/superadmin/rbac">
-                    <Button variant="outline" className="w-full justify-start bg-purple-50 hover:bg-purple-100 border-purple-200">
-                      <Shield className="w-4 h-4 mr-2 text-purple-600" />
-                      <span className="text-purple-700">Control de Acceso (RBAC)</span>
-                    </Button>
-                  </Link>
+                  <div className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-blue-800">Nueva versión desplegada</p>
+                      <p className="text-xs text-blue-600">Hace 6 horas</p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
