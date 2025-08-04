@@ -683,106 +683,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // WhatsApp notification endpoint via n8n server
-  app.post('/api/send-whatsapp', isAuthenticated, async (req: any, res) => {
-    const { phone, message, tenantId } = req.body;
-    const actualTenantId = tenantId || 'vetgroom1'; // Use provided tenantId or default
+  // Prepare WhatsApp message for manual copying (replaces automatic sending)
+  app.post('/api/prepare-whatsapp', isAuthenticated, async (req: any, res) => {
+    const { phone, message, tenantId, paymentLink, type } = req.body;
+    const actualTenantId = tenantId || 'vetgroom1';
     
     try {
-      // Check if N8N_WEBHOOK_URL is configured
-      const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
+      // Format the phone number for WhatsApp (remove special characters, keep only digits)
+      const formattedPhone = phone.replace(/[^\d]/g, '');
       
-      if (!n8nWebhookUrl) {
-        console.log('N8N_WEBHOOK_URL not configured - message queued:', phone, ':', message);
-        
-        // Log as maintenance mode
-        await webhookMonitor.logError(
-          actualTenantId, 
-          'whatsapp', 
-          'N/A', 
-          new Error('N8N_WEBHOOK_URL not configured - sistema en mantenimiento'),
-          { phone, message, type: 'whatsapp_appointment_confirmation' }
-        );
-        
-        return res.json({ 
-          success: true, 
-          message: "El sistema está en mantenimiento, se mandarán tan pronto se restaure" 
-        });
+      // Prepare the complete message with payment link if provided
+      let completeMessage = message;
+      if (paymentLink) {
+        completeMessage += `\n\nLink de pago: ${paymentLink}`;
       }
       
-      // Check if we recently failed to avoid spam
-      const recentMonitoring = await storage.getWebhookMonitoring(actualTenantId, 'whatsapp');
-      const now = new Date();
+      console.log(`WhatsApp message prepared for manual sending to: ${formattedPhone}`);
       
-      // If webhook is down and we tried recently, don't retry immediately
-      if (recentMonitoring && 
-          recentMonitoring.status === 'down' && 
-          recentMonitoring.nextRetryAt && 
-          new Date(recentMonitoring.nextRetryAt) > now) {
-        
-        console.log('WhatsApp webhook is down, message queued until retry time');
-        return res.json({ 
-          success: true, 
-          message: "El sistema está en mantenimiento, se mandarán tan pronto se restaure" 
-        });
-      }
-      
-      // Send to n8n webhook for WhatsApp processing with JWT
-      const response = await fetch(n8nWebhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.N8N_JWT_TOKEN || 'default-token'}`
+      res.json({
+        success: true,
+        data: {
+          phoneNumber: formattedPhone,
+          message: completeMessage,
+          paymentLink: paymentLink || null,
+          type: type || 'appointment_confirmation'
         },
-        body: JSON.stringify({
-          phone: phone,
-          message: message,
-          type: 'whatsapp_appointment_confirmation'
-        })
+        message: "Mensaje preparado para envío manual por WhatsApp"
       });
       
-      if (response.ok) {
-        // Log successful webhook call
-        await webhookMonitor.logSuccess(actualTenantId, 'whatsapp', n8nWebhookUrl);
-        console.log('WhatsApp message sent successfully to:', phone);
-        
-        res.json({ 
-          success: true, 
-          message: "Mensaje de WhatsApp enviado correctamente" 
-        });
-      } else {
-        const errorText = await response.text();
-        console.error('n8n webhook failed:', errorText);
-        
-        // Log webhook error for monitoring (avoid duplicate logs)
-        await webhookMonitor.logError(
-          actualTenantId, 
-          'whatsapp', 
-          n8nWebhookUrl, 
-          new Error(`n8n webhook en mantenimiento - HTTP ${response.status}`),
-          { phone, message, type: 'whatsapp_appointment_confirmation' }
-        );
-        
-        res.json({ 
-          success: true, 
-          message: "El sistema está en mantenimiento, se mandarán tan pronto se restaure" 
-        });
-      }
-    } catch (error) {
-      console.error("WhatsApp webhook error:", error);
+    } catch (error: any) {
+      console.error('Error preparing WhatsApp message:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Error preparando el mensaje de WhatsApp" 
+      });
+    }
+  });
+
+  // Generate payment link for invoices and billing
+  app.post('/api/generate-payment-link', isAuthenticated, async (req: any, res) => {
+    const { invoiceId, amount, description, clientName, tenantId } = req.body;
+    
+    try {
+      // For now, generate a placeholder payment link
+      // In production, this would integrate with payment providers like Stripe, MercadoPago, etc.
+      const paymentLink = `https://pay.vetgroom.app/invoice/${invoiceId}?amount=${amount}&tenant=${tenantId}`;
       
-      // Log webhook error for monitoring (avoid duplicate logs)
-      await webhookMonitor.logError(
-        actualTenantId, 
-        'whatsapp', 
-        process.env.N8N_WEBHOOK_URL || 'N/A', 
-        new Error(`n8n webhook en mantenimiento - ${error instanceof Error ? error.message : 'Unknown error'}`),
-        { phone, message, type: 'whatsapp_appointment_confirmation' }
-      );
+      console.log(`Payment link generated for invoice ${invoiceId}: ${paymentLink}`);
       
-      res.json({ 
-        success: true, 
-        message: "El sistema está en mantenimiento, se mandarán tan pronto se restaure" 
+      res.json({
+        success: true,
+        data: {
+          paymentLink,
+          invoiceId,
+          amount,
+          description,
+          clientName,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+        },
+        message: "Link de pago generado correctamente"
+      });
+      
+    } catch (error: any) {
+      console.error('Error generating payment link:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Error generando el link de pago" 
       });
     }
   });

@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight, CheckCircle, MapPin, Building, User, Heart, Clock, Loader2 } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
+import { WhatsAppCopyModal } from "@/components/WhatsAppCopyModal";
 import { debounce } from "lodash";
 
 // Lazy load map component to prevent SSR issues
@@ -115,6 +116,14 @@ export default function BookingWizard() {
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [availabilityStatus, setAvailabilityStatus] = useState<{ available: boolean; message: string } | null>(null);
+  
+  // WhatsApp modal state
+  const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
+  const [whatsappData, setWhatsappData] = useState<{
+    phoneNumber: string;
+    message: string;
+    paymentLink?: string;
+  } | null>(null);
 
   // Get tenant business hours
   const { data: businessHours } = useQuery({
@@ -283,7 +292,7 @@ export default function BookingWizard() {
       });
     },
     onSuccess: async () => {
-      // Send WhatsApp confirmation after successful appointment creation
+      // Prepare WhatsApp message for manual sending
       if (customerData.phone) {
         const selectedService = services?.find((s: any) => s.id === bookingData.serviceId);
         const whatsappMessage = `🏥 *Confirmación de Cita - VetGroom*
@@ -303,37 +312,46 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
 
 ¡Gracias por confiar en VetGroom!`;
 
-        // Send WhatsApp message
+        // Prepare WhatsApp data for modal
         try {
-          const response = await fetch('/api/send-whatsapp', {
+          const response = await fetch('/api/prepare-whatsapp', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               phone: customerData.phone,
-              message: whatsappMessage
+              message: whatsappMessage,
+              tenantId: currentTenant?.id,
+              type: 'appointment_confirmation'
             })
           });
           
           const result = await response.json();
           
           if (result.success) {
+            setWhatsappData({
+              phoneNumber: result.data.phoneNumber,
+              message: result.data.message,
+              paymentLink: result.data.paymentLink
+            });
+            setWhatsappModalOpen(true);
+            
             toast({
               title: "Cita confirmada",
-              description: "Se ha enviado la confirmación por WhatsApp",
+              description: "WhatsApp message ready to send",
             });
           } else {
             toast({
               title: "Cita creada",
-              description: "Cita creada exitosamente (WhatsApp: " + result.message + ")",
+              description: "Cita creada exitosamente",
             });
           }
         } catch (whatsappError) {
-          console.error('WhatsApp error:', whatsappError);
+          console.error('WhatsApp preparation error:', whatsappError);
           toast({
             title: "Cita creada",
-            description: "Cita creada exitosamente (WhatsApp no disponible)",
+            description: "Cita creada exitosamente",
           });
         }
       } else {
@@ -1442,6 +1460,19 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
           )}
         </CardContent>
       </Card>
+
+      {/* WhatsApp Copy Modal */}
+      {whatsappData && (
+        <WhatsAppCopyModal
+          open={whatsappModalOpen}
+          onOpenChange={setWhatsappModalOpen}
+          phoneNumber={whatsappData.phoneNumber}
+          message={whatsappData.message}
+          paymentLink={whatsappData.paymentLink}
+          title="WhatsApp Confirmation Ready"
+          description="Copy the message below and send it manually via WhatsApp"
+        />
+      )}
     </div>
   );
 }
