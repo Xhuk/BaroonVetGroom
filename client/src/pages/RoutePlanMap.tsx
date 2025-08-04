@@ -80,8 +80,8 @@ export default function RoutePlanMap() {
   });
   
   // Use tenant's actual GPS coordinates or fallback to Monterrey center
-  const clinicLocation: [number, number] = tenantData?.latitude && tenantData?.longitude 
-    ? [tenantData.latitude, tenantData.longitude]
+  const clinicLocation: [number, number] = (tenantData?.latitude && tenantData?.longitude) 
+    ? [parseFloat(tenantData.latitude), parseFloat(tenantData.longitude)]
     : [25.6866, -100.3161];
 
   const { data: appointments } = useQuery<any[]>({
@@ -115,9 +115,11 @@ export default function RoutePlanMap() {
     const weights: Record<string, number> = {};
     fraccionamientos?.forEach(frac => {
       // Calculate weight based on distance from clinic (simplified)
+      const fracLat = parseFloat(frac.latitude || '0');
+      const fracLng = parseFloat(frac.longitude || '0');
       const distance = Math.sqrt(
-        Math.pow(frac.latitude - clinicLocation[0], 2) + 
-        Math.pow(frac.longitude - clinicLocation[1], 2)
+        Math.pow(fracLat - clinicLocation[0], 2) + 
+        Math.pow(fracLng - clinicLocation[1], 2)
       );
       weights[frac.name] = Math.min(10.9, Math.max(1.0, distance * 100));
     });
@@ -126,11 +128,18 @@ export default function RoutePlanMap() {
 
   // Calculate cage and weight statistics
   const weightStatistics = useMemo(() => {
-    if (!pickupAppointments.length) return { totalPetWeight: 0, averagePetWeight: 0, cageWeights: { small: 0, medium: 0, large: 0 }, totalTareWeight: 0 };
+    if (!pickupAppointments.length) return { 
+      totalPetWeight: 0, 
+      averagePetWeight: 0, 
+      cageWeights: { small: 0, medium: 0, large: 0 }, 
+      cageAllocation: { small: 0, medium: 0, large: 0 },
+      totalTareWeight: 0,
+      totalWeight: 0
+    };
 
     // Calculate total and average pet weights from actual pet data
     const totalPetWeight = pickupAppointments.reduce((sum, apt) => {
-      const petWeight = apt.pet?.weight || 5; // Default 5kg if no weight specified
+      const petWeight = parseFloat(apt.pet?.weight) || 5; // Default 5kg if no weight specified
       return sum + petWeight;
     }, 0);
     
@@ -138,14 +147,14 @@ export default function RoutePlanMap() {
 
     // Get cage weights from inventory (tare weights)
     const cageWeights = {
-      small: inventoryItems?.find(item => item.name?.toLowerCase().includes('jaula pequeña') || item.name?.toLowerCase().includes('cage small'))?.weight || 2.5,
-      medium: inventoryItems?.find(item => item.name?.toLowerCase().includes('jaula mediana') || item.name?.toLowerCase().includes('cage medium'))?.weight || 4.0,
-      large: inventoryItems?.find(item => item.name?.toLowerCase().includes('jaula grande') || item.name?.toLowerCase().includes('cage large'))?.weight || 6.5
+      small: parseFloat(inventoryItems?.find(item => item.name?.toLowerCase().includes('jaula pequeña') || item.name?.toLowerCase().includes('cage small'))?.weight) || 2.5,
+      medium: parseFloat(inventoryItems?.find(item => item.name?.toLowerCase().includes('jaula mediana') || item.name?.toLowerCase().includes('cage medium'))?.weight) || 4.0,
+      large: parseFloat(inventoryItems?.find(item => item.name?.toLowerCase().includes('jaula grande') || item.name?.toLowerCase().includes('cage large'))?.weight) || 6.5
     };
 
     // Calculate cage allocation based on pet sizes and van capacity
     const cageAllocation = pickupAppointments.reduce((cages, apt) => {
-      const petWeight = apt.pet?.weight || 5;
+      const petWeight = parseFloat(apt.pet?.weight) || 5;
       if (petWeight <= 8) cages.small++;
       else if (petWeight <= 20) cages.medium++;
       else cages.large++;
@@ -455,11 +464,11 @@ export default function RoutePlanMap() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-gray-600">Peso total mascotas:</p>
-                      <p className="font-medium text-lg">{weightStatistics.totalPetWeight.toFixed(1)} kg</p>
+                      <p className="font-medium text-lg">{(weightStatistics.totalPetWeight || 0).toFixed(1)} kg</p>
                     </div>
                     <div>
                       <p className="text-gray-600">Peso promedio:</p>
-                      <p className="font-medium text-lg">{weightStatistics.averagePetWeight.toFixed(1)} kg</p>
+                      <p className="font-medium text-lg">{(weightStatistics.averagePetWeight || 0).toFixed(1)} kg</p>
                     </div>
                   </div>
                   
@@ -484,11 +493,11 @@ export default function RoutePlanMap() {
                   <div className="border-t pt-3">
                     <div className="flex justify-between">
                       <span>Peso tara (jaulas):</span>
-                      <span className="font-medium">{weightStatistics.totalTareWeight.toFixed(1)} kg</span>
+                      <span className="font-medium">{(weightStatistics.totalTareWeight || 0).toFixed(1)} kg</span>
                     </div>
                     <div className="flex justify-between font-semibold text-base">
                       <span>Peso total carga:</span>
-                      <span className="text-blue-600">{weightStatistics.totalWeight.toFixed(1)} kg</span>
+                      <span className="text-blue-600">{(weightStatistics.totalWeight || 0).toFixed(1)} kg</span>
                     </div>
                   </div>
                 </div>
