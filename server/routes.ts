@@ -444,8 +444,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/services/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;
+      const { type } = req.query;
+      
       const services = await storage.getServices(tenantId);
-      res.json(services);
+      
+      // Filter by type if specified
+      const filteredServices = type 
+        ? services.filter(service => service.type === type)
+        : services;
+        
+      res.json(filteredServices);
     } catch (error) {
       console.error("Error fetching services:", error);
       res.status(500).json({ message: "Failed to fetch services" });

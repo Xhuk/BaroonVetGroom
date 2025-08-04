@@ -47,19 +47,14 @@ const groomingRecordSchema = z.object({
 
 type GroomingRecordFormData = z.infer<typeof groomingRecordSchema>;
 
-const groomingServices = [
-  "bath", "haircut", "nail_trim", "ear_cleaning", "teeth_brushing", 
-  "flea_treatment", "de_shedding", "paw_care", "anal_glands"
-];
-
 const serviceLabels = {
-  bath: "Baño",
+  full_bath: "Baño Completo",
   haircut: "Corte de Pelo", 
-  nail_trim: "Corte de Uñas",
+  nail_trimming: "Corte de Uñas",
   ear_cleaning: "Limpieza de Oídos",
   teeth_brushing: "Cepillado Dental",
   flea_treatment: "Tratamiento Antipulgas",
-  de_shedding: "Eliminación de Pelo Muerto",
+  brushing: "Cepillado",
   paw_care: "Cuidado de Patas",
   anal_glands: "Glándulas Anales"
 };
@@ -124,6 +119,39 @@ export default function GroomingServices() {
     queryKey: ["/api/staff", currentTenant?.id, "groomer"],
     enabled: !!currentTenant?.id,
   });
+
+  // Get available grooming services from admin configuration
+  const { data: availableServices = [] } = useQuery({
+    queryKey: ["/api/services", currentTenant?.id, "grooming"],
+    queryFn: () => apiRequest(`/api/services/${currentTenant?.id}?type=grooming`),
+    enabled: !!currentTenant?.id,
+  });
+
+  // Create a mapping function for services
+  const getServiceDisplayInfo = (serviceCode: string) => {
+    // Try to find matching admin service first
+    const adminService = availableServices?.find(s => 
+      s?.name?.toLowerCase().includes(serviceCode.replace('_', ' ')) ||
+      serviceCode.includes(s?.name?.toLowerCase().replace(' ', '_'))
+    );
+    
+    if (adminService) {
+      return {
+        name: adminService.name,
+        price: adminService.price,
+        duration: adminService.duration,
+        description: adminService.description
+      };
+    }
+    
+    // Fallback to hardcoded labels
+    return {
+      name: serviceLabels[serviceCode as keyof typeof serviceLabels] || serviceCode,
+      price: null,
+      duration: null,
+      description: null
+    };
+  };
 
   const form = useForm<GroomingRecordFormData>({
     resolver: zodResolver(groomingRecordSchema),
@@ -602,11 +630,15 @@ export default function GroomingServices() {
                     <div>
                       <p className="text-sm font-medium text-gray-700">Servicios:</p>
                       <div className="flex flex-wrap gap-1">
-                        {record.services?.slice(0, 3).map((service) => (
-                          <Badge key={service} variant="secondary" className="text-xs">
-                            {serviceLabels[service as keyof typeof serviceLabels]}
-                          </Badge>
-                        ))}
+                        {record.services?.slice(0, 3).map((service) => {
+                          const serviceInfo = getServiceDisplayInfo(service);
+                          return (
+                            <Badge key={service} variant="secondary" className="text-xs" title={serviceInfo.description || ''}>
+                              {serviceInfo.name}
+                              {serviceInfo.price && <span className="ml-1 font-semibold">${serviceInfo.price}</span>}
+                            </Badge>
+                          );
+                        })}
                         {record.services && record.services.length > 3 && (
                           <Badge variant="secondary" className="text-xs">
                             +{record.services.length - 3} más
