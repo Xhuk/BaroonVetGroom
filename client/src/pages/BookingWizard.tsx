@@ -77,6 +77,7 @@ export default function BookingWizard() {
   const [tenantLocation, setTenantLocation] = useState({ lat: 25.74055709021775, lng: -100.407349161356 });
   const [mapDiameterKm, setMapDiameterKm] = useState(8); // Configurable from admin
   const [maxZoomRange, setMaxZoomRange] = useState(8); // Admin-configured zoom limit
+  const [minZoomLevel] = useState(0.5); // Enhanced minimum zoom for detailed view
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, lat: 0, lng: 0 });
   
@@ -540,16 +541,16 @@ export default function BookingWizard() {
                               e.preventDefault();
                               e.stopPropagation();
                               
-                              // Zoom in/out based on wheel direction (respecting admin limits)
+                              // Zoom in/out based on wheel direction (respecting admin limits + enhanced range)
                               if (e.deltaY < 0) {
-                                // Zoom in (wheel up)
-                                if (mapDiameterKm > 1) {
-                                  setMapDiameterKm(prev => Math.max(1, prev - 1));
+                                // Zoom in (wheel up) - added ultra-close zoom level
+                                if (mapDiameterKm > minZoomLevel) {
+                                  setMapDiameterKm(prev => Math.max(minZoomLevel, prev - 0.5));
                                 }
                               } else {
-                                // Zoom out (wheel down)
-                                if (mapDiameterKm < maxZoomRange * 2) {
-                                  setMapDiameterKm(prev => Math.min(maxZoomRange * 2, prev + 1));
+                                // Zoom out (wheel down) - extended max range with additional layer
+                                if (mapDiameterKm < maxZoomRange * 3) {
+                                  setMapDiameterKm(prev => Math.min(maxZoomRange * 3, prev + 0.5));
                                 }
                               }
                             }}
@@ -567,10 +568,10 @@ export default function BookingWizard() {
                               const lng = (mapCoordinates.lng - mapDiameterKm * lngDegPerKm) + (x * (mapDiameterKm * lngDegPerKm) * 2);
                               const lat = (mapCoordinates.lat + mapDiameterKm * latDegPerKm) - (y * (mapDiameterKm * latDegPerKm) * 2);
                               
-                              // Center map on double-click location and zoom in
+                              // Center map on double-click location and zoom in with enhanced precision
                               setMapCoordinates({ lat, lng });
-                              if (mapDiameterKm > 1) {
-                                setMapDiameterKm(prev => Math.max(1, prev - 1));
+                              if (mapDiameterKm > minZoomLevel) {
+                                setMapDiameterKm(prev => Math.max(minZoomLevel, prev - 0.5));
                               }
                               
                               toast({
@@ -698,24 +699,24 @@ export default function BookingWizard() {
                         <div className="absolute top-2 right-2 flex flex-col gap-1 z-30">
                           <button
                             onClick={() => {
-                              if (mapDiameterKm > 1) {
-                                setMapDiameterKm(prev => Math.max(1, prev - 1));
+                              if (mapDiameterKm > minZoomLevel) {
+                                setMapDiameterKm(prev => Math.max(minZoomLevel, prev - 0.5));
                               }
                             }}
                             className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 rounded flex items-center justify-center text-gray-700 hover:text-gray-900 shadow-sm"
-                            title="Acercar"
+                            title="Acercar (Nueva capa de zoom detallado)"
                             data-testid="button-zoom-in"
                           >
                             <Plus className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => {
-                              if (mapDiameterKm < maxZoomRange * 2) {
-                                setMapDiameterKm(prev => Math.min(maxZoomRange * 2, prev + 1));
+                              if (mapDiameterKm < maxZoomRange * 3) {
+                                setMapDiameterKm(prev => Math.min(maxZoomRange * 3, prev + 0.5));
                               }
                             }}
                             className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 rounded flex items-center justify-center text-gray-700 hover:text-gray-900 shadow-sm"
-                            title="Alejar"
+                            title="Alejar (Rango extendido)"
                             data-testid="button-zoom-out"
                           >
                             <Minus className="w-4 h-4" />
@@ -724,9 +725,14 @@ export default function BookingWizard() {
                         
 
 
-                        {/* Map navigation instructions */}
-                        <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded text-xs text-gray-600">
-                          Arrastra para mover • Rueda para zoom • Doble clic para centrar • Clic derecho para ubicar cliente
+                        {/* Enhanced Map navigation instructions with zoom level */}
+                        <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded text-xs text-gray-600 max-w-sm">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-blue-600">Zoom: {mapDiameterKm}km</span>
+                            <span className="text-gray-400">|</span>
+                            <span className="text-green-600">Rango: {minZoomLevel}-{maxZoomRange * 3}km</span>
+                          </div>
+                          <div>Arrastra para mover • Rueda para zoom • Doble clic para centrar • Clic derecho para ubicar cliente</div>
                         </div>
                       </div>
                       

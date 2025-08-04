@@ -31,6 +31,7 @@ Preferred communication style: Simple, everyday language.
 - **Seeded Data**: Pre-populated with common veterinary services (consultations, vaccinations, grooming, surgeries)
 - **Business Logic**: Support for grooming appointments, medical visits, and delivery route management
 - **Data Validation**: Zod schemas shared between client and server for consistent validation
+- **Enhanced Map Zoom**: Ultra-precise zoom with 0.5km minimum level and 3x extended range for detailed planning
 
 ## Authentication & Authorization
 - **OAuth Provider**: Replit OIDC integration for secure authentication
