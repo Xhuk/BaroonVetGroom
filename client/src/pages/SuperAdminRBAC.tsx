@@ -171,9 +171,9 @@ export default function SuperAdminRBAC() {
     },
   });
 
-  // Check authorization
+  // Check authorization - only show error if we have definitive failure
   useEffect(() => {
-    if (!isLoading && (!isAuthenticated || !canAccessSuperAdmin)) {
+    if (!isLoading && !accessLoading && isAuthenticated && !canAccessSuperAdmin) {
       showErrorToast({
         title: "Acceso Denegado",
         description: "Solo desarrolladores y administradores de VetGroom pueden acceder a esta página",
@@ -183,6 +183,7 @@ export default function SuperAdminRBAC() {
           isAuthenticated, 
           canAccessSuperAdmin, 
           isLoading,
+          accessLoading,
           page: "SuperAdminRBAC"
         }
       });
@@ -191,9 +192,9 @@ export default function SuperAdminRBAC() {
       }, 2000);
       return;
     }
-  }, [isAuthenticated, isLoading, canAccessSuperAdmin, showErrorToast]);
+  }, [isAuthenticated, isLoading, accessLoading, canAccessSuperAdmin, showErrorToast]);
 
-  if (isLoading) {
+  if (isLoading || accessLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

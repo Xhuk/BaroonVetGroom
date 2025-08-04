@@ -1,0 +1,34 @@
+=== ERROR DEBUG INFORMATION ===
+Timestamp: 2025-08-04T16:09:54.175Z
+Context: Authorization
+User ID: 45804040
+URL: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/superadmin/rbac
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36
+
+Error Details:
+- Name: Error
+- Message: Unauthorized access attempt
+- Code: N/A
+
+Stack Trace:
+Error: Unauthorized access attempt
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/pages/SuperAdminRBAC.tsx:177:16
+    at commitHookEffectListMount (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=c1e7fdc4:16915:34)
+    at commitPassiveMountOnFiber (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=c1e7fdc4:18156:19)
+    at commitPassiveMountEffects_complete (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=c1e7fdc4:18129:17)
+    at commitPassiveMountEffects_begin (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=c1e7fdc4:18119:15)
+    at commitPassiveMountEffects (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=c1e7fdc4:18109:11)
+    at flushPassiveEffectsImpl (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=c1e7fdc4:19490:11)
+    at flushPassiveEffects (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=c1e7fdc4:19447:22)
+    at performSyncWorkOnRoot (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=c1e7fdc4:18868:11)
+    at flushSyncCallbacks (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=c1e7fdc4:9119:30)
+
+Additional Information:
+- isAuthenticated: true
+- canAccessSuperAdmin: false
+- isLoading: false
+- page: SuperAdminRBAC
+
+Raw Error Object:
+{}
+=== END DEBUG INFORMATION ===
