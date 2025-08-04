@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 interface AccessInfo {
   accessLevel: 'system_admin' | 'super_tenant' | 'tenant' | 'none';
@@ -14,22 +15,211 @@ interface AccessInfo {
   canDebugTenants: boolean;
 }
 
+// Role-based permissions mapping for impersonation
+const ROLE_PERMISSIONS = {
+  system_admin: {
+    canAccessSuperAdmin: true,
+    canAccessAdmin: true,
+    canDebugTenants: true,
+    canManageCompanies: true,
+    canManageAllTenants: true,
+    canViewAllData: true,
+    canManageUsers: true,
+    canManageRoles: true,
+    canAccessDeliveryTracking: true,
+    canManageInventory: true,
+    canViewReports: true,
+    canManageAppointments: true,
+    canManageClients: true,
+    canManagePets: true,
+    accessLevel: 'system_admin' as const
+  },
+  company_admin: {
+    canAccessSuperAdmin: false,
+    canAccessAdmin: true,
+    canDebugTenants: false,
+    canManageCompanies: false,
+    canManageAllTenants: false,
+    canViewAllData: true,
+    canManageUsers: true,
+    canManageRoles: true,
+    canAccessDeliveryTracking: true,
+    canManageInventory: true,
+    canViewReports: true,
+    canManageAppointments: true,
+    canManageClients: true,
+    canManagePets: true,
+    accessLevel: 'super_tenant' as const
+  },
+  tenant_admin: {
+    canAccessSuperAdmin: false,
+    canAccessAdmin: true,
+    canDebugTenants: false,
+    canManageCompanies: false,
+    canManageAllTenants: false,
+    canViewAllData: true,
+    canManageUsers: true,
+    canManageRoles: false,
+    canAccessDeliveryTracking: true,
+    canManageInventory: true,
+    canViewReports: true,
+    canManageAppointments: true,
+    canManageClients: true,
+    canManagePets: true,
+    accessLevel: 'tenant' as const
+  },
+  veterinario: {
+    canAccessSuperAdmin: false,
+    canAccessAdmin: false,
+    canDebugTenants: false,
+    canManageCompanies: false,
+    canManageAllTenants: false,
+    canViewAllData: false,
+    canManageUsers: false,
+    canManageRoles: false,
+    canAccessDeliveryTracking: false,
+    canManageInventory: false,
+    canViewReports: true,
+    canManageAppointments: true,
+    canManageClients: true,
+    canManagePets: true,
+    accessLevel: 'tenant' as const
+  },
+  asistente: {
+    canAccessSuperAdmin: false,
+    canAccessAdmin: false,
+    canDebugTenants: false,
+    canManageCompanies: false,
+    canManageAllTenants: false,
+    canViewAllData: false,
+    canManageUsers: false,
+    canManageRoles: false,
+    canAccessDeliveryTracking: false,
+    canManageInventory: true,
+    canViewReports: false,
+    canManageAppointments: true,
+    canManageClients: true,
+    canManagePets: true,
+    accessLevel: 'tenant' as const
+  },
+  recepcionista: {
+    canAccessSuperAdmin: false,
+    canAccessAdmin: false,
+    canDebugTenants: false,
+    canManageCompanies: false,
+    canManageAllTenants: false,
+    canViewAllData: false,
+    canManageUsers: false,
+    canManageRoles: false,
+    canAccessDeliveryTracking: false,
+    canManageInventory: false,
+    canViewReports: false,
+    canManageAppointments: true,
+    canManageClients: true,
+    canManagePets: false,
+    accessLevel: 'tenant' as const
+  },
+  groomer: {
+    canAccessSuperAdmin: false,
+    canAccessAdmin: false,
+    canDebugTenants: false,
+    canManageCompanies: false,
+    canManageAllTenants: false,
+    canViewAllData: false,
+    canManageUsers: false,
+    canManageRoles: false,
+    canAccessDeliveryTracking: false,
+    canManageInventory: false,
+    canViewReports: false,
+    canManageAppointments: true,
+    canManageClients: false,
+    canManagePets: false,
+    accessLevel: 'tenant' as const
+  },
+  delivery_driver: {
+    canAccessSuperAdmin: false,
+    canAccessAdmin: false,
+    canDebugTenants: false,
+    canManageCompanies: false,
+    canManageAllTenants: false,
+    canViewAllData: false,
+    canManageUsers: false,
+    canManageRoles: false,
+    canAccessDeliveryTracking: true,
+    canManageInventory: false,
+    canViewReports: false,
+    canManageAppointments: false,
+    canManageClients: false,
+    canManagePets: false,
+    accessLevel: 'tenant' as const
+  },
+  viewer: {
+    canAccessSuperAdmin: false,
+    canAccessAdmin: false,
+    canDebugTenants: false,
+    canManageCompanies: false,
+    canManageAllTenants: false,
+    canViewAllData: false,
+    canManageUsers: false,
+    canManageRoles: false,
+    canAccessDeliveryTracking: false,
+    canManageInventory: false,
+    canViewReports: false,
+    canManageAppointments: false,
+    canManageClients: false,
+    canManagePets: false,
+    accessLevel: 'none' as const
+  }
+};
+
 export function useAccessControl() {
+  const [impersonatedRole, setImpersonatedRole] = useState<string | null>(null);
+
   const { data: accessInfo, isLoading } = useQuery<AccessInfo>({
     queryKey: ['/api/auth/access-info'],
     retry: false,
   });
 
+  // Load impersonated role from sessionStorage
+  useEffect(() => {
+    const stored = sessionStorage.getItem('impersonatedRole');
+    if (stored && stored !== 'none') {
+      setImpersonatedRole(stored);
+    } else {
+      setImpersonatedRole(null);
+    }
+  }, []);
+
+  // Use impersonated permissions if role is selected
+  const effectivePermissions = impersonatedRole && ROLE_PERMISSIONS[impersonatedRole as keyof typeof ROLE_PERMISSIONS] 
+    ? ROLE_PERMISSIONS[impersonatedRole as keyof typeof ROLE_PERMISSIONS]
+    : {
+        canAccessSuperAdmin: accessInfo?.canAccessSuperAdmin || false,
+        canAccessAdmin: accessInfo?.canAccessAdmin || false,
+        canDebugTenants: accessInfo?.canDebugTenants || false,
+        accessLevel: accessInfo?.accessLevel || 'none',
+        canManageCompanies: accessInfo?.accessLevel === 'system_admin',
+        canManageAllTenants: accessInfo?.accessLevel === 'system_admin',
+        canViewAllData: accessInfo?.accessLevel !== 'none',
+        canManageUsers: accessInfo?.canAccessAdmin || false,
+        canManageRoles: accessInfo?.accessLevel === 'system_admin',
+        canAccessDeliveryTracking: accessInfo?.canAccessAdmin || false,
+        canManageInventory: accessInfo?.canAccessAdmin || false,
+        canViewReports: accessInfo?.canAccessAdmin || false,
+        canManageAppointments: accessInfo?.canAccessAdmin || false,
+        canManageClients: accessInfo?.canAccessAdmin || false,
+        canManagePets: accessInfo?.canAccessAdmin || false,
+      };
+
   return {
     accessInfo,
     isLoading,
-    canAccessSuperAdmin: accessInfo?.canAccessSuperAdmin || false,
-    canAccessAdmin: accessInfo?.canAccessAdmin || false,
-    canDebugTenants: accessInfo?.canDebugTenants || false,
-    accessLevel: accessInfo?.accessLevel || 'none',
+    isImpersonating: !!impersonatedRole,
+    impersonatedRole,
     roles: accessInfo?.roles || [],
-    isSystemAdmin: accessInfo?.accessLevel === 'system_admin',
-    isSuperTenant: accessInfo?.accessLevel === 'super_tenant',
-    isTenant: accessInfo?.accessLevel === 'tenant',
+    isSystemAdmin: effectivePermissions.accessLevel === 'system_admin',
+    isSuperTenant: effectivePermissions.accessLevel === 'super_tenant',
+    isTenant: effectivePermissions.accessLevel === 'tenant',
+    ...effectivePermissions,
   };
 }

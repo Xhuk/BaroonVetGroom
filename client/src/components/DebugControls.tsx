@@ -28,7 +28,7 @@ export function DebugControls() {
   // Save role impersonation to sessionStorage when changed
   const handleRoleChange = (role: string) => {
     setViewAsRole(role);
-    if (role) {
+    if (role && role !== 'none') {
       sessionStorage.setItem('impersonatedRole', role);
     } else {
       sessionStorage.removeItem('impersonatedRole');
@@ -58,33 +58,15 @@ export function DebugControls() {
     <div className="flex items-center space-x-2">
       {/* Debug Mode Controls */}
       {!isDebugMode && (
-        <>
-          <Button
-            onClick={activateDebugMode}
-            variant="outline"
-            size="sm"
-            className="text-orange-600 border-orange-300 hover:bg-orange-50"
-          >
-            <Bug className="w-3 h-3 mr-1" />
-            Debug
-          </Button>
-          <Button
-            onClick={() => setDebugTenant('vetgroom1')}
-            variant="outline"
-            size="sm"
-            className="text-green-600 border-green-300 hover:bg-green-50"
-          >
-            VG1
-          </Button>
-          <Button
-            onClick={() => setDebugTenant('tenant-1')}
-            variant="outline"
-            size="sm"
-            className="text-blue-600 border-blue-300 hover:bg-blue-50"
-          >
-            Central
-          </Button>
-        </>
+        <Button
+          onClick={activateDebugMode}
+          variant="outline"
+          size="sm"
+          className="text-orange-600 border-orange-300 hover:bg-orange-50"
+        >
+          <Bug className="w-3 h-3 mr-1" />
+          Debug
+        </Button>
       )}
 
       {/* View As Role Selector - Debug Mode Only */}

@@ -47,6 +47,10 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Role Impersonation System**: Complete implementation of "View As" dropdown for debug mode with seamless role switching without authentication changes
 - **Debug User Authentication Fix**: Resolved tenant context logic to properly handle users with both debug privileges and regular tenant assignments
 - **Enhanced Tenant Context**: Fixed priority-based tenant selection logic that correctly handles debug users, regular assignments, and debug mode activation
+- **Streamlined Debug Controls**: Simplified debug interface to single "Debug" button that opens tenant selector, removing quick VG1/Central buttons for cleaner UX
+- **Global Debug Access**: Added DebugControls component to all major page headers (Dashboard, Appointments, Clients, Inventory, DeliveryPlan, RoutePlanMap)
+- **Enhanced Role Impersonation**: Integrated role-based permissions directly into useAccessControl hook for real-time permission changes when switching roles
+- **Module Permission Refresh**: All components now automatically respect impersonated role permissions, refreshing functionality when "View As" role is selected
 
 # User Preferences
 
