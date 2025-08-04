@@ -67,6 +67,9 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **AI-Powered Mass Import**: Added intelligent inventory import system using OpenAI GPT-4o that processes natural language descriptions of veterinary supplies and automatically creates structured inventory records with realistic Mexican pricing
 - **Smart Onboarding**: Veterinarians can describe their inventory in plain text and AI generates proper product records with categories, SKUs, and appropriate stock levels
 - **Navigation Cleanup**: Removed "Plan de Entregas" button from main navigation header to simplify interface
+- **CSV Mass Import System**: Replaced AI text processing with streamlined CSV file upload for faster, more reliable inventory imports with sample template download
+- **Inventory Template**: Provided comprehensive CSV template based on real Mexican veterinary supplies with proper categorization and pricing structure
+- **Enhanced Import UI**: Removed "Poblar Inventario" button and replaced with "Descargar Plantilla CSV" for better onboarding workflow
 
 # User Preferences
 

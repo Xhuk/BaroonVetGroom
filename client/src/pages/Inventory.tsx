@@ -28,7 +28,8 @@ import {
   FileText,
   ChevronDown,
   FileSpreadsheet,
-  Zap
+  Download,
+  Upload
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { InventoryItem, InventoryTransaction } from "@shared/schema";
@@ -42,7 +43,7 @@ export default function Inventory() {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [importText, setImportText] = useState("");
+  const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isProcessingImport, setIsProcessingImport] = useState(false);
 
   const { data: inventoryItems, isLoading } = useQuery<InventoryItem[]>({
@@ -106,8 +107,8 @@ export default function Inventory() {
   });
 
   const massImportMutation = useMutation({
-    mutationFn: async (data: { text: string; tenantId: string }) => {
-      const response = await apiRequest('/api/inventory/mass-import', {
+    mutationFn: async (data: { csvData: string; tenantId: string }) => {
+      const response = await apiRequest('/api/inventory/csv-import', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -120,12 +121,12 @@ export default function Inventory() {
         description: `Se han importado ${data.imported} productos correctamente.`,
       });
       setShowMassImport(false);
-      setImportText("");
+      setCsvFile(null);
     },
     onError: (error: any) => {
       toast({
         title: "Error en importación",
-        description: error.message || "No se pudo procesar la importación masiva.",
+        description: error.message || "No se pudo procesar la importación CSV.",
         variant: "destructive",
       });
     },
@@ -223,28 +224,35 @@ export default function Inventory() {
           <DebugControls />
           <Button 
             variant="outline"
-            onClick={async () => {
-              try {
-                await apiRequest(`/api/seed/inventory-data`, {
-                  method: "POST",
-                  body: JSON.stringify({ tenantId: currentTenant?.id }),
-                });
-                toast({
-                  title: "Inventario poblado",
-                  description: "Se han agregado productos, medicamentos, vacunas y accesorios veterinarios.",
-                });
-                queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-              } catch (error) {
-                toast({
-                  title: "Error",
-                  description: "No se pudo poblar el inventario",
-                  variant: "destructive",
-                });
-              }
+            onClick={() => {
+              // Generate sample CSV content
+              const sampleCsv = `Categoria,Nombre,Descripcion,Precio Proveedor (MXN),Precio Venta (MXN),SKU,Stock,Unidad,Proveedor
+Vacuna,Vacuna antirrábica,Protección anual contra la rabia,120,250,VAC-001,50,Frasco,Vetpharma
+Vacuna,"Vacuna múltiple (moquillo, parvovirus)",Protege contra múltiples enfermedades,180,350,VAC-002,30,Frasco,PetLabs
+Accesorio,Collar de piel ajustable,Para perros medianos,90,180,ACC-001,75,Pieza,Mascota Feliz
+Grooming,Shampoo para perros hipoalergénico,Ideal para piel sensible,80,150,GRM-001,40,Botella,Dermapet
+Grooming,Cortaúñas profesional,"Acero inoxidable, mango antideslizante",40,90,GRM-002,60,Pieza,PetTools
+Médico,Jabón medicado,Para tratamiento de hongos y bacterias,60,110,MED-001,35,Barra,Vetpharma
+Médico,Collar isabelino,Talla ajustable para perros y gatos,30,65,MED-002,45,Pieza,VetComfort
+Medicamento,Antibiótico para perros (Amoxicilina),"250mg, tratamiento de infecciones",60,120,MED-003,40,Caja,Vetpharma
+Medicamento,Desparasitante oral,"Uso mensual, amplio espectro",35,75,MED-004,100,Tableta,PetLabs
+Alimento,Croquetas premium para perros (10kg),Con proteínas y omegas,450,850,ALM-001,25,Saco,NutriPet
+Alimento,Alimento húmedo para gatos (lata),"Sabor atún, sin conservadores",18,35,ALM-002,150,Lata,CatDelight`;
+              
+              const blob = new Blob([sampleCsv], { type: 'text/csv' });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'plantilla_inventario.csv';
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
             }}
-            data-testid="button-seed-inventory"
+            data-testid="button-download-sample"
           >
-            📦 Poblar Inventario
+            <Download className="w-4 h-4 mr-2" />
+            Descargar Plantilla CSV
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -267,8 +275,8 @@ export default function Inventory() {
                 onClick={() => setShowMassImport(true)}
                 data-testid="menu-item-mass-import"
               >
-                <FileSpreadsheet className="w-4 h-4 mr-2" />
-                Importación Masiva
+                <Upload className="w-4 h-4 mr-2" />
+                Importar CSV
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -728,16 +736,16 @@ export default function Inventory() {
         </TabsContent>
       </Tabs>
 
-      {/* Mass Import Dialog */}
+      {/* CSV Import Dialog */}
       <Dialog open={showMassImport} onOpenChange={setShowMassImport}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-blue-600" />
-              Importación Masiva con IA
+              <FileSpreadsheet className="w-5 h-5 text-blue-600" />
+              Importación Masiva CSV
             </DialogTitle>
             <DialogDescription>
-              Describe tus productos de forma natural y la IA los procesará automáticamente.
+              Sube un archivo CSV con tu inventario usando la plantilla proporcionada.
             </DialogDescription>
           </DialogHeader>
           
@@ -751,59 +759,80 @@ export default function Inventory() {
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="import-text">Describe tus productos de inventario</Label>
-              <Textarea
-                id="import-text"
-                placeholder="Ejemplo: Necesito medicamentos como amoxicilina 500mg, meloxicam, dexametasona. También vacunas antirrábicas, séxtuple canina. Suministros como jeringas, gasas, alcohol. Precios en pesos mexicanos..."
-                value={importText}
-                onChange={(e) => setImportText(e.target.value)}
-                rows={6}
-                className="resize-none"
-                data-testid="textarea-import-text"
+              <Label htmlFor="csv-upload">Archivo CSV de Inventario</Label>
+              <Input
+                id="csv-upload"
+                type="file"
+                accept=".csv"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  setCsvFile(file || null);
+                }}
+                className="cursor-pointer"
+                data-testid="input-csv-file"
               />
               <p className="text-sm text-gray-500 mt-2">
-                Describe medicamentos, vacunas, suministros, accesorios o cualquier producto veterinario. 
-                La IA interpretará la información y creará el inventario automáticamente.
+                Usa la plantilla CSV con las columnas: Categoria, Nombre, Descripcion, Precio Proveedor (MXN), 
+                Precio Venta (MXN), SKU, Stock, Unidad, Proveedor.
               </p>
+              {csvFile && (
+                <div className="mt-2 p-2 bg-blue-50 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    📁 Archivo seleccionado: {csvFile.name} ({(csvFile.size / 1024).toFixed(1)} KB)
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={() => setShowMassImport(false)}
+              onClick={() => {
+                setShowMassImport(false);
+                setCsvFile(null);
+              }}
               disabled={massImportMutation.isPending}
             >
               Cancelar
             </Button>
             <Button 
-              onClick={() => {
-                if (!importText.trim()) {
+              onClick={async () => {
+                if (!csvFile) {
                   toast({
                     title: "Error",
-                    description: "Por favor describe los productos a importar.",
+                    description: "Por favor selecciona un archivo CSV.",
                     variant: "destructive",
                   });
                   return;
                 }
                 
-                massImportMutation.mutate({ 
-                  text: importText, 
-                  tenantId: currentTenant?.id || '' 
-                });
+                try {
+                  const csvText = await csvFile.text();
+                  massImportMutation.mutate({ 
+                    csvData: csvText, 
+                    tenantId: currentTenant?.id || '' 
+                  });
+                } catch (error) {
+                  toast({
+                    title: "Error",
+                    description: "No se pudo leer el archivo CSV.",
+                    variant: "destructive",
+                  });
+                }
               }}
-              disabled={massImportMutation.isPending || !importText.trim()}
-              data-testid="button-process-import"
+              disabled={massImportMutation.isPending || !csvFile}
+              data-testid="button-process-csv"
             >
               {massImportMutation.isPending ? (
                 <>
-                  <Zap className="w-4 h-4 mr-2 animate-spin" />
-                  Procesando con IA...
+                  <Upload className="w-4 h-4 mr-2 animate-spin" />
+                  Importando CSV...
                 </>
               ) : (
                 <>
-                  <Zap className="w-4 h-4 mr-2" />
-                  Procesar con IA
+                  <Upload className="w-4 h-4 mr-2" />
+                  Importar CSV
                 </>
               )}
             </Button>

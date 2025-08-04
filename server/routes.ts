@@ -3044,6 +3044,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CSV-powered inventory import
+  app.post("/api/inventory/csv-import", isAuthenticated, async (req, res) => {
+    try {
+      const { csvData, tenantId } = req.body;
+      
+      if (!csvData || !tenantId) {
+        return res.status(400).json({ message: "CSV data and tenant ID are required" });
+      }
+
+      const { processCsvInventory } = await import("./csvInventoryProcessor");
+      const result = await processCsvInventory(csvData, tenantId);
+      
+      res.json({
+        message: "Inventory imported successfully from CSV",
+        imported: result.length,
+        data: result
+      });
+    } catch (error) {
+      console.error("Error processing CSV inventory import:", error);
+      res.status(500).json({ 
+        message: "Failed to process CSV inventory import",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
