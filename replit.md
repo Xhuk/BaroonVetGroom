@@ -39,6 +39,9 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Debug Tenant Selection**: VetGroom developers can access any tenant through debug mode with secure session management
 - **System Admin Dashboard**: Super admin interface for role management, user assignments, and debug access control
 - **Multi-Level Access Control**: Hierarchical system from VetGroom sysadmin → supertenant → tenant users with debug capabilities
+- **RBAC Page Integration**: RBAC management now exclusively accessible through SuperAdmin dashboard, not standalone navigation
+- **Database Schema Fixes**: Added missing domain and settings columns to companies table for proper schema alignment
+- **Endpoint Route Ordering**: Fixed API route precedence to prevent tenant-specific middleware from blocking system admin endpoints
 
 # User Preferences
 

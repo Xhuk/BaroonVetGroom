@@ -21,6 +21,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all tenants for system admin users - MUST BE BEFORE tenant-specific routes
+  app.get('/api/tenants/all', isAuthenticated, async (req: any, res) => {
+    try {
+      console.log('Checking system admin access for /api/tenants/all');
+      const hasSystemAccess = await isSystemAdmin(req);
+      console.log('System admin access result:', hasSystemAccess);
+      
+      if (!hasSystemAccess) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const tenants = await storage.getAllTenantsWithCompany();
+      console.log('Found tenants:', tenants.length);
+      res.json(tenants);
+    } catch (error) {
+      console.error("Error fetching all tenants:", error);
+      res.status(500).json({ message: "Failed to fetch tenants" });
+    }
+  });
+
   // Tenant context routes
   app.get('/api/tenants/user', isAuthenticated, async (req: any, res) => {
     try {
@@ -1435,21 +1455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all tenants for debug users
-  app.get('/api/tenants/all', isAuthenticated, async (req: any, res) => {
-    try {
-      const hasSystemAccess = await isSystemAdmin(req);
-      if (!hasSystemAccess) {
-        return res.status(403).json({ message: "System admin access required" });
-      }
-      
-      const tenants = await storage.getAllTenantsWithCompany();
-      res.json(tenants);
-    } catch (error) {
-      console.error("Error fetching all tenants:", error);
-      res.status(500).json({ message: "Failed to fetch tenants" });
-    }
-  });
+
 
   // Get all companies for SuperAdmin
   app.get('/api/superadmin/companies', isAuthenticated, async (req: any, res) => {
