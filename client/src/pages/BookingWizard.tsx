@@ -110,8 +110,7 @@ export default function BookingWizard() {
 
   // Pet breeds query with tenant-specific endpoint  
   const { data: allBreeds } = useQuery({
-    queryKey: ['/api/pet-breeds', currentTenant?.id],
-    queryFn: () => apiRequest(`/api/pet-breeds/${currentTenant?.id}`),
+    queryKey: [`/api/pet-breeds/${currentTenant?.id}`],
     enabled: !!currentTenant?.id,
     staleTime: 30 * 60 * 1000, // 30 minutes
     cacheTime: 60 * 60 * 1000 // 1 hour
