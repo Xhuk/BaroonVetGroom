@@ -93,6 +93,7 @@ export interface IStorage {
   
   // Service operations
   getServices(tenantId: string): Promise<Service[]>;
+  getService(serviceId: string): Promise<Service | undefined>;
   createService(service: InsertService): Promise<Service>;
   updateService(serviceId: string, service: Partial<InsertService>): Promise<Service>;
   deleteService(serviceId: string): Promise<void>;
@@ -394,6 +395,11 @@ export class DatabaseStorage implements IStorage {
   // Service operations
   async getServices(tenantId: string): Promise<Service[]> {
     return await db.select().from(services).where(eq(services.tenantId, tenantId));
+  }
+
+  async getService(serviceId: string): Promise<Service | undefined> {
+    const [service] = await db.select().from(services).where(eq(services.id, serviceId));
+    return service;
   }
 
   async createService(service: InsertService): Promise<Service> {

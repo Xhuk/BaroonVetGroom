@@ -498,6 +498,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check availability for a specific date, time, and service
+  app.get('/api/availability/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { date, time, serviceId } = req.query;
+
+      if (!date || !time || !serviceId) {
+        return res.status(400).json({ message: "Date, time, and serviceId are required" });
+      }
+
+      // Get existing appointments for this date
+      const existingAppointments = await storage.getAppointments(tenantId, date as string);
+      
+      // Get service details for duration
+      const service = await storage.getService(serviceId as string);
+      if (!service) {
+        return res.status(404).json({ message: "Service not found" });
+      }
+
+      // Check if the requested time slot is available
+      const requestedDateTime = new Date(`${date}T${time}`);
+      const serviceEndTime = new Date(requestedDateTime.getTime() + (service.duration * 60000));
+
+      // Check for conflicts with existing appointments
+      const hasConflict = existingAppointments.some((apt: any) => {
+        const aptStart = new Date(`${apt.requestedDate}T${apt.requestedTime}`);
+        const aptEnd = new Date(aptStart.getTime() + (apt.duration * 60000));
+        
+        return (
+          (requestedDateTime >= aptStart && requestedDateTime < aptEnd) ||
+          (serviceEndTime > aptStart && serviceEndTime <= aptEnd) ||
+          (requestedDateTime <= aptStart && serviceEndTime >= aptEnd)
+        );
+      });
+
+      if (!hasConflict) {
+        // Slot is available
+        res.json({ available: true });
+      } else {
+        // Generate alternative slots (next 3 available slots)
+        const businessHours = await storage.getTenantBusinessHours(tenantId);
+        const alternativeSlots = [];
+        
+        // Start looking from the next 30-minute slot
+        let nextSlot = new Date(requestedDateTime.getTime() + (30 * 60000));
+        let searchCount = 0;
+        
+        while (alternativeSlots.length < 3 && searchCount < 20) {
+          const nextTime = nextSlot.toTimeString().slice(0, 5);
+          const nextHasConflict = existingAppointments.some((apt: any) => {
+            const aptStart = new Date(`${apt.requestedDate}T${apt.requestedTime}`);
+            const aptEnd = new Date(aptStart.getTime() + (apt.duration * 60000));
+            const testEnd = new Date(nextSlot.getTime() + (service.duration * 60000));
+            
+            return (
+              (nextSlot >= aptStart && nextSlot < aptEnd) ||
+              (testEnd > aptStart && testEnd <= aptEnd) ||
+              (nextSlot <= aptStart && testEnd >= aptEnd)
+            );
+          });
+          
+          if (!nextHasConflict) {
+            alternativeSlots.push(nextTime);
+          }
+          
+          nextSlot = new Date(nextSlot.getTime() + (30 * 60000));
+          searchCount++;
+        }
+
+        res.json({ 
+          available: false, 
+          alternativeSlots 
+        });
+      }
+    } catch (error) {
+      console.error("Error checking availability:", error);
+      res.status(500).json({ message: "Failed to check availability" });
+    }
+  });
+
+  // WhatsApp notification endpoint (placeholder for future integration)
+  app.post('/api/send-whatsapp', isAuthenticated, async (req: any, res) => {
+    try {
+      const { phone, message } = req.body;
+      
+      // Log the WhatsApp message for now (future integration with actual WhatsApp API)
+      console.log('WhatsApp message to', phone, ':', message);
+      
+      // For now, return success (this would integrate with actual WhatsApp API)
+      res.json({ 
+        success: true, 
+        message: "WhatsApp message logged (integration pending)" 
+      });
+    } catch (error) {
+      console.error("Error sending WhatsApp:", error);
+      res.status(500).json({ message: "Failed to send WhatsApp message" });
+    }
+  });
+
   app.put('/api/admin/business-hours/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;

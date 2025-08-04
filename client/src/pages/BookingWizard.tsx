@@ -113,6 +113,8 @@ export default function BookingWizard() {
   const [selectedPetId, setSelectedPetId] = useState<string>("");
   const [currentReservationId, setCurrentReservationId] = useState<string | null>(null);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
+  const [availabilityStatus, setAvailabilityStatus] = useState<{ available: boolean; message: string } | null>(null);
 
   // Get tenant business hours
   const { data: businessHours } = useQuery({
@@ -1017,10 +1019,7 @@ export default function BookingWizard() {
                       return;
                     }
                     
-                    // Check availability for the selected date/time
-                    setIsCheckingAvailability(true);
-                    
-                    // For now, go to service selection. We'll add availability checking after service selection
+                    // Go to service selection 
                     setCurrentStep(2);
                   }}
                   data-testid="button-next-to-service"
@@ -1059,7 +1058,46 @@ export default function BookingWizard() {
                         ? "ring-2 ring-blue-500 bg-blue-50"
                         : "hover:ring-1 hover:ring-gray-300"
                     }`}
-                    onClick={() => setBookingData(prev => ({ ...prev, serviceId: service.id }))}
+                    onClick={async () => {
+                      setSelectedServiceId(service.id);
+                      setBookingData(prev => ({ ...prev, serviceId: service.id }));
+                      
+                      // Check availability if date/time already selected
+                      if (bookingData.requestedDate && bookingData.requestedTime) {
+                        setIsCheckingAvailability(true);
+                        try {
+                          const response = await fetch(
+                            `/api/availability/${currentTenant?.id}?date=${bookingData.requestedDate}&time=${bookingData.requestedTime}&serviceId=${service.id}`
+                          );
+                          const availability = await response.json();
+                          
+                          if (availability.available) {
+                            setAvailabilityStatus({
+                              available: true,
+                              message: "✓ Horario disponible - avanzando a confirmación"
+                            });
+                            
+                            // Auto-advance to step 3 after short delay
+                            setTimeout(() => {
+                              setCurrentStep(3);
+                            }, 1500);
+                          } else {
+                            setAvailabilityStatus({
+                              available: false,
+                              message: `❌ Horario no disponible. Alternativas: ${availability.alternativeSlots?.join(', ') || 'Ninguna'}`
+                            });
+                          }
+                        } catch (error) {
+                          console.error('Error checking availability:', error);
+                          setAvailabilityStatus({
+                            available: false,
+                            message: "Error verificando disponibilidad"
+                          });
+                        } finally {
+                          setIsCheckingAvailability(false);
+                        }
+                      }
+                    }}
                     data-testid={`service-card-${service.id}`}
                   >
                     <CardContent className="p-4">
@@ -1085,6 +1123,26 @@ export default function BookingWizard() {
                     </CardContent>
                     </Card>
                   ))}
+                </div>
+              )}
+
+              {/* Availability Status */}
+              {isCheckingAvailability && (
+                <div className="text-center py-4">
+                  <p className="text-blue-600">Verificando disponibilidad...</p>
+                </div>
+              )}
+              
+              {availabilityStatus && (
+                <div className={`p-4 rounded-lg border-2 ${
+                  availabilityStatus.available 
+                    ? "bg-green-50 border-green-200 text-green-800" 
+                    : "bg-red-50 border-red-200 text-red-800"
+                }`}>
+                  <p className="font-medium">{availabilityStatus.message}</p>
+                  {availabilityStatus.available && (
+                    <p className="text-sm mt-1">Avanzando a confirmación...</p>
+                  )}
                 </div>
               )}
 
