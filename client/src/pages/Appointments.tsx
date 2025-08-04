@@ -155,6 +155,7 @@ export default function Appointments() {
     },
   });
 
+  // Check loading state after all hooks are declared
   if (appointmentsLoading) {
     return (
       <div className="p-6">
