@@ -277,12 +277,86 @@ export default function BookingWizard() {
   // Create appointment mutation
   const createAppointmentMutation = useMutation({
     mutationFn: async (appointmentData: any) => {
-      return await apiRequest('/api/appointments', {
-        method: 'POST',
-        body: JSON.stringify({
-          ...appointmentData,
-          tenantId: currentTenant?.id
-        })
+      return await apiRequest('POST', `/api/appointments/${currentTenant?.id}`, {
+        ...appointmentData,
+        tenantId: currentTenant?.id
+      });
+    },
+    onSuccess: async () => {
+      // Send WhatsApp confirmation after successful appointment creation
+      if (customerData.phone) {
+        const selectedService = services?.find((s: any) => s.id === bookingData.serviceId);
+        const whatsappMessage = `🏥 *Confirmación de Cita - VetGroom*
+        
+¡Hola ${customerData.name}!
+
+Tu cita ha sido confirmada:
+📅 *Fecha:* ${bookingData.requestedDate}
+⏰ *Hora:* ${bookingData.requestedTime}
+🏥 *Servicio:* ${selectedService?.name}
+🐾 *Mascota:* ${petData.name}
+💰 *Precio:* $${selectedService?.price}
+
+📍 *Dirección de recogida:* ${customerData.address}, ${customerData.fraccionamiento}
+
+Nos pondremos en contacto contigo 30 minutos antes de la cita.
+
+¡Gracias por confiar en VetGroom!`;
+
+        // Send WhatsApp message
+        try {
+          const response = await fetch('/api/send-whatsapp', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              phone: customerData.phone,
+              message: whatsappMessage
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            toast({
+              title: "Cita confirmada",
+              description: "Se ha enviado la confirmación por WhatsApp",
+            });
+          } else {
+            toast({
+              title: "Cita creada",
+              description: "Cita creada exitosamente (WhatsApp: " + result.message + ")",
+            });
+          }
+        } catch (whatsappError) {
+          console.error('WhatsApp error:', whatsappError);
+          toast({
+            title: "Cita creada",
+            description: "Cita creada exitosamente (WhatsApp no disponible)",
+          });
+        }
+      } else {
+        toast({
+          title: "Cita creada",
+          description: "Cita creada exitosamente",
+        });
+      }
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+      
+      // Reset form and go back to step 1 or redirect
+      setTimeout(() => {
+        window.location.href = '/appointments';
+      }, 2000);
+    },
+    onError: (error) => {
+      console.error('Error creating appointment:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo crear la cita",
+        variant: "destructive",
       });
     },
     onSuccess: () => {
@@ -1365,13 +1439,19 @@ export default function BookingWizard() {
                   onClick={handleSubmit}
                   disabled={createAppointmentMutation.isPending}
                   data-testid="button-confirm-appointment"
+                  className="bg-green-600 hover:bg-green-700 text-white"
                 >
                   {createAppointmentMutation.isPending ? (
-                    "Creando cita..."
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Confirmando...
+                    </>
                   ) : (
-                    "Confirmar Cita"
+                    <>
+                      Confirmar + WhatsApp
+                      <CheckCircle className="ml-2 h-4 w-4" />
+                    </>
                   )}
-                  <CheckCircle className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>

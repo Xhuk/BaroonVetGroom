@@ -17,6 +17,10 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Business Hours Configuration**: Added tenant-specific business hours with admin configuration page
 - **Smart Time Selection**: Time slots now respect tenant's open/close hours and time slot duration
 - **Configurable Reservations**: Slot reservation timeout is now tenant-configurable through admin interface
+- **Smart Availability Checking**: Auto-validates appointment slots and advances to confirmation when free
+- **Alternative Slot Suggestions**: System proposes 3 alternative times when requested slot is unavailable
+- **WhatsApp Integration**: Appointment confirmations sent via n8n webhook to WhatsApp API
+- **Auto-Step Progression**: Available time slots automatically advance booking wizard to confirmation step
 
 # User Preferences
 

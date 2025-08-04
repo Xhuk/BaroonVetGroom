@@ -578,19 +578,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // WhatsApp notification endpoint (placeholder for future integration)
+  // WhatsApp notification endpoint via n8n server
   app.post('/api/send-whatsapp', isAuthenticated, async (req: any, res) => {
     try {
       const { phone, message } = req.body;
       
-      // Log the WhatsApp message for now (future integration with actual WhatsApp API)
-      console.log('WhatsApp message to', phone, ':', message);
+      // Check if N8N_WEBHOOK_URL is configured
+      const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
       
-      // For now, return success (this would integrate with actual WhatsApp API)
-      res.json({ 
-        success: true, 
-        message: "WhatsApp message logged (integration pending)" 
+      if (!n8nWebhookUrl) {
+        console.log('WhatsApp message to', phone, ':', message);
+        return res.json({ 
+          success: false, 
+          message: "N8N_WEBHOOK_URL not configured - message logged only" 
+        });
+      }
+      
+      // Send to n8n webhook for WhatsApp processing
+      const response = await fetch(n8nWebhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone: phone,
+          message: message,
+          type: 'whatsapp_appointment_confirmation'
+        })
       });
+      
+      if (response.ok) {
+        res.json({ 
+          success: true, 
+          message: "WhatsApp message sent via n8n" 
+        });
+      } else {
+        console.error('n8n webhook failed:', await response.text());
+        res.json({ 
+          success: false, 
+          message: "n8n webhook failed - check server logs" 
+        });
+      }
     } catch (error) {
       console.error("Error sending WhatsApp:", error);
       res.status(500).json({ message: "Failed to send WhatsApp message" });
