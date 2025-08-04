@@ -30,6 +30,7 @@ import {
   Key,
   AlertTriangle
 } from "lucide-react";
+import { useAccessControl } from "@/hooks/useAccessControl";
 
 // Available pages in the system
 const AVAILABLE_PAGES = [
@@ -67,32 +68,32 @@ export default function SuperAdminRBAC() {
   });
 
   // Check if user has system admin access
-  const isSystemAdmin = user?.email?.includes('vetgroom') || false;
+  const { canAccessSuperAdmin, canDebugTenants, isLoading: accessLoading } = useAccessControl();
 
   // Fetch system data
   const { data: companies } = useQuery({
     queryKey: ['/api/superadmin/companies'],
-    enabled: isSystemAdmin,
+    enabled: canAccessSuperAdmin,
   });
 
   const { data: systemRoles } = useQuery({
     queryKey: ['/api/superadmin/system-roles'],
-    enabled: isSystemAdmin,
+    enabled: canAccessSuperAdmin,
   });
 
   const { data: roles = [] } = useQuery({
     queryKey: ['/api/superadmin/roles', selectedCompany],
-    enabled: isSystemAdmin && !!selectedCompany,
+    enabled: canAccessSuperAdmin && !!selectedCompany,
   });
 
   const { data: users = [] } = useQuery({
     queryKey: ['/api/superadmin/users', selectedCompany],
-    enabled: isSystemAdmin && !!selectedCompany,
+    enabled: canAccessSuperAdmin && !!selectedCompany,
   });
 
   const { data: userAssignments = [] } = useQuery({
     queryKey: ['/api/superadmin/user-assignments', selectedCompany],
-    enabled: isSystemAdmin && !!selectedCompany,
+    enabled: canAccessSuperAdmin && !!selectedCompany,
   });
 
   // Create role mutation
@@ -145,7 +146,7 @@ export default function SuperAdminRBAC() {
 
   // Check authorization
   useEffect(() => {
-    if (!isLoading && (!isAuthenticated || !isSystemAdmin)) {
+    if (!isLoading && (!isAuthenticated || !canAccessSuperAdmin)) {
       toast({
         title: "Acceso Denegado",
         description: "Solo desarrolladores y administradores de VetGroom pueden acceder a esta página",
@@ -156,7 +157,7 @@ export default function SuperAdminRBAC() {
       }, 2000);
       return;
     }
-  }, [isAuthenticated, isLoading, isSystemAdmin, toast]);
+  }, [isAuthenticated, isLoading, canAccessSuperAdmin, toast]);
 
   if (isLoading) {
     return (
@@ -166,7 +167,7 @@ export default function SuperAdminRBAC() {
     );
   }
 
-  if (!isAuthenticated || !isSystemAdmin) {
+  if (!isAuthenticated || !canAccessSuperAdmin) {
     return null;
   }
 

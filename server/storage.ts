@@ -1053,6 +1053,41 @@ export class DatabaseStorage implements IStorage {
     
     return count > 0;
   }
+
+  async getUserSystemRoles(userId: string): Promise<any[]> {
+    return await db
+      .select({
+        roleId: systemRoles.id,
+        roleName: systemRoles.name,
+        roleDescription: systemRoles.description,
+        systemLevel: systemRoles.systemLevel,
+        isActive: userSystemRoles.isActive
+      })
+      .from(userSystemRoles)
+      .innerJoin(systemRoles, eq(userSystemRoles.systemRoleId, systemRoles.id))
+      .where(
+        and(
+          eq(userSystemRoles.userId, userId),
+          eq(userSystemRoles.isActive, true)
+        )
+      );
+  }
+
+  async hasDebugRole(userId: string): Promise<boolean> {
+    const result = await db
+      .select({ count: sql`count(*)` })
+      .from(userSystemRoles)
+      .innerJoin(systemRoles, eq(userSystemRoles.systemRoleId, systemRoles.id))
+      .where(
+        and(
+          eq(userSystemRoles.userId, userId),
+          eq(userSystemRoles.isActive, true),
+          eq(systemRoles.name, 'debug')
+        )
+      );
+    
+    return parseInt(result[0].count as string) > 0;
+  }
 }
 
 export const storage = new DatabaseStorage();

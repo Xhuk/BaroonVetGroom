@@ -1369,19 +1369,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return response.json();
   }
 
-  // SuperAdmin RBAC endpoints - Database role verification only
+  // RBAC Helper Functions
   const isSystemAdmin = async (req: any) => {
     const user = req.user;
     if (!user?.claims?.sub) return false;
     
     try {
-      // Check if user has system admin roles in database
       return await storage.hasSystemRole(user.claims.sub);
     } catch (error) {
       console.error('Error checking system admin role:', error);
       return false;
     }
   };
+
+  const hasDebugAccess = async (req: any) => {
+    const user = req.user;
+    if (!user?.claims?.sub) return false;
+    
+    try {
+      return await storage.hasDebugRole(user.claims.sub);
+    } catch (error) {
+      console.error('Error checking debug role:', error);
+      return false;
+    }
+  };
+
+  const getUserAccessLevel = async (req: any) => {
+    const user = req.user;
+    if (!user?.claims?.sub) return 'none';
+    
+    try {
+      const roles = await storage.getUserSystemRoles(user.claims.sub);
+      
+      if (roles.some(r => ['debug', 'developer', 'sysadmin'].includes(r.roleName))) {
+        return 'system_admin';
+      }
+      
+      // Check if user is a super tenant (company admin)
+      // This would need to be implemented based on your tenant hierarchy
+      
+      return 'tenant';
+    } catch (error) {
+      console.error('Error checking user access level:', error);
+      return 'none';
+    }
+  };
+
+  // Get user access info
+  app.get('/api/auth/access-info', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const accessLevel = await getUserAccessLevel(req);
+      const roles = await storage.getUserSystemRoles(userId);
+      
+      res.json({
+        accessLevel,
+        roles,
+        canAccessSuperAdmin: accessLevel === 'system_admin',
+        canAccessAdmin: ['system_admin', 'super_tenant'].includes(accessLevel),
+        canDebugTenants: await hasDebugAccess(req)
+      });
+    } catch (error) {
+      console.error("Error fetching access info:", error);
+      res.status(500).json({ message: "Failed to fetch access info" });
+    }
+  });
 
   // Get all companies for SuperAdmin
   app.get('/api/superadmin/companies', isAuthenticated, async (req: any, res) => {
