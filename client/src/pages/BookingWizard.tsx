@@ -74,18 +74,31 @@ export default function BookingWizard() {
     enabled: !!currentTenant?.id,
   });
 
-  // Geocoding function for address
-  const geocodeAddress = async (address: string, fraccionamiento: string) => {
+  // Geocoding function for address with postal code fallback
+  const geocodeAddress = async (address: string, fraccionamiento: string, postalCode?: string) => {
     if (!address || !fraccionamiento) return null;
     
     try {
-      console.log("Geocoding address:", address, fraccionamiento);
-      const fullAddress = `${address}, ${fraccionamiento}, Monterrey, Nuevo León, México`;
-      const response = await fetch(
+      console.log("Geocoding address:", address, fraccionamiento, postalCode);
+      
+      // Try with full address first
+      let fullAddress = `${address}, ${fraccionamiento}, Monterrey, Nuevo León, México`;
+      let response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=mx&addressdetails=1`
       );
-      const data = await response.json();
-      console.log("Geocoding response:", data);
+      let data = await response.json();
+      console.log("First geocoding attempt:", data);
+      
+      // If no results and we have postal code, try with postal code
+      if (data.length === 0 && postalCode) {
+        console.log("Trying with postal code:", postalCode);
+        fullAddress = `${postalCode}, Monterrey, Nuevo León, México`;
+        response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=mx&addressdetails=1`
+        );
+        data = await response.json();
+        console.log("Postal code geocoding attempt:", data);
+      }
       
       if (data.length > 0) {
         const { lat, lon } = data[0];
@@ -99,22 +112,40 @@ export default function BookingWizard() {
         }));
         return newCoords;
       } else {
-        console.log("No geocoding results found");
+        // Use tenant default coordinates or fallback
+        console.log("No geocoding results found, using default coordinates");
+        const defaultCoords = {
+          lat: currentTenant?.latitude ? parseFloat(currentTenant.latitude) : 25.740586082849077,
+          lng: currentTenant?.longitude ? parseFloat(currentTenant.longitude) : -100.40735989019088
+        };
+        setMapCoordinates(defaultCoords);
+        setCustomerData(prev => ({
+          ...prev,
+          latitude: defaultCoords.lat.toString(),
+          longitude: defaultCoords.lng.toString()
+        }));
         toast({
-          title: "Ubicación no encontrada",
-          description: "No se pudo encontrar la dirección. Por favor verifica que sea correcta.",
-          variant: "destructive",
+          title: "Usando ubicación por defecto",
+          description: "No se encontró la dirección exacta. Se usa la ubicación de la clínica.",
+          variant: "default",
         });
+        return defaultCoords;
       }
     } catch (error) {
       console.error("Geocoding error:", error);
+      // Use default coordinates on error
+      const defaultCoords = {
+        lat: currentTenant?.latitude ? parseFloat(currentTenant.latitude) : 25.740586082849077,
+        lng: currentTenant?.longitude ? parseFloat(currentTenant.longitude) : -100.40735989019088
+      };
+      setMapCoordinates(defaultCoords);
       toast({
         title: "Error de geocodificación",
-        description: "Error al buscar la ubicación. Intenta nuevamente.",
+        description: "Error al buscar la ubicación. Se usa la ubicación por defecto.",
         variant: "destructive",
       });
+      return defaultCoords;
     }
-    return null;
   };
 
   // Check available slots when service and date are selected
@@ -261,7 +292,7 @@ export default function BookingWizard() {
   // Handle next step
   const nextStep = async () => {
     if (currentStep === 2 && customerData.address && customerData.fraccionamiento) {
-      await geocodeAddress(customerData.address, customerData.fraccionamiento);
+      await geocodeAddress(customerData.address, customerData.fraccionamiento, customerData.postalCode);
     }
     if (currentStep === 4 && bookingData.serviceId && bookingData.requestedDate) {
       checkAvailableSlots();
@@ -387,7 +418,7 @@ export default function BookingWizard() {
                       setCustomerData(prev => ({ ...prev, address: formattedValue }));
                       // Auto-geocode after both fields are filled
                       if (formattedValue && customerData.fraccionamiento) {
-                        setTimeout(() => geocodeAddress(formattedValue, customerData.fraccionamiento), 1000);
+                        setTimeout(() => geocodeAddress(formattedValue, customerData.fraccionamiento, customerData.postalCode), 1000);
                       }
                     }}
                     placeholder="Calle Gracias 345"
@@ -405,7 +436,7 @@ export default function BookingWizard() {
                       setCustomerData(prev => ({ ...prev, fraccionamiento: formattedValue }));
                       // Auto-geocode after both fields are filled
                       if (customerData.address && formattedValue) {
-                        setTimeout(() => geocodeAddress(customerData.address, formattedValue), 1000);
+                        setTimeout(() => geocodeAddress(customerData.address, formattedValue, customerData.postalCode), 1000);
                       }
                     }}
                     placeholder="Valle De Cumbres"
@@ -459,7 +490,7 @@ export default function BookingWizard() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => geocodeAddress(customerData.address, customerData.fraccionamiento)}
+                            onClick={() => geocodeAddress(customerData.address, customerData.fraccionamiento, customerData.postalCode)}
                             className="text-xs"
                           >
                             Actualizar ubicación
@@ -476,7 +507,7 @@ export default function BookingWizard() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => geocodeAddress(customerData.address, customerData.fraccionamiento)}
+                            onClick={() => geocodeAddress(customerData.address, customerData.fraccionamiento, customerData.postalCode)}
                             className="mt-2"
                           >
                             Buscar ubicación
