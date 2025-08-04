@@ -84,11 +84,23 @@ export default function BookingWizard() {
   const [geocodeTimeout, setGeocodeTimeout] = useState<NodeJS.Timeout | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([25.74055709021775, -100.407349161356]);
   const mapRef = useRef<any>(null);
+  
+  // Pet breeds cache - stored in browser memory
+  const [breedsCache, setBreedsCache] = useState<Record<string, string[]>>({});
+  const [filteredBreeds, setFilteredBreeds] = useState<string[]>([]);
 
   // Queries
   const { data: services } = useQuery<any[]>({
     queryKey: ["/api/services", currentTenant?.id],
     enabled: !!currentTenant?.id,
+  });
+
+  // Load pet breeds for the tenant (cached in browser memory)
+  const { data: petBreeds } = useQuery<Record<string, string[]>>({
+    queryKey: ["/api/pet-breeds", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+    cacheTime: 60 * 60 * 1000, // Keep in memory for 1 hour
   });
 
   // Remove staff query - not needed for delivery planning
@@ -118,6 +130,35 @@ export default function BookingWizard() {
       }
     }
   }, [currentTenant?.id]);
+
+  // Update breeds cache when data loads
+  useEffect(() => {
+    if (petBreeds) {
+      setBreedsCache(petBreeds);
+    }
+  }, [petBreeds]);
+
+  // Filter breeds when species changes
+  useEffect(() => {
+    if (petData.species && breedsCache[petData.species]) {
+      setFilteredBreeds(breedsCache[petData.species]);
+    } else {
+      // Fallback breeds if not in cache
+      const fallbackBreeds = {
+        perro: ['Labrador', 'Golden Retriever', 'Pastor Alemán', 'Bulldog', 'Chihuahua', 'Mestizo', 'Otro'],
+        gato: ['Persa', 'Siamés', 'Maine Coon', 'Británico', 'Mestizo', 'Otro'],
+        ave: ['Canario', 'Periquito', 'Cacatúa', 'Loro', 'Otro'],
+        reptil: ['Iguana', 'Tortuga', 'Gecko', 'Serpiente', 'Otro'],
+        conejo: ['Holandés', 'Angora', 'Enano', 'Mestizo', 'Otro'],
+        otro: ['Otro']
+      };
+      setFilteredBreeds(fallbackBreeds[petData.species as keyof typeof fallbackBreeds] || ['Otro']);
+    }
+    // Reset breed selection when species changes
+    if (petData.breed && filteredBreeds.length > 0 && !filteredBreeds.includes(petData.breed)) {
+      setPetData(prev => ({ ...prev, breed: '' }));
+    }
+  }, [petData.species, breedsCache]);
 
   // Update tenant location when currentTenant changes
   useEffect(() => {
@@ -708,19 +749,17 @@ export default function BookingWizard() {
                       <SelectValue placeholder="Seleccionar raza" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="golden-retriever">Golden Retriever</SelectItem>
-                      <SelectItem value="labrador">Labrador</SelectItem>
-                      <SelectItem value="pastor-aleman">Pastor Alemán</SelectItem>
-                      <SelectItem value="chihuahua">Chihuahua</SelectItem>
-                      <SelectItem value="bulldog-frances">Bulldog Francés</SelectItem>
-                      <SelectItem value="poodle">Poodle</SelectItem>
-                      <SelectItem value="yorkshire">Yorkshire Terrier</SelectItem>
-                      <SelectItem value="husky-siberiano">Husky Siberiano</SelectItem>
-                      <SelectItem value="rottweiler">Rottweiler</SelectItem>
-                      <SelectItem value="dachshund">Dachshund (Salchicha)</SelectItem>
-                      <SelectItem value="beagle">Beagle</SelectItem>
-                      <SelectItem value="mestizo">Mestizo</SelectItem>
-                      <SelectItem value="otro">Otro</SelectItem>
+                      {filteredBreeds.length > 0 ? (
+                        filteredBreeds.map((breed) => (
+                          <SelectItem key={breed} value={breed.toLowerCase().replace(/\s+/g, '-')}>
+                            {breed}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          Selecciona una especie primero
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

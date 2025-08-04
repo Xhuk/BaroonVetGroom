@@ -358,6 +358,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Pet breeds by species for the tenant - cached endpoint
+  app.get('/api/pet-breeds/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      // Return breed data organized by species
+      const breedsBySpecies = {
+        perro: ['Labrador', 'Golden Retriever', 'Pastor Alemán', 'Bulldog Francés', 'Chihuahua', 'Poodle', 'Yorkshire Terrier', 'Husky Siberiano', 'Rottweiler', 'Dachshund', 'Beagle', 'Mestizo', 'Otro'],
+        gato: ['Persa', 'Siamés', 'Maine Coon', 'Británico de Pelo Corto', 'Angora', 'Bengalí', 'Ragdoll', 'Sphynx', 'Mestizo', 'Otro'],
+        ave: ['Canario', 'Periquito', 'Cacatúa', 'Loro Amazonas', 'Agapornis', 'Ninfa', 'Guacamayo', 'Otro'],
+        reptil: ['Iguana Verde', 'Tortuga de Orejas Rojas', 'Gecko Leopardo', 'Pitón Bola', 'Dragón Barbudo', 'Otro'],
+        conejo: ['Holandés', 'Angora', 'Enano Holandés', 'Belier', 'Rex', 'Gigante de Flandes', 'Mestizo', 'Otro'],
+        otro: ['Otro']
+      };
+      
+      // Set cache headers for 30 minutes
+      res.set('Cache-Control', 'public, max-age=1800');
+      res.json(breedsBySpecies);
+    } catch (error) {
+      console.error("Error fetching pet breeds:", error);
+      res.status(500).json({ message: "Failed to fetch pet breeds" });
+    }
+  });
+
   app.post('/api/admin/services/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;
