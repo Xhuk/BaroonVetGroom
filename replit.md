@@ -64,6 +64,9 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Smart Inventory Tracking**: InventorySelector component allows selection of products used during medical appointments with automatic cost calculation and itemized billing
 - **Billing-Inventory Integration**: When payments are processed (cash or payment link), inventory stock is automatically reduced based on items tracked in pending invoices
 - **Transaction Logging**: Complete audit trail of inventory usage with automatic transaction records linking to medical appointments and invoices for accurate cost accounting
+- **AI-Powered Mass Import**: Added intelligent inventory import system using OpenAI GPT-4o that processes natural language descriptions of veterinary supplies and automatically creates structured inventory records with realistic Mexican pricing
+- **Smart Onboarding**: Veterinarians can describe their inventory in plain text and AI generates proper product records with categories, SKUs, and appropriate stock levels
+- **Navigation Cleanup**: Removed "Plan de Entregas" button from main navigation header to simplify interface
 
 # User Preferences
 
