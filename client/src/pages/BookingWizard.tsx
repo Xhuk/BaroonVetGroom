@@ -154,9 +154,22 @@ export default function BookingWizard() {
       };
       setFilteredBreeds(fallbackBreeds[petData.species as keyof typeof fallbackBreeds] || ['Otro']);
     }
-    // Reset breed selection when species changes
-    if (petData.breed && filteredBreeds.length > 0 && !filteredBreeds.includes(petData.breed)) {
-      setPetData(prev => ({ ...prev, breed: '' }));
+    
+    // Auto-select "Otro" breed when "Otro" species is selected
+    if (petData.species === 'otro') {
+      setPetData(prev => ({ ...prev, breed: 'otro' }));
+      // Focus next field (age) after brief delay
+      setTimeout(() => {
+        const ageInput = document.querySelector('input[placeholder="Edad en años"]') as HTMLInputElement;
+        if (ageInput) {
+          ageInput.focus();
+        }
+      }, 100);
+    } else {
+      // Reset breed selection when species changes (except for "otro")
+      if (petData.breed && filteredBreeds.length > 0 && !filteredBreeds.includes(petData.breed)) {
+        setPetData(prev => ({ ...prev, breed: '' }));
+      }
     }
   }, [petData.species, breedsCache]);
 
