@@ -3,16 +3,16 @@ import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 
 interface BackButtonProps {
-  to?: string;
   className?: string;
+  href?: string;
 }
 
-export function BackButton({ to = "/", className = "" }: BackButtonProps) {
+export function BackButton({ className = "", href }: BackButtonProps) {
   const [, setLocation] = useLocation();
 
   const handleBack = () => {
-    if (to) {
-      setLocation(to);
+    if (href) {
+      setLocation(href);
     } else {
       window.history.back();
     }
@@ -21,12 +21,11 @@ export function BackButton({ to = "/", className = "" }: BackButtonProps) {
   return (
     <Button
       variant="outline"
-      size="sm"
       onClick={handleBack}
       className={`flex items-center gap-2 ${className}`}
     >
       <ArrowLeft className="w-4 h-4" />
-      Volver
+      Regresar
     </Button>
   );
 }

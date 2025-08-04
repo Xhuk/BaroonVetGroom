@@ -12,6 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import Admin from "@/pages/Admin";
 import SuperAdmin from "@/pages/SuperAdmin";
 import Appointments from "@/pages/Appointments";
+import BookingWizard from "@/pages/BookingWizard";
 import Clients from "@/pages/Clients";
 import Inventory from "@/pages/Inventory";
 import DeliveryPlan from "@/pages/DeliveryPlan";
@@ -28,6 +29,7 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/appointments" component={Appointments} />
+          <Route path="/booking" component={BookingWizard} />
           <Route path="/clients" component={Clients} />
           <Route path="/inventory" component={Inventory} />
           <Route path="/delivery" component={DeliveryPlan} />

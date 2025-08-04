@@ -10,6 +10,7 @@ import {
   appointments,
   services,
   roles,
+  tempSlotReservations,
   type User,
   type UpsertUser,
   type Company,
@@ -33,7 +34,7 @@ import {
   type InsertRole,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -79,6 +80,9 @@ export interface IStorage {
   updateAppointment(appointmentId: string, appointment: Partial<InsertAppointment>): Promise<Appointment>;
   deleteAppointment(appointmentId: string): Promise<void>;
   getAvailableSlots(tenantId: string, date: string, serviceId: string): Promise<string[]>;
+  checkAvailability(tenantId: string, date: string, time: string, serviceId: string): Promise<{ available: boolean; alternativeSlots: string[] }>;
+  reserveSlot(reservation: any): Promise<any>;
+  getClientByPhone(tenantId: string, phone: string): Promise<Client | undefined>;
   
   // Service operations
   getServices(tenantId: string): Promise<Service[]>;
@@ -312,6 +316,49 @@ export class DatabaseStorage implements IStorage {
     });
 
     return availableSlots;
+  }
+
+  async checkAvailability(tenantId: string, date: string, time: string, serviceId: string): Promise<{ available: boolean; alternativeSlots: string[] }> {
+    // Get the service duration
+    const [service] = await db.select().from(services).where(eq(services.id, serviceId));
+    if (!service) return { available: false, alternativeSlots: [] };
+
+    // Check if requested time is available
+    const requestedSlot = time;
+    const availableSlots = await this.getAvailableSlots(tenantId, date, serviceId);
+    const isAvailable = availableSlots.includes(requestedSlot);
+
+    return {
+      available: isAvailable,
+      alternativeSlots: isAvailable ? [requestedSlot] : availableSlots.slice(0, 6) // Show up to 6 alternatives
+    };
+  }
+
+  async reserveSlot(reservation: any): Promise<any> {
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    
+    // Clean up expired reservations first
+    await db.delete(tempSlotReservations)
+      .where(sql`expires_at < ${new Date()}`);
+    
+    // Create new reservation
+    const [newReservation] = await db
+      .insert(tempSlotReservations)
+      .values({
+        ...reservation,
+        expiresAt
+      })
+      .returning();
+      
+    return newReservation;
+  }
+
+  async getClientByPhone(tenantId: string, phone: string): Promise<Client | undefined> {
+    const [client] = await db
+      .select()
+      .from(clients)
+      .where(sql`${clients.tenantId} = ${tenantId} AND ${clients.phone} = ${phone}`);
+    return client;
   }
 
   // Service operations

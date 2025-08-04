@@ -118,7 +118,10 @@ export const clients = pgTable("clients", {
   email: varchar("email"),
   phone: varchar("phone"),
   address: text("address"),
+  postalCode: varchar("postal_code", { length: 10 }),
   fraccionamiento: varchar("fraccionamiento"), // subdivision/neighborhood
+  latitude: varchar("latitude", { length: 50 }),
+  longitude: varchar("longitude", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -204,3 +207,19 @@ export type InsertPet = typeof pets.$inferInsert;
 
 export type Appointment = typeof appointments.$inferSelect;
 export type InsertAppointment = typeof appointments.$inferInsert;
+
+// Temporary slot reservations for booking flow
+export const tempSlotReservations = pgTable("temp_slot_reservations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull(),
+  sessionId: varchar("session_id").notNull(), // browser session ID
+  scheduledDate: date("scheduled_date").notNull(),
+  scheduledTime: time("scheduled_time").notNull(),
+  serviceId: varchar("service_id").notNull(),
+  roomId: varchar("room_id"),
+  expiresAt: timestamp("expires_at").notNull(), // 10 minutes from creation
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type TempSlotReservation = typeof tempSlotReservations.$inferSelect;
+export type InsertTempSlotReservation = typeof tempSlotReservations.$inferInsert;

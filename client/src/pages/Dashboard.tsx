@@ -8,7 +8,8 @@ import { Calendar } from "@/components/Calendar";
 import { BottomStatsRibbon } from "@/components/BottomStatsRibbon";
 import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Plus, History, Truck } from "lucide-react";
+import { Plus, History, Truck, Phone, CalendarIcon } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -66,18 +67,24 @@ export default function Dashboard() {
       <main className="lg:ml-64 pb-40">
         {/* Action Buttons */}
         <div className="mb-6 flex flex-wrap gap-4 px-6">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 shadow-md">
-            <Plus className="w-4 h-4 mr-2" />
-            Crear Nueva Cita
-          </Button>
-          <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md">
-            <History className="w-4 h-4 mr-2" />
-            Revisar Citas Anteriores
-          </Button>
-          <Button className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 shadow-md">
-            <Truck className="w-4 h-4 mr-2" />
-            Plan de Entregas
-          </Button>
+          <Link href="/booking">
+            <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md">
+              <Phone className="w-4 h-4 mr-2" />
+              Nueva Cita por Teléfono
+            </Button>
+          </Link>
+          <Link href="/appointments">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 shadow-md">
+              <CalendarIcon className="w-4 h-4 mr-2" />
+              Gestionar Citas
+            </Button>
+          </Link>
+          <Link href="/delivery">
+            <Button className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 shadow-md">
+              <Truck className="w-4 h-4 mr-2" />
+              Plan de Entregas
+            </Button>
+          </Link>
         </div>
 
         {/* Calendar */}

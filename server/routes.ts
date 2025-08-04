@@ -194,6 +194,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check availability for specific time and get alternatives
+  app.get('/api/appointments/check-availability/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { date, time, serviceId } = req.query;
+      const result = await storage.checkAvailability(tenantId, date as string, time as string, serviceId as string);
+      res.json(result);
+    } catch (error) {
+      console.error("Error checking availability:", error);
+      res.status(500).json({ message: "Failed to check availability" });
+    }
+  });
+
+  // Reserve a time slot temporarily
+  app.post('/api/appointments/reserve-slot/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const reservationData = { ...req.body, tenantId };
+      const reservation = await storage.reserveSlot(reservationData);
+      res.json(reservation);
+    } catch (error) {
+      console.error("Error reserving slot:", error);
+      res.status(500).json({ message: "Failed to reserve slot" });
+    }
+  });
+
+  // Get client by phone
+  app.get('/api/clients/by-phone/:tenantId/:phone', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId, phone } = req.params;
+      const client = await storage.getClientByPhone(tenantId, phone);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      res.json(client);
+    } catch (error) {
+      console.error("Error fetching client by phone:", error);
+      res.status(500).json({ message: "Failed to fetch client" });
+    }
+  });
+
   // Dashboard stats route - Based on real database data
   app.get('/api/dashboard/stats/:tenantId', isAuthenticated, async (req: any, res) => {
     try {
