@@ -1613,6 +1613,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Medical Records API
+  app.get('/api/medical-records/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const records = await storage.getMedicalRecords(tenantId);
+      res.json(records);
+    } catch (error) {
+      console.error("Error fetching medical records:", error);
+      res.status(500).json({ message: "Failed to fetch medical records" });
+    }
+  });
+
+  app.post('/api/medical-records/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const recordData = { ...req.body, tenantId };
+      const record = await storage.createMedicalRecord(recordData);
+      res.json(record);
+    } catch (error) {
+      console.error("Error creating medical record:", error);
+      res.status(500).json({ message: "Failed to create medical record" });
+    }
+  });
+
+  app.get('/api/medical-records/:tenantId/:recordId', isAuthenticated, async (req, res) => {
+    try {
+      const { recordId } = req.params;
+      const record = await storage.getMedicalRecord(recordId);
+      if (!record) {
+        return res.status(404).json({ message: "Medical record not found" });
+      }
+      res.json(record);
+    } catch (error) {
+      console.error("Error fetching medical record:", error);
+      res.status(500).json({ message: "Failed to fetch medical record" });
+    }
+  });
+
+  app.put('/api/medical-records/:recordId', isAuthenticated, async (req, res) => {
+    try {
+      const { recordId } = req.params;
+      const record = await storage.updateMedicalRecord(recordId, req.body);
+      res.json(record);
+    } catch (error) {
+      console.error("Error updating medical record:", error);
+      res.status(500).json({ message: "Failed to update medical record" });
+    }
+  });
+
+  // Grooming Records API
+  app.get('/api/grooming-records/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const records = await storage.getGroomingRecords(tenantId);
+      res.json(records);
+    } catch (error) {
+      console.error("Error fetching grooming records:", error);
+      res.status(500).json({ message: "Failed to fetch grooming records" });
+    }
+  });
+
+  app.post('/api/grooming-records/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const recordData = { ...req.body, tenantId };
+      const record = await storage.createGroomingRecord(recordData);
+      res.json(record);
+    } catch (error) {
+      console.error("Error creating grooming record:", error);
+      res.status(500).json({ message: "Failed to create grooming record" });
+    }
+  });
+
+  app.get('/api/grooming-records/:tenantId/:recordId', isAuthenticated, async (req, res) => {
+    try {
+      const { recordId } = req.params;
+      const record = await storage.getGroomingRecord(recordId);
+      if (!record) {
+        return res.status(404).json({ message: "Grooming record not found" });
+      }
+      res.json(record);
+    } catch (error) {
+      console.error("Error fetching grooming record:", error);
+      res.status(500).json({ message: "Failed to fetch grooming record" });
+    }
+  });
+
+  app.put('/api/grooming-records/:recordId', isAuthenticated, async (req, res) => {
+    try {
+      const { recordId } = req.params;
+      const record = await storage.updateGroomingRecord(recordId, req.body);
+      res.json(record);
+    } catch (error) {
+      console.error("Error updating grooming record:", error);
+      res.status(500).json({ message: "Failed to update grooming record" });
+    }
+  });
+
+  // Staff by role endpoint
+  app.get('/api/staff/:tenantId/:role', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId, role } = req.params;
+      const staff = await storage.getStaffByRole(tenantId, role);
+      res.json(staff);
+    } catch (error) {
+      console.error("Error fetching staff by role:", error);
+      res.status(500).json({ message: "Failed to fetch staff" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

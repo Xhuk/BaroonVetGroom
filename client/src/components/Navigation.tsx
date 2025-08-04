@@ -8,7 +8,9 @@ import {
   Truck, 
   DollarSign, 
   Settings, 
-  Crown
+  Crown,
+  Stethoscope,
+  Scissors
 } from "lucide-react";
 
 interface NavigationProps {
@@ -22,6 +24,8 @@ export function Navigation({ className }: NavigationProps) {
     { icon: BarChart3, label: "Tablero", href: "/", active: true },
     { icon: Calendar, label: "Citas", href: "/appointments" },
     { icon: Users, label: "Clientes", href: "/clients" },
+    { icon: Stethoscope, label: "Expedientes", href: "/medical-records" },
+    { icon: Scissors, label: "Estética", href: "/grooming-services" },
     { icon: Package, label: "Inventario", href: "/inventory" },
     { icon: Truck, label: "Plan de Entregas", href: "/delivery-plan" },
     { icon: DollarSign, label: "Facturación", href: "/billing" },

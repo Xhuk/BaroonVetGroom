@@ -350,6 +350,108 @@ export const vans = pgTable("vans", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Medical Records - patient medical history and diagnoses
+export const medicalRecords = pgTable("medical_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  petId: varchar("pet_id").notNull().references(() => pets.id),
+  appointmentId: varchar("appointment_id").references(() => appointments.id),
+  veterinarianId: varchar("veterinarian_id").notNull().references(() => staff.id),
+  visitDate: date("visit_date").notNull(),
+  visitType: varchar("visit_type").notNull(), // consultation, checkup, surgery, emergency
+  chiefComplaint: text("chief_complaint"), // main reason for visit
+  symptoms: text("symptoms").array().default(sql`ARRAY[]::text[]`),
+  diagnosis: text("diagnosis").notNull(),
+  treatmentPlan: text("treatment_plan"),
+  notes: text("notes"),
+  vitals: jsonb("vitals"), // temperature, weight, heart_rate, etc.
+  followUpRequired: boolean("follow_up_required").default(false),
+  followUpDate: date("follow_up_date"),
+  status: varchar("status").default("active"), // active, resolved, ongoing
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Prescriptions - medications prescribed to pets
+export const prescriptions = pgTable("prescriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  medicalRecordId: varchar("medical_record_id").notNull().references(() => medicalRecords.id),
+  petId: varchar("pet_id").notNull().references(() => pets.id),
+  veterinarianId: varchar("veterinarian_id").notNull().references(() => staff.id),
+  medicationName: varchar("medication_name").notNull(),
+  dosage: varchar("dosage").notNull(),
+  frequency: varchar("frequency").notNull(), // daily, twice_daily, weekly, etc.
+  duration: varchar("duration").notNull(), // 7 days, 2 weeks, etc.
+  instructions: text("instructions"),
+  prescriptionDate: date("prescription_date").notNull(),
+  status: varchar("status").default("active"), // active, completed, discontinued
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Vaccination Records - track pet vaccinations
+export const vaccinationRecords = pgTable("vaccination_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  petId: varchar("pet_id").notNull().references(() => pets.id),
+  appointmentId: varchar("appointment_id").references(() => appointments.id),
+  vaccineName: varchar("vaccine_name").notNull(),
+  batchNumber: varchar("batch_number"),
+  administeredBy: varchar("administered_by").notNull().references(() => staff.id),
+  administeredDate: date("administered_date").notNull(),
+  nextDueDate: date("next_due_date"),
+  sideEffects: text("side_effects"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Grooming Records - detailed grooming history and preferences
+export const groomingRecords = pgTable("grooming_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  petId: varchar("pet_id").notNull().references(() => pets.id),
+  appointmentId: varchar("appointment_id").references(() => appointments.id),
+  groomerId: varchar("groomer_id").notNull().references(() => staff.id),
+  groomingDate: date("grooming_date").notNull(),
+  servicesProvided: varchar("services_provided").array().notNull(), // bath, haircut, nail_trim, ear_cleaning, etc.
+  coatCondition: varchar("coat_condition"), // excellent, good, fair, poor
+  skinCondition: varchar("skin_condition"), // healthy, dry, irritated, infected
+  behaviorNotes: text("behavior_notes"),
+  specialInstructions: text("special_instructions"),
+  productsUsed: jsonb("products_used"), // shampoos, conditioners, tools
+  beforePhotos: text("before_photos").array().default(sql`ARRAY[]::text[]`),
+  afterPhotos: text("after_photos").array().default(sql`ARRAY[]::text[]`),
+  duration: integer("duration"), // minutes spent
+  totalCost: decimal("total_cost", { precision: 10, scale: 2 }),
+  clientSatisfaction: integer("client_satisfaction"), // 1-5 rating
+  notes: text("notes"),
+  nextGroomingDate: date("next_grooming_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Pet Health Profiles - comprehensive health information
+export const petHealthProfiles = pgTable("pet_health_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  petId: varchar("pet_id").primaryKey().references(() => pets.id),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  allergies: text("allergies").array().default(sql`ARRAY[]::text[]`),
+  chronicConditions: text("chronic_conditions").array().default(sql`ARRAY[]::text[]`),
+  currentMedications: jsonb("current_medications"),
+  dietaryRestrictions: text("dietary_restrictions"),
+  emergencyContacts: jsonb("emergency_contacts"),
+  microchipNumber: varchar("microchip_number"),
+  insuranceProvider: varchar("insurance_provider"),
+  insurancePolicyNumber: varchar("insurance_policy_number"),
+  specialNeeds: text("special_needs"),
+  behavioralNotes: text("behavioral_notes"),
+  preferredVeterinarian: varchar("preferred_veterinarian").references(() => staff.id),
+  preferredGroomer: varchar("preferred_groomer").references(() => staff.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const vansRelations = relations(vans, ({ one }) => ({
   tenant: one(tenants, {
     fields: [vans.tenantId],
@@ -359,6 +461,22 @@ export const vansRelations = relations(vans, ({ one }) => ({
 
 export type InsertVan = typeof vans.$inferInsert;
 export type Van = typeof vans.$inferSelect;
+
+// Medical and grooming types
+export type MedicalRecord = typeof medicalRecords.$inferSelect;
+export type InsertMedicalRecord = typeof medicalRecords.$inferInsert;
+
+export type Prescription = typeof prescriptions.$inferSelect;
+export type InsertPrescription = typeof prescriptions.$inferInsert;
+
+export type VaccinationRecord = typeof vaccinationRecords.$inferSelect;
+export type InsertVaccinationRecord = typeof vaccinationRecords.$inferInsert;
+
+export type GroomingRecord = typeof groomingRecords.$inferSelect;
+export type InsertGroomingRecord = typeof groomingRecords.$inferInsert;
+
+export type PetHealthProfile = typeof petHealthProfiles.$inferSelect;
+export type InsertPetHealthProfile = typeof petHealthProfiles.$inferInsert;
 
 // Route optimization configuration for companies
 export const routeOptimizationConfig = pgTable("route_optimization_config", {

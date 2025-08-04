@@ -26,6 +26,8 @@ import RoutePlanMap from "@/pages/RoutePlanMap";
 import DeliveryTracking from "@/pages/DeliveryTracking";
 import AdminVanConfig from "@/pages/AdminVanConfig";
 import Billing from "@/pages/Billing";
+import MedicalRecords from "@/pages/MedicalRecords";
+import GroomingServices from "@/pages/GroomingServices";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -40,6 +42,8 @@ function Router() {
           <Route path="/appointments" component={Appointments} />
           <Route path="/booking" component={BookingWizard} />
           <Route path="/clients" component={Clients} />
+          <Route path="/medical-records" component={MedicalRecords} />
+          <Route path="/grooming-services" component={GroomingServices} />
           <Route path="/inventory" component={Inventory} />
           <Route path="/delivery-plan" component={DeliveryPlan} />
           <Route path="/route-map" component={RoutePlanMap} />

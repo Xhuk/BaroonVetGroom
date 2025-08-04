@@ -23,6 +23,11 @@ import {
   deliveryTracking,
   deliveryAlerts,
   driverCheckIns,
+  medicalRecords,
+  prescriptions,
+  vaccinationRecords,
+  groomingRecords,
+  petHealthProfiles,
   type User,
   type UpsertUser,
   type Company,
@@ -60,6 +65,16 @@ import {
   type InsertDeliveryAlert,
   type DriverCheckIn,
   type InsertDriverCheckIn,
+  type MedicalRecord,
+  type InsertMedicalRecord,
+  type Prescription,
+  type InsertPrescription,
+  type VaccinationRecord,
+  type InsertVaccinationRecord,
+  type GroomingRecord,
+  type InsertGroomingRecord,
+  type PetHealthProfile,
+  type InsertPetHealthProfile,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
@@ -92,6 +107,7 @@ export interface IStorage {
   
   // Staff operations
   getStaff(tenantId: string): Promise<Staff[]>;
+  getStaffByRole(tenantId: string, role: string): Promise<Staff[]>;
   createStaff(staff: InsertStaff): Promise<Staff>;
   updateStaff(staffId: string, staff: Partial<InsertStaff>): Promise<Staff>;
   deleteStaff(staffId: string): Promise<void>;
@@ -150,6 +166,18 @@ export interface IStorage {
   updateWebhookMonitoringStatus(tenantId: string, webhookType: string, status: string, lastFailure?: Date): Promise<void>;
   getFailedWebhooksForRetry(): Promise<WebhookMonitoring[]>;
   incrementWebhookRetry(tenantId: string, webhookType: string): Promise<void>;
+  
+  // Medical Records operations
+  getMedicalRecords(tenantId: string): Promise<MedicalRecord[]>;
+  getMedicalRecord(recordId: string): Promise<MedicalRecord | undefined>;
+  createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord>;
+  updateMedicalRecord(recordId: string, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord>;
+  
+  // Grooming Records operations
+  getGroomingRecords(tenantId: string): Promise<GroomingRecord[]>;
+  getGroomingRecord(recordId: string): Promise<GroomingRecord | undefined>;
+  createGroomingRecord(record: InsertGroomingRecord): Promise<GroomingRecord>;
+  updateGroomingRecord(recordId: string, record: Partial<InsertGroomingRecord>): Promise<GroomingRecord>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1087,6 +1115,71 @@ export class DatabaseStorage implements IStorage {
       );
     
     return parseInt(result[0].count as string) > 0;
+  }
+
+  // Staff by role operations
+  async getStaffByRole(tenantId: string, role: string): Promise<Staff[]> {
+    const staffList = await db.select().from(staff)
+      .where(and(eq(staff.tenantId, tenantId), eq(staff.role, role)));
+    return staffList;
+  }
+
+  // Medical Records operations
+  async getMedicalRecords(tenantId: string): Promise<MedicalRecord[]> {
+    const records = await db.select().from(medicalRecords)
+      .where(eq(medicalRecords.tenantId, tenantId))
+      .orderBy(desc(medicalRecords.visitDate));
+    return records;
+  }
+
+  async getMedicalRecord(recordId: string): Promise<MedicalRecord | undefined> {
+    const [record] = await db.select().from(medicalRecords)
+      .where(eq(medicalRecords.id, recordId));
+    return record;
+  }
+
+  async createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord> {
+    const [newRecord] = await db.insert(medicalRecords)
+      .values(record)
+      .returning();
+    return newRecord;
+  }
+
+  async updateMedicalRecord(recordId: string, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord> {
+    const [updatedRecord] = await db.update(medicalRecords)
+      .set({ ...record, updatedAt: new Date() })
+      .where(eq(medicalRecords.id, recordId))
+      .returning();
+    return updatedRecord;
+  }
+
+  // Grooming Records operations
+  async getGroomingRecords(tenantId: string): Promise<GroomingRecord[]> {
+    const records = await db.select().from(groomingRecords)
+      .where(eq(groomingRecords.tenantId, tenantId))
+      .orderBy(desc(groomingRecords.groomingDate));
+    return records;
+  }
+
+  async getGroomingRecord(recordId: string): Promise<GroomingRecord | undefined> {
+    const [record] = await db.select().from(groomingRecords)
+      .where(eq(groomingRecords.id, recordId));
+    return record;
+  }
+
+  async createGroomingRecord(record: InsertGroomingRecord): Promise<GroomingRecord> {
+    const [newRecord] = await db.insert(groomingRecords)
+      .values(record)
+      .returning();
+    return newRecord;
+  }
+
+  async updateGroomingRecord(recordId: string, record: Partial<InsertGroomingRecord>): Promise<GroomingRecord> {
+    const [updatedRecord] = await db.update(groomingRecords)
+      .set({ ...record, updatedAt: new Date() })
+      .where(eq(groomingRecords.id, recordId))
+      .returning();
+    return updatedRecord;
   }
 }
 
