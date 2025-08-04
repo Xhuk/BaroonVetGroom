@@ -465,6 +465,120 @@ export default function Admin() {
     }
   };
 
+  // Create service mutation
+  const createServiceMutation = useMutation({
+    mutationFn: async (data) => {
+      return apiRequest('POST', `/api/admin/services/${currentTenant?.id}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Servicio creado",
+        description: "El nuevo servicio ha sido creado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api', 'admin', 'services', currentTenant?.id] });
+      setIsServiceDialogOpen(false);
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para crear servicios",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo crear el servicio",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update service mutation
+  const updateServiceMutation = useMutation({
+    mutationFn: async ({ serviceId, data }) => {
+      return apiRequest('PUT', `/api/admin/services/${serviceId}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Servicio actualizado",
+        description: "El servicio ha sido actualizado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api', 'admin', 'services', currentTenant?.id] });
+      setEditingService(null);
+      setEditServiceData({ name: '', type: '', duration: 0, price: 0 });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para actualizar servicios",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el servicio",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete service mutation
+  const deleteServiceMutation = useMutation({
+    mutationFn: async (serviceId: string) => {
+      return apiRequest('DELETE', `/api/admin/services/${serviceId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Servicio eliminado",
+        description: "El servicio ha sido eliminado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api', 'admin', 'services', currentTenant?.id] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para eliminar servicios",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo eliminar el servicio",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle create service
+  const handleCreateService = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      name: formData.get('name'),
+      type: formData.get('type'),
+      duration: parseInt(formData.get('duration')),
+      price: parseFloat(formData.get('price')),
+      isActive: true
+    };
+
+    createServiceMutation.mutate(data);
+  };
+
   // Handle edit service
   const handleEditService = (service) => {
     setEditingService(service);
@@ -479,17 +593,17 @@ export default function Admin() {
   // Handle save edited service
   const handleSaveEditedService = () => {
     if (editingService) {
-      setServices(prev => prev.map(service => 
-        service.id === editingService.id 
-          ? { ...service, ...editServiceData }
-          : service
-      ));
-      setEditingService(null);
-      setEditServiceData({ name: '', type: '', duration: 0, price: 0 });
-      toast({
-        title: "Servicio actualizado",
-        description: "El servicio ha sido actualizado exitosamente",
+      updateServiceMutation.mutate({
+        serviceId: editingService.id,
+        data: editServiceData
       });
+    }
+  };
+
+  // Handle delete service
+  const handleDeleteService = (serviceId: string, serviceName: string) => {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar el servicio "${serviceName}"?`)) {
+      deleteServiceMutation.mutate(serviceId);
     }
   };
 
@@ -1434,14 +1548,18 @@ export default function Admin() {
                     <DialogHeader>
                       <DialogTitle>Agregar Nuevo Servicio</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <form onSubmit={handleCreateService} className="space-y-4">
                       <div>
-                        <Label>Nombre del Servicio</Label>
-                        <Input placeholder="Ej: Limpieza Dental" />
+                        <Label htmlFor="name">Nombre del Servicio *</Label>
+                        <Input 
+                          name="name"
+                          placeholder="Ej: Limpieza Dental" 
+                          required
+                        />
                       </div>
                       <div>
-                        <Label>Tipo de Servicio</Label>
-                        <Select>
+                        <Label htmlFor="type">Tipo de Servicio *</Label>
+                        <Select name="type" required>
                           <SelectTrigger>
                             <SelectValue placeholder="Seleccionar tipo" />
                           </SelectTrigger>
@@ -1454,16 +1572,31 @@ export default function Admin() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>Duración (minutos)</Label>
-                          <Input type="number" placeholder="60" />
+                          <Label htmlFor="duration">Duración (minutos) *</Label>
+                          <Input 
+                            name="duration"
+                            type="number" 
+                            placeholder="60" 
+                            required
+                            min="1"
+                          />
                         </div>
                         <div>
-                          <Label>Precio (MXN)</Label>
-                          <Input type="number" placeholder="350" />
+                          <Label htmlFor="price">Precio (MXN) *</Label>
+                          <Input 
+                            name="price"
+                            type="number" 
+                            placeholder="350" 
+                            required
+                            min="0"
+                            step="0.01"
+                          />
                         </div>
                       </div>
-                      <Button className="w-full">Crear Servicio</Button>
-                    </div>
+                      <Button type="submit" className="w-full" disabled={createServiceMutation.isPending}>
+                        {createServiceMutation.isPending ? 'Creando...' : 'Crear Servicio'}
+                      </Button>
+                    </form>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -1504,7 +1637,13 @@ export default function Admin() {
                             <Edit className="w-3 h-3 mr-1" />
                             Editar
                           </Button>
-                          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDeleteService(service.id, service.name)}
+                            disabled={deleteServiceMutation.isPending}
+                          >
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
@@ -1566,8 +1705,12 @@ export default function Admin() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button onClick={handleSaveEditedService} className="flex-1">
-                        Guardar Cambios
+                      <Button 
+                        onClick={handleSaveEditedService} 
+                        className="flex-1"
+                        disabled={updateServiceMutation.isPending}
+                      >
+                        {updateServiceMutation.isPending ? 'Guardando...' : 'Guardar Cambios'}
                       </Button>
                       <Button variant="outline" onClick={() => setEditingService(null)} className="flex-1">
                         Cancelar
