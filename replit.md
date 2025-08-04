@@ -60,6 +60,10 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **LateNode Webhook Integration System**: Complete Super Admin interface for configuring automated notifications (payment reminders, delivery notifications, pickup confirmations, appointment reminders) with testing capabilities and comprehensive logging
 - **Webhook Configuration Management**: Database tables and API endpoints for managing LateNode webhook integrations with authentication, retry logic, and performance monitoring
 - **Module Cleanup**: Removed duplicated Facturacion module - pending invoices functionality is properly integrated into the main Billing page to avoid redundancy
+- **Automatic Inventory Deduction**: Integrated inventory management with billing system - medical appointments and grooming services now automatically reduce inventory stock when supplies, medications, or accessories are used
+- **Smart Inventory Tracking**: InventorySelector component allows selection of products used during medical appointments with automatic cost calculation and itemized billing
+- **Billing-Inventory Integration**: When payments are processed (cash or payment link), inventory stock is automatically reduced based on items tracked in pending invoices
+- **Transaction Logging**: Complete audit trail of inventory usage with automatic transaction records linking to medical appointments and invoices for accurate cost accounting
 
 # User Preferences
 

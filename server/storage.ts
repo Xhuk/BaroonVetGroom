@@ -710,6 +710,71 @@ export class DatabaseStorage implements IStorage {
     await db.delete(tempSlotReservations).where(lt(tempSlotReservations.expiresAt, now));
   }
 
+  // Enhanced inventory operations with automatic deduction
+  async getInventoryItem(itemId: string): Promise<InventoryItem | undefined> {
+    const [item] = await db.select().from(inventoryItems).where(eq(inventoryItems.id, itemId));
+    return item;
+  }
+
+  async updateInventoryStock(itemId: string, quantityChange: number, transactionType: 'purchase' | 'sale' | 'adjustment' | 'expired' | 'used', notes?: string): Promise<void> {
+    const item = await this.getInventoryItem(itemId);
+    if (!item) throw new Error("Inventory item not found");
+
+    const newStock = Math.max(0, item.currentStock + quantityChange);
+    
+    await db.update(inventoryItems)
+      .set({ 
+        currentStock: newStock,
+        updatedAt: new Date()
+      })
+      .where(eq(inventoryItems.id, itemId));
+
+    // Create transaction record
+    await db.insert(inventoryTransactions).values({
+      itemId,
+      tenantId: item.tenantId,
+      type: transactionType,
+      quantity: quantityChange,
+      unitPrice: item.unitPrice,
+      totalAmount: Math.abs(quantityChange) * parseFloat(item.unitPrice.toString()),
+      notes: notes || `Auto ${transactionType} via billing system`,
+      createdAt: new Date()
+    });
+  }
+
+  async processInventoryForInvoice(invoiceId: string): Promise<void> {
+    const [invoice] = await db.select().from(pendingInvoices).where(eq(pendingInvoices.id, invoiceId));
+    if (!invoice || invoice.inventoryProcessed) return;
+
+    const inventoryUsed = invoice.inventoryUsed as any[];
+    if (!inventoryUsed || inventoryUsed.length === 0) return;
+
+    for (const item of inventoryUsed) {
+      await this.updateInventoryStock(
+        item.itemId, 
+        -item.quantity, // Negative to reduce stock
+        'used',
+        `Used in invoice ${invoice.invoiceNumber} - ${invoice.serviceName}`
+      );
+    }
+
+    // Mark inventory as processed
+    await db.update(pendingInvoices)
+      .set({ inventoryProcessed: true })
+      .where(eq(pendingInvoices.id, invoiceId));
+  }
+
+  async processInventoryForPayment(billingQueueId: string): Promise<void> {
+    // Get billing queue item and related invoice
+    const [billingItem] = await db.select().from(billingQueue).where(eq(billingQueue.id, billingQueueId));
+    if (!billingItem) return;
+
+    // Process inventory if there's an associated invoice
+    if (billingItem.invoiceId) {
+      await this.processInventoryForInvoice(billingItem.invoiceId);
+    }
+  }
+
   async getTenantReservationTimeout(tenantId: string): Promise<number> {
     const tenant = await this.getTenant(tenantId);
     return tenant?.reservationTimeout ?? 5; // Default 5 minutes

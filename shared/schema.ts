@@ -909,6 +909,7 @@ export const pendingInvoices = pgTable("pending_invoices", {
   taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).notNull(),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   itemizedCosts: jsonb("itemized_costs"), // Array of { item, quantity, unitPrice, total }
+  inventoryUsed: jsonb("inventory_used"), // Array of { itemId, quantity, unitPrice, total } for automatic deduction
   status: varchar("status", { enum: ["pending", "pdf_generated", "sent", "paid", "cancelled", "completed"] }).default("pending"),
   pdfUrl: varchar("pdf_url"), // URL to generated PDF invoice
   paymentLinkUrl: text("payment_link_url"), // Payment link for WhatsApp sharing
@@ -920,6 +921,7 @@ export const pendingInvoices = pgTable("pending_invoices", {
   completedAt: timestamp("completed_at"),
   dueDate: timestamp("due_date").notNull(),
   notes: text("notes"),
+  inventoryProcessed: boolean("inventory_processed").default(false), // Track if inventory has been deducted
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

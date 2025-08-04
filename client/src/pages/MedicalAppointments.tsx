@@ -23,6 +23,7 @@ import { BackButton } from "@/components/BackButton";
 import { DebugControls } from "@/components/DebugControls";
 import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { InventorySelector } from "@/components/InventorySelector";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +31,15 @@ import type {
   MedicalAppointment, InsertMedicalAppointment, Pet, Staff, Client, Room,
   MedicalDocument, InvoiceQueue 
 } from "@shared/schema";
+
+interface InventoryUsageItem {
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  category: string;
+}
 
 const medicalAppointmentSchema = z.object({
   petId: z.string().min(1, "Debe seleccionar una mascota"),
@@ -66,6 +76,7 @@ export default function MedicalAppointments() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<MedicalAppointment | null>(null);
   const [showDiagnosisForm, setShowDiagnosisForm] = useState(false);
+  const [inventoryUsed, setInventoryUsed] = useState<InventoryUsageItem[]>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -157,24 +168,41 @@ export default function MedicalAppointments() {
         confirmedAt: new Date().toISOString(),
       });
       
-      // Generate invoice if configured
+      // Calculate total cost including services and inventory
+      const serviceCost = 500.00; // Default service cost - should be configurable
+      const inventoryCost = inventoryUsed.reduce((sum, item) => sum + item.total, 0);
+      const totalAmount = serviceCost + inventoryCost;
+      
+      // Generate invoice with inventory usage
       await apiRequest("POST", `/api/invoice-queue/${currentTenant?.id}`, {
         serviceType: "medical",
         serviceId: appointmentId,
         serviceName: "Consulta Médica",
         serviceDescription: diagnosisData.diagnosis || "Servicio médico",
-        amount: 500.00, // Default amount - should be configurable
+        amount: totalAmount,
         clientId: selectedAppointment?.clientId,
+        inventoryUsed: inventoryUsed,
+        itemizedCosts: [
+          { item: "Consulta Médica", quantity: 1, unitPrice: serviceCost, total: serviceCost },
+          ...inventoryUsed.map(item => ({
+            item: item.itemName,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total
+          }))
+        ]
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/medical-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
       setShowDiagnosisForm(false);
       setSelectedAppointment(null);
+      setInventoryUsed([]);
       diagnosisForm.reset();
       toast({
         title: "Cita confirmada",
-        description: "La cita ha sido completada y enviada a facturación.",
+        description: "La cita ha sido completada y enviada a facturación. El inventario será descontado al procesar el pago.",
       });
     },
     onError: (error) => {
@@ -788,6 +816,16 @@ export default function MedicalAppointments() {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Inventory Usage */}
+              <div className="border-t pt-4">
+                <InventorySelector
+                  selectedItems={inventoryUsed}
+                  onItemsChange={setInventoryUsed}
+                  title="Medicamentos y Suministros Utilizados"
+                  description="Selecciona los productos, medicamentos y suministros utilizados durante la consulta"
+                />
               </div>
 
               <div className="border-t pt-4">

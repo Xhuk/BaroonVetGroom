@@ -2453,10 +2453,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedItem = await storage.updateBillingQueueItem(id, updates);
+      
+      // Process inventory deduction when payment is completed
+      if (status === "paid_cash" || status === "paid_link") {
+        await storage.processInventoryForPayment(id);
+      }
+      
       res.json(updatedItem);
     } catch (error) {
       console.error("Error processing payment:", error);
-      res.status(500).json({ message: "Failed to process payment" });
+      res.status(500).json({ message: "Failed to process paymentt" });
     }
   });
 
