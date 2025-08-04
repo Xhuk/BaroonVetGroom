@@ -16,11 +16,14 @@ import {
   Users,
   Navigation,
   Timer,
-  Bell
+  Bell,
+  ArrowLeft,
+  Settings
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { Link } from "wouter";
 
 interface DeliveryTracker {
   id: string;
@@ -63,6 +66,9 @@ export default function DeliveryTracking() {
   const { currentTenant } = useTenant();
   const { toast } = useToast();
   const [selectedTrackerId, setSelectedTrackerId] = useState<string | null>(null);
+
+  // BETA: Delivery tracking enabled for all tenants during testing
+  const tenantConfig = { deliveryTrackingEnabled: true };
 
   // Fetch active delivery tracking
   const { data: activeDeliveries, refetch: refetchDeliveries } = useQuery<DeliveryTracker[]>({
@@ -141,12 +147,59 @@ export default function DeliveryTracking() {
   const unreadAlerts = deliveryAlerts?.filter(alert => !alert.isRead) || [];
   const criticalAlerts = deliveryAlerts?.filter(alert => alert.severity === "critical" && !alert.isResolved) || [];
 
+  // Check if feature is enabled
+  if (!tenantConfig?.deliveryTrackingEnabled) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm" data-testid="button-back">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver al Dashboard
+            </Button>
+          </Link>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5" />
+              Seguimiento de Entregas - BETA
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <Settings className="h-4 w-4" />
+              <AlertDescription>
+                Esta funcionalidad está en fase BETA y no está habilitada para su cuenta. 
+                Contacte al administrador del sistema para activar el seguimiento de entregas.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Seguimiento de Entregas</h1>
-          <p className="text-gray-600">Monitoreo en tiempo real de rutas y conductores</p>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm" data-testid="button-back">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Dashboard
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              Seguimiento de Entregas
+              <Badge variant="secondary" className="text-xs">BETA</Badge>
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Monitoreo en tiempo real de rutas de entrega y conductores
+            </p>
+          </div>
         </div>
         
         {criticalAlerts.length > 0 && (

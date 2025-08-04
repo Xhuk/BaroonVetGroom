@@ -73,6 +73,10 @@ export interface IStorage {
   getTenants(): Promise<Tenant[]>;
   getUserTenants(userId: string): Promise<UserTenant[]>;
   getTenant(tenantId: string): Promise<Tenant | undefined>;
+  
+  // Van operations
+  getVan(vanId: string): Promise<Van | undefined>;
+  getVansByTenant(tenantId: string): Promise<Van[]>;
   createTenant(tenant: InsertTenant): Promise<Tenant>;
   
   // Room operations
@@ -734,6 +738,17 @@ export class DatabaseStorage implements IStorage {
       .where(eq(routeOptimizationConfig.companyId, companyId))
       .returning();
     return updatedConfig;
+  }
+
+  // Van operations
+  async getVan(vanId: string): Promise<Van | undefined> {
+    const [van] = await db.select().from(vans).where(eq(vans.id, vanId));
+    return van;
+  }
+
+  async getVansByTenant(tenantId: string): Promise<Van[]> {
+    const vansData = await db.select().from(vans).where(eq(vans.tenantId, tenantId));
+    return vansData;
   }
 
   // Delivery tracking operations
