@@ -39,14 +39,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/preview/tenants', async (req, res) => {
     try {
-      // Return VetGroom1 tenant data directly for preview mode
-      res.json([{
-        id: "vetgroom1",
-        tenantId: "vetgroom1",
-        name: "Vetgroom1",
-        subdomain: "vetgroom1",
-        companyId: "vetgroom-corp"
-      }]);
+      // Return VetGroom1 tenant data in the same format as /api/tenants/user
+      const tenant = await storage.getTenant('vetgroom1');
+      if (tenant) {
+        res.json([{
+          id: "vetgroom1", 
+          tenantId: "vetgroom1",
+          name: tenant.name,
+          subdomain: tenant.subdomain,
+          companyId: tenant.companyId
+        }]);
+      } else {
+        res.json([{
+          id: "vetgroom1",
+          tenantId: "vetgroom1", 
+          name: "Vetgroom1",
+          subdomain: "vetgroom1",
+          companyId: "vetgroom-corp"
+        }]);
+      }
     } catch (error) {
       console.error("Error in preview tenants endpoint:", error);
       res.status(500).json({ message: "Failed to fetch preview tenants" });

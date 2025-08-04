@@ -82,7 +82,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     if (finalTenants.length > 0 && !currentTenant && !debugMode) {
       // Fetch full tenant data for all user tenants
       Promise.all(
-        userTenants.map(ut => 
+        finalTenants.map(ut => 
           fetch(`/api/tenants/${ut.tenantId}`)
             .then(res => res.json())
             .catch(console.error)
@@ -104,7 +104,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         }
       });
     }
-  }, [userTenants, currentTenant, user, isDebugUser]);
+  }, [finalTenants, currentTenant, user, isDebugUser]);
 
   const handleTenantSelect = (selectedTenant: Tenant) => {
     setCurrentTenant(selectedTenant);
@@ -139,7 +139,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     currentTenant: tenant || currentTenant,
-    userTenants,
+    userTenants: finalTenants,
     setCurrentTenant,
     isLoading: isLoadingTenants || isLoadingCurrentTenant,
     showTenantSelector,
