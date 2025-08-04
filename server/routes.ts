@@ -5,6 +5,9 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookMonitor } from "./webhookMonitor";
 import { advancedRouteOptimization, type OptimizedRoute, type RouteOptimizationOptions } from "./routeOptimizer";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { pets } from "@shared/schema";
 
 // Helper function to check system admin access
 async function isSystemAdmin(req: any): Promise<boolean> {
@@ -1715,7 +1718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/medical-appointments/:appointmentId/documents', isAuthenticated, async (req, res) => {
     try {
       const { appointmentId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       
       const appointment = await storage.getMedicalAppointment(appointmentId);
       if (!appointment) {
@@ -1764,11 +1767,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/medical-appointments/:appointmentId/complete-followup', isAuthenticated, async (req, res) => {
     try {
       const { appointmentId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       
       const appointment = await storage.updateMedicalAppointment(appointmentId, {
         isConfirmed: true,
-        confirmedAt: new Date().toISOString(),
+        confirmedAt: new Date(),
         confirmedBy: userId
       });
       
@@ -1988,6 +1991,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Auto-calculate next appointment date based on grooming follow-up config
         try {
           const tenant = await storage.getTenant(tenantId);
+          if (!tenant) {
+            console.log("Tenant not found for follow-up calculation");
+            return;
+          }
           const billingConfig = await storage.getCompanyBillingConfig(tenant.companyId);
           
           if (billingConfig?.enableGroomingFollowUp) {
@@ -2011,14 +2018,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Get billing configuration
           const tenant = await storage.getTenant(tenantId);
+          if (!tenant) {
+            console.log("Tenant not found for billing workflow");
+            return;
+          }
           const billingConfig = await storage.getCompanyBillingConfig(tenant.companyId);
           
           if (billingConfig?.autoGenerateGroomingInvoices) {
+            // Get client ID through pet relation
+            // We need to add a method to get pet by ID, but for now use a direct query
+            const [pet] = await db.select().from(pets).where(eq(pets.id, record.petId));
+            if (!pet) {
+              console.log("Pet not found for grooming record");
+              return;
+            }
+            
             // Auto-generate invoice
             const invoiceData = {
               tenantId,
               groomingRecordId: recordId,
-              clientId: record.clientId,
+              clientId: pet.clientId,
               invoiceNumber: `GR-${Date.now()}`,
               totalAmount: record.totalCost || "0",
               servicesCost: record.totalCost || "0",
@@ -2032,13 +2051,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Auto-schedule delivery if configured
           if (billingConfig?.autoScheduleDelivery) {
+            // Reuse the pet data from above if available, or query again
+            const [pet] = await db.select().from(pets).where(eq(pets.id, record.petId));
+            if (!pet) {
+              console.log("Pet not found for delivery scheduling");
+              return;
+            }
+            
             const deliveryDate = new Date();
             deliveryDate.setDate(deliveryDate.getDate() + 1); // Next day
             
             const deliveryData = {
               tenantId,
               groomingRecordId: recordId,
-              clientId: record.clientId,
+              clientId: pet.clientId,
               deliveryDate: deliveryDate.toISOString().split('T')[0],
               status: "scheduled" as const,
             };
@@ -2299,7 +2325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let updates: any = {
         paymentMethod,
         status,
-        processedBy: req.user?.claims?.sub,
+        processedBy: (req.user as any)?.claims?.sub,
         processedAt: new Date(),
       };
 

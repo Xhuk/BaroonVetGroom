@@ -193,6 +193,10 @@ export interface IStorage {
   getUserAssignments(companyId: string): Promise<any[]>;
   assignSystemRole(userId: string, systemRoleId: string): Promise<any>;
   
+  // Additional operations for system admin
+  getAllTenantsWithCompany(): Promise<any[]>;
+  hasSystemRole(userId: string): Promise<boolean>;
+  
   // Webhook monitoring operations
   logWebhookError(errorLog: InsertWebhookErrorLog): Promise<WebhookErrorLog>;
   getWebhookErrorLogs(tenantId?: string, limit?: number): Promise<WebhookErrorLog[]>;
@@ -1447,22 +1451,20 @@ export class DatabaseStorage implements IStorage {
 
   // Payment gateway configuration operations
   async getPaymentGatewayConfigs(companyId?: string, tenantId?: string): Promise<PaymentGatewayConfig[]> {
-    let query = db.select().from(paymentGatewayConfig);
-    
     if (companyId && tenantId) {
-      query = query.where(
+      return await db.select().from(paymentGatewayConfig).where(
         or(
           eq(paymentGatewayConfig.companyId, companyId),
           eq(paymentGatewayConfig.tenantId, tenantId)
         )
       );
     } else if (companyId) {
-      query = query.where(eq(paymentGatewayConfig.companyId, companyId));
+      return await db.select().from(paymentGatewayConfig).where(eq(paymentGatewayConfig.companyId, companyId));
     } else if (tenantId) {
-      query = query.where(eq(paymentGatewayConfig.tenantId, tenantId));
+      return await db.select().from(paymentGatewayConfig).where(eq(paymentGatewayConfig.tenantId, tenantId));
     }
     
-    return await query;
+    return await db.select().from(paymentGatewayConfig);
   }
 
   async createPaymentGatewayConfig(config: InsertPaymentGatewayConfig): Promise<PaymentGatewayConfig> {
