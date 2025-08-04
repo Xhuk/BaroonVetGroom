@@ -76,25 +76,43 @@ export default function BookingWizard() {
 
   // Geocoding function for address
   const geocodeAddress = async (address: string, fraccionamiento: string) => {
+    if (!address || !fraccionamiento) return null;
+    
     try {
+      console.log("Geocoding address:", address, fraccionamiento);
       const fullAddress = `${address}, ${fraccionamiento}, Monterrey, Nuevo León, México`;
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=mx`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=mx&addressdetails=1`
       );
       const data = await response.json();
+      console.log("Geocoding response:", data);
       
       if (data.length > 0) {
         const { lat, lon } = data[0];
-        setMapCoordinates({ lat: parseFloat(lat), lng: parseFloat(lon) });
+        const newCoords = { lat: parseFloat(lat), lng: parseFloat(lon) };
+        console.log("Setting coordinates:", newCoords);
+        setMapCoordinates(newCoords);
         setCustomerData(prev => ({
           ...prev,
           latitude: lat,
           longitude: lon
         }));
-        return { lat: parseFloat(lat), lng: parseFloat(lon) };
+        return newCoords;
+      } else {
+        console.log("No geocoding results found");
+        toast({
+          title: "Ubicación no encontrada",
+          description: "No se pudo encontrar la dirección. Por favor verifica que sea correcta.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Geocoding error:", error);
+      toast({
+        title: "Error de geocodificación",
+        description: "Error al buscar la ubicación. Intenta nuevamente.",
+        variant: "destructive",
+      });
     }
     return null;
   };
@@ -241,9 +259,9 @@ export default function BookingWizard() {
   });
 
   // Handle next step
-  const nextStep = () => {
+  const nextStep = async () => {
     if (currentStep === 2 && customerData.address && customerData.fraccionamiento) {
-      geocodeAddress(customerData.address, customerData.fraccionamiento);
+      await geocodeAddress(customerData.address, customerData.fraccionamiento);
     }
     if (currentStep === 4 && bookingData.serviceId && bookingData.requestedDate) {
       checkAvailableSlots();
@@ -364,7 +382,14 @@ export default function BookingWizard() {
                   <Input
                     id="address"
                     value={customerData.address}
-                    onChange={(e) => setCustomerData(prev => ({ ...prev, address: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
+                    onChange={(e) => {
+                      const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+                      setCustomerData(prev => ({ ...prev, address: formattedValue }));
+                      // Auto-geocode after both fields are filled
+                      if (formattedValue && customerData.fraccionamiento) {
+                        setTimeout(() => geocodeAddress(formattedValue, customerData.fraccionamiento), 1000);
+                      }
+                    }}
                     placeholder="Calle Gracias 345"
                     required
                     className="capitalize"
@@ -375,7 +400,14 @@ export default function BookingWizard() {
                   <Input
                     id="fraccionamiento"
                     value={customerData.fraccionamiento}
-                    onChange={(e) => setCustomerData(prev => ({ ...prev, fraccionamiento: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
+                    onChange={(e) => {
+                      const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+                      setCustomerData(prev => ({ ...prev, fraccionamiento: formattedValue }));
+                      // Auto-geocode after both fields are filled
+                      if (customerData.address && formattedValue) {
+                        setTimeout(() => geocodeAddress(customerData.address, formattedValue), 1000);
+                      }
+                    }}
                     placeholder="Valle De Cumbres"
                     required
                     className="capitalize"
@@ -396,17 +428,18 @@ export default function BookingWizard() {
               <div className="mt-4">
                 <Label>Ubicación en el mapa</Label>
                 <div className="border rounded-lg overflow-hidden bg-gray-50">
-                  {mapCoordinates.lat !== 25.6866 ? (
+                  {(mapCoordinates.lat !== 25.6866 || mapCoordinates.lng !== -100.3161) ? (
                     <div>
                       {/* Map Container */}
-                      <div className="h-64 relative bg-blue-50 flex items-center justify-center border-b">
+                      <div className="h-64 relative bg-blue-50 border-b">
                         <iframe
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-0.01},${mapCoordinates.lat-0.01},${mapCoordinates.lng+0.01},${mapCoordinates.lat+0.01}&layer=mapnik&marker=${mapCoordinates.lat},${mapCoordinates.lng}`}
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-0.005},${mapCoordinates.lat-0.005},${mapCoordinates.lng+0.005},${mapCoordinates.lat+0.005}&layer=mapnik&marker=${mapCoordinates.lat},${mapCoordinates.lng}`}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
                           title="Mapa de ubicación"
                           className="rounded-t-lg"
+                          loading="lazy"
                         />
                       </div>
                       
@@ -439,6 +472,16 @@ export default function BookingWizard() {
                       <div className="text-center">
                         <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                         <p className="text-sm">Ingresa la dirección para ver la ubicación</p>
+                        {customerData.address && customerData.fraccionamiento && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => geocodeAddress(customerData.address, customerData.fraccionamiento)}
+                            className="mt-2"
+                          >
+                            Buscar ubicación
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
