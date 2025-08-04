@@ -14,6 +14,9 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Enhanced Booking Workflow**: Added appointment time selection to step 1 with date/time validation
 - **Slot Reservation System**: Implemented temporary slot reservation with UUID tracking and auto-cleanup
 - **Missing Services Endpoint**: Added `/api/services/:tenantId` endpoint to fix empty service selection
+- **Business Hours Configuration**: Added tenant-specific business hours with admin configuration page
+- **Smart Time Selection**: Time slots now respect tenant's open/close hours and time slot duration
+- **Configurable Reservations**: Slot reservation timeout is now tenant-configurable through admin interface
 
 # User Preferences
 

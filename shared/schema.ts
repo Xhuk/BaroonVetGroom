@@ -63,6 +63,10 @@ export const tenants = pgTable("tenants", {
   latitude: varchar("latitude"),
   longitude: varchar("longitude"),
   postalCode: varchar("postal_code"),
+  openTime: time("open_time").default("08:00"), // Default 8:00 AM
+  closeTime: time("close_time").default("18:00"), // Default 6:00 PM
+  timeSlotDuration: integer("time_slot_duration").default(30), // Minutes per slot
+  reservationTimeout: integer("reservation_timeout").default(5), // Minutes before slot expires
   settings: jsonb("settings"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

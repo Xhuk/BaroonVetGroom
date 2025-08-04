@@ -48,6 +48,27 @@ interface BookingData {
 const BREED_CACHE = new Map<string, { breeds: string[], timestamp: number }>();
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
+// Helper function to generate time slots within business hours
+const generateTimeSlots = (openTime: string, closeTime: string, slotDuration: number = 30): string[] => {
+  const slots: string[] = [];
+  const [openHour, openMin] = openTime.split(':').map(Number);
+  const [closeHour, closeMin] = closeTime.split(':').map(Number);
+  
+  let currentTime = new Date();
+  currentTime.setHours(openHour, openMin, 0, 0);
+  
+  const endTime = new Date();
+  endTime.setHours(closeHour, closeMin, 0, 0);
+  
+  while (currentTime < endTime) {
+    const timeString = currentTime.toTimeString().slice(0, 5);
+    slots.push(timeString);
+    currentTime.setMinutes(currentTime.getMinutes() + slotDuration);
+  }
+  
+  return slots;
+};
+
 export default function BookingWizard() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -92,6 +113,12 @@ export default function BookingWizard() {
   const [selectedPetId, setSelectedPetId] = useState<string>("");
   const [currentReservationId, setCurrentReservationId] = useState<string | null>(null);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
+
+  // Get tenant business hours
+  const { data: businessHours } = useQuery({
+    queryKey: ["/api/admin/business-hours", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
 
   // Get tenant location
   const tenantLocation = useMemo(() => {
@@ -836,14 +863,41 @@ export default function BookingWizard() {
                   </div>
                   <div>
                     <Label htmlFor="requestedTime">Hora preferida *</Label>
-                    <Input
-                      id="requestedTime"
-                      type="time"
-                      value={bookingData.requestedTime}
-                      onChange={(e) => setBookingData(prev => ({ ...prev, requestedTime: e.target.value }))}
-                      required
-                      data-testid="input-requested-time"
-                    />
+                    {businessHours ? (
+                      <Select 
+                        value={bookingData.requestedTime} 
+                        onValueChange={(value) => setBookingData(prev => ({ ...prev, requestedTime: value }))}
+                      >
+                        <SelectTrigger data-testid="select-requested-time">
+                          <SelectValue placeholder="Selecciona una hora" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {generateTimeSlots(
+                            businessHours.openTime, 
+                            businessHours.closeTime, 
+                            businessHours.timeSlotDuration
+                          ).map((time) => (
+                            <SelectItem key={time} value={time}>
+                              {time}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        id="requestedTime"
+                        type="time"
+                        value={bookingData.requestedTime}
+                        onChange={(e) => setBookingData(prev => ({ ...prev, requestedTime: e.target.value }))}
+                        required
+                        data-testid="input-requested-time"
+                      />
+                    )}
+                    {businessHours && (
+                      <p className="text-sm text-green-600 mt-1">
+                        Horario de atención: {businessHours.openTime} - {businessHours.closeTime}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

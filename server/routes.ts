@@ -485,6 +485,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Business hours endpoints for admin configuration
+  app.get('/api/admin/business-hours/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const businessHours = await storage.getTenantBusinessHours(tenantId);
+      const reservationTimeout = await storage.getTenantReservationTimeout(tenantId);
+      res.json({ ...businessHours, reservationTimeout });
+    } catch (error) {
+      console.error("Error fetching business hours:", error);
+      res.status(500).json({ message: "Failed to fetch business hours" });
+    }
+  });
+
+  app.put('/api/admin/business-hours/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { openTime, closeTime, timeSlotDuration, reservationTimeout } = req.body;
+      
+      const updatedTenant = await storage.updateTenantBusinessHours(tenantId, {
+        openTime,
+        closeTime,
+        timeSlotDuration,
+        reservationTimeout
+      });
+      
+      res.json(updatedTenant);
+    } catch (error) {
+      console.error("Error updating business hours:", error);
+      res.status(500).json({ message: "Failed to update business hours" });
+    }
+  });
+
   app.post('/api/admin/services/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;

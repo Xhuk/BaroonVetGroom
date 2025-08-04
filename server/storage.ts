@@ -87,6 +87,8 @@ export interface IStorage {
   releaseSlot(reservationId: string): Promise<void>;
   cleanupExpiredReservations(): Promise<void>;
   getTenantReservationTimeout(tenantId: string): Promise<number>;
+  getTenantBusinessHours(tenantId: string): Promise<{ openTime: string; closeTime: string; timeSlotDuration: number }>;
+  updateTenantBusinessHours(tenantId: string, hours: { openTime: string; closeTime: string; timeSlotDuration: number; reservationTimeout: number }): Promise<Tenant>;
   getClientByPhone(tenantId: string, phone: string): Promise<Client | undefined>;
   
   // Service operations
@@ -450,8 +452,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTenantReservationTimeout(tenantId: string): Promise<number> {
-    // Default to 5 minutes, could be made configurable per tenant
-    return 5;
+    const tenant = await this.getTenant(tenantId);
+    return tenant?.reservationTimeout ?? 5; // Default 5 minutes
+  }
+
+  async getTenantBusinessHours(tenantId: string): Promise<{ openTime: string; closeTime: string; timeSlotDuration: number }> {
+    const tenant = await this.getTenant(tenantId);
+    return {
+      openTime: tenant?.openTime ?? "08:00",
+      closeTime: tenant?.closeTime ?? "18:00", 
+      timeSlotDuration: tenant?.timeSlotDuration ?? 30
+    };
+  }
+
+  async updateTenantBusinessHours(tenantId: string, hours: { openTime: string; closeTime: string; timeSlotDuration: number; reservationTimeout: number }): Promise<Tenant> {
+    const [tenant] = await db
+      .update(tenants)
+      .set({
+        openTime: hours.openTime,
+        closeTime: hours.closeTime,
+        timeSlotDuration: hours.timeSlotDuration,
+        reservationTimeout: hours.reservationTimeout,
+        updatedAt: new Date()
+      })
+      .where(eq(tenants.id, tenantId))
+      .returning();
+    return tenant;
   }
 }
 
