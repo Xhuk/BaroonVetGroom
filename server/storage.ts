@@ -1034,6 +1034,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async hasSystemRole(userId: string): Promise<boolean> {
+    console.log('Checking system role for user ID:', userId);
+    
     const result = await db
       .select({ count: sql`count(*)` })
       .from(userSystemRoles)
@@ -1046,7 +1048,10 @@ export class DatabaseStorage implements IStorage {
         )
       );
     
-    return parseInt(result[0].count as string) > 0;
+    const count = parseInt(result[0].count as string);
+    console.log('System role count for user:', count);
+    
+    return count > 0;
   }
 }
 

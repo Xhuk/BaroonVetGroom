@@ -1386,7 +1386,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all companies for SuperAdmin
   app.get('/api/superadmin/companies', isAuthenticated, async (req: any, res) => {
     try {
-      if (!(await isSystemAdmin(req))) {
+      console.log('SuperAdmin companies - User ID:', req.user?.claims?.sub);
+      console.log('SuperAdmin companies - User Email:', req.user?.claims?.email);
+      
+      const hasRole = await isSystemAdmin(req);
+      console.log('SuperAdmin companies - Has system role:', hasRole);
+      
+      if (!hasRole) {
         return res.status(403).json({ message: "System admin access required" });
       }
       
