@@ -926,9 +926,16 @@ export default function BookingWizard() {
           {/* Step 2: Service Selection */}
           {currentStep === 2 && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {services?.map((service: any) => (
-                  <Card
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Selección de Servicio y Horario</h2>
+              
+              {!services || services.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Cargando servicios disponibles...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {services.map((service: any) => (
+                    <Card
                     key={service.id}
                     className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
                       bookingData.serviceId === service.id
@@ -959,9 +966,10 @@ export default function BookingWizard() {
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
-              </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
 
               {bookingData.serviceId && (
                 <div className="space-y-4">
