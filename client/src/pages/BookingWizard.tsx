@@ -524,7 +524,7 @@ export default function BookingWizard() {
                             </div>
                           )}
 
-                          {/* Clinic Location - Blue Marker (Always bound to tenant GPS coordinates) */}
+                          {/* Clinic Location - Blue Marker (Always positioned at tenant GPS coordinates) */}
                           <div 
                             className="absolute transform -translate-x-1/2 -translate-y-full group"
                             style={{
@@ -582,12 +582,12 @@ export default function BookingWizard() {
                         {/* Map Legend */}
                         <div className="flex justify-center gap-6 mb-3 text-xs">
                           <div className="flex items-center gap-1">
-                            <img src={markerIconPath} alt="" className="w-3 h-3" />
-                            <span>Clínica</span>
-                          </div>
-                          <div className="flex items-center gap-1">
                             <MapPin className="w-3 h-3 text-red-600" />
                             <span>Cliente</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <img src={markerIconPath} alt="" className="w-3 h-3" />
+                            <span>Clínica</span>
                           </div>
                         </div>
 
