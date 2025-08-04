@@ -21,6 +21,9 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Alternative Slot Suggestions**: System proposes 3 alternative times when requested slot is unavailable
 - **WhatsApp Integration**: Appointment confirmations sent via n8n webhook to WhatsApp API
 - **Auto-Step Progression**: Available time slots automatically advance booking wizard to confirmation step
+- **Comprehensive Webhook Monitoring**: Full error logging, automatic retry with exponential backoff, and super admin dashboard
+- **Maintenance Mode Handling**: Graceful degradation when n8n webhook is unavailable with user-friendly Spanish messages
+- **Smart Error Deduplication**: Prevents spam logging of identical webhook failures within 5-minute windows
 
 # User Preferences
 

@@ -29,6 +29,19 @@ export class WebhookMonitor {
   // Log webhook error and update monitoring status
   async logError(tenantId: string, webhookType: string, endpoint: string, error: any, requestPayload?: any) {
     try {
+      // Check if we recently logged the same error to avoid spam
+      const recentLogs = await storage.getWebhookErrorLogs(tenantId, 5);
+      const sameErrorRecently = recentLogs.find(log => 
+        log.webhookType === webhookType && 
+        log.errorMessage === error.message &&
+        new Date(log.createdAt).getTime() > Date.now() - (5 * 60 * 1000) // Within last 5 minutes
+      );
+
+      if (sameErrorRecently) {
+        console.log(`Duplicate error suppressed for ${webhookType} (${tenantId}):`, error.message);
+        return;
+      }
+
       // Log the error
       const errorLog: InsertWebhookErrorLog = {
         tenantId,
@@ -36,7 +49,7 @@ export class WebhookMonitor {
         endpoint,
         requestPayload,
         errorMessage: error.message || error.toString(),
-        errorCode: error.code || 'UNKNOWN',
+        errorCode: error.code || 'MAINTENANCE',
         httpStatus: error.status || error.statusCode || 0,
         retryCount: 0,
         status: 'failed'

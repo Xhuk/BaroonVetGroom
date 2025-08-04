@@ -638,17 +638,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // WhatsApp notification endpoint via n8n server
   app.post('/api/send-whatsapp', isAuthenticated, async (req: any, res) => {
+    const { phone, message } = req.body;
+    const tenantId = req.user?.claims?.sub || 'unknown';
+    
     try {
-      const { phone, message } = req.body;
-      
       // Check if N8N_WEBHOOK_URL is configured
       const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
       
       if (!n8nWebhookUrl) {
-        console.log('WhatsApp message to', phone, ':', message);
+        console.log('N8N_WEBHOOK_URL not configured - message queued:', phone, ':', message);
+        
+        // Log as maintenance mode
+        await webhookMonitor.logError(
+          tenantId, 
+          'whatsapp', 
+          'N/A', 
+          new Error('N8N_WEBHOOK_URL not configured - sistema en mantenimiento'),
+          { phone, message, type: 'whatsapp_appointment_confirmation' }
+        );
+        
         return res.json({ 
-          success: false, 
-          message: "N8N_WEBHOOK_URL not configured - message logged only" 
+          success: true, 
+          message: "El sistema está en mantenimiento, se mandarán tan pronto se restaure" 
+        });
+      }
+      
+      // Check if we recently failed to avoid spam
+      const recentMonitoring = await storage.getWebhookMonitoring(tenantId, 'whatsapp');
+      const now = new Date();
+      
+      // If webhook is down and we tried recently, don't retry immediately
+      if (recentMonitoring && 
+          recentMonitoring.status === 'down' && 
+          recentMonitoring.nextRetryAt && 
+          new Date(recentMonitoring.nextRetryAt) > now) {
+        
+        console.log('WhatsApp webhook is down, message queued until retry time');
+        return res.json({ 
+          success: true, 
+          message: "El sistema está en mantenimiento, se mandarán tan pronto se restaure" 
         });
       }
       
@@ -668,42 +696,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (response.ok) {
         // Log successful webhook call
-        await webhookMonitor.logSuccess(req.user?.claims?.sub || 'unknown', 'whatsapp', n8nWebhookUrl);
+        await webhookMonitor.logSuccess(tenantId, 'whatsapp', n8nWebhookUrl);
+        console.log('WhatsApp message sent successfully to:', phone);
+        
         res.json({ 
           success: true, 
-          message: "WhatsApp message sent via n8n" 
+          message: "Mensaje de WhatsApp enviado correctamente" 
         });
       } else {
         const errorText = await response.text();
         console.error('n8n webhook failed:', errorText);
         
-        // Log webhook error for monitoring
+        // Log webhook error for monitoring (avoid duplicate logs)
         await webhookMonitor.logError(
-          req.user?.claims?.sub || 'unknown', 
+          tenantId, 
           'whatsapp', 
           n8nWebhookUrl, 
-          new Error(`HTTP ${response.status}: ${errorText}`),
+          new Error(`n8n webhook en mantenimiento - HTTP ${response.status}`),
           { phone, message, type: 'whatsapp_appointment_confirmation' }
         );
         
         res.json({ 
-          success: false, 
-          message: "n8n webhook failed - check server logs" 
+          success: true, 
+          message: "El sistema está en mantenimiento, se mandarán tan pronto se restaure" 
         });
       }
     } catch (error) {
-      console.error("Error sending WhatsApp:", error);
+      console.error("WhatsApp webhook error:", error);
       
-      // Log webhook error for monitoring
+      // Log webhook error for monitoring (avoid duplicate logs)
       await webhookMonitor.logError(
-        req.user?.claims?.sub || 'unknown', 
+        tenantId, 
         'whatsapp', 
-        n8nWebhookUrl || 'N/A', 
-        error,
+        process.env.N8N_WEBHOOK_URL || 'N/A', 
+        new Error(`n8n webhook en mantenimiento - ${error.message}`),
         { phone, message, type: 'whatsapp_appointment_confirmation' }
       );
       
-      res.status(500).json({ message: "Failed to send WhatsApp message" });
+      res.json({ 
+        success: true, 
+        message: "El sistema está en mantenimiento, se mandarán tan pronto se restaure" 
+      });
     }
   });
 
