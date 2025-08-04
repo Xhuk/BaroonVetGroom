@@ -44,8 +44,25 @@ class DeliveryMonitoringService {
       // Get all active deliveries across all tenants
       const activeDeliveries = await storage.getActiveDeliveryTracking("");
       
-      for (const delivery of activeDeliveries) {
-        await this.checkSingleDelivery(delivery);
+      if (activeDeliveries.length === 0) {
+        console.log("No active deliveries to monitor");
+        return;
+      }
+      
+      console.log(`Monitoring ${activeDeliveries.length} active deliveries across all tenants`);
+      
+      // Process deliveries in batches to avoid overwhelming the system
+      const batchSize = 50; // Process 50 deliveries at a time
+      for (let i = 0; i < activeDeliveries.length; i += batchSize) {
+        const batch = activeDeliveries.slice(i, i + batchSize);
+        
+        // Process batch in parallel with concurrency limit
+        await Promise.all(batch.map(delivery => this.checkSingleDelivery(delivery)));
+        
+        // Small delay between batches to prevent database overload
+        if (i + batchSize < activeDeliveries.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
       
     } catch (error) {
