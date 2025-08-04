@@ -56,6 +56,7 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Intelligent Automation**: Medical appointments now auto-generate invoices with supplies/services costs, grooming sessions auto-schedule deliveries when configured
 - **WhatsApp Integration Modification**: Replaced automatic WhatsApp message sending with user-friendly modal displaying copyable appointment confirmations and payment links for manual WhatsApp sending
 - **Manual WhatsApp Workflow**: Created WhatsAppCopyModal component with one-click copying, formatted messages, and direct WhatsApp web integration while maintaining webhook monitoring infrastructure
+- **Read-Only Debugger Permissions**: Implemented strict access controls where debugger role can only view data, logs, and export information but cannot modify payments, configurations, or any business data
 
 # User Preferences
 
@@ -95,7 +96,7 @@ Preferred communication style: Simple, everyday language.
 - **Multi-tenant Access Control**: Users can switch between authorized tenants
 - **Route Protection**: Server-side middleware and client-side guards for protected resources
 - **RBAC System**: Complete role-based access control with system roles, company roles, and page permissions
-- **Debug Access**: Secure tenant selection system for VetGroom developers and system administrators
+- **Debug Access**: Secure tenant selection system for VetGroom developers and system administrators with read-only debugger permissions
 
 ## Multi-tenancy Implementation
 - **Tenant Context**: React context provider for current tenant state management

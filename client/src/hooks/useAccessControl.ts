@@ -68,6 +68,27 @@ const ROLE_PERMISSIONS = {
     canManagePets: true,
     accessLevel: 'tenant' as const
   },
+  debugger: {
+    canAccessSuperAdmin: false,
+    canAccessAdmin: false,
+    canDebugTenants: true,
+    canManageCompanies: false,
+    canManageAllTenants: false,
+    canViewAllData: true, // Can view data across tenants for debugging
+    canManageUsers: false, // READ-ONLY: Cannot modify users
+    canManageRoles: false, // READ-ONLY: Cannot modify roles
+    canAccessDeliveryTracking: true, // Can view for debugging
+    canManageInventory: false, // READ-ONLY: Cannot modify inventory
+    canViewReports: true, // Can view all reports for debugging
+    canManageAppointments: false, // READ-ONLY: Cannot modify appointments
+    canManageClients: false, // READ-ONLY: Cannot modify client data
+    canManagePets: false, // READ-ONLY: Cannot modify pet data
+    canManagePayments: false, // READ-ONLY: Cannot modify payment configurations
+    canManageConfigurations: false, // READ-ONLY: Cannot modify system configurations
+    canViewLogs: true, // Can access logs and diagnostic information
+    canExportData: true, // Can export data for analysis
+    accessLevel: 'tenant' as const
+  },
   veterinario: {
     canAccessSuperAdmin: false,
     canAccessAdmin: false,
