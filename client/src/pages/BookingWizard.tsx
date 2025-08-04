@@ -86,6 +86,10 @@ export default function BookingWizard() {
   });
 
   const [mapCenter, setMapCenter] = useState<[number, number]>([25.7617, -100.1950]);
+  const [foundCustomer, setFoundCustomer] = useState<any>(null);
+  const [showPetSelection, setShowPetSelection] = useState(false);
+  const [availablePets, setAvailablePets] = useState<any[]>([]);
+  const [selectedPetId, setSelectedPetId] = useState<string>("");
 
   // Get tenant location
   const tenantLocation = useMemo(() => {
@@ -136,6 +140,8 @@ export default function BookingWizard() {
     try {
       const response = await apiRequest(`/api/customers/lookup?name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&email=${encodeURIComponent(email)}`);
       if (response) {
+        setFoundCustomer(response);
+        
         // Auto-fill existing customer data
         setCustomerData(prev => ({
           ...prev,
@@ -146,29 +152,44 @@ export default function BookingWizard() {
           longitude: response.longitude || prev.longitude
         }));
         
-        // If customer has pets, auto-fill the most recent pet
+        // Handle pets
         if (response.pets && response.pets.length > 0) {
-          const recentPet = response.pets[0];
-          setPetData(prev => ({
-            ...prev,
-            name: recentPet.name || prev.name,
-            species: recentPet.species || prev.species,
-            breed: recentPet.breed || prev.breed,
-            age: recentPet.age || prev.age,
-            weight: recentPet.weight || prev.weight,
-            medicalHistory: recentPet.medicalHistory || prev.medicalHistory
-          }));
+          setAvailablePets(response.pets);
+          
+          if (response.pets.length === 1) {
+            // Only one pet, auto-fill
+            const pet = response.pets[0];
+            setPetData(prev => ({
+              ...prev,
+              name: pet.name || prev.name,
+              species: pet.species || prev.species,
+              breed: pet.breed || prev.breed,
+              age: pet.age || prev.age,
+              weight: pet.weight || prev.weight,
+              medicalHistory: pet.medicalHistory || prev.medicalHistory
+            }));
+            setSelectedPetId(pet.id);
+          } else {
+            // Multiple pets, show selection
+            setShowPetSelection(true);
+          }
         }
         
         toast({
           title: "Cliente encontrado",
-          description: "Se ha autocompletado la información del cliente existente",
+          description: response.pets?.length > 1 
+            ? `Cliente existente con ${response.pets.length} mascotas. Selecciona una mascota o agrega una nueva.`
+            : "Se ha autocompletado la información del cliente existente",
           variant: "default"
         });
       }
     } catch (error) {
       // User not found, continue with new customer flow
       console.log('Customer not found, continuing with new customer');
+      setFoundCustomer(null);
+      setShowPetSelection(false);
+      setAvailablePets([]);
+      setSelectedPetId("");
     }
   };
 
@@ -353,6 +374,13 @@ export default function BookingWizard() {
                       onChange={(e) => {
                         const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
                         setCustomerData(prev => ({ ...prev, name: formattedValue }));
+                        
+                        // Clear pet selection state when customer info changes
+                        setShowPetSelection(false);
+                        setAvailablePets([]);
+                        setSelectedPetId("");
+                        setFoundCustomer(null);
+                        
                         // Trigger user lookup when name, phone and email are filled
                         if (formattedValue && customerData.phone && customerData.email) {
                           debouncedUserLookup(formattedValue, customerData.phone, customerData.email);
@@ -371,6 +399,13 @@ export default function BookingWizard() {
                       value={customerData.phone}
                       onChange={(e) => {
                         setCustomerData(prev => ({ ...prev, phone: e.target.value }));
+                        
+                        // Clear pet selection state when customer info changes
+                        setShowPetSelection(false);
+                        setAvailablePets([]);
+                        setSelectedPetId("");
+                        setFoundCustomer(null);
+                        
                         // Trigger user lookup when name, phone and email are filled
                         if (customerData.name && e.target.value && customerData.email) {
                           debouncedUserLookup(customerData.name, e.target.value, customerData.email);
@@ -390,6 +425,13 @@ export default function BookingWizard() {
                       onChange={(e) => {
                         const emailValue = e.target.value.toLowerCase();
                         setCustomerData(prev => ({ ...prev, email: emailValue }));
+                        
+                        // Clear pet selection state when customer info changes
+                        setShowPetSelection(false);
+                        setAvailablePets([]);
+                        setSelectedPetId("");
+                        setFoundCustomer(null);
+                        
                         // Trigger user lookup when name, phone and email are filled
                         if (customerData.name && customerData.phone && emailValue) {
                           debouncedUserLookup(customerData.name, customerData.phone, emailValue);
@@ -457,7 +499,97 @@ export default function BookingWizard() {
                   <Heart className="mr-2 h-5 w-5 text-green-600" />
                   Información de la Mascota
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                {/* Pet Selection for existing customers */}
+                {showPetSelection && availablePets.length > 0 && (
+                  <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h4 className="font-medium text-blue-900 mb-3">
+                      Cliente existente con {availablePets.length} mascotas registradas
+                    </h4>
+                    <div className="space-y-2">
+                      {availablePets.map((pet) => (
+                        <label
+                          key={pet.id}
+                          className={`flex items-center p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                            selectedPetId === pet.id
+                              ? 'border-blue-500 bg-blue-100'
+                              : 'border-gray-200 hover:border-blue-300'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="selectedPet"
+                            value={pet.id}
+                            checked={selectedPetId === pet.id}
+                            onChange={(e) => {
+                              setSelectedPetId(e.target.value);
+                              // Auto-fill selected pet data
+                              setPetData({
+                                name: pet.name,
+                                species: pet.species,
+                                breed: pet.breed,
+                                age: pet.age,
+                                weight: pet.weight,
+                                medicalHistory: pet.medicalHistory || ""
+                              });
+                            }}
+                            className="mr-3"
+                            data-testid={`radio-pet-${pet.id}`}
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">
+                              {pet.name} - {pet.species} ({pet.breed})
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {pet.age} años, {pet.weight}
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                      
+                      {/* Option to add new pet */}
+                      <label
+                        className={`flex items-center p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                          selectedPetId === "new"
+                            ? 'border-green-500 bg-green-100'
+                            : 'border-gray-200 hover:border-green-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="selectedPet"
+                          value="new"
+                          checked={selectedPetId === "new"}
+                          onChange={(e) => {
+                            setSelectedPetId(e.target.value);
+                            // Clear pet data for new pet
+                            setPetData({
+                              name: "",
+                              species: "",
+                              breed: "",
+                              age: 0,
+                              weight: "",
+                              medicalHistory: ""
+                            });
+                          }}
+                          className="mr-3"
+                          data-testid="radio-pet-new"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-green-900">
+                            ➕ Agregar nueva mascota
+                          </div>
+                          <div className="text-sm text-green-600">
+                            Registrar una nueva mascota para este cliente
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                )}
+                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${
+                  showPetSelection && selectedPetId && selectedPetId !== "new" ? "opacity-50 pointer-events-none" : ""
+                }`}>
                   <div>
                     <Label htmlFor="petName">Nombre de la mascota *</Label>
                     <Input
@@ -759,6 +891,16 @@ export default function BookingWizard() {
                       toast({
                         title: "Campo requerido",
                         description: "Por favor ingresa el peso de la mascota",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    
+                    // If showing pet selection, ensure one is selected
+                    if (showPetSelection && !selectedPetId) {
+                      toast({
+                        title: "Selección requerida",
+                        description: "Por favor selecciona una mascota existente o agrega una nueva",
                         variant: "destructive"
                       });
                       return;
