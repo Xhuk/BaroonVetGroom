@@ -1369,18 +1369,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return response.json();
   }
 
-  // SuperAdmin RBAC endpoints - VetGroom developer/sysadmin only
+  // SuperAdmin RBAC endpoints - Database role verification only
   const isSystemAdmin = async (req: any) => {
     const user = req.user;
     if (!user?.claims?.sub) return false;
     
     try {
       // Check if user has system admin roles in database
-      const hasSystemRole = await storage.hasSystemRole(user.claims.sub);
-      return hasSystemRole || user?.claims?.email?.includes('vetgroom') || false;
+      return await storage.hasSystemRole(user.claims.sub);
     } catch (error) {
       console.error('Error checking system admin role:', error);
-      return user?.claims?.email?.includes('vetgroom') || false;
+      return false;
     }
   };
 
