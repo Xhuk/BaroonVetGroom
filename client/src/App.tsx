@@ -17,6 +17,7 @@ import SuperAdminRouteConfig from "@/pages/SuperAdminRouteConfig";
 import SuperAdminRBAC from "@/pages/SuperAdminRBAC";
 import AdminSettings from "@/pages/AdminSettings";
 import AdminBusinessHours from "@/pages/AdminBusinessHours";
+import AdminBillingConfig from "@/pages/AdminBillingConfig";
 import Appointments from "@/pages/Appointments";
 import BookingWizard from "@/pages/BookingWizard";
 import Clients from "@/pages/Clients";
@@ -52,6 +53,7 @@ function Router() {
           <Route path="/admin" component={Admin} />
           <Route path="/admin/settings" component={AdminSettings} />
           <Route path="/admin/business-hours" component={AdminBusinessHours} />
+          <Route path="/admin/billing-config" component={AdminBillingConfig} />
           <Route path="/admin/van-config" component={AdminVanConfig} />
           <Route path="/superadmin" component={SuperAdmin} />
           <Route path="/superadmin/monitoring" component={SuperAdminMonitoring} />

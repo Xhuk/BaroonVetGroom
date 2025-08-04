@@ -1629,7 +1629,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { tenantId } = req.params;
       const recordData = { ...req.body, tenantId };
+      
+      // Create medical record
       const record = await storage.createMedicalRecord(recordData);
+      
+      // Check company billing configuration for auto-invoice generation
+      const tenant = await storage.getTenant(tenantId);
+      if (tenant) {
+        const billingConfig = await storage.getCompanyBillingConfig(tenant.companyId);
+        
+        if (billingConfig?.autoGenerateMedicalInvoices) {
+          // Generate invoice automatically
+          const invoiceNumber = `MED-${Date.now()}`;
+          const suppliesCost = recordData.suppliesCost || 0;
+          const servicesCost = recordData.servicesCost || 100; // Default consultation fee
+          
+          await storage.createInvoice({
+            tenantId,
+            medicalRecordId: record.id,
+            clientId: recordData.clientId,
+            invoiceNumber,
+            totalAmount: suppliesCost + servicesCost,
+            suppliesCost,
+            servicesCost,
+            status: 'pending'
+          });
+        }
+      }
+      
       res.json(record);
     } catch (error) {
       console.error("Error creating medical record:", error);
@@ -1678,7 +1705,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { tenantId } = req.params;
       const recordData = { ...req.body, tenantId };
+      
+      // Create grooming record
       const record = await storage.createGroomingRecord(recordData);
+      
+      // Check company billing configuration
+      const tenant = await storage.getTenant(tenantId);
+      if (tenant) {
+        const billingConfig = await storage.getCompanyBillingConfig(tenant.companyId);
+        
+        // Auto-generate invoice if enabled
+        if (billingConfig?.autoGenerateGroomingInvoices) {
+          const invoiceNumber = `GRM-${Date.now()}`;
+          const totalCost = parseFloat(recordData.totalCost || '0');
+          
+          await storage.createInvoice({
+            tenantId,
+            groomingRecordId: record.id,
+            clientId: recordData.clientId,
+            invoiceNumber,
+            totalAmount: totalCost,
+            servicesCost: totalCost,
+            status: 'pending'
+          });
+        }
+        
+        // Auto-schedule delivery if enabled and client needs delivery
+        if (billingConfig?.autoScheduleDelivery && recordData.needsDelivery) {
+          const deliveryDate = new Date();
+          deliveryDate.setDate(deliveryDate.getDate() + 1); // Schedule for next day
+          
+          await storage.createDeliverySchedule({
+            tenantId,
+            groomingRecordId: record.id,
+            clientId: recordData.clientId,
+            deliveryDate: deliveryDate.toISOString().split('T')[0],
+            notes: `Delivery for grooming session ${record.id}`
+          });
+        }
+      }
+      
       res.json(record);
     } catch (error) {
       console.error("Error creating grooming record:", error);
@@ -1720,6 +1786,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching staff by role:", error);
       res.status(500).json({ message: "Failed to fetch staff" });
+    }
+  });
+
+  // Company billing configuration endpoints
+  app.get('/api/company-billing-config/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const config = await storage.getCompanyBillingConfig(companyId);
+      res.json(config || {
+        companyId,
+        autoGenerateMedicalInvoices: false,
+        autoGenerateGroomingInvoices: false,
+        allowAdvanceScheduling: true,
+        autoScheduleDelivery: false
+      });
+    } catch (error) {
+      console.error("Error fetching billing config:", error);
+      res.status(500).json({ message: "Failed to fetch billing configuration" });
+    }
+  });
+
+  app.put('/api/company-billing-config/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const config = await storage.upsertCompanyBillingConfig({ 
+        ...req.body, 
+        companyId 
+      });
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating billing config:", error);
+      res.status(500).json({ message: "Failed to update billing configuration" });
+    }
+  });
+
+  // Billing invoices endpoints
+  app.get('/api/invoices/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const invoices = await storage.getInvoicesByTenant(tenantId);
+      res.json(invoices);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+      res.status(500).json({ message: "Failed to fetch invoices" });
+    }
+  });
+
+  app.put('/api/invoices/:invoiceId/status', isAuthenticated, async (req, res) => {
+    try {
+      const { invoiceId } = req.params;
+      const { status } = req.body;
+      const updatedInvoice = await storage.updateInvoiceStatus(invoiceId, status);
+      res.json(updatedInvoice);
+    } catch (error) {
+      console.error("Error updating invoice status:", error);
+      res.status(500).json({ message: "Failed to update invoice status" });
+    }
+  });
+
+  // Delivery scheduling endpoints
+  app.get('/api/delivery-schedule/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const schedules = await storage.getDeliverySchedulesByTenant(tenantId);
+      res.json(schedules);
+    } catch (error) {
+      console.error("Error fetching delivery schedules:", error);
+      res.status(500).json({ message: "Failed to fetch delivery schedules" });
+    }
+  });
+
+  app.post('/api/delivery-schedule/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const scheduleData = { ...req.body, tenantId };
+      const schedule = await storage.createDeliverySchedule(scheduleData);
+      res.json(schedule);
+    } catch (error) {
+      console.error("Error creating delivery schedule:", error);
+      res.status(500).json({ message: "Failed to create delivery schedule" });
+    }
+  });
+
+  app.put('/api/delivery-schedule/:scheduleId/status', isAuthenticated, async (req, res) => {
+    try {
+      const { scheduleId } = req.params;
+      const { status } = req.body;
+      const updatedSchedule = await storage.updateDeliveryStatus(scheduleId, status);
+      res.json(updatedSchedule);
+    } catch (error) {
+      console.error("Error updating delivery status:", error);
+      res.status(500).json({ message: "Failed to update delivery status" });
     }
   });
 

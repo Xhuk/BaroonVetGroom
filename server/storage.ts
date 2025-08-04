@@ -28,6 +28,9 @@ import {
   vaccinationRecords,
   groomingRecords,
   petHealthProfiles,
+  billingInvoices,
+  companyBillingConfig,
+  deliverySchedule,
   type User,
   type UpsertUser,
   type Company,
@@ -75,6 +78,12 @@ import {
   type InsertGroomingRecord,
   type PetHealthProfile,
   type InsertPetHealthProfile,
+  type BillingInvoice,
+  type InsertBillingInvoice,
+  type CompanyBillingConfig,
+  type InsertCompanyBillingConfig,
+  type DeliverySchedule,
+  type InsertDeliverySchedule,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
@@ -178,6 +187,20 @@ export interface IStorage {
   getGroomingRecord(recordId: string): Promise<GroomingRecord | undefined>;
   createGroomingRecord(record: InsertGroomingRecord): Promise<GroomingRecord>;
   updateGroomingRecord(recordId: string, record: Partial<InsertGroomingRecord>): Promise<GroomingRecord>;
+  
+  // Billing operations
+  createInvoice(invoice: InsertBillingInvoice): Promise<BillingInvoice>;
+  getInvoicesByTenant(tenantId: string): Promise<BillingInvoice[]>;
+  updateInvoiceStatus(invoiceId: string, status: string): Promise<BillingInvoice>;
+  
+  // Company billing configuration
+  getCompanyBillingConfig(companyId: string): Promise<CompanyBillingConfig | undefined>;
+  upsertCompanyBillingConfig(config: InsertCompanyBillingConfig): Promise<CompanyBillingConfig>;
+  
+  // Delivery scheduling operations
+  createDeliverySchedule(schedule: InsertDeliverySchedule): Promise<DeliverySchedule>;
+  getDeliverySchedulesByTenant(tenantId: string): Promise<DeliverySchedule[]>;
+  updateDeliveryStatus(scheduleId: string, status: string): Promise<DeliverySchedule>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1180,6 +1203,70 @@ export class DatabaseStorage implements IStorage {
       .where(eq(groomingRecords.id, recordId))
       .returning();
     return updatedRecord;
+  }
+
+  // Billing operations
+  async createInvoice(invoice: InsertBillingInvoice): Promise<BillingInvoice> {
+    const [newInvoice] = await db.insert(billingInvoices)
+      .values(invoice)
+      .returning();
+    return newInvoice;
+  }
+
+  async getInvoicesByTenant(tenantId: string): Promise<BillingInvoice[]> {
+    const invoices = await db.select().from(billingInvoices)
+      .where(eq(billingInvoices.tenantId, tenantId))
+      .orderBy(desc(billingInvoices.createdAt));
+    return invoices;
+  }
+
+  async updateInvoiceStatus(invoiceId: string, status: string): Promise<BillingInvoice> {
+    const [updatedInvoice] = await db.update(billingInvoices)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(billingInvoices.id, invoiceId))
+      .returning();
+    return updatedInvoice;
+  }
+
+  // Company billing configuration
+  async getCompanyBillingConfig(companyId: string): Promise<CompanyBillingConfig | undefined> {
+    const [config] = await db.select().from(companyBillingConfig)
+      .where(eq(companyBillingConfig.companyId, companyId));
+    return config;
+  }
+
+  async upsertCompanyBillingConfig(config: InsertCompanyBillingConfig): Promise<CompanyBillingConfig> {
+    const [newConfig] = await db.insert(companyBillingConfig)
+      .values(config)
+      .onConflictDoUpdate({
+        target: companyBillingConfig.companyId,
+        set: { ...config, updatedAt: new Date() }
+      })
+      .returning();
+    return newConfig;
+  }
+
+  // Delivery scheduling operations
+  async createDeliverySchedule(schedule: InsertDeliverySchedule): Promise<DeliverySchedule> {
+    const [newSchedule] = await db.insert(deliverySchedule)
+      .values(schedule)
+      .returning();
+    return newSchedule;
+  }
+
+  async getDeliverySchedulesByTenant(tenantId: string): Promise<DeliverySchedule[]> {
+    const schedules = await db.select().from(deliverySchedule)
+      .where(eq(deliverySchedule.tenantId, tenantId))
+      .orderBy(desc(deliverySchedule.deliveryDate));
+    return schedules;
+  }
+
+  async updateDeliveryStatus(scheduleId: string, status: string): Promise<DeliverySchedule> {
+    const [updatedSchedule] = await db.update(deliverySchedule)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(deliverySchedule.id, scheduleId))
+      .returning();
+    return updatedSchedule;
   }
 }
 

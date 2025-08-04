@@ -249,6 +249,67 @@ export const betaFeatureUsage = pgTable("beta_feature_usage", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+// New tables for billing and delivery integration
+export const billingInvoices = pgTable("billing_invoices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  appointmentId: varchar("appointment_id").references(() => appointments.id),
+  medicalRecordId: varchar("medical_record_id").references(() => medicalRecords.id),
+  groomingRecordId: varchar("grooming_record_id").references(() => groomingRecords.id),
+  clientId: varchar("client_id").notNull().references(() => clients.id),
+  invoiceNumber: varchar("invoice_number").notNull(),
+  invoiceDate: date("invoice_date").notNull().default(sql`CURRENT_DATE`),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  suppliesCost: decimal("supplies_cost", { precision: 10, scale: 2 }).default("0"),
+  servicesCost: decimal("services_cost", { precision: 10, scale: 2 }).default("0"),
+  status: varchar("status").notNull().default("pending"), // pending, paid, overdue, cancelled
+  paymentDate: date("payment_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const companyBillingConfig = pgTable("company_billing_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  autoGenerateMedicalInvoices: boolean("auto_generate_medical_invoices").default(false),
+  autoGenerateGroomingInvoices: boolean("auto_generate_grooming_invoices").default(false),
+  allowAdvanceScheduling: boolean("allow_advance_scheduling").default(true),
+  autoScheduleDelivery: boolean("auto_schedule_delivery").default(false),
+  deliverySchedulingRules: jsonb("delivery_scheduling_rules"), // Configuration for when to schedule delivery
+  billingRules: jsonb("billing_rules"), // Configuration for billing automation
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  uniqueCompany: index("unique_company_billing_config").on(table.companyId),
+}));
+
+export const deliverySchedule = pgTable("delivery_schedule", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  groomingRecordId: varchar("grooming_record_id").references(() => groomingRecords.id),
+  clientId: varchar("client_id").notNull().references(() => clients.id),
+  pickupDate: date("pickup_date"),
+  deliveryDate: date("delivery_date").notNull(),
+  pickupTime: time("pickup_time"),
+  deliveryTime: time("delivery_time"),
+  status: varchar("status").notNull().default("scheduled"), // scheduled, in_transit, delivered, cancelled
+  driverId: varchar("driver_id").references(() => staff.id),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Medical records table is already defined above - just add appointmentId column via migration
+
+// Type exports for new tables
+export type BillingInvoice = typeof billingInvoices.$inferSelect;
+export type InsertBillingInvoice = typeof billingInvoices.$inferInsert;
+export type CompanyBillingConfig = typeof companyBillingConfig.$inferSelect;
+export type InsertCompanyBillingConfig = typeof companyBillingConfig.$inferInsert;
+export type DeliverySchedule = typeof deliverySchedule.$inferSelect;
+export type InsertDeliverySchedule = typeof deliverySchedule.$inferInsert;
+
 export type Company = typeof companies.$inferSelect;
 export type InsertCompany = typeof companies.$inferInsert;
 
