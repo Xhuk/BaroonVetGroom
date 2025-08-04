@@ -612,26 +612,30 @@ export default function BookingWizard() {
                             }}
                           />
                           
-                          {/* Clinic Location - Blue Marker (Bound to tenant GPS coordinates) */}
-                          <div 
-                            className="absolute transform -translate-x-1/2 -translate-y-full group pointer-events-none"
-                            style={{
-                              left: `${((tenantLocation.lng - (mapCoordinates.lng - mapDiameterKm/111.32)) / ((mapDiameterKm/111.32) * 2)) * 100}%`,
-                              top: `${((mapCoordinates.lat + mapDiameterKm/110.54 - tenantLocation.lat) / ((mapDiameterKm/110.54) * 2)) * 100}%`,
-                              zIndex: 30
-                            }}
-                          >
-                            <img 
-                              src={markerIconPath} 
-                              alt="Clínica" 
-                              className="w-6 h-6 drop-shadow-lg"
-                            />
-                            <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-blue-100 px-3 py-2 rounded shadow text-xs whitespace-nowrap border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="font-semibold">Clínica Veterinaria</div>
-                              <div className="text-blue-600">{currentTenant?.name}</div>
-                              <div className="text-xs text-gray-500">GPS: {tenantLocation.lat.toFixed(4)}, {tenantLocation.lng.toFixed(4)}</div>
+                          {/* Clinic Location - Blue Marker (Bound to stored tenant GPS coordinates) */}
+                          {currentTenant?.latitude && currentTenant?.longitude && (
+                            <div 
+                              className="absolute transform -translate-x-1/2 -translate-y-full group pointer-events-none"
+                              style={{
+                                left: `${((parseFloat(currentTenant.longitude) - (mapCoordinates.lng - mapDiameterKm/111.32)) / ((mapDiameterKm/111.32) * 2)) * 100}%`,
+                                top: `${((mapCoordinates.lat + mapDiameterKm/110.54 - parseFloat(currentTenant.latitude)) / ((mapDiameterKm/110.54) * 2)) * 100}%`,
+                                zIndex: 30
+                              }}
+                            >
+                              <img 
+                                src={markerIconPath} 
+                                alt="Clínica" 
+                                className="w-6 h-6 drop-shadow-lg"
+                                style={{ filter: 'hue-rotate(200deg) saturate(1.5)' }}
+                              />
+                              <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-blue-100 px-3 py-2 rounded shadow text-xs whitespace-nowrap border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="font-semibold">Clínica Veterinaria</div>
+                                <div className="text-blue-600">{currentTenant?.name}</div>
+                                <div className="text-xs text-gray-500">GPS: {parseFloat(currentTenant.latitude).toFixed(6)}, {parseFloat(currentTenant.longitude).toFixed(6)}</div>
+                                <div className="text-xs text-blue-600">Ubicación del Tenant</div>
+                              </div>
                             </div>
-                          </div>
+                          )}
                           
                           {/* Customer Location - Red Pin (placed by right-click) */}
                           {customerData.latitude && customerData.longitude && (
