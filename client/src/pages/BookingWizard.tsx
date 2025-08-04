@@ -82,6 +82,8 @@ export default function BookingWizard() {
   const [reservedSlots, setReservedSlots] = useState<string[]>([]);
   const [tenantLocation, setTenantLocation] = useState({ lat: 25.74055709021775, lng: -100.407349161356 });
   const [geocodeTimeout, setGeocodeTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([25.74055709021775, -100.407349161356]);
+  const mapRef = useRef<any>(null);
 
   // Queries
   const { data: services } = useQuery<any[]>({
@@ -536,7 +538,7 @@ export default function BookingWizard() {
                       <div className="h-80 relative border-b">
                         <Suspense fallback={<div className="h-full w-full bg-gray-100 flex items-center justify-center">Cargando mapa...</div>}>
                           <LeafletMap
-                            center={[tenantLocation.lat, tenantLocation.lng]}
+                            center={mapCenter}
                             zoom={13}
                             tenantLocation={tenantLocation}
                             customerLocation={
@@ -565,6 +567,7 @@ export default function BookingWizard() {
                               });
                             }}
                             onMapMove={() => {}} // Remove map move tracking
+                            onCenterChange={setMapCenter}
                           />
                         </Suspense>
                       </div>
@@ -605,7 +608,9 @@ export default function BookingWizard() {
                               onClick={() => {
                                 // Center map on customer location if available
                                 if (customerData.latitude && customerData.longitude) {
-                                  // Map will center on customer location automatically
+                                  const customerLat = parseFloat(customerData.latitude);
+                                  const customerLng = parseFloat(customerData.longitude);
+                                  setMapCenter([customerLat, customerLng]);
                                   toast({
                                     title: "Vista centrada en cliente",
                                     description: "Mapa centrado en la dirección del cliente.",
@@ -622,7 +627,8 @@ export default function BookingWizard() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                // Map stays centered on clinic
+                                // Center map on clinic location
+                                setMapCenter([tenantLocation.lat, tenantLocation.lng]);
                                 toast({
                                   title: "Vista centrada en clínica",
                                   description: "Mapa centrado en las coordenadas de la clínica.",
@@ -686,7 +692,7 @@ export default function BookingWizard() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="breed">Raza</Label>
+                  <Label htmlFor="breed">Raza *</Label>
                   <Select 
                     value={petData.breed} 
                     onValueChange={(value) => setPetData(prev => ({ ...prev, breed: value }))}
@@ -712,22 +718,24 @@ export default function BookingWizard() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="age">Edad (años)</Label>
+                  <Label htmlFor="age">Edad (años) *</Label>
                   <Input
                     id="age"
                     type="number"
                     value={petData.age}
                     onChange={(e) => setPetData(prev => ({ ...prev, age: parseInt(e.target.value) || 0 }))}
                     placeholder="3"
+                    required
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label htmlFor="weight">Peso (kg)</Label>
+                  <Label htmlFor="weight">Peso (kg) *</Label>
                   <Input
                     id="weight"
                     value={petData.weight}
                     onChange={(e) => setPetData(prev => ({ ...prev, weight: e.target.value }))}
                     placeholder="25.5"
+                    required
                   />
                 </div>
               </div>
@@ -924,7 +932,7 @@ export default function BookingWizard() {
                 disabled={
                   (currentStep === 1 && (!customerData.name || !customerData.phone)) ||
                   (currentStep === 2 && (!customerData.address || !customerData.fraccionamiento || !customerData.latitude || !customerData.longitude)) ||
-                  (currentStep === 3 && (!petData.name || !petData.species)) ||
+                  (currentStep === 3 && (!petData.name || !petData.species || !petData.breed || !petData.age || !petData.weight)) ||
                   (currentStep === 4 && (!selectedSlot || !bookingData.serviceId))
                 }
               >

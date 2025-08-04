@@ -17,6 +17,7 @@ interface LeafletMapProps {
   tenantName?: string;
   onMapClick: (lat: number, lng: number) => void;
   onMapMove?: (lat: number, lng: number) => void;
+  onCenterChange?: (center: [number, number]) => void;
 }
 
 // Map Click Handler Component for Leaflet - Right click only
@@ -39,10 +40,28 @@ export default function LeafletMap({
   customerLocation,
   tenantName,
   onMapClick,
-  onMapMove
+  onMapMove,
+  onCenterChange
 }: LeafletMapProps) {
   const mapRef = useRef<any>(null);
   const customerMarkerRef = useRef<any>(null);
+
+  // Center map function that can be called externally
+  const centerMapOnLocation = (lat: number, lng: number, zoomLevel: number = 16) => {
+    if (mapRef.current) {
+      mapRef.current.setView([lat, lng], zoomLevel);
+      if (onCenterChange) {
+        onCenterChange([lat, lng]);
+      }
+    }
+  };
+
+  // Expose the center function
+  useEffect(() => {
+    if (mapRef.current && onCenterChange) {
+      (mapRef.current as any).centerMapOnLocation = centerMapOnLocation;
+    }
+  }, [mapRef.current]);
 
   return (
     <MapContainer
