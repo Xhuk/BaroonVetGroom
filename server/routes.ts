@@ -2780,6 +2780,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Super Admin Company Management Endpoints
+  
+  // Create new company (Super Admin only)
+  app.post('/api/superadmin/companies', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const companyData = req.body;
+      const company = await storage.createCompany(companyData);
+      res.json(company);
+    } catch (error) {
+      console.error("Error creating company:", error);
+      res.status(500).json({ message: "Failed to create company" });
+    }
+  });
+
+  // Create company trial (Super Admin only)
+  app.post('/api/superadmin/companies/trial', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId, duration, customFee, notes } = req.body;
+      
+      // Create trial subscription record
+      const trialData = {
+        companyId,
+        subscriptionType: 'trial',
+        trialDuration: duration,
+        trialCustomFee: customFee || 0,
+        trialNotes: notes,
+        subscriptionStatus: 'active',
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + duration * 24 * 60 * 60 * 1000).toISOString(),
+      };
+      
+      // For now, we'll store this in the company settings
+      // In a full implementation, you'd have a separate subscriptions table
+      await storage.updateCompanySettings(companyId, { 
+        subscriptionType: 'trial',
+        trialInfo: trialData
+      });
+      
+      res.json({ success: true, trial: trialData });
+    } catch (error) {
+      console.error("Error creating company trial:", error);
+      res.status(500).json({ message: "Failed to create company trial" });
+    }
+  });
+
+  // Create company subscription (Super Admin only)
+  app.post('/api/superadmin/companies/subscription', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId, planId } = req.body;
+      
+      const subscriptionData = {
+        companyId,
+        planId,
+        subscriptionType: 'paid',
+        subscriptionStatus: 'active',
+        createdAt: new Date().toISOString(),
+      };
+      
+      await storage.updateCompanySettings(companyId, { 
+        subscriptionType: 'paid',
+        subscriptionInfo: subscriptionData
+      });
+      
+      res.json({ success: true, subscription: subscriptionData });
+    } catch (error) {
+      console.error("Error creating company subscription:", error);
+      res.status(500).json({ message: "Failed to create company subscription" });
+    }
+  });
+
+  // Setup WhatsApp credits for company (Super Admin only)
+  app.post('/api/superadmin/companies/whatsapp', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId, credits } = req.body;
+      
+      // Create WhatsApp external service subscription
+      const whatsappSubscription = {
+        companyId,
+        serviceName: 'whatsapp',
+        serviceType: 'communication',
+        subscriptionStatus: 'active',
+        creditsRemaining: credits,
+        creditsTotal: credits,
+        pricePerBlock: 29.99,
+        blockSize: 1000,
+        autoRefill: false,
+        lowCreditThreshold: 100,
+        usageThisPeriod: 0,
+      };
+      
+      const subscription = await storage.createExternalServiceSubscription(whatsappSubscription);
+      res.json({ success: true, subscription });
+    } catch (error) {
+      console.error("Error creating WhatsApp subscription:", error);
+      res.status(500).json({ message: "Failed to create WhatsApp subscription" });
+    }
+  });
+
+  // Get all companies (Super Admin only)
+  app.get('/api/superadmin/companies', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const companies = await storage.getCompanies();
+      res.json(companies);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      res.status(500).json({ message: "Failed to fetch companies" });
+    }
+  });
+
   // External Services API Endpoints
   
   // Get all external service subscriptions for a company (Super Admin only)

@@ -348,6 +348,15 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(companies);
   }
 
+  async updateCompanySettings(companyId: string, settings: any): Promise<void> {
+    await db.update(companies)
+      .set({ 
+        settings: settings,
+        updatedAt: new Date()
+      })
+      .where(eq(companies.id, companyId));
+  }
+
   async createCompany(company: InsertCompany): Promise<Company> {
     const [newCompany] = await db.insert(companies).values(company).returning();
     return newCompany;

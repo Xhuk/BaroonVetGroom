@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NewCompanyDialog } from "@/components/NewCompanyDialog";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { 
   Building, 
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button";
 export default function SuperAdmin() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
+  const [showNewCompanyDialog, setShowNewCompanyDialog] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -182,7 +184,12 @@ export default function SuperAdmin() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Gestión de Empresas</span>
-                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Button 
+                    size="sm" 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => setShowNewCompanyDialog(true)}
+                    data-testid="button-new-company"
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Nueva Empresa
                   </Button>
@@ -374,6 +381,12 @@ export default function SuperAdmin() {
           </div>
         </div>
       </main>
+
+      {/* New Company Dialog */}
+      <NewCompanyDialog 
+        open={showNewCompanyDialog} 
+        onOpenChange={setShowNewCompanyDialog} 
+      />
     </div>
   );
 }
