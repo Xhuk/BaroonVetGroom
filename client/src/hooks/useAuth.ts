@@ -8,10 +8,18 @@ export function useAuth() {
   // Use preview endpoints for Replit domain, normal auth for localhost
   const authEndpoint = isReplitDomain ? "/api/preview/user" : "/api/auth/user";
   
-  const { data: user, isLoading } = useQuery<User>({
+  console.log("useAuth - Domain check:", { 
+    hostname: window.location.hostname, 
+    isReplitDomain, 
+    authEndpoint 
+  });
+
+  const { data: user, isLoading, error } = useQuery<User>({
     queryKey: [authEndpoint],
     retry: false,
   });
+
+  console.log("useAuth - Query result:", { user, isLoading, error });
 
   return {
     user,

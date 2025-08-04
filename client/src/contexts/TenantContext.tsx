@@ -42,6 +42,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     enabled: isAuthenticated,
   });
 
+  console.log("TenantContext - Tenants:", { finalTenants, isLoadingTenants, isAuthenticated });
+
   const { data: tenant, isLoading: isLoadingCurrentTenant } = useQuery<Tenant>({
     queryKey: ["/api/tenants", currentTenant?.id],
     enabled: !!currentTenant?.id,
