@@ -114,7 +114,8 @@ export default function RoutePlanMap() {
   const optimizeRouteMutation = useMutation({
     mutationFn: async (data: RouteOptimizationRequest) => {
       if (!currentTenant?.id) throw new Error("No tenant selected");
-      return apiRequest(`/api/optimize-route/${currentTenant.id}`, "POST", data);
+      const response = await apiRequest(`/api/optimize-route/${currentTenant.id}`, "POST", data);
+      return await response.json();
     },
     onSuccess: (result: any) => {
       setOptimizedRoute(result.optimizedRoute || []);
