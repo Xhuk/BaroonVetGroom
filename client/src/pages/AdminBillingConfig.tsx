@@ -19,6 +19,7 @@ import {
   Calendar,
   AlertCircle
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface BillingConfig {
   companyId: string;
@@ -26,6 +27,9 @@ interface BillingConfig {
   autoGenerateGroomingInvoices: boolean;
   allowAdvanceScheduling: boolean;
   autoScheduleDelivery: boolean;
+  groomingFollowUpDays: number;
+  groomingFollowUpVariance: number;
+  enableGroomingFollowUp: boolean;
   deliverySchedulingRules?: any;
   billingRules?: any;
 }
@@ -40,7 +44,10 @@ export default function AdminBillingConfig() {
     autoGenerateMedicalInvoices: false,
     autoGenerateGroomingInvoices: false,
     allowAdvanceScheduling: true,
-    autoScheduleDelivery: false
+    autoScheduleDelivery: false,
+    groomingFollowUpDays: 30,
+    groomingFollowUpVariance: 7,
+    enableGroomingFollowUp: true
   });
 
   const { data: billingConfig, isLoading } = useQuery({
@@ -88,6 +95,9 @@ export default function AdminBillingConfig() {
         autoGenerateGroomingInvoices: (billingConfig as any).autoGenerateGroomingInvoices || false,
         allowAdvanceScheduling: (billingConfig as any).allowAdvanceScheduling !== false,
         autoScheduleDelivery: (billingConfig as any).autoScheduleDelivery || false,
+        groomingFollowUpDays: (billingConfig as any).groomingFollowUpDays || 30,
+        groomingFollowUpVariance: (billingConfig as any).groomingFollowUpVariance || 7,
+        enableGroomingFollowUp: (billingConfig as any).enableGroomingFollowUp ?? true,
         deliverySchedulingRules: (billingConfig as any).deliverySchedulingRules,
         billingRules: (billingConfig as any).billingRules
       });
@@ -316,6 +326,83 @@ export default function AdminBillingConfig() {
                   }}
                   data-testid="textarea-delivery-rules"
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Grooming Follow-up Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Configuración de Seguimiento de Grooming
+              </CardTitle>
+              <CardDescription>
+                Configura las citas de seguimiento automáticas para servicios de grooming
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="enableGroomingFollowUp">Habilitar Seguimiento Automático</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Programa automáticamente citas de seguimiento para grooming
+                  </p>
+                </div>
+                <Switch
+                  id="enableGroomingFollowUp"
+                  checked={config.enableGroomingFollowUp}
+                  onCheckedChange={(checked) => updateField('enableGroomingFollowUp', checked)}
+                />
+              </div>
+
+              {config.enableGroomingFollowUp && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="groomingFollowUpDays">Días para Próxima Cita</Label>
+                    <Input
+                      id="groomingFollowUpDays"
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={config.groomingFollowUpDays}
+                      onChange={(e) => updateField('groomingFollowUpDays', Number(e.target.value))}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Días por defecto entre servicios de grooming
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="groomingFollowUpVariance">Margen de Recordatorio (±días)</Label>
+                    <Input
+                      id="groomingFollowUpVariance"
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={config.groomingFollowUpVariance}
+                      onChange={(e) => updateField('groomingFollowUpVariance', Number(e.target.value))}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Recordatorio {config.groomingFollowUpVariance} días antes de la cita sugerida
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="flex gap-2">
+                  <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-blue-900">Configuración Actual:</p>
+                    <p className="text-blue-700">
+                      Próxima cita programada cada <strong>{config.groomingFollowUpDays} días</strong>
+                    </p>
+                    <p className="text-blue-700">
+                      Recordatorio enviado <strong>{config.groomingFollowUpVariance} días antes</strong> de la fecha sugerida
+                    </p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

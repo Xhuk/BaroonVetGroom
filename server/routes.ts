@@ -1974,6 +1974,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update grooming record status with automated workflow
+  app.patch("/api/grooming-records/:tenantId/:recordId/status", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId, recordId } = req.params;
+      const { status } = req.body;
+
+      // Update the status with timestamp
+      const updateData: any = { status };
+      if (status === 'completed') {
+        updateData.completedAt = new Date().toISOString();
+        
+        // Auto-calculate next appointment date based on grooming follow-up config
+        try {
+          const tenant = await storage.getTenant(tenantId);
+          const billingConfig = await storage.getCompanyBillingConfig(tenant.companyId);
+          
+          if (billingConfig?.enableGroomingFollowUp) {
+            const followUpDays = billingConfig.groomingFollowUpDays || 30;
+            const nextDate = new Date();
+            nextDate.setDate(nextDate.getDate() + followUpDays);
+            updateData.nextAppointmentDate = nextDate.toISOString().split('T')[0];
+            updateData.nextAppointmentRecommended = true;
+          }
+        } catch (configError) {
+          console.log("Could not get billing config for follow-up calculation:", configError);
+        }
+      } else if (status === 'billed') {
+        updateData.billedAt = new Date().toISOString();
+      }
+
+      const record = await storage.updateGroomingRecord(recordId, updateData);
+
+      // If status is 'billed', trigger billing workflow
+      if (status === 'billed') {
+        try {
+          // Get billing configuration
+          const tenant = await storage.getTenant(tenantId);
+          const billingConfig = await storage.getCompanyBillingConfig(tenant.companyId);
+          
+          if (billingConfig?.autoGenerateGroomingInvoices) {
+            // Auto-generate invoice
+            const invoiceData = {
+              tenantId,
+              groomingRecordId: recordId,
+              clientId: record.clientId,
+              invoiceNumber: `GR-${Date.now()}`,
+              totalAmount: record.totalCost || "0",
+              servicesCost: record.totalCost || "0",
+              suppliesCost: "0",
+              status: "pending" as const,
+            };
+            
+            await storage.createInvoice(invoiceData);
+            console.log(`Auto-generated invoice for grooming record ${recordId}`);
+          }
+
+          // Auto-schedule delivery if configured
+          if (billingConfig?.autoScheduleDelivery) {
+            const deliveryDate = new Date();
+            deliveryDate.setDate(deliveryDate.getDate() + 1); // Next day
+            
+            const deliveryData = {
+              tenantId,
+              groomingRecordId: recordId,
+              clientId: record.clientId,
+              deliveryDate: deliveryDate.toISOString().split('T')[0],
+              status: "scheduled" as const,
+            };
+            
+            await storage.createDeliverySchedule(deliveryData);
+            console.log(`Auto-scheduled delivery for grooming record ${recordId}`);
+          }
+        } catch (billingError) {
+          console.error("Error in billing workflow:", billingError);
+          // Don't fail the status update if billing fails
+        }
+      }
+
+      res.json(record);
+    } catch (error) {
+      console.error("Error updating grooming record status:", error);
+      res.status(500).json({ error: "Failed to update grooming record status" });
+    }
+  });
+
   // Staff by role endpoint
   app.get('/api/staff/:tenantId/:role', isAuthenticated, async (req, res) => {
     try {

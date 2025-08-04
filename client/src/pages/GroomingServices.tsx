@@ -22,6 +22,7 @@ import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import type { GroomingRecord, InsertGroomingRecord, Pet, Staff } from "@shared/schema";
 
 const groomingRecordSchema = z.object({
@@ -51,6 +52,7 @@ const serviceLabels = {
 
 export default function GroomingServices() {
   const { currentTenant } = useTenant();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPet, setSelectedPet] = useState<string>("");
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -162,6 +164,27 @@ export default function GroomingServices() {
       form.reset();
     },
   });
+
+  // Status update function for grooming workflow
+  const updateGroomingStatus = async (recordId: string, newStatus: 'completed' | 'billed') => {
+    try {
+      await apiRequest(`/api/grooming-records/${currentTenant?.id}/${recordId}/status`, "PATCH", { status: newStatus });
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/grooming-records", currentTenant?.id] });
+      
+      const statusText = newStatus === 'completed' ? 'finalizado' : 'cerrado y facturado';
+      toast({
+        title: "Estado actualizado",
+        description: `El servicio de grooming ha sido ${statusText}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el estado del servicio.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const filteredRecords = groomingRecords.filter((record) => {
     const pet = pets.find(p => p.id === record.petId);
@@ -498,19 +521,56 @@ export default function GroomingServices() {
                       </div>
                     </div>
                     
-                    <Button
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentGrooming(record);
-                        setShowServiceModal(true);
-                      }}
-                      className="bg-green-500 hover:bg-green-600 text-white"
-                      data-testid={`button-start-grooming-${record.id}`}
-                    >
-                      <Play className="w-4 h-4 mr-1" />
-                      Iniciar Sesión
-                    </Button>
+                    <div className="flex gap-2">
+                      {(record.status === 'in_progress' || !record.status) && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-blue-500 hover:bg-blue-600 text-white"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateGroomingStatus(record.id, 'completed');
+                          }}
+                          data-testid={`button-complete-grooming-${record.id}`}
+                        >
+                          Finalizar
+                        </Button>
+                      )}
+                      {record.status === 'completed' && (
+                        <Button
+                          size="sm"
+                          className="bg-green-500 hover:bg-green-600 text-white"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateGroomingStatus(record.id, 'billed');
+                          }}
+                          data-testid={`button-bill-grooming-${record.id}`}
+                        >
+                          Cerrado
+                        </Button>
+                      )}
+                      {record.status === 'billed' && (
+                        <div className="flex items-center text-green-600 text-sm font-medium">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                          </svg>
+                          Facturado
+                        </div>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentGrooming(record);
+                          setShowServiceModal(true);
+                        }}
+                        data-testid={`button-start-grooming-${record.id}`}
+                      >
+                        <Play className="w-4 h-4 mr-1" />
+                        Sesión
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4 mb-3">

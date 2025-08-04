@@ -278,6 +278,9 @@ export const companyBillingConfig = pgTable("company_billing_config", {
   autoScheduleDelivery: boolean("auto_schedule_delivery").default(false),
   deliverySchedulingRules: jsonb("delivery_scheduling_rules"), // Configuration for when to schedule delivery
   billingRules: jsonb("billing_rules"), // Configuration for billing automation
+  groomingFollowUpDays: integer("grooming_follow_up_days").default(30), // Default days for next grooming appointment
+  groomingFollowUpVariance: integer("grooming_follow_up_variance").default(7), // ± days for follow-up reminders
+  enableGroomingFollowUp: boolean("enable_grooming_follow_up").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -526,8 +529,11 @@ export const groomingRecords = pgTable("grooming_records", {
   beforePhotos: text("before_photos").array().default(sql`ARRAY[]::text[]`),
   afterPhotos: text("after_photos").array().default(sql`ARRAY[]::text[]`),
   totalCost: decimal("total_cost", { precision: 10, scale: 2 }),
+  status: varchar("status").notNull().default("in_progress"), // in_progress, completed, billed
   nextAppointmentRecommended: boolean("next_appointment_recommended").default(false),
   nextAppointmentDate: date("next_appointment_date"),
+  completedAt: timestamp("completed_at"),
+  billedAt: timestamp("billed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
