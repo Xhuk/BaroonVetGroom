@@ -501,60 +501,71 @@ export default function BookingWizard() {
                       <div className="h-80 relative border-b">
                         {/* Custom Overlay Layer for Interactive Markers */}
                         <div className="absolute inset-0 z-20 pointer-events-none">
-                          {/* Client Location - Red Pin (appears when address is geocoded) */}
-                          {customerData.address && mapCoordinates.lat !== tenantLocation.lat && mapCoordinates.lng !== tenantLocation.lng && (
+                          {/* Client Location - Red Pin (positioned at customer GPS coordinates when available) */}
+                          {customerData.address && customerData.latitude && customerData.longitude && (
                             <div 
                               className="absolute transform -translate-x-1/2 -translate-y-full group z-40"
                               style={{
-                                left: '50%',
-                                top: '50%'
+                                left: `${50 + ((parseFloat(customerData.longitude) - mapCoordinates.lng) / (mapDiameterKm / 111.32)) * 50}%`,
+                                top: `${50 - ((parseFloat(customerData.latitude) - mapCoordinates.lat) / (mapDiameterKm / 110.54)) * 50}%`,
+                                display: (
+                                  Math.abs(parseFloat(customerData.longitude) - mapCoordinates.lng) <= mapDiameterKm / 111.32 && 
+                                  Math.abs(parseFloat(customerData.latitude) - mapCoordinates.lat) <= mapDiameterKm / 110.54
+                                ) ? 'block' : 'none'
                               }}
                             >
                               <MapPin className="w-8 h-8 text-red-600 drop-shadow-lg animate-bounce" />
-                              <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-red-50 px-3 py-2 rounded shadow text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-red-200">
+                              <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-red-50 px-3 py-2 rounded shadow text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-red-200">
                                 <div className="font-semibold text-red-700">Dirección del Cliente</div>
                                 <div className="text-red-600">{customerData.address}</div>
                                 <div className="text-red-600">{customerData.fraccionamiento}</div>
-                                <div className="text-xs text-gray-500">Ubicación encontrada</div>
+                                <div className="text-xs text-gray-500">GPS: {parseFloat(customerData.latitude).toFixed(4)}, {parseFloat(customerData.longitude).toFixed(4)}</div>
                               </div>
                             </div>
                           )}
 
-                          {/* Clinic Location - Blue Marker (Shows when map is centered on clinic) */}
-                          {(!customerData.address || (mapCoordinates.lat === tenantLocation.lat && mapCoordinates.lng === tenantLocation.lng)) && (
-                            <div 
-                              className="absolute transform -translate-x-1/2 -translate-y-full group"
-                              style={{
-                                left: '50%',
-                                top: '50%',
-                                zIndex: 30
-                              }}
-                            >
-                              <img 
-                                src={markerIconPath} 
-                                alt="Clínica" 
-                                className="w-6 h-6 drop-shadow-lg"
-                              />
-                              <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-blue-100 px-3 py-2 rounded shadow text-xs whitespace-nowrap border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="font-semibold">Clínica Veterinaria</div>
-                                <div className="text-blue-600">{currentTenant?.name}</div>
-                                <div className="text-xs text-gray-500">Punto de origen</div>
-                              </div>
+                          {/* Clinic Location - Blue Marker (Always positioned at tenant GPS coordinates) */}
+                          <div 
+                            className="absolute transform -translate-x-1/2 -translate-y-full group"
+                            style={{
+                              left: `${50 + ((tenantLocation.lng - mapCoordinates.lng) / (mapDiameterKm / 111.32)) * 50}%`,
+                              top: `${50 - ((tenantLocation.lat - mapCoordinates.lat) / (mapDiameterKm / 110.54)) * 50}%`,
+                              zIndex: 30,
+                              display: (
+                                Math.abs(tenantLocation.lng - mapCoordinates.lng) <= mapDiameterKm / 111.32 && 
+                                Math.abs(tenantLocation.lat - mapCoordinates.lat) <= mapDiameterKm / 110.54
+                              ) ? 'block' : 'none'
+                            }}
+                          >
+                            <img 
+                              src={markerIconPath} 
+                              alt="Clínica" 
+                              className="w-6 h-6 drop-shadow-lg"
+                            />
+                            <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-blue-100 px-3 py-2 rounded shadow text-xs whitespace-nowrap border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="font-semibold">Clínica Veterinaria</div>
+                              <div className="text-blue-600">{currentTenant?.name}</div>
+                              <div className="text-xs text-gray-500">GPS: {tenantLocation.lat.toFixed(4)}, {tenantLocation.lng.toFixed(4)}</div>
                             </div>
-                          )}
+                          </div>
                         </div>
 
-                        {/* Base OpenStreetMap - Dynamically centered based on geocoded address or tenant */}
+                        {/* Base OpenStreetMap with pan and zoom controls */}
                         <iframe
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-(mapDiameterKm/111.32)},${mapCoordinates.lat-(mapDiameterKm/110.54)},${mapCoordinates.lng+(mapDiameterKm/111.32)},${mapCoordinates.lat+(mapDiameterKm/110.54)}&layer=mapnik`}
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-(mapDiameterKm/111.32)},${mapCoordinates.lat-(mapDiameterKm/110.54)},${mapCoordinates.lng+(mapDiameterKm/111.32)},${mapCoordinates.lat+(mapDiameterKm/110.54)}&layer=mapnik&marker=${mapCoordinates.lat},${mapCoordinates.lng}`}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
-                          title={`Mapa de ${mapDiameterKm}km - ${customerData.address ? 'Cliente' : 'Clínica'}`}
+                          title="Mapa navegable para planificación de entrega"
                           className="rounded-t-lg"
                           loading="lazy"
                           key={`${mapCoordinates.lat}-${mapCoordinates.lng}-${mapDiameterKm}`}
                         />
+                        
+                        {/* Map navigation instructions */}
+                        <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded text-xs text-gray-600">
+                          Arrastra para mover • Rueda para zoom
+                        </div>
                       </div>
                       
                       {/* Enhanced Map Info with Legend */}
@@ -594,17 +605,39 @@ export default function BookingWizard() {
                               disabled={!customerData.address || !customerData.fraccionamiento}
                             >
                               <MapPin className="w-3 h-3 mr-1" />
-                              Ubicar cliente
+                              Geocodificar
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                // Reset map to center on clinic
+                                // Center map on customer location if available
+                                if (customerData.latitude && customerData.longitude) {
+                                  setMapCoordinates({
+                                    lat: parseFloat(customerData.latitude),
+                                    lng: parseFloat(customerData.longitude)
+                                  });
+                                  toast({
+                                    title: "Vista centrada en cliente",
+                                    description: "Mapa centrado en la dirección del cliente.",
+                                  });
+                                }
+                              }}
+                              className="text-xs"
+                              disabled={!customerData.latitude || !customerData.longitude}
+                            >
+                              <MapPin className="w-3 h-3 mr-1" />
+                              Ver cliente
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                // Center map on clinic
                                 setMapCoordinates(tenantLocation);
                                 toast({
                                   title: "Vista centrada en clínica",
-                                  description: "Mapa recentrado en las coordenadas de la clínica.",
+                                  description: "Mapa centrado en las coordenadas de la clínica.",
                                 });
                               }}
                               className="text-xs"
