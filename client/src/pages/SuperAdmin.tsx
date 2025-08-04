@@ -311,6 +311,13 @@ export default function SuperAdmin() {
                       <span className="text-blue-700">Webhook Monitoring</span>
                     </Button>
                   </Link>
+                  
+                  <Link href="/superadmin/rbac">
+                    <Button variant="outline" className="w-full justify-start bg-purple-50 hover:bg-purple-100 border-purple-200">
+                      <Shield className="w-4 h-4 mr-2 text-purple-600" />
+                      <span className="text-purple-700">Control de Acceso (RBAC)</span>
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

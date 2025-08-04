@@ -74,14 +74,49 @@ export const tenants = pgTable("tenants", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Roles definition
+// System roles for VetGroom platform
+export const systemRoles = pgTable("system_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull().unique(), // developer, sysadmin
+  displayName: varchar("display_name").notNull(),
+  description: text("description"),
+  systemLevel: boolean("system_level").default(true), // true for system-wide access
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User system role assignments (for VetGroom developers/sysadmins)
+export const userSystemRoles = pgTable("user_system_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  systemRoleId: varchar("system_role_id").notNull().references(() => systemRoles.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Roles definition for tenant-level access
 export const roles = pgTable("roles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").references(() => companies.id), // null for global roles
   name: varchar("name").notNull(), // recepcion, grooming, medical, admin, autoentregas
   displayName: varchar("display_name").notNull(),
   description: text("description"),
-  permissions: varchar("permissions").array().notNull(), // array of permissions like ['view_appointments', 'manage_clients']
+  pageAccess: varchar("page_access").notNull().default("none"), // all, some, one, none
+  allowedPages: varchar("allowed_pages").array().default(sql`ARRAY[]::varchar[]`), // specific pages when pageAccess is 'some' or 'one'
+  permissions: varchar("permissions").array().notNull().default(sql`ARRAY[]::varchar[]`), // array of permissions like ['view_appointments', 'manage_clients']
   department: varchar("department").notNull(), // reception, grooming, medical, admin, delivery
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User-Company relationships for supertenant level access
+export const userCompanies = pgTable("user_companies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  roleId: varchar("role_id").references(() => roles.id),
+  isSupertenant: boolean("is_supertenant").default(false), // true for company-level admin
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -90,7 +125,7 @@ export const userTenants = pgTable("user_tenants", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
-  role: varchar("role").notNull(), // admin, veterinarian, groomer, receptionist, delivery
+  roleId: varchar("role_id").references(() => roles.id),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -10,6 +10,9 @@ import {
   appointments,
   services,
   roles,
+  systemRoles,
+  userSystemRoles,
+  userCompanies,
   tempSlotReservations,
   webhookErrorLogs,
   webhookMonitoring,
@@ -130,6 +133,13 @@ export interface IStorage {
   createRole(role: InsertRole): Promise<Role>;
   updateRole(roleId: string, role: Partial<InsertRole>): Promise<Role>;
   deleteRole(roleId: string): Promise<void>;
+  
+  // RBAC operations
+  getSystemRoles(): Promise<any[]>;
+  getRolesByCompany(companyId: string): Promise<any[]>;
+  getUsersByCompany(companyId: string): Promise<any[]>;
+  getUserAssignments(companyId: string): Promise<any[]>;
+  assignSystemRole(userId: string, systemRoleId: string): Promise<any>;
   
   // Webhook monitoring operations
   logWebhookError(errorLog: InsertWebhookErrorLog): Promise<WebhookErrorLog>;
@@ -967,6 +977,40 @@ export class DatabaseStorage implements IStorage {
       .from(deliveryTracking)
       .where(eq(deliveryTracking.id, trackingId));
     return tracking;
+  }
+
+  // RBAC operations
+  async getSystemRoles(): Promise<any[]> {
+    return await db.select().from(systemRoles);
+  }
+
+  async getRolesByCompany(companyId: string): Promise<any[]> {
+    return await db.select().from(roles).where(eq(roles.companyId, companyId));
+  }
+
+  async getUsersByCompany(companyId: string): Promise<any[]> {
+    return await db.select({
+      id: users.id,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      profileImageUrl: users.profileImageUrl,
+    }).from(users)
+      .innerJoin(userCompanies, eq(users.id, userCompanies.userId))
+      .where(eq(userCompanies.companyId, companyId));
+  }
+
+  async getUserAssignments(companyId: string): Promise<any[]> {
+    return await db.select().from(userCompanies).where(eq(userCompanies.companyId, companyId));
+  }
+
+  async assignSystemRole(userId: string, systemRoleId: string): Promise<any> {
+    const [assignment] = await db.insert(userSystemRoles).values({
+      userId,
+      systemRoleId,
+      isActive: true,
+    }).returning();
+    return assignment;
   }
 }
 

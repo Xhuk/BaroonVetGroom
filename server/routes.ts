@@ -1369,6 +1369,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return response.json();
   }
 
+  // SuperAdmin RBAC endpoints - VetGroom developer/sysadmin only
+  const isSystemAdmin = (req: any) => {
+    const user = req.user;
+    return user?.claims?.email?.includes('vetgroom') || false;
+  };
+
+  // Get all companies for SuperAdmin
+  app.get('/api/superadmin/companies', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!isSystemAdmin(req)) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const companies = await storage.getCompanies();
+      res.json(companies);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      res.status(500).json({ message: "Failed to fetch companies" });
+    }
+  });
+
+  // Get system roles
+  app.get('/api/superadmin/system-roles', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!isSystemAdmin(req)) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const systemRoles = await storage.getSystemRoles();
+      res.json(systemRoles);
+    } catch (error) {
+      console.error("Error fetching system roles:", error);
+      res.status(500).json({ message: "Failed to fetch system roles" });
+    }
+  });
+
+  // Get roles for a company
+  app.get('/api/superadmin/roles/:companyId', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!isSystemAdmin(req)) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const { companyId } = req.params;
+      const roles = await storage.getRolesByCompany(companyId);
+      res.json(roles);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+
+  // Create new role
+  app.post('/api/superadmin/roles', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!isSystemAdmin(req)) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const roleData = req.body;
+      const newRole = await storage.createRole(roleData);
+      res.json(newRole);
+    } catch (error) {
+      console.error("Error creating role:", error);
+      res.status(500).json({ message: "Failed to create role" });
+    }
+  });
+
+  // Get users for a company
+  app.get('/api/superadmin/users/:companyId', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!isSystemAdmin(req)) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const { companyId } = req.params;
+      const users = await storage.getUsersByCompany(companyId);
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Get user assignments for a company
+  app.get('/api/superadmin/user-assignments/:companyId', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!isSystemAdmin(req)) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const { companyId } = req.params;
+      const assignments = await storage.getUserAssignments(companyId);
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching user assignments:", error);
+      res.status(500).json({ message: "Failed to fetch user assignments" });
+    }
+  });
+
+  // Assign system role to user
+  app.post('/api/superadmin/assign-system-role', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!isSystemAdmin(req)) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const { userId, systemRoleId } = req.body;
+      const assignment = await storage.assignSystemRole(userId, systemRoleId);
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error assigning system role:", error);
+      res.status(500).json({ message: "Failed to assign system role" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
