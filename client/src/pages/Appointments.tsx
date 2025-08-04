@@ -26,63 +26,35 @@ export default function Appointments() {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
-  // Handle authentication state
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
-
-  // Show loading while checking authentication
-  if (isLoading) {
-    return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="text-center">Loading...</div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated
-  if (!isAuthenticated) {
-    return null;
-  }
-
+  // All hooks must be called before any early returns
   const { data: appointments, isLoading: appointmentsLoading } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments", currentTenant?.id],
-    enabled: !!currentTenant?.id,
+    enabled: !!currentTenant?.id && isAuthenticated,
   });
 
   const { data: clients } = useQuery<Client[]>({
     queryKey: ["/api/clients", currentTenant?.id],
-    enabled: !!currentTenant?.id,
+    enabled: !!currentTenant?.id && isAuthenticated,
   });
 
   const { data: pets } = useQuery<Pet[]>({
     queryKey: ["/api/pets", currentTenant?.id],
-    enabled: !!currentTenant?.id,
+    enabled: !!currentTenant?.id && isAuthenticated,
   });
 
   const { data: rooms } = useQuery<Room[]>({
     queryKey: ["/api/rooms", currentTenant?.id],
-    enabled: !!currentTenant?.id,
+    enabled: !!currentTenant?.id && isAuthenticated,
   });
 
   const { data: staff } = useQuery<Staff[]>({
     queryKey: ["/api/staff", currentTenant?.id],
-    enabled: !!currentTenant?.id,
+    enabled: !!currentTenant?.id && isAuthenticated,
   });
 
   const { data: services } = useQuery<Service[]>({
     queryKey: ["/api/services", currentTenant?.id],
-    enabled: !!currentTenant?.id,
+    enabled: !!currentTenant?.id && isAuthenticated,
   });
 
   // Create appointment mutation
@@ -184,6 +156,58 @@ export default function Appointments() {
     },
   });
 
+  // Calculate available time slots based on service duration
+  const calculateAvailableSlots = async (date: string, serviceId: string) => {
+    if (!serviceId) return;
+    
+    const service = services?.find(s => s.id === serviceId);
+    if (!service) return;
+
+    try {
+      const response = await apiRequest('GET', `/api/appointments/available-slots/${currentTenant?.id}?date=${date}&serviceId=${serviceId}`) as { slots?: string[] };
+      setAvailableSlots(response.slots || []);
+    } catch (error) {
+      console.error("Error fetching available slots:", error);
+      setAvailableSlots([]);
+    }
+  };
+
+  // Handle service selection to calculate available slots
+  useEffect(() => {
+    if (selectedDate && selectedService) {
+      calculateAvailableSlots(selectedDate, selectedService.id);
+    }
+  }, [selectedDate, selectedService]);
+
+  // Handle authentication state after all hooks are declared
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
+
   // Check loading state after all hooks are declared
   if (appointmentsLoading) {
     return (
@@ -200,28 +224,7 @@ export default function Appointments() {
     );
   }
 
-  // Calculate available time slots based on service duration
-  const calculateAvailableSlots = async (date: string, serviceId: string) => {
-    if (!serviceId) return;
-    
-    const service = services?.find(s => s.id === serviceId);
-    if (!service) return;
 
-    try {
-      const response = await apiRequest('GET', `/api/appointments/available-slots/${currentTenant?.id}?date=${date}&serviceId=${serviceId}`);
-      setAvailableSlots(response.slots || []);
-    } catch (error) {
-      console.error("Error fetching available slots:", error);
-      setAvailableSlots([]);
-    }
-  };
-
-  // Handle service selection to calculate available slots
-  useEffect(() => {
-    if (selectedDate && selectedService) {
-      calculateAvailableSlots(selectedDate, selectedService.id);
-    }
-  }, [selectedDate, selectedService]);
 
   const handleCreateAppointment = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -482,7 +485,7 @@ export default function Appointments() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-2">
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status || 'scheduled')}`}>
                       {appointment.status === "scheduled" && "Programada"}
                       {appointment.status === "in_progress" && "En Proceso"}
                       {appointment.status === "completed" && "Completada"}
@@ -617,7 +620,7 @@ export default function Appointments() {
 
               <div>
                 <Label htmlFor="serviceId">Servicio</Label>
-                <Select name="serviceId" required defaultValue={editingAppointment.serviceId}>
+                <Select name="serviceId" required defaultValue={editingAppointment.serviceId || undefined}>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar servicio" />
                   </SelectTrigger>
@@ -633,7 +636,7 @@ export default function Appointments() {
 
               <div>
                 <Label htmlFor="status">Estado</Label>
-                <Select name="status" required defaultValue={editingAppointment.status}>
+                <Select name="status" required defaultValue={editingAppointment.status || undefined}>
                   <SelectTrigger>
                     <SelectValue placeholder="Estado de la cita" />
                   </SelectTrigger>
