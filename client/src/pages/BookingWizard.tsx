@@ -503,7 +503,7 @@ export default function BookingWizard() {
                       <div className="h-80 relative border-b">
                         {/* Custom Overlay Layer for Interactive Markers */}
                         <div className="absolute inset-0 z-20 pointer-events-none">
-                          {/* Right-click overlay for placing customer marker */}
+                          {/* Interactive overlay for mouse events */}
                           <div 
                             className="absolute inset-0 z-10 pointer-events-auto"
                             onContextMenu={(e) => {
@@ -527,6 +527,46 @@ export default function BookingWizard() {
                               toast({
                                 title: "Ubicación del cliente establecida",
                                 description: `Coordenadas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+                              });
+                            }}
+                            onWheel={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              
+                              // Zoom in/out based on wheel direction
+                              if (e.deltaY < 0) {
+                                // Zoom in (wheel up)
+                                if (mapDiameterKm > 1) {
+                                  setMapDiameterKm(prev => Math.max(1, prev - 1));
+                                }
+                              } else {
+                                // Zoom out (wheel down)
+                                if (mapDiameterKm < 20) {
+                                  setMapDiameterKm(prev => Math.min(20, prev + 1));
+                                }
+                              }
+                            }}
+                            onDoubleClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const x = (e.clientX - rect.left) / rect.width;
+                              const y = (e.clientY - rect.top) / rect.height;
+                              
+                              // Convert screen coordinates to GPS coordinates for centering
+                              const lng = (mapCoordinates.lng - mapDiameterKm/111.32) + (x * (mapDiameterKm/111.32) * 2);
+                              const lat = (mapCoordinates.lat + mapDiameterKm/110.54) - (y * (mapDiameterKm/110.54) * 2);
+                              
+                              // Center map on double-click location and zoom in
+                              setMapCoordinates({ lat, lng });
+                              if (mapDiameterKm > 1) {
+                                setMapDiameterKm(prev => Math.max(1, prev - 2));
+                              }
+                              
+                              toast({
+                                title: "Mapa centrado y ampliado",
+                                description: `Centrado en: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
                               });
                             }}
                             onMouseDown={(e) => e.stopPropagation()}
@@ -619,7 +659,7 @@ export default function BookingWizard() {
 
                         {/* Map navigation instructions */}
                         <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded text-xs text-gray-600">
-                          Arrastra para mover • +/- para zoom • Clic derecho para ubicar cliente
+                          Rueda para zoom • Doble clic para centrar • Clic derecho para ubicar cliente
                         </div>
                       </div>
                       
