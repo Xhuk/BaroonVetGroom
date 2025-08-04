@@ -76,6 +76,7 @@ export default function BookingWizard() {
   const [mapCoordinates, setMapCoordinates] = useState({ lat: 25.6866, lng: -100.3161 }); // Monterrey default
   const [tenantLocation, setTenantLocation] = useState({ lat: 25.740586082849077, lng: -100.40735989019088 });
   const [mapDiameterKm, setMapDiameterKm] = useState(8); // Configurable from admin
+  const [maxZoomRange, setMaxZoomRange] = useState(8); // Admin-configured zoom limit
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, lat: 0, lng: 0 });
   
@@ -85,7 +86,9 @@ export default function BookingWizard() {
       const savedSettings = localStorage.getItem(`mapSettings_${currentTenant.id}`);
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        setMapDiameterKm(settings.diameterKm || 8);
+        const adminRange = settings.diameterKm || 8;
+        setMapDiameterKm(adminRange);
+        setMaxZoomRange(adminRange);
       }
     }
   }, [currentTenant?.id]);
@@ -537,16 +540,16 @@ export default function BookingWizard() {
                               e.preventDefault();
                               e.stopPropagation();
                               
-                              // Zoom in/out based on wheel direction
+                              // Zoom in/out based on wheel direction (respecting admin limits)
                               if (e.deltaY < 0) {
                                 // Zoom in (wheel up)
-                                if (mapDiameterKm > 0.5) {
-                                  setMapDiameterKm(prev => Math.max(0.5, prev - 0.5));
+                                if (mapDiameterKm > 1) {
+                                  setMapDiameterKm(prev => Math.max(1, prev - 1));
                                 }
                               } else {
                                 // Zoom out (wheel down)
-                                if (mapDiameterKm < 25) {
-                                  setMapDiameterKm(prev => Math.min(25, prev + 0.5));
+                                if (mapDiameterKm < maxZoomRange * 2) {
+                                  setMapDiameterKm(prev => Math.min(maxZoomRange * 2, prev + 1));
                                 }
                               }
                             }}
@@ -564,8 +567,8 @@ export default function BookingWizard() {
                               
                               // Center map on double-click location and zoom in
                               setMapCoordinates({ lat, lng });
-                              if (mapDiameterKm > 0.5) {
-                                setMapDiameterKm(prev => Math.max(0.5, prev - 1));
+                              if (mapDiameterKm > 1) {
+                                setMapDiameterKm(prev => Math.max(1, prev - 1));
                               }
                               
                               toast({
@@ -614,15 +617,36 @@ export default function BookingWizard() {
                           />
                           
                           {/* Clinic Location - Blue Marker (Bound to stored tenant GPS coordinates) */}
-                          {currentTenant?.latitude && currentTenant?.longitude && (
-                            <div 
-                              className="absolute transform -translate-x-1/2 -translate-y-full group pointer-events-none"
-                              style={{
-                                left: `${((parseFloat(currentTenant.longitude) - (mapCoordinates.lng - mapDiameterKm/111.32)) / ((mapDiameterKm/111.32) * 2)) * 100}%`,
-                                top: `${((mapCoordinates.lat + mapDiameterKm/110.54 - parseFloat(currentTenant.latitude)) / ((mapDiameterKm/110.54) * 2)) * 100}%`,
-                                zIndex: 30
-                              }}
-                            >
+                          {currentTenant?.latitude && currentTenant?.longitude && (() => {
+                            const tenantLat = parseFloat(currentTenant.latitude);
+                            const tenantLng = parseFloat(currentTenant.longitude);
+                            
+                            // Calculate marker position with better precision
+                            const leftPercent = ((tenantLng - (mapCoordinates.lng - mapDiameterKm/111.32)) / ((mapDiameterKm/111.32) * 2)) * 100;
+                            const topPercent = ((mapCoordinates.lat + mapDiameterKm/110.54 - tenantLat) / ((mapDiameterKm/110.54) * 2)) * 100;
+                            
+                            // Debug logging for marker positioning
+                            console.log('Blue Marker Debug:', {
+                              tenantLat,
+                              tenantLng,
+                              mapLat: mapCoordinates.lat,
+                              mapLng: mapCoordinates.lng,
+                              diameter: mapDiameterKm,
+                              leftPercent,
+                              topPercent,
+                              isVisible: leftPercent >= -5 && leftPercent <= 105 && topPercent >= -5 && topPercent <= 105
+                            });
+                            
+                            return (
+                              <div 
+                                className="absolute transform -translate-x-1/2 -translate-y-full group pointer-events-none"
+                                style={{
+                                  left: `${leftPercent}%`,
+                                  top: `${topPercent}%`,
+                                  zIndex: 30,
+                                  opacity: (leftPercent >= -5 && leftPercent <= 105 && topPercent >= -5 && topPercent <= 105) ? 1 : 0.3
+                                }}
+                              >
                               <img 
                                 src={blueMarkerIconPath} 
                                 alt="Clínica" 
@@ -634,8 +658,9 @@ export default function BookingWizard() {
                                 <div className="text-xs text-gray-500">GPS: {parseFloat(currentTenant.latitude).toFixed(6)}, {parseFloat(currentTenant.longitude).toFixed(6)}</div>
                                 <div className="text-xs text-blue-600">Ubicación del Tenant</div>
                               </div>
-                            </div>
-                          )}
+                              </div>
+                            );
+                          })()}
                           
                           {/* Customer Location - Red Pin (placed by right-click) */}
                           {customerData.latitude && customerData.longitude && (
@@ -675,8 +700,8 @@ export default function BookingWizard() {
                         <div className="absolute top-2 right-2 flex flex-col gap-1 z-30">
                           <button
                             onClick={() => {
-                              if (mapDiameterKm > 0.5) {
-                                setMapDiameterKm(prev => Math.max(0.5, prev - 1));
+                              if (mapDiameterKm > 1) {
+                                setMapDiameterKm(prev => Math.max(1, prev - 1));
                               }
                             }}
                             className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 rounded flex items-center justify-center text-gray-700 hover:text-gray-900 shadow-sm"
@@ -687,8 +712,8 @@ export default function BookingWizard() {
                           </button>
                           <button
                             onClick={() => {
-                              if (mapDiameterKm < 25) {
-                                setMapDiameterKm(prev => Math.min(25, prev + 1));
+                              if (mapDiameterKm < maxZoomRange * 2) {
+                                setMapDiameterKm(prev => Math.min(maxZoomRange * 2, prev + 1));
                               }
                             }}
                             className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 rounded flex items-center justify-center text-gray-700 hover:text-gray-900 shadow-sm"
