@@ -106,7 +106,7 @@ export default function BookingWizard() {
     try {
       const response = await apiRequest('GET', 
         `/api/appointments/check-availability/${currentTenant?.id}?date=${bookingData.requestedDate}&serviceId=${bookingData.serviceId}&time=${bookingData.requestedTime}`
-      );
+      ) as { available: boolean; alternativeSlots: string[] };
       
       if (response.available) {
         setAvailableSlots([bookingData.requestedTime]);
@@ -177,21 +177,22 @@ export default function BookingWizard() {
   const createAppointmentMutation = useMutation({
     mutationFn: async () => {
       // First create/find client
-      let clientResponse;
+      let clientResponse: Client;
       try {
-        clientResponse = await apiRequest('POST', `/api/clients/${currentTenant?.id}`, customerData);
+        clientResponse = await apiRequest('POST', `/api/clients/${currentTenant?.id}`, customerData) as Client;
       } catch (error) {
         // If client exists, try to get by phone
-        clientResponse = await apiRequest('GET', `/api/clients/by-phone/${currentTenant?.id}/${customerData.phone}`);
+        clientResponse = await apiRequest('GET', `/api/clients/by-phone/${currentTenant?.id}/${customerData.phone}`) as Client;
       }
       
       // Create pet
       const petResponse = await apiRequest('POST', `/api/pets`, {
         ...petData,
         clientId: clientResponse.id
-      });
+      }) as Pet;
       
       // Create appointment
+      const selectedService = (services || []).find((s: Service) => s.id === bookingData.serviceId);
       const appointmentData = {
         clientId: clientResponse.id,
         petId: petResponse.id,
@@ -201,7 +202,7 @@ export default function BookingWizard() {
         logistics: bookingData.logistics,
         notes: bookingData.notes,
         status: 'scheduled',
-        type: services?.find(s => s.id === bookingData.serviceId)?.type || 'grooming'
+        type: selectedService?.type || 'grooming'
       };
       
       return apiRequest('POST', `/api/appointments/${currentTenant?.id}`, appointmentData);
@@ -244,7 +245,7 @@ export default function BookingWizard() {
     if (currentStep === 2 && customerData.address && customerData.fraccionamiento) {
       geocodeAddress(customerData.address, customerData.fraccionamiento);
     }
-    if (currentStep === 3 && bookingData.serviceId && bookingData.requestedDate) {
+    if (currentStep === 4 && bookingData.serviceId && bookingData.requestedDate) {
       checkAvailableSlots();
     }
     setCurrentStep(prev => Math.min(prev + 1, 5));
@@ -362,7 +363,7 @@ export default function BookingWizard() {
                     id="address"
                     value={customerData.address}
                     onChange={(e) => setCustomerData(prev => ({ ...prev, address: e.target.value }))}
-                    placeholder="Privada Cumbres 000"
+                    placeholder="Ej: Vía Láctea 1000, Satelite 245, Cerrada Luna 89"
                     required
                   />
                 </div>
@@ -372,7 +373,7 @@ export default function BookingWizard() {
                     id="fraccionamiento"
                     value={customerData.fraccionamiento}
                     onChange={(e) => setCustomerData(prev => ({ ...prev, fraccionamiento: e.target.value }))}
-                    placeholder="Valle de Cumbres"
+                    placeholder="Ej: Residencial San Nicolás, Fraccionamiento Las Palmas"
                     required
                   />
                 </div>
@@ -382,26 +383,103 @@ export default function BookingWizard() {
                     id="postalCode"
                     value={customerData.postalCode}
                     onChange={(e) => setCustomerData(prev => ({ ...prev, postalCode: e.target.value }))}
-                    placeholder="64000"
+                    placeholder="Ej: 66260, 64720, 67190"
                   />
                 </div>
               </div>
               
-              {/* Simple Map Display */}
-              {mapCoordinates.lat !== 25.6866 && (
-                <div className="mt-4">
-                  <Label>Ubicación en el mapa</Label>
-                  <div className="border rounded-lg p-4 bg-gray-50">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <MapPin className="w-4 h-4" />
-                      <span>Ubicación confirmada: {customerData.address}, {customerData.fraccionamiento}</span>
+              {/* Interactive Map Display */}
+              <div className="mt-4">
+                <Label>Ubicación en el mapa</Label>
+                <div className="border rounded-lg overflow-hidden bg-gray-50">
+                  {mapCoordinates.lat !== 25.6866 ? (
+                    <div>
+                      {/* Map Container */}
+                      <div className="h-64 relative bg-blue-50 flex items-center justify-center border-b">
+                        <iframe
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-0.01},${mapCoordinates.lat-0.01},${mapCoordinates.lng+0.01},${mapCoordinates.lat+0.01}&layer=mapnik&marker=${mapCoordinates.lat},${mapCoordinates.lng}`}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          title="Mapa de ubicación"
+                          className="rounded-t-lg"
+                        />
+                      </div>
+                      
+                      {/* Map Info */}
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 text-sm text-green-700 mb-2">
+                          <MapPin className="w-4 h-4" />
+                          <span className="font-medium">Ubicación confirmada</span>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2">
+                          {customerData.address}, {customerData.fraccionamiento}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-gray-500">
+                            GPS: {mapCoordinates.lat.toFixed(6)}, {mapCoordinates.lng.toFixed(6)}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => geocodeAddress(customerData.address, customerData.fraccionamiento)}
+                            className="text-xs"
+                          >
+                            Actualizar ubicación
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Coordenadas: {mapCoordinates.lat.toFixed(6)}, {mapCoordinates.lng.toFixed(6)}
-                    </p>
-                  </div>
+                  ) : (
+                    <div className="h-32 flex items-center justify-center text-gray-500">
+                      <div className="text-center">
+                        <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm">Ingresa la dirección para ver la ubicación</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+                
+                {/* Manual Coordinates Input */}
+                {mapCoordinates.lat !== 25.6866 && (
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="latitude" className="text-xs">Latitud (opcional)</Label>
+                      <Input
+                        id="latitude"
+                        value={customerData.latitude}
+                        onChange={(e) => {
+                          setCustomerData(prev => ({ ...prev, latitude: e.target.value }));
+                          const lat = parseFloat(e.target.value);
+                          const lng = parseFloat(customerData.longitude);
+                          if (!isNaN(lat) && !isNaN(lng)) {
+                            setMapCoordinates({ lat, lng });
+                          }
+                        }}
+                        placeholder="25.6866"
+                        className="text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="longitude" className="text-xs">Longitud (opcional)</Label>
+                      <Input
+                        id="longitude"
+                        value={customerData.longitude}
+                        onChange={(e) => {
+                          setCustomerData(prev => ({ ...prev, longitude: e.target.value }));
+                          const lat = parseFloat(customerData.latitude);
+                          const lng = parseFloat(e.target.value);
+                          if (!isNaN(lat) && !isNaN(lng)) {
+                            setMapCoordinates({ lat, lng });
+                          }
+                        }}
+                        placeholder="-100.3161"
+                        className="text-xs"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -438,12 +516,29 @@ export default function BookingWizard() {
                 </div>
                 <div>
                   <Label htmlFor="breed">Raza</Label>
-                  <Input
-                    id="breed"
-                    value={petData.breed}
-                    onChange={(e) => setPetData(prev => ({ ...prev, breed: e.target.value }))}
-                    placeholder="Golden Retriever"
-                  />
+                  <Select 
+                    value={petData.breed} 
+                    onValueChange={(value) => setPetData(prev => ({ ...prev, breed: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar raza" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="golden-retriever">Golden Retriever</SelectItem>
+                      <SelectItem value="labrador">Labrador</SelectItem>
+                      <SelectItem value="pastor-aleman">Pastor Alemán</SelectItem>
+                      <SelectItem value="chihuahua">Chihuahua</SelectItem>
+                      <SelectItem value="bulldog-frances">Bulldog Francés</SelectItem>
+                      <SelectItem value="poodle">Poodle</SelectItem>
+                      <SelectItem value="yorkshire">Yorkshire Terrier</SelectItem>
+                      <SelectItem value="husky-siberiano">Husky Siberiano</SelectItem>
+                      <SelectItem value="rottweiler">Rottweiler</SelectItem>
+                      <SelectItem value="dachshund">Dachshund (Salchicha)</SelectItem>
+                      <SelectItem value="beagle">Beagle</SelectItem>
+                      <SelectItem value="mestizo">Mestizo</SelectItem>
+                      <SelectItem value="otro">Otro</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="age">Edad (años)</Label>
@@ -482,7 +577,7 @@ export default function BookingWizard() {
                       <SelectValue placeholder="Seleccionar servicio" />
                     </SelectTrigger>
                     <SelectContent>
-                      {services?.filter(s => s.type === 'grooming').map((service) => (
+                      {(services || []).map((service: Service) => (
                         <SelectItem key={service.id} value={service.id}>
                           {service.name} - ${service.price} ({service.duration} min)
                         </SelectItem>
@@ -630,8 +725,8 @@ export default function BookingWizard() {
                     <div>
                       <h4 className="font-medium mb-2">Servicio</h4>
                       <div className="text-sm space-y-1">
-                        <p>{services?.find(s => s.id === bookingData.serviceId)?.name}</p>
-                        <p>${services?.find(s => s.id === bookingData.serviceId)?.price}</p>
+                        <p>{(services || []).find((s: Service) => s.id === bookingData.serviceId)?.name}</p>
+                        <p>${(services || []).find((s: Service) => s.id === bookingData.serviceId)?.price}</p>
                       </div>
                     </div>
                   </div>
