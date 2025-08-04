@@ -52,7 +52,7 @@ export function Header() {
   });
   
   // Check if user has debug access
-  const isDebugUser = user?.email?.includes('vetgroom') || false;
+  const isDebugUser = canDebugTenants || user?.email?.includes('vetgroom') || false;
 
   const currentDate = new Date();
   const dateOptions: Intl.DateTimeFormatOptions = {
@@ -73,6 +73,12 @@ export function Header() {
   const activateDebugMode = () => {
     sessionStorage.setItem('debugMode', 'true');
     sessionStorage.removeItem('selectedTenantId');
+    showDebugSelector();
+  };
+
+  const setDebugTenant = (tenantId: string) => {
+    sessionStorage.setItem('debugMode', 'true');
+    sessionStorage.setItem('selectedTenantId', tenantId);
     window.location.reload();
   };
 
@@ -141,15 +147,33 @@ export function Header() {
           <div className="flex items-center space-x-3">
             {/* Debug Mode Activation - Only for VetGroom users */}
             {isDebugUser && !isDebugMode && (
-              <Button
-                onClick={activateDebugMode}
-                variant="outline"
-                size="sm"
-                className="text-orange-600 border-orange-300 hover:bg-orange-50"
-              >
-                <Bug className="w-3 h-3 mr-1" />
-                Debug Mode
-              </Button>
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={activateDebugMode}
+                  variant="outline"
+                  size="sm"
+                  className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                >
+                  <Bug className="w-3 h-3 mr-1" />
+                  Debug Mode
+                </Button>
+                <Button
+                  onClick={() => setDebugTenant('vetgroom1')}
+                  variant="outline"
+                  size="sm"
+                  className="text-green-600 border-green-300 hover:bg-green-50"
+                >
+                  Debug VG1
+                </Button>
+                <Button
+                  onClick={() => setDebugTenant('tenant-1')}
+                  variant="outline"
+                  size="sm"
+                  className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                >
+                  Debug Central
+                </Button>
+              </div>
             )}
             
             <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">

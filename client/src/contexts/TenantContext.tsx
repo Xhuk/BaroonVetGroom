@@ -56,18 +56,36 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     
     setIsDebugMode(debugMode);
     
-    // Priority 1: Handle stored debug tenant selection
+    // Priority 1: Handle stored debug tenant selection (memory-based)
     if (debugMode && isDebugUser && storedTenantId) {
-      fetch(`/api/tenants/${storedTenantId}`)
-        .then(res => res.json())
-        .then(tenant => {
-          if (tenant && !tenant.error) {
-            setCurrentTenant(tenant);
-          } else {
-            setShowDebugTenantSelector(true);
-          }
-        })
-        .catch(() => setShowDebugTenantSelector(true));
+      // Create tenant object from memory instead of API call
+      const debugTenants = [
+        {
+          id: 'vetgroom1',
+          name: 'Vetgroom1',
+          subdomain: 'vetgroom1',
+          companyId: 'vetgroom-corp',
+          address: 'Sucursal Principal - Av. Mascotas 456',
+          phone: '+1-555-2001',
+          email: 'vetgroom1@vetgroom.com'
+        },
+        {
+          id: 'tenant-1', 
+          name: 'VetGroom Central',
+          subdomain: 'central',
+          companyId: 'comp-1',
+          address: 'Centro Veterinario - Calle Principal 123',
+          phone: '+1-555-1001',
+          email: 'central@vetcorp.com'
+        }
+      ];
+      
+      const selectedTenant = debugTenants.find(t => t.id === storedTenantId);
+      if (selectedTenant) {
+        setCurrentTenant(selectedTenant);
+      } else {
+        setShowDebugTenantSelector(true);
+      }
       return;
     }
     

@@ -21,11 +21,27 @@ export function DebugTenantSelector({ isOpen, onClose, onTenantSelect }: DebugTe
   // Check if user has debug/system admin access
   const isDebugUser = user?.email?.includes('vetgroom') || false;
 
-  // Fetch all tenants for debug users
-  const { data: allTenants = [], isLoading } = useQuery({
-    queryKey: ['/api/debug/all-tenants'],
-    enabled: isDebugUser && isOpen,
-  });
+  // Static tenant list for debug mode (memory-based, no database calls)
+  const allTenants = [
+    {
+      id: 'vetgroom1',
+      name: 'Vetgroom1',
+      subdomain: 'vetgroom1', 
+      companyName: 'VetGroom Corp',
+      address: 'Sucursal Principal - Av. Mascotas 456',
+      phone: '+1-555-2001'
+    },
+    {
+      id: 'tenant-1',
+      name: 'VetGroom Central',
+      subdomain: 'central',
+      companyName: 'VetCorp Inc',
+      address: 'Centro Veterinario - Calle Principal 123',
+      phone: '+1-555-1001'
+    }
+  ];
+  
+  const isLoading = false;
 
   // Filter tenants based on search
   const filteredTenants = allTenants.filter((tenant: any) =>
