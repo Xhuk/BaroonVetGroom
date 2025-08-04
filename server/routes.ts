@@ -1435,6 +1435,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
 
+  // Add error logging endpoint
+  app.post('/api/error-log', isAuthenticated, async (req: any, res) => {
+    try {
+      const errorInfo = req.body;
+      console.group('🐛 Frontend Error Log');
+      console.error('Context:', errorInfo.context);
+      console.error('Error:', errorInfo.error);
+      console.log('User Info:', {
+        userId: errorInfo.userId,
+        tenantId: errorInfo.tenantId,
+        timestamp: errorInfo.timestamp
+      });
+      console.log('Additional Info:', errorInfo.additionalInfo);
+      console.groupEnd();
+      
+      // In production, you might want to store this in a database
+      // await storage.logError(errorInfo);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to log frontend error:', error);
+      res.status(500).json({ message: 'Failed to log error' });
+    }
+  });
+
   // Get user access info
   app.get('/api/auth/access-info', isAuthenticated, async (req: any, res) => {
     try {

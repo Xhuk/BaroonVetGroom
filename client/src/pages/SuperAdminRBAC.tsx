@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { Header } from "@/components/Header";
 import { Navigation } from "@/components/Navigation";
 import { BackButton } from "@/components/BackButton";
@@ -15,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CompanyTenantSelector } from "@/components/CompanyTenantSelector";
@@ -52,6 +54,7 @@ const AVAILABLE_PAGES = [
 export default function SuperAdminRBAC() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { handleError } = useErrorHandler();
   
   // State management
   const [selectedCompany, setSelectedCompany] = useState<string>("");
@@ -71,30 +74,35 @@ export default function SuperAdminRBAC() {
   // Check if user has system admin access
   const { canAccessSuperAdmin, canDebugTenants, isLoading: accessLoading } = useAccessControl();
 
-  // Fetch system data
-  const { data: companies } = useQuery({
+  // Fetch system data with error handling
+  const { data: companies, error: companiesError, isLoading: companiesLoading } = useQuery({
     queryKey: ['/api/superadmin/companies'],
     enabled: canAccessSuperAdmin,
+    retry: false,
   });
 
-  const { data: systemRoles } = useQuery({
+  const { data: systemRoles, error: systemRolesError, isLoading: systemRolesLoading } = useQuery({
     queryKey: ['/api/superadmin/system-roles'],
     enabled: canAccessSuperAdmin,
+    retry: false,
   });
 
-  const { data: roles = [] } = useQuery({
+  const { data: roles = [], error: rolesError } = useQuery({
     queryKey: ['/api/superadmin/roles', selectedCompany],
     enabled: canAccessSuperAdmin && !!selectedCompany,
+    retry: false,
   });
 
-  const { data: users = [] } = useQuery({
+  const { data: users = [], error: usersError } = useQuery({
     queryKey: ['/api/superadmin/users', selectedCompany],
     enabled: canAccessSuperAdmin && !!selectedCompany,
+    retry: false,
   });
 
-  const { data: userAssignments = [] } = useQuery({
+  const { data: userAssignments = [], error: assignmentsError } = useQuery({
     queryKey: ['/api/superadmin/user-assignments', selectedCompany],
     enabled: canAccessSuperAdmin && !!selectedCompany,
+    retry: false,
   });
 
   // Create role mutation
@@ -123,9 +131,14 @@ export default function SuperAdminRBAC() {
       });
     },
     onError: (error) => {
+      const errorInfo = handleError(error, { 
+        context: 'CreateRole',
+        additionalInfo: { roleData: newRoleData, selectedCompany }
+      });
+      
       toast({
         title: "Error",
-        description: "No se pudo crear el rol",
+        description: "No se pudo crear el rol. Info copiada al portapapeles.",
         variant: "destructive",
       });
     },
@@ -228,6 +241,69 @@ export default function SuperAdminRBAC() {
 
           {/* Debug Company/Tenant Selector */}
           {canDebugTenants && <CompanyTenantSelector />}
+
+          {/* Error Display Section */}
+          {(companiesError || systemRolesError || rolesError || usersError || assignmentsError) && (
+            <div className="mb-6 space-y-4">
+              {companiesError && (
+                <ErrorDisplay 
+                  error={companiesError}
+                  context="Companies API"
+                  userId={user?.id}
+                  additionalInfo={{ 
+                    endpoint: '/api/superadmin/companies',
+                    canAccessSuperAdmin,
+                    accessLoading 
+                  }}
+                />
+              )}
+              {systemRolesError && (
+                <ErrorDisplay 
+                  error={systemRolesError}
+                  context="System Roles API"
+                  userId={user?.id}
+                  additionalInfo={{ 
+                    endpoint: '/api/superadmin/system-roles',
+                    canAccessSuperAdmin 
+                  }}
+                />
+              )}
+              {rolesError && (
+                <ErrorDisplay 
+                  error={rolesError}
+                  context="Roles API"
+                  userId={user?.id}
+                  additionalInfo={{ 
+                    endpoint: '/api/superadmin/roles',
+                    selectedCompany,
+                    canAccessSuperAdmin 
+                  }}
+                />
+              )}
+              {usersError && (
+                <ErrorDisplay 
+                  error={usersError}
+                  context="Users API"
+                  userId={user?.id}
+                  additionalInfo={{ 
+                    endpoint: '/api/superadmin/users',
+                    selectedCompany 
+                  }}
+                />
+              )}
+              {assignmentsError && (
+                <ErrorDisplay 
+                  error={assignmentsError}
+                  context="User Assignments API"
+                  userId={user?.id}
+                  additionalInfo={{ 
+                    endpoint: '/api/superadmin/user-assignments',
+                    selectedCompany 
+                  }}
+                />
+              )}
+            </div>
+          )}
 
           {/* Company Selection */}
           <Card className="mb-6">
