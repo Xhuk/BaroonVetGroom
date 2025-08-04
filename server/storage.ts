@@ -76,6 +76,9 @@ export interface IStorage {
   // Appointment operations
   getAppointments(tenantId: string, date?: string): Promise<Appointment[]>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
+  updateAppointment(appointmentId: string, appointment: Partial<InsertAppointment>): Promise<Appointment>;
+  deleteAppointment(appointmentId: string): Promise<void>;
+  getAvailableSlots(tenantId: string, date: string, serviceId: string): Promise<string[]>;
   
   // Service operations
   getServices(tenantId: string): Promise<Service[]>;
@@ -257,6 +260,58 @@ export class DatabaseStorage implements IStorage {
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
     const [newAppointment] = await db.insert(appointments).values(appointment).returning();
     return newAppointment;
+  }
+
+  async updateAppointment(appointmentId: string, appointment: Partial<InsertAppointment>): Promise<Appointment> {
+    const [updatedAppointment] = await db
+      .update(appointments)
+      .set(appointment)
+      .where(eq(appointments.id, appointmentId))
+      .returning();
+    return updatedAppointment;
+  }
+
+  async deleteAppointment(appointmentId: string): Promise<void> {
+    await db.delete(appointments).where(eq(appointments.id, appointmentId));
+  }
+
+  async getAvailableSlots(tenantId: string, date: string, serviceId: string): Promise<string[]> {
+    // Get the service duration
+    const [service] = await db.select().from(services).where(eq(services.id, serviceId));
+    if (!service) return [];
+
+    // Get existing appointments for the date
+    const existingAppointments = await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.tenantId, tenantId));
+
+    // Generate time slots from 8:00 AM to 6:00 PM
+    const slots = [];
+    for (let hour = 8; hour < 18; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+    }
+
+    // Filter out slots that conflict with existing appointments
+    const availableSlots = slots.filter(slot => {
+      const slotTime = new Date(`${date}T${slot}:00`);
+      const slotEndTime = new Date(slotTime.getTime() + service.duration * 60000);
+
+      return !existingAppointments.some(apt => {
+        if (apt.scheduledDate !== date) return false;
+        
+        const aptTime = new Date(`${apt.scheduledDate}T${apt.scheduledTime}:00`);
+        const aptEndTime = new Date(aptTime.getTime() + (apt.duration || 30) * 60000);
+
+        // Check for time overlap
+        return slotTime < aptEndTime && slotEndTime > aptTime;
+      });
+    });
+
+    return availableSlots;
   }
 
   // Service operations

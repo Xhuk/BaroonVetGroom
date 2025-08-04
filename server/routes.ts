@@ -144,6 +144,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create appointment
+  app.post('/api/appointments/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const appointmentData = { ...req.body, tenantId };
+      const appointment = await storage.createAppointment(appointmentData);
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error creating appointment:", error);
+      res.status(500).json({ message: "Failed to create appointment" });
+    }
+  });
+
+  // Update appointment
+  app.put('/api/appointments/:appointmentId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const appointment = await storage.updateAppointment(appointmentId, req.body);
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error updating appointment:", error);
+      res.status(500).json({ message: "Failed to update appointment" });
+    }
+  });
+
+  // Delete appointment
+  app.delete('/api/appointments/:appointmentId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { appointmentId } = req.params;
+      await storage.deleteAppointment(appointmentId);
+      res.json({ message: "Appointment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting appointment:", error);
+      res.status(500).json({ message: "Failed to delete appointment" });
+    }
+  });
+
+  // Get available time slots for a service on a specific date
+  app.get('/api/appointments/available-slots/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { date, serviceId } = req.query;
+      const slots = await storage.getAvailableSlots(tenantId, date as string, serviceId as string);
+      res.json({ slots });
+    } catch (error) {
+      console.error("Error fetching available slots:", error);
+      res.status(500).json({ message: "Failed to fetch available slots" });
+    }
+  });
+
   // Dashboard stats route - Based on real database data
   app.get('/api/dashboard/stats/:tenantId', isAuthenticated, async (req: any, res) => {
     try {
