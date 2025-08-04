@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { 
   Plus, 
   Map, 
@@ -20,7 +21,8 @@ import {
   User,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  ArrowLeft
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { DeliveryRoute, DeliveryStop, Fraccionamiento, Staff, Appointment } from "@shared/schema";
@@ -28,6 +30,7 @@ import type { DeliveryRoute, DeliveryStop, Fraccionamiento, Staff, Appointment }
 export default function DeliveryPlan() {
   const { currentTenant } = useTenant();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [showRouteForm, setShowRouteForm] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -79,7 +82,19 @@ export default function DeliveryPlan() {
     return (
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-blue-800">Planificación de Entregas</h1>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation("/")}
+              className="text-gray-600 hover:text-gray-900"
+              data-testid="button-back-to-dashboard"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Volver al Dashboard
+            </Button>
+            <h1 className="text-2xl font-bold text-blue-800">Planificación de Entregas</h1>
+          </div>
         </div>
         <div className="grid gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -140,7 +155,19 @@ export default function DeliveryPlan() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-blue-800">Planificación de Entregas</h1>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocation("/")}
+            className="text-gray-600 hover:text-gray-900"
+            data-testid="button-back-to-dashboard"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver al Dashboard
+          </Button>
+          <h1 className="text-2xl font-bold text-blue-800">Planificación de Entregas</h1>
+        </div>
         <div className="flex gap-3">
           <Input
             type="date"
