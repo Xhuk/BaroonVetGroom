@@ -31,7 +31,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [isDebugMode, setIsDebugMode] = useState(false);
 
   // Check if user has debug access through access control
-  const { data: accessInfo } = useQuery({
+  const { data: accessInfo } = useQuery<any>({
     queryKey: ['/api/auth/access-info'],
     enabled: isAuthenticated,
   });
@@ -52,40 +52,35 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     const debugMode = sessionStorage.getItem('debugMode') === 'true';
     const storedTenantId = sessionStorage.getItem('selectedTenantId');
     
+    // console.log('TenantContext useEffect - Debug mode:', debugMode, 'storedTenantId:', storedTenantId, 'isDebugUser:', isDebugUser, 'userTenants.length:', userTenants.length, 'currentTenant:', currentTenant);
+    
     setIsDebugMode(debugMode);
     
-    if (debugMode && isDebugUser) {
-      if (storedTenantId) {
-        // Load the stored tenant for debug mode
-        fetch(`/api/tenants/${storedTenantId}`)
-          .then(res => res.json())
-          .then(tenant => {
-            if (tenant && !tenant.error) {
-              setCurrentTenant(tenant);
-            } else {
-              // Invalid stored tenant, show debug selector
-              setShowDebugTenantSelector(true);
-            }
-          })
-          .catch(() => setShowDebugTenantSelector(true));
-      } else {
-        // No stored tenant, show debug selector
-        setShowDebugTenantSelector(true);
-      }
-      return; // Skip normal tenant logic in debug mode
-    }
-    
-    // Handle users with debug privileges but no regular tenant assignments
-    if (isDebugUser && userTenants.length === 0 && !currentTenant && !debugMode) {
-      // User has debug privileges - activate debug mode automatically
-      setIsDebugMode(true);
-      setShowDebugTenantSelector(true);
-      sessionStorage.setItem('debugMode', 'true');
+    // Priority 1: Handle stored debug tenant selection
+    if (debugMode && isDebugUser && storedTenantId) {
+      fetch(`/api/tenants/${storedTenantId}`)
+        .then(res => res.json())
+        .then(tenant => {
+          if (tenant && !tenant.error) {
+            setCurrentTenant(tenant);
+          } else {
+            setShowDebugTenantSelector(true);
+          }
+        })
+        .catch(() => setShowDebugTenantSelector(true));
       return;
     }
     
-    // Normal tenant selection logic for non-debug users
+    // Priority 2: Show debug selector for debug mode without stored tenant
+    if (debugMode && isDebugUser && !storedTenantId) {
+      setShowDebugTenantSelector(true);
+      return;
+    }
+    
+    // Priority 3: Handle regular tenant assignments (including debug users with normal assignments)
     if (userTenants.length > 0 && !currentTenant && !debugMode) {
+      // console.log('Loading regular tenant assignments for user');
+      // Fetch full tenant data for all user tenants
       // Fetch full tenant data for all user tenants
       Promise.all(
         userTenants.map(ut => 
