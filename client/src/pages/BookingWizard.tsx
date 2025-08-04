@@ -539,13 +539,13 @@ export default function BookingWizard() {
                               // Zoom in/out based on wheel direction
                               if (e.deltaY < 0) {
                                 // Zoom in (wheel up)
-                                if (mapDiameterKm > 1) {
-                                  setMapDiameterKm(prev => Math.max(1, prev - 1));
+                                if (mapDiameterKm > 0.5) {
+                                  setMapDiameterKm(prev => Math.max(0.5, prev - 0.5));
                                 }
                               } else {
                                 // Zoom out (wheel down)
-                                if (mapDiameterKm < 20) {
-                                  setMapDiameterKm(prev => Math.min(20, prev + 1));
+                                if (mapDiameterKm < 25) {
+                                  setMapDiameterKm(prev => Math.min(25, prev + 0.5));
                                 }
                               }
                             }}
@@ -563,8 +563,8 @@ export default function BookingWizard() {
                               
                               // Center map on double-click location and zoom in
                               setMapCoordinates({ lat, lng });
-                              if (mapDiameterKm > 1) {
-                                setMapDiameterKm(prev => Math.max(1, prev - 2));
+                              if (mapDiameterKm > 0.5) {
+                                setMapDiameterKm(prev => Math.max(0.5, prev - 1));
                               }
                               
                               toast({
@@ -622,12 +622,9 @@ export default function BookingWizard() {
                                 zIndex: 30
                               }}
                             >
-                              <img 
-                                src={markerIconPath} 
-                                alt="Clínica" 
-                                className="w-6 h-6 drop-shadow-lg"
-                                style={{ filter: 'hue-rotate(200deg) saturate(1.5)' }}
-                              />
+                              <div className="w-8 h-8 bg-blue-600 rounded-full border-2 border-white drop-shadow-lg flex items-center justify-center">
+                                <div className="w-4 h-4 bg-white rounded-full"></div>
+                              </div>
                               <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-blue-100 px-3 py-2 rounded shadow text-xs whitespace-nowrap border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <div className="font-semibold">Clínica Veterinaria</div>
                                 <div className="text-blue-600">{currentTenant?.name}</div>
@@ -675,8 +672,8 @@ export default function BookingWizard() {
                         <div className="absolute top-2 right-2 flex flex-col gap-1 z-30">
                           <button
                             onClick={() => {
-                              if (mapDiameterKm > 1) {
-                                setMapDiameterKm(prev => Math.max(1, prev - 2));
+                              if (mapDiameterKm > 0.5) {
+                                setMapDiameterKm(prev => Math.max(0.5, prev - 1));
                               }
                             }}
                             className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 rounded flex items-center justify-center text-gray-700 hover:text-gray-900 shadow-sm"
@@ -687,8 +684,8 @@ export default function BookingWizard() {
                           </button>
                           <button
                             onClick={() => {
-                              if (mapDiameterKm < 20) {
-                                setMapDiameterKm(prev => Math.min(20, prev + 2));
+                              if (mapDiameterKm < 25) {
+                                setMapDiameterKm(prev => Math.min(25, prev + 1));
                               }
                             }}
                             className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 rounded flex items-center justify-center text-gray-700 hover:text-gray-900 shadow-sm"
