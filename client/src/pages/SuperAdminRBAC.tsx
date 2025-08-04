@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { useErrorToast } from "@/hooks/useErrorToast";
 import { Header } from "@/components/Header";
 import { Navigation } from "@/components/Navigation";
 import { BackButton } from "@/components/BackButton";
@@ -55,6 +56,7 @@ export default function SuperAdminRBAC() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { handleError } = useErrorHandler();
+  const { showErrorToast } = useErrorToast();
   
   // State management
   const [selectedCompany, setSelectedCompany] = useState<string>("");
@@ -136,10 +138,12 @@ export default function SuperAdminRBAC() {
         additionalInfo: { roleData: newRoleData, selectedCompany }
       });
       
-      toast({
-        title: "Error",
-        description: "No se pudo crear el rol. Info copiada al portapapeles.",
-        variant: "destructive",
+      showErrorToast({
+        title: "Error creando rol",
+        description: "No se pudo crear el rol",
+        context: "CreateRole",
+        error,
+        additionalInfo: { roleData: newRoleData, selectedCompany }
       });
     },
   });
@@ -156,22 +160,38 @@ export default function SuperAdminRBAC() {
         description: "El rol de sistema ha sido asignado correctamente",
       });
     },
+    onError: (error) => {
+      showErrorToast({
+        title: "Error asignando rol",
+        description: "No se pudo asignar el rol de sistema",
+        context: "AssignSystemRole",
+        error,
+        additionalInfo: { assignSystemRoleMutation }
+      });
+    },
   });
 
   // Check authorization
   useEffect(() => {
     if (!isLoading && (!isAuthenticated || !canAccessSuperAdmin)) {
-      toast({
+      showErrorToast({
         title: "Acceso Denegado",
         description: "Solo desarrolladores y administradores de VetGroom pueden acceder a esta página",
-        variant: "destructive",
+        context: "Authorization",
+        error: new Error("Unauthorized access attempt"),
+        additionalInfo: { 
+          isAuthenticated, 
+          canAccessSuperAdmin, 
+          isLoading,
+          page: "SuperAdminRBAC"
+        }
       });
       setTimeout(() => {
         window.location.href = "/";
       }, 2000);
       return;
     }
-  }, [isAuthenticated, isLoading, canAccessSuperAdmin, toast]);
+  }, [isAuthenticated, isLoading, canAccessSuperAdmin, showErrorToast]);
 
   if (isLoading) {
     return (
@@ -187,10 +207,12 @@ export default function SuperAdminRBAC() {
 
   const handleCreateRole = () => {
     if (!newRoleData.name || !newRoleData.displayName) {
-      toast({
-        title: "Error",
+      showErrorToast({
+        title: "Datos incompletos",
         description: "Nombre y nombre para mostrar son requeridos",
-        variant: "destructive",
+        context: "CreateRoleValidation",
+        error: new Error("Missing required fields"),
+        additionalInfo: { newRoleData }
       });
       return;
     }
