@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 
 import markerIconPath from "@assets/marker-icon_1754279780257.png";
-import blueMarkerIconPath from "@assets/marker-icon-2x_1754283652982.png";
+import blueMarkerIconPath from "@assets/marker-icon_1754283680600.png";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client, Pet, Service } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
