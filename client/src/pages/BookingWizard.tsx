@@ -519,60 +519,65 @@ export default function BookingWizard() {
                       <div className="h-80 relative border-b">
                         {/* Custom Overlay Layer for Interactive Markers */}
                         <div className="absolute inset-0 z-20 pointer-events-none">
-                          {/* Client Location - Red Pin */}
-                          {mapCoordinates.lat !== 25.6866 && mapCoordinates.lng !== -100.3161 && (
+                          {/* Client Location - Red Pin (appears when address is geocoded) */}
+                          {customerData.address && mapCoordinates.lat !== tenantLocation.lat && mapCoordinates.lng !== tenantLocation.lng && (
                             <div 
-                              className="absolute transform -translate-x-1/2 -translate-y-full group"
+                              className="absolute transform -translate-x-1/2 -translate-y-full group z-40"
                               style={{
-                                left: `${50 + (mapCoordinates.lng - tenantLocation.lng) * 12000}%`,
-                                top: `${50 + (tenantLocation.lat - mapCoordinates.lat) * 12000}%`
+                                left: '50%',
+                                top: '50%'
                               }}
                             >
-                              <MapPin className="w-6 h-6 text-red-600 drop-shadow-lg" />
-                              <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded shadow text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border">
-                                Cliente: {customerData.address}
+                              <MapPin className="w-8 h-8 text-red-600 drop-shadow-lg animate-bounce" />
+                              <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-red-50 px-3 py-2 rounded shadow text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-red-200">
+                                <div className="font-semibold text-red-700">Dirección del Cliente</div>
+                                <div className="text-red-600">{customerData.address}</div>
+                                <div className="text-red-600">{customerData.fraccionamiento}</div>
+                                <div className="text-xs text-gray-500">Ubicación encontrada</div>
                               </div>
                             </div>
                           )}
 
-                          {/* Tenant/Clinic Location - Blue Marker (Enhanced Draggable) */}
-                          <div 
-                            className="absolute transform -translate-x-1/2 -translate-y-full pointer-events-auto cursor-move group"
-                            style={{
-                              left: '50%',
-                              top: '50%',
-                              zIndex: 30
-                            }}
-                            onMouseDown={(e) => {
-                              setIsDraggingTenant(true);
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setDragOffset({
-                                x: e.clientX - rect.left,
-                                y: e.clientY - rect.top
-                              });
-                              e.preventDefault();
-                            }}
-                          >
-                            <img 
-                              src={markerIconPath} 
-                              alt="Clínica" 
-                              className="w-6 h-6 drop-shadow-lg hover:scale-110 transition-transform"
-                            />
-                            <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-blue-100 px-3 py-2 rounded shadow text-xs whitespace-nowrap border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="font-semibold">Clínica Veterinaria</div>
-                              <div className="text-blue-600">{currentTenant?.name}</div>
-                              <div className="text-xs text-gray-500 mt-1">Arrastra para mover</div>
+                          {/* Tenant/Clinic Location - Blue Marker (Shows when map is centered on clinic) */}
+                          {(!customerData.address || (mapCoordinates.lat === tenantLocation.lat && mapCoordinates.lng === tenantLocation.lng)) && (
+                            <div 
+                              className="absolute transform -translate-x-1/2 -translate-y-full pointer-events-auto cursor-move group"
+                              style={{
+                                left: '50%',
+                                top: '50%',
+                                zIndex: 30
+                              }}
+                              onMouseDown={(e) => {
+                                setIsDraggingTenant(true);
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setDragOffset({
+                                  x: e.clientX - rect.left,
+                                  y: e.clientY - rect.top
+                                });
+                                e.preventDefault();
+                              }}
+                            >
+                              <img 
+                                src={markerIconPath} 
+                                alt="Clínica" 
+                                className="w-6 h-6 drop-shadow-lg hover:scale-110 transition-transform"
+                              />
+                              <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-blue-100 px-3 py-2 rounded shadow text-xs whitespace-nowrap border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="font-semibold">Clínica Veterinaria</div>
+                                <div className="text-blue-600">{currentTenant?.name}</div>
+                                <div className="text-xs text-gray-500 mt-1">Arrastra para mover</div>
+                              </div>
                             </div>
-                          </div>
+                          )}
 
-                          {/* Staff Locations - Green Paw Icons (Enhanced Draggable) */}
+                          {/* Staff Locations - Green Paw Icons (Positioned relative to current map center) */}
                           {staffLocations.map((member, index) => (
                             <div 
                               key={member.id}
                               className="absolute transform -translate-x-1/2 -translate-y-full pointer-events-auto cursor-move group"
                               style={{
-                                left: `${50 + (member.lng - tenantLocation.lng) * 12000}%`,
-                                top: `${50 + (tenantLocation.lat - member.lat) * 12000}%`,
+                                left: `${50 + (member.lng - mapCoordinates.lng) * 12000}%`,
+                                top: `${50 + (mapCoordinates.lat - member.lat) * 12000}%`,
                                 zIndex: 25
                               }}
                               onMouseDown={(e) => {
@@ -627,15 +632,16 @@ export default function BookingWizard() {
                           ))}
                         </div>
 
-                        {/* Base OpenStreetMap - Always centered on tenant with configurable diameter */}
+                        {/* Base OpenStreetMap - Dynamically centered based on geocoded address or tenant */}
                         <iframe
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${tenantLocation.lng-(mapDiameterKm/111.32)},${tenantLocation.lat-(mapDiameterKm/110.54)},${tenantLocation.lng+(mapDiameterKm/111.32)},${tenantLocation.lat+(mapDiameterKm/110.54)}&layer=mapnik`}
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-(mapDiameterKm/111.32)},${mapCoordinates.lat-(mapDiameterKm/110.54)},${mapCoordinates.lng+(mapDiameterKm/111.32)},${mapCoordinates.lat+(mapDiameterKm/110.54)}&layer=mapnik`}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
-                          title={`Mapa de ${mapDiameterKm}km centrado en clínica`}
+                          title={`Mapa de ${mapDiameterKm}km - ${customerData.address ? 'Cliente' : 'Clínica'}`}
                           className="rounded-t-lg"
                           loading="lazy"
+                          key={`${mapCoordinates.lat}-${mapCoordinates.lng}-${mapDiameterKm}`}
                         />
                       </div>
                       
@@ -668,8 +674,9 @@ export default function BookingWizard() {
 
                         <div className="flex items-center justify-between">
                           <div className="text-xs text-gray-500">
-                            <p>Clínica: {tenantLocation.lat.toFixed(6)}, {tenantLocation.lng.toFixed(6)}</p>
-                            <p>Radio: {mapDiameterKm}km | Personal: {staffLocations.length}</p>
+                            <p>Centro: {mapCoordinates.lat.toFixed(6)}, {mapCoordinates.lng.toFixed(6)}</p>
+                            <p>Radio: {mapDiameterKm}km | Personal: {staffLocations.length} | 
+                              {customerData.address ? ' Cliente ubicado' : ' Vista clínica'}</p>
                           </div>
                           <div className="flex gap-2">
                             <Button
@@ -709,20 +716,17 @@ export default function BookingWizard() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                // Reset tenant location to center
-                                setTenantLocation({
-                                  lat: parseFloat(currentTenant.latitude || "25.740586082849077"),
-                                  lng: parseFloat(currentTenant.longitude || "-100.40735989019088")
-                                });
+                                // Reset map to center on clinic
+                                setMapCoordinates(tenantLocation);
                                 toast({
-                                  title: "Clínica recentrada",
-                                  description: "Ubicación restaurada a coordenadas originales.",
+                                  title: "Vista centrada en clínica",
+                                  description: "Mapa recentrado en las coordenadas de la clínica.",
                                 });
                               }}
                               className="text-xs"
                             >
                               <Navigation className="w-3 h-3 mr-1" />
-                              Centrar clínica
+                              Ver clínica
                             </Button>
                           </div>
                         </div>
