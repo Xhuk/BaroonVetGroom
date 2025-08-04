@@ -7,6 +7,10 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Enhanced Map Markers**: Fixed customer location markers to appear precisely at right-click position without repositioning
 - **Dynamic Pet Forms**: Breed dropdown now automatically filters based on selected species with comprehensive database integration
 - **Performance Optimization**: Added 30-minute cache headers for pet breed data with fallback options
+- **Multi-Pet Customer Support**: Added intelligent customer lookup that handles multiple pets per customer with selection interface
+- **Customer Auto-Fill**: System now auto-fills customer information when name, phone, and email match existing records
+- **Service Selection Enhancement**: Fixed service loading and display in booking wizard with proper error handling
+- **CSS Import Order**: Resolved Leaflet map rendering by correcting CSS import precedence over Tailwind
 
 # User Preferences
 
