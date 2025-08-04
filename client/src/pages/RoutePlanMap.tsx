@@ -6,7 +6,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Truck, MapPin, Route, Settings, Calculator } from "lucide-react";
+import { ArrowLeft, Truck, MapPin, Route, Settings, Calculator, Scale } from "lucide-react";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -94,6 +94,12 @@ export default function RoutePlanMap() {
     enabled: !!currentTenant?.id,
   });
 
+  // Get inventory data for cage weights
+  const { data: inventoryItems } = useQuery<any[]>({
+    queryKey: ["/api/inventory", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
+
   // Filter pickup appointments for selected date
   const pickupAppointments = useMemo(() => {
     return appointments?.filter(apt => 
@@ -117,6 +123,50 @@ export default function RoutePlanMap() {
     });
     return weights;
   }, [fraccionamientos]);
+
+  // Calculate cage and weight statistics
+  const weightStatistics = useMemo(() => {
+    if (!pickupAppointments.length) return { totalPetWeight: 0, averagePetWeight: 0, cageWeights: { small: 0, medium: 0, large: 0 }, totalTareWeight: 0 };
+
+    // Calculate total and average pet weights from actual pet data
+    const totalPetWeight = pickupAppointments.reduce((sum, apt) => {
+      const petWeight = apt.pet?.weight || 5; // Default 5kg if no weight specified
+      return sum + petWeight;
+    }, 0);
+    
+    const averagePetWeight = totalPetWeight / pickupAppointments.length;
+
+    // Get cage weights from inventory (tare weights)
+    const cageWeights = {
+      small: inventoryItems?.find(item => item.name?.toLowerCase().includes('jaula pequeña') || item.name?.toLowerCase().includes('cage small'))?.weight || 2.5,
+      medium: inventoryItems?.find(item => item.name?.toLowerCase().includes('jaula mediana') || item.name?.toLowerCase().includes('cage medium'))?.weight || 4.0,
+      large: inventoryItems?.find(item => item.name?.toLowerCase().includes('jaula grande') || item.name?.toLowerCase().includes('cage large'))?.weight || 6.5
+    };
+
+    // Calculate cage allocation based on pet sizes and van capacity
+    const cageAllocation = pickupAppointments.reduce((cages, apt) => {
+      const petWeight = apt.pet?.weight || 5;
+      if (petWeight <= 8) cages.small++;
+      else if (petWeight <= 20) cages.medium++;
+      else cages.large++;
+      return cages;
+    }, { small: 0, medium: 0, large: 0 });
+
+    // Calculate total tare weight for allocated cages
+    const totalTareWeight = 
+      (cageAllocation.small * cageWeights.small) +
+      (cageAllocation.medium * cageWeights.medium) +
+      (cageAllocation.large * cageWeights.large);
+
+    return {
+      totalPetWeight,
+      averagePetWeight,
+      cageWeights,
+      cageAllocation,
+      totalTareWeight,
+      totalWeight: totalPetWeight + totalTareWeight
+    };
+  }, [pickupAppointments, inventoryItems]);
 
   // Route optimization mutation
   const optimizeRouteMutation = useMutation({
@@ -392,6 +442,59 @@ export default function RoutePlanMap() {
               </CardContent>
             </Card>
 
+            {/* Weight Statistics */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Scale className="w-5 h-5" />
+                  Estadísticas de Peso
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-gray-600">Peso total mascotas:</p>
+                      <p className="font-medium text-lg">{weightStatistics.totalPetWeight.toFixed(1)} kg</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Peso promedio:</p>
+                      <p className="font-medium text-lg">{weightStatistics.averagePetWeight.toFixed(1)} kg</p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-3">
+                    <p className="font-medium mb-2">Asignación de Jaulas:</p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Pequeñas (≤8kg):</span>
+                        <span className="font-medium">{weightStatistics.cageAllocation?.small || 0} jaulas</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Medianas (9-20kg):</span>
+                        <span className="font-medium">{weightStatistics.cageAllocation?.medium || 0} jaulas</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Grandes (&gt;20kg):</span>
+                        <span className="font-medium">{weightStatistics.cageAllocation?.large || 0} jaulas</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-3">
+                    <div className="flex justify-between">
+                      <span>Peso tara (jaulas):</span>
+                      <span className="font-medium">{weightStatistics.totalTareWeight.toFixed(1)} kg</span>
+                    </div>
+                    <div className="flex justify-between font-semibold text-base">
+                      <span>Peso total carga:</span>
+                      <span className="text-blue-600">{weightStatistics.totalWeight.toFixed(1)} kg</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Route Statistics */}
             <Card>
               <CardHeader>
@@ -402,15 +505,6 @@ export default function RoutePlanMap() {
                   <div className="flex justify-between">
                     <span>Total paradas:</span>
                     <span className="font-medium">{pickupAppointments.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Peso promedio:</span>
-                    <span className="font-medium">
-                      {pickupAppointments.length > 0 ? 
-                        (Object.values(fraccionamientoWeights).reduce((a, b) => a + b, 0) / Object.values(fraccionamientoWeights).length).toFixed(1) : 
-                        'N/A'
-                      }
-                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Estado:</span>
