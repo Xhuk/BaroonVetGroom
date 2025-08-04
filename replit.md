@@ -51,6 +51,9 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Global Debug Access**: Added DebugControls component to all major page headers (Dashboard, Appointments, Clients, Inventory, DeliveryPlan, RoutePlanMap)
 - **Enhanced Role Impersonation**: Integrated role-based permissions directly into useAccessControl hook for real-time permission changes when switching roles
 - **Module Permission Refresh**: All components now automatically respect impersonated role permissions, refreshing functionality when "View As" role is selected
+- **Advanced Business Logic Integration**: Implemented automatic invoice generation for medical appointments and delivery scheduling for grooming services
+- **Company Billing Configuration**: Added comprehensive admin interface for configuring per-company billing and delivery automation rules
+- **Intelligent Automation**: Medical appointments now auto-generate invoices with supplies/services costs, grooming sessions auto-schedule deliveries when configured
 
 # User Preferences
 

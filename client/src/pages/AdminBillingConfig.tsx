@@ -31,7 +31,7 @@ interface BillingConfig {
 }
 
 export default function AdminBillingConfig() {
-  const { tenant } = useTenant();
+  const { currentTenant } = useTenant();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { canAccessAdmin } = useAccessControl();
@@ -42,6 +42,66 @@ export default function AdminBillingConfig() {
     allowAdvanceScheduling: true,
     autoScheduleDelivery: false
   });
+
+  const { data: billingConfig, isLoading } = useQuery({
+    queryKey: ['/api/company-billing-config', currentTenant?.companyId],
+    enabled: !!currentTenant?.companyId,
+  });
+
+  const updateConfigMutation = useMutation({
+    mutationFn: async (newConfig: BillingConfig) => {
+      const response = await fetch(`/api/company-billing-config/${currentTenant?.companyId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newConfig),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update billing config');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Configuración guardada",
+        description: "La configuración de facturación y delivery se ha actualizado correctamente.",
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/company-billing-config', currentTenant?.companyId] 
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la configuración. Intenta de nuevo.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (billingConfig && currentTenant?.companyId) {
+      setConfig({
+        companyId: currentTenant.companyId,
+        autoGenerateMedicalInvoices: (billingConfig as any).autoGenerateMedicalInvoices || false,
+        autoGenerateGroomingInvoices: (billingConfig as any).autoGenerateGroomingInvoices || false,
+        allowAdvanceScheduling: (billingConfig as any).allowAdvanceScheduling !== false,
+        autoScheduleDelivery: (billingConfig as any).autoScheduleDelivery || false,
+        deliverySchedulingRules: (billingConfig as any).deliverySchedulingRules,
+        billingRules: (billingConfig as any).billingRules
+      });
+    }
+  }, [billingConfig, currentTenant?.companyId]);
+
+  const handleSave = () => {
+    if (!currentTenant?.companyId) return;
+    updateConfigMutation.mutate(config);
+  };
+
+  const updateField = (field: keyof BillingConfig, value: any) => {
+    setConfig(prev => ({ ...prev, [field]: value }));
+  };
 
   // Check page access
   if (!canAccessAdmin) {
@@ -62,66 +122,6 @@ export default function AdminBillingConfig() {
       </div>
     );
   }
-
-  const { data: billingConfig, isLoading } = useQuery({
-    queryKey: ['/api/company-billing-config', tenant?.companyId],
-    enabled: !!tenant?.companyId,
-  });
-
-  const updateConfigMutation = useMutation({
-    mutationFn: async (newConfig: BillingConfig) => {
-      const response = await fetch(`/api/company-billing-config/${tenant?.companyId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newConfig),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update billing config');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Configuración guardada",
-        description: "La configuración de facturación y delivery se ha actualizado correctamente.",
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: ['/api/company-billing-config', tenant?.companyId] 
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "No se pudo guardar la configuración. Intenta de nuevo.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  useEffect(() => {
-    if (billingConfig && tenant?.companyId) {
-      setConfig({
-        companyId: tenant.companyId,
-        autoGenerateMedicalInvoices: (billingConfig as any).autoGenerateMedicalInvoices || false,
-        autoGenerateGroomingInvoices: (billingConfig as any).autoGenerateGroomingInvoices || false,
-        allowAdvanceScheduling: (billingConfig as any).allowAdvanceScheduling !== false,
-        autoScheduleDelivery: (billingConfig as any).autoScheduleDelivery || false,
-        deliverySchedulingRules: (billingConfig as any).deliverySchedulingRules,
-        billingRules: (billingConfig as any).billingRules
-      });
-    }
-  }, [billingConfig, tenant?.companyId]);
-
-  const handleSave = () => {
-    if (!tenant?.companyId) return;
-    updateConfigMutation.mutate(config);
-  };
-
-  const updateField = (field: keyof BillingConfig, value: any) => {
-    setConfig(prev => ({ ...prev, [field]: value }));
-  };
 
   if (isLoading) {
     return (
