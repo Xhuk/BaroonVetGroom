@@ -15,6 +15,8 @@ import {
   webhookMonitoring,
   vans,
   routeOptimizationConfig,
+  savedRoutes,
+  betaFeatureUsage,
   deliveryTracking,
   deliveryAlerts,
   driverCheckIns,
@@ -749,6 +751,112 @@ export class DatabaseStorage implements IStorage {
   async getVansByTenant(tenantId: string): Promise<Van[]> {
     const vansData = await db.select().from(vans).where(eq(vans.tenantId, tenantId));
     return vansData;
+  }
+
+  // Route optimization caching
+  async getSavedRoute(tenantId: string, date: string, appointmentIds: string[]): Promise<any> {
+    const routeHash = this.generateRouteHash(appointmentIds);
+    const [savedRoute] = await db
+      .select()
+      .from(savedRoutes)
+      .where(eq(savedRoutes.tenantId, tenantId))
+      .where(eq(savedRoutes.date, date))
+      .where(eq(savedRoutes.routeHash, routeHash));
+    return savedRoute;
+  }
+
+  async saveOptimizedRoute(tenantId: string, date: string, appointmentIds: string[], optimizedRoute: any, stats: any): Promise<void> {
+    const routeHash = this.generateRouteHash(appointmentIds);
+    await db
+      .insert(savedRoutes)
+      .values({
+        tenantId,
+        date,
+        appointmentIds,
+        optimizedRoute,
+        routeHash,
+        distanceKm: stats.totalDistance?.toString(),
+        estimatedDurationMinutes: stats.totalDuration,
+      })
+      .onConflictDoUpdate({
+        target: [savedRoutes.tenantId, savedRoutes.date, savedRoutes.routeHash],
+        set: {
+          optimizedRoute,
+          distanceKm: stats.totalDistance?.toString(),
+          estimatedDurationMinutes: stats.totalDuration,
+          updatedAt: new Date(),
+        },
+      });
+  }
+
+  private generateRouteHash(appointmentIds: string[]): string {
+    return appointmentIds.sort().join('|');
+  }
+
+  // BETA feature tracking
+  async trackBetaFeatureUsage(featureName: string, companyId: string, tenantId?: string, userId?: string, metadata?: any): Promise<void> {
+    await db
+      .insert(betaFeatureUsage)
+      .values({
+        featureName,
+        companyId,
+        tenantId,
+        userId,
+        metadata,
+      })
+      .onConflictDoUpdate({
+        target: [betaFeatureUsage.featureName, betaFeatureUsage.companyId, betaFeatureUsage.tenantId],
+        set: {
+          usageCount: sql`${betaFeatureUsage.usageCount} + 1`,
+          lastUsedAt: new Date(),
+          metadata,
+        },
+      });
+  }
+
+  async getBetaFeatureStats(): Promise<any[]> {
+    return await db
+      .select({
+        featureName: betaFeatureUsage.featureName,
+        companyId: betaFeatureUsage.companyId,
+        companyName: companies.name,
+        totalUsage: sql<number>`sum(${betaFeatureUsage.usageCount})`,
+        lastUsed: sql<Date>`max(${betaFeatureUsage.lastUsedAt})`,
+        uniqueTenants: sql<number>`count(distinct ${betaFeatureUsage.tenantId})`,
+        uniqueUsers: sql<number>`count(distinct ${betaFeatureUsage.userId})`,
+      })
+      .from(betaFeatureUsage)
+      .leftJoin(companies, eq(betaFeatureUsage.companyId, companies.id))
+      .groupBy(betaFeatureUsage.featureName, betaFeatureUsage.companyId, companies.name);
+  }
+
+  // Check if delivery tracking is enabled for company/tenant
+  async isDeliveryTrackingEnabled(tenantId: string): Promise<boolean> {
+    const [tenant] = await db
+      .select({
+        tenantEnabled: tenants.deliveryTrackingEnabled,
+        companyEnabled: companies.deliveryTrackingEnabled,
+      })
+      .from(tenants)
+      .leftJoin(companies, eq(tenants.companyId, companies.id))
+      .where(eq(tenants.id, tenantId));
+
+    return tenant?.tenantEnabled || tenant?.companyEnabled || false;
+  }
+
+  // Company delivery tracking management
+  async updateCompanyDeliveryTracking(companyId: string, enabled: boolean): Promise<void> {
+    await db
+      .update(companies)
+      .set({ deliveryTrackingEnabled: enabled, updatedAt: new Date() })
+      .where(eq(companies.id, companyId));
+  }
+
+  async updateTenantDeliveryTracking(tenantId: string, enabled: boolean): Promise<void> {
+    await db
+      .update(tenants)
+      .set({ deliveryTrackingEnabled: enabled, updatedAt: new Date() })
+      .where(eq(tenants.id, tenantId));
   }
 
   // Delivery tracking operations

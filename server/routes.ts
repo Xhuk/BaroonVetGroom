@@ -1032,10 +1032,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/optimize-route/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;
-      const { appointments, vanCapacity, fraccionamientoWeights, clinicLocation } = req.body;
+      const { appointments, vanCapacity, fraccionamientoWeights, clinicLocation, date } = req.body;
       
       if (!appointments || !Array.isArray(appointments)) {
         return res.status(400).json({ message: "Valid appointments array is required" });
+      }
+
+      // Check for saved route first
+      const appointmentIds = appointments.map((apt: any) => apt.id);
+      const today = date || new Date().toISOString().split('T')[0];
+      const savedRoute = await storage.getSavedRoute(tenantId, today, appointmentIds);
+      
+      if (savedRoute) {
+        console.log(`Using cached route for ${tenantId} on ${today}`);
+        return res.json({
+          optimizedRoute: savedRoute.optimizedRoute,
+          totalDistance: parseFloat(savedRoute.distanceKm || "0"),
+          estimatedTime: savedRoute.estimatedDurationMinutes || 0,
+          efficiency: 95, // Cached routes are considered highly efficient
+          provider: 'cached',
+          cached: true
+        });
       }
 
       // Get company's route optimization configuration
@@ -1067,12 +1084,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         appointments.find((apt: any) => apt.id === point.id)
       ).filter(Boolean);
 
+      // Save the optimized route for future use
+      await storage.saveOptimizedRoute(tenantId, today, appointmentIds, optimizedRoute, {
+        totalDistance: result.totalDistance,
+        totalDuration: result.estimatedTime
+      });
+      
+      // Track beta feature usage
+      if (tenant) {
+        await storage.trackBetaFeatureUsage('route_optimization', tenant.companyId, tenantId, req.user?.claims?.sub);
+      }
+
       res.json({
         optimizedRoute,
         totalDistance: result.totalDistance,
         estimatedTime: result.estimatedTime,
         efficiency: result.efficiency,
-        provider: config?.isEnabled ? config.provider : 'simple_weight_based'
+        provider: config?.isEnabled ? config.provider : 'simple_weight_based',
+        cached: false
       });
     } catch (error) {
       console.error("Error optimizing route:", error);

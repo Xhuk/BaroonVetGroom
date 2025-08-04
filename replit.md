@@ -32,6 +32,9 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Driver Check-in System**: Real-time location tracking with missed check-in detection and automatic escalation protocols
 - **Scalable Monitoring Architecture**: Batch processing with concurrency limits for high-volume tenant environments (1000+ tenants)
 - **Cost-Efficient Design**: Optimized for minimal server resource usage with smart batching and delay management
+- **BETA Feature Control**: Super admin can enable/disable delivery tracking per company and tenant with usage analytics
+- **Route Optimization Caching**: Saves optimized routes to avoid recalculation unless new delivery points are added
+- **Smart Route Management**: Automatically detects when route needs recalculation based on appointment changes
 
 # User Preferences
 

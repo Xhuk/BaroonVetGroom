@@ -47,6 +47,7 @@ export const companies = pgTable("companies", {
   subscriptionStatus: varchar("subscription_status").default("active"), // active, suspended, cancelled
   subscriptionEndDate: timestamp("subscription_end_date"),
   subscriptionPlan: varchar("subscription_plan").default("basic"), // basic, pro, enterprise
+  deliveryTrackingEnabled: boolean("delivery_tracking_enabled").default(false), // BETA feature control
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -67,6 +68,7 @@ export const tenants = pgTable("tenants", {
   closeTime: time("close_time").default("18:00"), // Default 6:00 PM
   timeSlotDuration: integer("time_slot_duration").default(30), // Minutes per slot
   reservationTimeout: integer("reservation_timeout").default(5), // Minutes before slot expires
+  deliveryTrackingEnabled: boolean("delivery_tracking_enabled").default(false), // Per-tenant BETA override
   settings: jsonb("settings"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -182,6 +184,33 @@ export const appointments = pgTable("appointments", {
 });
 
 // Type exports
+// Saved optimized routes to avoid recalculation
+export const savedRoutes = pgTable("saved_routes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  date: date("date").notNull(),
+  appointmentIds: varchar("appointment_ids").array().notNull(), // Array of appointment IDs
+  optimizedRoute: jsonb("optimized_route").notNull(), // Cached route data
+  routeHash: varchar("route_hash").notNull(), // Hash of appointment IDs for quick comparison
+  distanceKm: decimal("distance_km", { precision: 8, scale: 2 }),
+  estimatedDurationMinutes: integer("estimated_duration_minutes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// BETA feature usage tracking for super admin
+export const betaFeatureUsage = pgTable("beta_feature_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  featureName: varchar("feature_name").notNull(), // 'delivery_tracking'
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  tenantId: varchar("tenant_id").references(() => tenants.id),
+  userId: varchar("user_id").references(() => users.id),
+  usageCount: integer("usage_count").default(1),
+  lastUsedAt: timestamp("last_used_at").defaultNow(),
+  metadata: jsonb("metadata"), // Additional tracking data
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
