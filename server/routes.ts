@@ -638,8 +638,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // WhatsApp notification endpoint via n8n server
   app.post('/api/send-whatsapp', isAuthenticated, async (req: any, res) => {
-    const { phone, message } = req.body;
-    const tenantId = req.user?.claims?.sub || 'unknown';
+    const { phone, message, tenantId } = req.body;
+    const actualTenantId = tenantId || 'vetgroom1'; // Use provided tenantId or default
     
     try {
       // Check if N8N_WEBHOOK_URL is configured
@@ -650,7 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Log as maintenance mode
         await webhookMonitor.logError(
-          tenantId, 
+          actualTenantId, 
           'whatsapp', 
           'N/A', 
           new Error('N8N_WEBHOOK_URL not configured - sistema en mantenimiento'),
@@ -664,7 +664,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if we recently failed to avoid spam
-      const recentMonitoring = await storage.getWebhookMonitoring(tenantId, 'whatsapp');
+      const recentMonitoring = await storage.getWebhookMonitoring(actualTenantId, 'whatsapp');
       const now = new Date();
       
       // If webhook is down and we tried recently, don't retry immediately
@@ -696,7 +696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (response.ok) {
         // Log successful webhook call
-        await webhookMonitor.logSuccess(tenantId, 'whatsapp', n8nWebhookUrl);
+        await webhookMonitor.logSuccess(actualTenantId, 'whatsapp', n8nWebhookUrl);
         console.log('WhatsApp message sent successfully to:', phone);
         
         res.json({ 
@@ -709,7 +709,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Log webhook error for monitoring (avoid duplicate logs)
         await webhookMonitor.logError(
-          tenantId, 
+          actualTenantId, 
           'whatsapp', 
           n8nWebhookUrl, 
           new Error(`n8n webhook en mantenimiento - HTTP ${response.status}`),
@@ -726,7 +726,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log webhook error for monitoring (avoid duplicate logs)
       await webhookMonitor.logError(
-        tenantId, 
+        actualTenantId, 
         'whatsapp', 
         process.env.N8N_WEBHOOK_URL || 'N/A', 
         new Error(`n8n webhook en mantenimiento - ${error.message}`),
@@ -762,7 +762,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test webhook monitoring (for demonstration)
   app.post('/api/test-webhook-monitoring', isAuthenticated, async (req: any, res) => {
     try {
-      const tenantId = req.user?.claims?.sub || 'test-tenant';
+      // Use a valid tenant ID from the database instead of user ID
+      const tenants = await storage.getAllTenants();
+      const tenantId = tenants.length > 0 ? tenants[0].id : 'vetgroom1';
+      
+      console.log(`Testing webhook monitoring for tenant: ${tenantId}`);
       
       // Simulate a webhook failure
       await webhookMonitor.logError(
@@ -779,7 +783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error testing webhook monitoring:", error);
-      res.status(500).json({ message: "Failed to test webhook monitoring" });
+      res.status(500).json({ message: `Failed to test webhook monitoring: ${error.message}` });
     }
   });
 

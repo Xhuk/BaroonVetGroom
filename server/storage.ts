@@ -185,6 +185,10 @@ export class DatabaseStorage implements IStorage {
     return tenant;
   }
 
+  async getAllTenants(): Promise<Tenant[]> {
+    return await db.select().from(tenants);
+  }
+
   async createTenant(tenant: InsertTenant): Promise<Tenant> {
     const [newTenant] = await db.insert(tenants).values(tenant).returning();
     return newTenant;
