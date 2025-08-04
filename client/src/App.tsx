@@ -11,6 +11,7 @@ import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import Admin from "@/pages/Admin";
 import SuperAdmin from "@/pages/SuperAdmin";
+import SuperAdminMonitoring from "@/pages/SuperAdminMonitoring";
 import AdminSettings from "@/pages/AdminSettings";
 import AdminBusinessHours from "@/pages/AdminBusinessHours";
 import Appointments from "@/pages/Appointments";
@@ -40,6 +41,7 @@ function Router() {
           <Route path="/admin/settings" component={AdminSettings} />
           <Route path="/admin/business-hours" component={AdminBusinessHours} />
           <Route path="/superadmin" component={SuperAdmin} />
+          <Route path="/superadmin/monitoring" component={SuperAdminMonitoring} />
         </>
       )}
       <Route component={NotFound} />

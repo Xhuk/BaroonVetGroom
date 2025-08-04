@@ -230,3 +230,44 @@ export const tempSlotReservations = pgTable("temp_slot_reservations", {
 
 export type TempSlotReservation = typeof tempSlotReservations.$inferSelect;
 export type InsertTempSlotReservation = typeof tempSlotReservations.$inferInsert;
+
+// Webhook Error Logs for Super Admin Monitoring
+export const webhookErrorLogs = pgTable("webhook_error_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  webhookType: varchar("webhook_type").notNull(), // whatsapp, email, sms
+  endpoint: varchar("endpoint").notNull(),
+  requestPayload: jsonb("request_payload"),
+  errorMessage: text("error_message"),
+  errorCode: varchar("error_code"),
+  httpStatus: integer("http_status"),
+  retryCount: integer("retry_count").default(0),
+  status: varchar("status").default("failed"), // failed, retrying, resolved
+  lastRetryAt: timestamp("last_retry_at"),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Webhook Monitoring Status for Auto-Retry System
+export const webhookMonitoring = pgTable("webhook_monitoring", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  webhookType: varchar("webhook_type").notNull(),
+  endpoint: varchar("endpoint").notNull(),
+  status: varchar("status").default("healthy"), // healthy, degraded, down
+  lastSuccessAt: timestamp("last_success_at"),
+  lastFailureAt: timestamp("last_failure_at"),
+  consecutiveFailures: integer("consecutive_failures").default(0),
+  isAutoRetryEnabled: boolean("is_auto_retry_enabled").default(true),
+  retryIntervalMinutes: integer("retry_interval_minutes").default(5), // Start with 5 minutes
+  maxRetryIntervalMinutes: integer("max_retry_interval_minutes").default(60), // Max 1 hour
+  nextRetryAt: timestamp("next_retry_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type WebhookErrorLog = typeof webhookErrorLogs.$inferSelect;
+export type InsertWebhookErrorLog = typeof webhookErrorLogs.$inferInsert;
+export type WebhookMonitoring = typeof webhookMonitoring.$inferSelect;
+export type InsertWebhookMonitoring = typeof webhookMonitoring.$inferInsert;

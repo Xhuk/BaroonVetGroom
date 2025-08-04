@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { webhookMonitor } from "./webhookMonitor";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -666,12 +667,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (response.ok) {
+        // Log successful webhook call
+        await webhookMonitor.logSuccess(req.user?.claims?.sub || 'unknown', 'whatsapp', n8nWebhookUrl);
         res.json({ 
           success: true, 
           message: "WhatsApp message sent via n8n" 
         });
       } else {
-        console.error('n8n webhook failed:', await response.text());
+        const errorText = await response.text();
+        console.error('n8n webhook failed:', errorText);
+        
+        // Log webhook error for monitoring
+        await webhookMonitor.logError(
+          req.user?.claims?.sub || 'unknown', 
+          'whatsapp', 
+          n8nWebhookUrl, 
+          new Error(`HTTP ${response.status}: ${errorText}`),
+          { phone, message, type: 'whatsapp_appointment_confirmation' }
+        );
+        
         res.json({ 
           success: false, 
           message: "n8n webhook failed - check server logs" 
@@ -679,6 +693,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Error sending WhatsApp:", error);
+      
+      // Log webhook error for monitoring
+      await webhookMonitor.logError(
+        req.user?.claims?.sub || 'unknown', 
+        'whatsapp', 
+        n8nWebhookUrl || 'N/A', 
+        error,
+        { phone, message, type: 'whatsapp_appointment_confirmation' }
+      );
+      
       res.status(500).json({ message: "Failed to send WhatsApp message" });
     }
   });
@@ -699,6 +723,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating business hours:", error);
       res.status(500).json({ message: "Failed to update business hours" });
+    }
+  });
+
+  // Super Admin Routes - Webhook Monitoring
+  app.get('/api/superadmin/webhook-stats', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is super admin (this could be enhanced with proper role checking)
+      const userId = req.user?.claims?.sub;
+      
+      const stats = await webhookMonitor.getWebhookStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching webhook stats:", error);
+      res.status(500).json({ message: "Failed to fetch webhook statistics" });
+    }
+  });
+
+  app.get('/api/superadmin/webhook-errors', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId, limit } = req.query;
+      const logs = await storage.getWebhookErrorLogs(tenantId, parseInt(limit) || 50);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching webhook errors:", error);
+      res.status(500).json({ message: "Failed to fetch webhook errors" });
+    }
+  });
+
+  app.post('/api/superadmin/webhook-retry/:logId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { logId } = req.params;
+      
+      // Mark error as resolved
+      await storage.updateWebhookErrorStatus(logId, 'resolved', new Date());
+      
+      res.json({ message: "Webhook error marked as resolved" });
+    } catch (error) {
+      console.error("Error resolving webhook error:", error);
+      res.status(500).json({ message: "Failed to resolve webhook error" });
+    }
+  });
+
+  app.get('/api/superadmin/webhook-monitoring', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.query;
+      
+      // Get all webhook monitoring records
+      const { db } = await import('./db');
+      const { webhookMonitoring } = await import('@shared/schema');
+      const { eq, sql } = await import('drizzle-orm');
+      
+      const monitoring = await db.select().from(webhookMonitoring)
+        .where(tenantId ? eq(webhookMonitoring.tenantId, tenantId) : undefined)
+        .orderBy(sql`${webhookMonitoring.updatedAt} DESC`);
+      
+      res.json(monitoring);
+    } catch (error) {
+      console.error("Error fetching webhook monitoring:", error);
+      res.status(500).json({ message: "Failed to fetch webhook monitoring data" });
+    }
+  });
+
+  app.put('/api/superadmin/webhook-monitoring/:tenantId/:webhookType', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId, webhookType } = req.params;
+      const { isAutoRetryEnabled, retryIntervalMinutes, maxRetryIntervalMinutes } = req.body;
+      
+      const monitoring = await storage.getWebhookMonitoring(tenantId, webhookType);
+      if (!monitoring) {
+        return res.status(404).json({ message: "Webhook monitoring not found" });
+      }
+
+      await storage.upsertWebhookMonitoring({
+        ...monitoring,
+        isAutoRetryEnabled,
+        retryIntervalMinutes,
+        maxRetryIntervalMinutes
+      });
+      
+      res.json({ message: "Webhook monitoring updated successfully" });
+    } catch (error) {
+      console.error("Error updating webhook monitoring:", error);
+      res.status(500).json({ message: "Failed to update webhook monitoring" });
     }
   });
 

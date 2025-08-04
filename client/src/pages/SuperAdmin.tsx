@@ -12,8 +12,10 @@ import {
   TrendingUp,
   Server,
   Plus,
-  Settings
+  Settings,
+  Activity
 } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
 export default function SuperAdmin() {
@@ -302,6 +304,13 @@ export default function SuperAdmin() {
                     <Shield className="w-4 h-4 mr-2" />
                     Auditoría de Seguridad
                   </Button>
+                  
+                  <Link href="/superadmin/monitoring">
+                    <Button variant="outline" className="w-full justify-start bg-blue-50 hover:bg-blue-100 border-blue-200">
+                      <Activity className="w-4 h-4 mr-2 text-blue-600" />
+                      <span className="text-blue-700">Webhook Monitoring</span>
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

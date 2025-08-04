@@ -11,6 +11,8 @@ import {
   services,
   roles,
   tempSlotReservations,
+  webhookErrorLogs,
+  webhookMonitoring,
   type User,
   type UpsertUser,
   type Company,
@@ -34,6 +36,10 @@ import {
   type InsertRole,
   type TempSlotReservation,
   type InsertTempSlotReservation,
+  type WebhookErrorLog,
+  type InsertWebhookErrorLog,
+  type WebhookMonitoring,
+  type InsertWebhookMonitoring,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte } from "drizzle-orm";
@@ -103,6 +109,16 @@ export interface IStorage {
   createRole(role: InsertRole): Promise<Role>;
   updateRole(roleId: string, role: Partial<InsertRole>): Promise<Role>;
   deleteRole(roleId: string): Promise<void>;
+  
+  // Webhook monitoring operations
+  logWebhookError(errorLog: InsertWebhookErrorLog): Promise<WebhookErrorLog>;
+  getWebhookErrorLogs(tenantId?: string, limit?: number): Promise<WebhookErrorLog[]>;
+  updateWebhookErrorStatus(logId: string, status: string, resolvedAt?: Date): Promise<void>;
+  getWebhookMonitoring(tenantId: string, webhookType: string): Promise<WebhookMonitoring | undefined>;
+  upsertWebhookMonitoring(monitoring: InsertWebhookMonitoring): Promise<WebhookMonitoring>;
+  updateWebhookMonitoringStatus(tenantId: string, webhookType: string, status: string, lastFailure?: Date): Promise<void>;
+  getFailedWebhooksForRetry(): Promise<WebhookMonitoring[]>;
+  incrementWebhookRetry(tenantId: string, webhookType: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -484,6 +500,118 @@ export class DatabaseStorage implements IStorage {
       .where(eq(tenants.id, tenantId))
       .returning();
     return tenant;
+  }
+
+  // Webhook monitoring operations
+  async logWebhookError(errorLog: InsertWebhookErrorLog): Promise<WebhookErrorLog> {
+    const [log] = await db.insert(webhookErrorLogs).values(errorLog).returning();
+    return log;
+  }
+
+  async getWebhookErrorLogs(tenantId?: string, limit: number = 100): Promise<WebhookErrorLog[]> {
+    let query = db.select().from(webhookErrorLogs);
+    
+    if (tenantId) {
+      query = query.where(eq(webhookErrorLogs.tenantId, tenantId));
+    }
+    
+    return query.orderBy(sql`${webhookErrorLogs.createdAt} DESC`).limit(limit);
+  }
+
+  async updateWebhookErrorStatus(logId: string, status: string, resolvedAt?: Date): Promise<void> {
+    await db
+      .update(webhookErrorLogs)
+      .set({
+        status,
+        resolvedAt,
+        updatedAt: new Date()
+      })
+      .where(eq(webhookErrorLogs.id, logId));
+  }
+
+  async getWebhookMonitoring(tenantId: string, webhookType: string): Promise<WebhookMonitoring | undefined> {
+    const [monitoring] = await db
+      .select()
+      .from(webhookMonitoring)
+      .where(and(
+        eq(webhookMonitoring.tenantId, tenantId),
+        eq(webhookMonitoring.webhookType, webhookType)
+      ));
+    return monitoring;
+  }
+
+  async upsertWebhookMonitoring(monitoring: InsertWebhookMonitoring): Promise<WebhookMonitoring> {
+    const [result] = await db
+      .insert(webhookMonitoring)
+      .values(monitoring)
+      .onConflictDoUpdate({
+        target: [webhookMonitoring.tenantId, webhookMonitoring.webhookType],
+        set: {
+          ...monitoring,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+    return result;
+  }
+
+  async updateWebhookMonitoringStatus(tenantId: string, webhookType: string, status: string, lastFailure?: Date): Promise<void> {
+    const existing = await this.getWebhookMonitoring(tenantId, webhookType);
+    
+    const updateData: any = {
+      status,
+      updatedAt: new Date()
+    };
+
+    if (status === 'healthy') {
+      updateData.lastSuccessAt = new Date();
+      updateData.consecutiveFailures = 0;
+      updateData.nextRetryAt = null;
+    } else if (lastFailure) {
+      updateData.lastFailureAt = lastFailure;
+      updateData.consecutiveFailures = (existing?.consecutiveFailures || 0) + 1;
+      
+      // Calculate next retry using exponential backoff
+      const baseInterval = existing?.retryIntervalMinutes || 5;
+      const maxInterval = existing?.maxRetryIntervalMinutes || 60;
+      const nextInterval = Math.min(baseInterval * Math.pow(2, updateData.consecutiveFailures - 1), maxInterval);
+      
+      updateData.retryIntervalMinutes = nextInterval;
+      updateData.nextRetryAt = new Date(Date.now() + nextInterval * 60 * 1000);
+    }
+
+    await db
+      .update(webhookMonitoring)
+      .set(updateData)
+      .where(and(
+        eq(webhookMonitoring.tenantId, tenantId),
+        eq(webhookMonitoring.webhookType, webhookType)
+      ));
+  }
+
+  async getFailedWebhooksForRetry(): Promise<WebhookMonitoring[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(webhookMonitoring)
+      .where(and(
+        eq(webhookMonitoring.isAutoRetryEnabled, true),
+        sql`${webhookMonitoring.status} IN ('degraded', 'down')`,
+        lt(webhookMonitoring.nextRetryAt, now)
+      ));
+  }
+
+  async incrementWebhookRetry(tenantId: string, webhookType: string): Promise<void> {
+    await db
+      .update(webhookMonitoring)
+      .set({
+        lastRetryAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(webhookMonitoring.tenantId, tenantId),
+        eq(webhookMonitoring.webhookType, webhookType)
+      ));
   }
 }
 
