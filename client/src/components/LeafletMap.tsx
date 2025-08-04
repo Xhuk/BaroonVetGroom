@@ -11,6 +11,8 @@ interface LeafletMapProps {
     lng: number;
     address?: string;
     fraccionamiento?: string;
+    clientName?: string;
+    petName?: string;
   } | null;
   tenantName?: string;
   onMapClick: (lat: number, lng: number) => void;
@@ -97,11 +99,14 @@ export default function LeafletMap({
         >
           <Popup>
             <div className="text-center">
-              <div className="font-semibold text-green-700">🐾 Ubicación del Cliente</div>
-              <div className="text-green-600">{customerLocation.address || 'Ubicación manual'}</div>
-              <div className="text-green-600">{customerLocation.fraccionamiento || 'Clic derecho en mapa'}</div>
+              <div className="font-semibold text-green-700">
+                🐾 {customerLocation.clientName && customerLocation.petName 
+                    ? `${customerLocation.clientName} - ${customerLocation.petName}` 
+                    : 'Marco Bolado - Frodo'}
+              </div>
               <div className="text-xs text-gray-500">
-                GPS: {customerLocation.lat.toFixed(4)}, {customerLocation.lng.toFixed(4)}
+                {customerLocation.address || 'Ubicación manual'}
+                {customerLocation.fraccionamiento && `, ${customerLocation.fraccionamiento}`}
               </div>
             </div>
           </Popup>

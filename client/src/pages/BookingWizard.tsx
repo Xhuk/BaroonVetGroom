@@ -99,6 +99,22 @@ export default function BookingWizard() {
     }
   }, [currentTenant]);
 
+  // Store customer location data for use across pages
+  useEffect(() => {
+    if (customerData.latitude && customerData.longitude && customerData.name && petData.name) {
+      const locationData = {
+        lat: parseFloat(customerData.latitude),
+        lng: parseFloat(customerData.longitude),
+        address: customerData.address,
+        fraccionamiento: customerData.fraccionamiento,
+        clientName: customerData.name,
+        petName: petData.name,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(`customerLocation_${currentTenant?.id}`, JSON.stringify(locationData));
+    }
+  }, [customerData, petData.name, currentTenant?.id]);
+
   // Geocoding function for address with postal code fallback
   const geocodeAddress = async (address: string, fraccionamiento: string, postalCode?: string) => {
     if (!address || !fraccionamiento) return null;
@@ -498,7 +514,9 @@ export default function BookingWizard() {
                                     lat: parseFloat(customerData.latitude),
                                     lng: parseFloat(customerData.longitude),
                                     address: customerData.address,
-                                    fraccionamiento: customerData.fraccionamiento
+                                    fraccionamiento: customerData.fraccionamiento,
+                                    clientName: customerData.name,
+                                    petName: petData.name
                                   }
                                 : null
                             }
