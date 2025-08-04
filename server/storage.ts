@@ -738,18 +738,22 @@ export class DatabaseStorage implements IStorage {
 
   // Delivery tracking operations
   async getActiveDeliveryTracking(tenantId: string): Promise<DeliveryTracking[]> {
-    const query = db
-      .select()
-      .from(deliveryTracking)
-      .where(sql`status IN ('preparing', 'en_route', 'delayed', 'emergency')`);
+    const baseWhere = sql`status IN ('preparing', 'en_route', 'delayed', 'emergency')`;
     
     // If tenantId is provided, filter by it
     if (tenantId) {
-      query.where(eq(deliveryTracking.tenantId, tenantId));
+      const activeDeliveries = await db
+        .select()
+        .from(deliveryTracking)
+        .where(and(eq(deliveryTracking.tenantId, tenantId), baseWhere));
+      return activeDeliveries;
+    } else {
+      const activeDeliveries = await db
+        .select()
+        .from(deliveryTracking)
+        .where(baseWhere);
+      return activeDeliveries;
     }
-    
-    const activeDeliveries = await query;
-    return activeDeliveries;
   }
 
   async createDeliveryTracking(trackingData: InsertDeliveryTracking): Promise<DeliveryTracking> {
