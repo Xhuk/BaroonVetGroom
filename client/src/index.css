@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+
+/* Fix Leaflet map rendering issues */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}
+
+.leaflet-tile {
+  filter: none !important;
+}
+
+.leaflet-tile-container {
+  opacity: 1 !important;
+}
+
 /* Bounce animation for customer markers - exactly 2 bounces */
 @keyframes bounce {
   0% {
