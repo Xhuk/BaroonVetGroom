@@ -77,9 +77,9 @@ export default function BookingWizard() {
   // Geocoding function for address
   const geocodeAddress = async (address: string, fraccionamiento: string) => {
     try {
-      const fullAddress = `${address}, ${fraccionamiento}, Monterrey, México`;
+      const fullAddress = `${address}, ${fraccionamiento}, Monterrey, Nuevo León, México`;
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=mx`
       );
       const data = await response.json();
       
@@ -324,10 +324,10 @@ export default function BookingWizard() {
                   <Input
                     id="name"
                     value={customerData.name}
-                    onChange={(e) => setCustomerData(prev => ({ ...prev, name: e.target.value.toUpperCase() }))}
-                    placeholder="NOMBRE DEL CLIENTE"
+                    onChange={(e) => setCustomerData(prev => ({ ...prev, name: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
+                    placeholder="María González"
                     required
-                    className="uppercase"
+                    className="capitalize"
                   />
                 </div>
                 <div>
@@ -346,9 +346,9 @@ export default function BookingWizard() {
                     id="email"
                     type="email"
                     value={customerData.email}
-                    onChange={(e) => setCustomerData(prev => ({ ...prev, email: e.target.value.toUpperCase() }))}
-                    placeholder="EMAIL@EJEMPLO.COM"
-                    className="uppercase"
+                    onChange={(e) => setCustomerData(prev => ({ ...prev, email: e.target.value.toLowerCase() }))}
+                    placeholder="maria@ejemplo.com"
+                    className="lowercase"
                   />
                 </div>
               </div>
@@ -364,10 +364,10 @@ export default function BookingWizard() {
                   <Input
                     id="address"
                     value={customerData.address}
-                    onChange={(e) => setCustomerData(prev => ({ ...prev, address: e.target.value.toUpperCase() }))}
-                    placeholder="EJ: VÍA LÁCTEA 1000, SATELITE 245, CERRADA LUNA 89"
+                    onChange={(e) => setCustomerData(prev => ({ ...prev, address: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
+                    placeholder="Calle Gracias 345"
                     required
-                    className="uppercase"
+                    className="capitalize"
                   />
                 </div>
                 <div>
@@ -375,10 +375,10 @@ export default function BookingWizard() {
                   <Input
                     id="fraccionamiento"
                     value={customerData.fraccionamiento}
-                    onChange={(e) => setCustomerData(prev => ({ ...prev, fraccionamiento: e.target.value.toUpperCase() }))}
-                    placeholder="EJ: RESIDENCIAL SAN NICOLÁS, FRACCIONAMIENTO LAS PALMAS"
+                    onChange={(e) => setCustomerData(prev => ({ ...prev, fraccionamiento: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
+                    placeholder="Valle De Cumbres"
                     required
-                    className="uppercase"
+                    className="capitalize"
                   />
                 </div>
                 <div>
@@ -387,7 +387,7 @@ export default function BookingWizard() {
                     id="postalCode"
                     value={customerData.postalCode}
                     onChange={(e) => setCustomerData(prev => ({ ...prev, postalCode: e.target.value }))}
-                    placeholder="EJ: 66260, 64720, 67190"
+                    placeholder="66260"
                   />
                 </div>
               </div>
@@ -496,10 +496,10 @@ export default function BookingWizard() {
                   <Input
                     id="petName"
                     value={petData.name}
-                    onChange={(e) => setPetData(prev => ({ ...prev, name: e.target.value.toUpperCase() }))}
-                    placeholder="FRODO"
+                    onChange={(e) => setPetData(prev => ({ ...prev, name: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
+                    placeholder="Frodo"
                     required
-                    className="uppercase"
+                    className="capitalize"
                   />
                 </div>
                 <div>
@@ -659,9 +659,9 @@ export default function BookingWizard() {
                 <Textarea
                   id="notes"
                   value={bookingData.notes}
-                  onChange={(e) => setBookingData(prev => ({ ...prev, notes: e.target.value.toUpperCase() }))}
-                  placeholder="INFORMACIÓN ADICIONAL SOBRE LA MASCOTA O EL SERVICIO..."
-                  className="uppercase"
+                  onChange={(e) => setBookingData(prev => ({ ...prev, notes: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
+                  placeholder="Información adicional sobre la mascota o el servicio..."
+                  className="capitalize"
                 />
               </div>
             </div>
