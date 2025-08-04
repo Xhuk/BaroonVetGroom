@@ -22,13 +22,13 @@ export const customBlueIcon = new L.Icon({
   shadowAnchor: [13, 41]
 });
 
-// Custom red customer marker  
+// Custom red customer marker - larger and more eye-catching
 export const customRedIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
+  iconSize: [35, 57], // Larger size
+  iconAnchor: [17, 57],
+  popupAnchor: [1, -45],
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  shadowSize: [41, 41],
-  shadowAnchor: [13, 41]
+  shadowSize: [50, 50], // Larger shadow
+  shadowAnchor: [18, 50]
 });

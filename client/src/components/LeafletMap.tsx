@@ -40,6 +40,7 @@ export default function LeafletMap({
   onMapMove
 }: LeafletMapProps) {
   const mapRef = useRef<any>(null);
+  const customerMarkerRef = useRef<any>(null);
 
   return (
     <MapContainer
@@ -78,17 +79,27 @@ export default function LeafletMap({
         </Marker>
       )}
       
-      {/* Customer Marker - Red */}
+      {/* Customer Marker - Red with CSS Bounce Animation */}
       {customerLocation && (
         <Marker
           position={[customerLocation.lat, customerLocation.lng]}
           icon={customRedIcon}
+          ref={customerMarkerRef}
+          eventHandlers={{
+            add: (e) => {
+              // Add CSS bounce animation when marker is added
+              const marker = e.target;
+              if (marker._icon) {
+                marker._icon.style.animation = 'bounce 0.6s ease-in-out 2';
+              }
+            }
+          }}
         >
           <Popup>
             <div className="text-center">
-              <div className="font-semibold text-red-700">Ubicación del Cliente</div>
+              <div className="font-semibold text-red-700">📍 Ubicación del Cliente</div>
               <div className="text-red-600">{customerLocation.address || 'Ubicación manual'}</div>
-              <div className="text-red-600">{customerLocation.fraccionamiento || 'Clic en mapa'}</div>
+              <div className="text-red-600">{customerLocation.fraccionamiento || 'Clic derecho en mapa'}</div>
               <div className="text-xs text-gray-500">
                 GPS: {customerLocation.lat.toFixed(4)}, {customerLocation.lng.toFixed(4)}
               </div>
