@@ -11,7 +11,33 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Green GPS icon for customer locations
+// Create numbered customer icons for route order
+const createNumberedIcon = (number: number) => {
+  return L.divIcon({
+    html: `
+      <div style="
+        width: 30px; 
+        height: 30px; 
+        background-color: #22c55e; 
+        border: 3px solid white; 
+        border-radius: 50%; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-weight: bold; 
+        font-size: 14px; 
+        color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      ">${number}</div>
+    `,
+    className: 'custom-numbered-marker',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15]
+  });
+};
+
+// Green GPS icon for unordered customer locations
 const customerIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -230,31 +256,38 @@ export default function RoutePlanMap() {
                     </Popup>
                   </Marker>
 
-                  {/* Customer markers */}
-                  {pickupAppointments.map((appointment, index) => (
-                    <Marker
-                      key={appointment.id}
-                      position={[appointment.client.latitude, appointment.client.longitude]}
-                      icon={customerIcon}
-                    >
-                      <Popup>
-                        <div className="min-w-[200px]">
-                          <h3 className="font-semibold">{appointment.client.name}</h3>
-                          <p className="text-sm text-gray-600">Mascota: {appointment.pet?.name}</p>
-                          <p className="text-sm text-gray-600">Hora: {appointment.scheduledTime}</p>
-                          <p className="text-sm text-gray-600">{appointment.client.fraccionamiento}</p>
-                          <Badge className="mt-1 text-xs">
-                            Peso: {fraccionamientoWeights[appointment.client.fraccionamiento]?.toFixed(1) || 'N/A'}
-                          </Badge>
-                          {optimizedRoute.findIndex(apt => apt.id === appointment.id) !== -1 && (
-                            <Badge className="ml-1 bg-green-100 text-green-800">
-                              Orden: {optimizedRoute.findIndex(apt => apt.id === appointment.id) + 1}
+                  {/* Customer markers with route numbers */}
+                  {pickupAppointments.map((appointment, index) => {
+                    // Check if this appointment is in the optimized route
+                    const routeIndex = optimizedRoute.findIndex(apt => apt.id === appointment.id);
+                    const isInRoute = routeIndex !== -1;
+                    const routeNumber = routeIndex + 1;
+
+                    return (
+                      <Marker
+                        key={appointment.id}
+                        position={[appointment.client.latitude, appointment.client.longitude]}
+                        icon={isInRoute ? createNumberedIcon(routeNumber) : customerIcon}
+                      >
+                        <Popup>
+                          <div className="min-w-[200px]">
+                            <h3 className="font-semibold">{appointment.client.name}</h3>
+                            <p className="text-sm text-gray-600">Mascota: {appointment.pet?.name}</p>
+                            <p className="text-sm text-gray-600">Hora: {appointment.scheduledTime}</p>
+                            <p className="text-sm text-gray-600">{appointment.client.fraccionamiento}</p>
+                            <Badge className="mt-1 text-xs">
+                              Peso: {fraccionamientoWeights[appointment.client.fraccionamiento]?.toFixed(1) || 'N/A'}
                             </Badge>
-                          )}
-                        </div>
-                      </Popup>
-                    </Marker>
-                  ))}
+                            {isInRoute && (
+                              <Badge className="ml-1 bg-green-100 text-green-800">
+                                Parada #{routeNumber}
+                              </Badge>
+                            )}
+                          </div>
+                        </Popup>
+                      </Marker>
+                    );
+                  })}
 
                   {/* Optimized route line */}
                   {routeCoordinates.length > 0 && (
