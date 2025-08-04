@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 import { FastNavigation } from "@/components/FastNavigation";
 import { OptimizedBottomStats } from "@/components/OptimizedBottomStats";
+import { HourlyAppointmentList } from "@/components/HourlyAppointmentList";
 import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, History, Truck, Phone, CalendarIcon } from "lucide-react";
@@ -83,13 +84,8 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Calendar - Load on demand */}
-        <div className="px-6">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Citas de Hoy</h2>
-            <p className="text-gray-600">Haz clic en "Gestionar Citas" para ver el calendario completo</p>
-          </div>
-        </div>
+        {/* Hourly Appointment List */}
+        <HourlyAppointmentList />
       </main>
 
       {/* Bottom Statistics Ribbon */}

@@ -6,6 +6,7 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics, provi
 
 Preferred communication style: Simple, everyday language.
 Performance preference: Fast loading over complex UI animations.
+Dashboard preference: Replace Calendar with "good looking list of appointments per hour"
 
 # System Architecture
 
