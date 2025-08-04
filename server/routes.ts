@@ -2222,6 +2222,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Payment Gateway Configuration routes
+  app.get("/api/admin/payment-gateways", isAuthenticated, async (req, res) => {
+    try {
+      const { companyId, tenantId } = req.query;
+      const configs = await storage.getPaymentGatewayConfigs(
+        companyId as string, 
+        tenantId as string
+      );
+      res.json(configs);
+    } catch (error) {
+      console.error("Error fetching payment gateway configs:", error);
+      res.status(500).json({ message: "Failed to fetch payment gateway configurations" });
+    }
+  });
+
+  app.post("/api/admin/payment-gateways", isAuthenticated, async (req, res) => {
+    try {
+      const newConfig = await storage.createPaymentGatewayConfig(req.body);
+      res.json(newConfig);
+    } catch (error) {
+      console.error("Error creating payment gateway config:", error);
+      res.status(500).json({ message: "Failed to create payment gateway configuration" });
+    }
+  });
+
+  app.put("/api/admin/payment-gateways/:id", isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updatedConfig = await storage.updatePaymentGatewayConfig(id, req.body);
+      res.json(updatedConfig);
+    } catch (error) {
+      console.error("Error updating payment gateway config:", error);
+      res.status(500).json({ message: "Failed to update payment gateway configuration" });
+    }
+  });
+
+  app.delete("/api/admin/payment-gateways/:id", isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deletePaymentGatewayConfig(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting payment gateway config:", error);
+      res.status(500).json({ message: "Failed to delete payment gateway configuration" });
+    }
+  });
+
+  // Billing Queue routes
+  app.get("/api/billing-queue/:tenantId", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const billingQueue = await storage.getBillingQueue(tenantId);
+      res.json(billingQueue);
+    } catch (error) {
+      console.error("Error fetching billing queue:", error);
+      res.status(500).json({ message: "Failed to fetch billing queue" });
+    }
+  });
+
+  app.post("/api/billing-queue", isAuthenticated, async (req, res) => {
+    try {
+      const newItem = await storage.createBillingQueueItem(req.body);
+      res.json(newItem);
+    } catch (error) {
+      console.error("Error creating billing queue item:", error);
+      res.status(500).json({ message: "Failed to create billing queue item" });
+    }
+  });
+
+  app.put("/api/billing-queue/:id/process", isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { paymentMethod, paymentGateway, notes, status } = req.body;
+      
+      let updates: any = {
+        paymentMethod,
+        status,
+        processedBy: req.user?.claims?.sub,
+        processedAt: new Date(),
+      };
+
+      if (notes) updates.notes = notes;
+      if (paymentGateway) updates.paymentGateway = paymentGateway;
+
+      // TODO: Implement actual payment link generation with Stripe/MercadoPago
+      if (paymentMethod === "payment_link") {
+        updates.paymentLinkUrl = `https://pay.example.com/checkout/${id}`;
+        updates.status = "processing";
+      }
+
+      const updatedItem = await storage.updateBillingQueueItem(id, updates);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      res.status(500).json({ message: "Failed to process payment" });
+    }
+  });
+
+  // Subscription plans routes (public)
+  app.get("/api/subscription-plans", async (req, res) => {
+    try {
+      const plans = await storage.getSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ message: "Failed to fetch subscription plans" });
+    }
+  });
+
+  // Company subscription routes
+  app.get("/api/company-subscription/:companyId", isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const subscription = await storage.getCompanySubscription(companyId);
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error fetching company subscription:", error);
+      res.status(500).json({ message: "Failed to fetch company subscription" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

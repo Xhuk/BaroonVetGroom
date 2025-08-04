@@ -759,6 +759,104 @@ export const driverCheckInsRelations = relations(driverCheckIns, ({ one }) => ({
 
 export type DeliveryTracking = typeof deliveryTracking.$inferSelect;
 export type InsertDeliveryTracking = typeof deliveryTracking.$inferInsert;
+
+// Payment gateway configuration per company/tenant
+export const paymentGatewayConfig = pgTable("payment_gateway_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").references(() => companies.id),
+  tenantId: varchar("tenant_id").references(() => tenants.id),
+  gatewayType: varchar("gateway_type", { enum: ["stripe", "mercadopago"] }).notNull(),
+  isActive: boolean("is_active").default(true),
+  config: jsonb("config").notNull(), // Stores encrypted API keys and settings
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Billing queue for staff payment processing
+export const billingQueue = pgTable("billing_queue", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  invoiceId: varchar("invoice_id").references(() => billingInvoices.id),
+  groomingRecordId: varchar("grooming_record_id").references(() => groomingRecords.id),
+  medicalRecordId: varchar("medical_record_id").references(() => medicalRecords.id),
+  clientId: varchar("client_id").notNull().references(() => clients.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  description: text("description").notNull(),
+  status: varchar("status", { enum: ["pending", "processing", "paid_cash", "paid_link", "cancelled"] }).default("pending"),
+  paymentMethod: varchar("payment_method", { enum: ["cash", "payment_link"] }),
+  paymentGateway: varchar("payment_gateway", { enum: ["stripe", "mercadopago"] }),
+  paymentLinkUrl: text("payment_link_url"),
+  paymentIntentId: varchar("payment_intent_id"),
+  processedBy: varchar("processed_by").references(() => staff.id),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Subscription plans for the SaaS platform
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(), // basic, small, medium, big, extra_big, enterprise, custom
+  displayName: varchar("display_name").notNull(),
+  description: text("description"),
+  maxTenants: integer("max_tenants").notNull(), // 1, 3, 6, 10, 20, 50, unlimited
+  monthlyPrice: decimal("monthly_price", { precision: 10, scale: 2 }).notNull(),
+  yearlyPrice: decimal("yearly_price", { precision: 10, scale: 2 }),
+  features: jsonb("features"), // Array of included features
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Company subscriptions
+export const companySubscriptions = pgTable("company_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  planId: varchar("plan_id").notNull().references(() => subscriptionPlans.id),
+  status: varchar("status", { enum: ["active", "cancelled", "suspended", "trial"] }).default("trial"),
+  currentPeriodStart: timestamp("current_period_start").notNull(),
+  currentPeriodEnd: timestamp("current_period_end").notNull(),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  stripePriceId: varchar("stripe_price_id"),
+  trialEndsAt: timestamp("trial_ends_at"),
+  cancelledAt: timestamp("cancelled_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Promotional discounts for subscriptions
+export const subscriptionPromotions = pgTable("subscription_promotions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: varchar("code").notNull().unique(),
+  name: varchar("name").notNull(),
+  discountType: varchar("discount_type", { enum: ["percentage", "fixed_amount"] }).notNull(),
+  discountValue: decimal("discount_value", { precision: 10, scale: 2 }).notNull(),
+  applicablePlans: jsonb("applicable_plans"), // Array of plan IDs
+  maxUses: integer("max_uses"),
+  usedCount: integer("used_count").default(0),
+  validFrom: timestamp("valid_from").notNull(),
+  validTo: timestamp("valid_to").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Type exports for new payment and subscription tables
+export type PaymentGatewayConfig = typeof paymentGatewayConfig.$inferSelect;
+export type InsertPaymentGatewayConfig = typeof paymentGatewayConfig.$inferInsert;
+
+export type BillingQueue = typeof billingQueue.$inferSelect;
+export type InsertBillingQueue = typeof billingQueue.$inferInsert;
+
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
+
+export type CompanySubscription = typeof companySubscriptions.$inferSelect;
+export type InsertCompanySubscription = typeof companySubscriptions.$inferInsert;
+
+export type SubscriptionPromotion = typeof subscriptionPromotions.$inferSelect;
+export type InsertSubscriptionPromotion = typeof subscriptionPromotions.$inferInsert;
 export type DeliveryAlert = typeof deliveryAlerts.$inferSelect;
 export type InsertDeliveryAlert = typeof deliveryAlerts.$inferInsert;  
 export type DriverCheckIn = typeof driverCheckIns.$inferSelect;

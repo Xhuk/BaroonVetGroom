@@ -11,7 +11,9 @@ import {
   Crown,
   Stethoscope,
   Scissors,
-  Heart
+  Heart,
+  Receipt,
+  CreditCard
 } from "lucide-react";
 
 interface NavigationProps {
@@ -31,6 +33,7 @@ export function Navigation({ className }: NavigationProps) {
     { icon: Package, label: "Inventario", href: "/inventory" },
     { icon: Truck, label: "Plan de Entregas", href: "/delivery-plan" },
     { icon: DollarSign, label: "Facturación", href: "/billing" },
+    { icon: Receipt, label: "Cola de Pagos", href: "/facturacion" },
   ];
 
   const adminItems = [

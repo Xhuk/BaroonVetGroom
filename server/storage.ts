@@ -35,6 +35,11 @@ import {
   billingInvoices,
   companyBillingConfig,
   deliverySchedule,
+  paymentGatewayConfig,
+  billingQueue,
+  subscriptionPlans,
+  companySubscriptions,
+  subscriptionPromotions,
   type User,
   type UpsertUser,
   type Company,
@@ -96,6 +101,16 @@ import {
   type InsertCompanyBillingConfig,
   type DeliverySchedule,
   type InsertDeliverySchedule,
+  type PaymentGatewayConfig,
+  type InsertPaymentGatewayConfig,
+  type BillingQueue,
+  type InsertBillingQueue,
+  type SubscriptionPlan,
+  type InsertSubscriptionPlan,
+  type CompanySubscription,
+  type InsertCompanySubscription,
+  type SubscriptionPromotion,
+  type InsertSubscriptionPromotion,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
@@ -228,6 +243,27 @@ export interface IStorage {
   createDeliverySchedule(schedule: InsertDeliverySchedule): Promise<DeliverySchedule>;
   getDeliverySchedulesByTenant(tenantId: string): Promise<DeliverySchedule[]>;
   updateDeliveryStatus(scheduleId: string, status: string): Promise<DeliverySchedule>;
+
+  // Payment gateway configuration operations
+  getPaymentGatewayConfigs(companyId?: string, tenantId?: string): Promise<PaymentGatewayConfig[]>;
+  createPaymentGatewayConfig(config: InsertPaymentGatewayConfig): Promise<PaymentGatewayConfig>;
+  updatePaymentGatewayConfig(id: string, config: Partial<InsertPaymentGatewayConfig>): Promise<PaymentGatewayConfig>;
+  deletePaymentGatewayConfig(id: string): Promise<void>;
+
+  // Billing queue operations
+  getBillingQueue(tenantId: string): Promise<BillingQueue[]>;
+  createBillingQueueItem(item: InsertBillingQueue): Promise<BillingQueue>;
+  updateBillingQueueItem(id: string, updates: Partial<InsertBillingQueue>): Promise<BillingQueue>;
+
+  // Subscription operations
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getCompanySubscription(companyId: string): Promise<CompanySubscription | undefined>;
+  createCompanySubscription(subscription: InsertCompanySubscription): Promise<CompanySubscription>;
+  updateCompanySubscription(companyId: string, updates: Partial<InsertCompanySubscription>): Promise<CompanySubscription>;
+
+  // Subscription promotions
+  getActivePromotions(): Promise<SubscriptionPromotion[]>;
+  validatePromotionCode(code: string): Promise<SubscriptionPromotion | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1407,6 +1443,140 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(medicalAppointments.followUpDate), asc(medicalAppointments.visitDate));
 
     return result;
+  }
+
+  // Payment gateway configuration operations
+  async getPaymentGatewayConfigs(companyId?: string, tenantId?: string): Promise<PaymentGatewayConfig[]> {
+    let query = db.select().from(paymentGatewayConfig);
+    
+    if (companyId && tenantId) {
+      query = query.where(
+        or(
+          eq(paymentGatewayConfig.companyId, companyId),
+          eq(paymentGatewayConfig.tenantId, tenantId)
+        )
+      );
+    } else if (companyId) {
+      query = query.where(eq(paymentGatewayConfig.companyId, companyId));
+    } else if (tenantId) {
+      query = query.where(eq(paymentGatewayConfig.tenantId, tenantId));
+    }
+    
+    return await query;
+  }
+
+  async createPaymentGatewayConfig(config: InsertPaymentGatewayConfig): Promise<PaymentGatewayConfig> {
+    const [newConfig] = await db
+      .insert(paymentGatewayConfig)
+      .values(config)
+      .returning();
+    return newConfig;
+  }
+
+  async updatePaymentGatewayConfig(id: string, updates: Partial<InsertPaymentGatewayConfig>): Promise<PaymentGatewayConfig> {
+    const [updatedConfig] = await db
+      .update(paymentGatewayConfig)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(paymentGatewayConfig.id, id))
+      .returning();
+    return updatedConfig;
+  }
+
+  async deletePaymentGatewayConfig(id: string): Promise<void> {
+    await db
+      .delete(paymentGatewayConfig)
+      .where(eq(paymentGatewayConfig.id, id));
+  }
+
+  // Billing queue operations
+  async getBillingQueue(tenantId: string): Promise<BillingQueue[]> {
+    return await db
+      .select()
+      .from(billingQueue)
+      .where(eq(billingQueue.tenantId, tenantId))
+      .orderBy(billingQueue.createdAt);
+  }
+
+  async createBillingQueueItem(item: InsertBillingQueue): Promise<BillingQueue> {
+    const [newItem] = await db
+      .insert(billingQueue)
+      .values(item)
+      .returning();
+    return newItem;
+  }
+
+  async updateBillingQueueItem(id: string, updates: Partial<InsertBillingQueue>): Promise<BillingQueue> {
+    const [updatedItem] = await db
+      .update(billingQueue)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(billingQueue.id, id))
+      .returning();
+    return updatedItem;
+  }
+
+  // Subscription operations
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return await db
+      .select()
+      .from(subscriptionPlans)
+      .where(eq(subscriptionPlans.isActive, true))
+      .orderBy(subscriptionPlans.sortOrder);
+  }
+
+  async getCompanySubscription(companyId: string): Promise<CompanySubscription | undefined> {
+    const [subscription] = await db
+      .select()
+      .from(companySubscriptions)
+      .where(eq(companySubscriptions.companyId, companyId));
+    return subscription;
+  }
+
+  async createCompanySubscription(subscription: InsertCompanySubscription): Promise<CompanySubscription> {
+    const [newSubscription] = await db
+      .insert(companySubscriptions)
+      .values(subscription)
+      .returning();
+    return newSubscription;
+  }
+
+  async updateCompanySubscription(companyId: string, updates: Partial<InsertCompanySubscription>): Promise<CompanySubscription> {
+    const [updatedSubscription] = await db
+      .update(companySubscriptions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(companySubscriptions.companyId, companyId))
+      .returning();
+    return updatedSubscription;
+  }
+
+  // Subscription promotions
+  async getActivePromotions(): Promise<SubscriptionPromotion[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(subscriptionPromotions)
+      .where(
+        and(
+          eq(subscriptionPromotions.isActive, true),
+          lte(subscriptionPromotions.validFrom, now),
+          gte(subscriptionPromotions.validTo, now)
+        )
+      );
+  }
+
+  async validatePromotionCode(code: string): Promise<SubscriptionPromotion | undefined> {
+    const now = new Date();
+    const [promotion] = await db
+      .select()
+      .from(subscriptionPromotions)
+      .where(
+        and(
+          eq(subscriptionPromotions.code, code),
+          eq(subscriptionPromotions.isActive, true),
+          lte(subscriptionPromotions.validFrom, now),
+          gte(subscriptionPromotions.validTo, now)
+        )
+      );
+    return promotion;
   }
 }
 
