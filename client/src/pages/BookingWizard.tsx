@@ -108,29 +108,27 @@ export default function BookingWizard() {
     enabled: !!currentTenant?.id
   });
 
-  // Fetch pet breeds with caching
-  const { data: allBreeds = [] } = useQuery({
-    queryKey: ['/api/pet-breeds'],
-    staleTime: CACHE_DURATION,
-    gcTime: CACHE_DURATION,
-    enabled: true
+  // Pet breeds query with tenant-specific endpoint  
+  const { data: allBreeds } = useQuery({
+    queryKey: ['/api/pet-breeds', currentTenant?.id],
+    queryFn: () => apiRequest(`/api/pet-breeds/${currentTenant?.id}`),
+    enabled: !!currentTenant?.id,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    cacheTime: 60 * 60 * 1000 // 1 hour
   });
 
-  // Filter breeds based on selected species with caching
+  // Memoized filtered breeds with browser-level caching for better performance
   const filteredBreeds = useMemo(() => {
-    if (!petData.species) return [];
+    if (!allBreeds || !petData.species) return [];
     
-    const cacheKey = petData.species;
+    const cacheKey = `breeds_${petData.species}`;
     const cached = BREED_CACHE.get(cacheKey);
     
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
       return cached.breeds;
     }
     
-    const breeds = allBreeds.filter((breed: any) => 
-      breed.species.toLowerCase() === petData.species.toLowerCase()
-    ).map((breed: any) => breed.breed);
-    
+    const breeds = allBreeds[petData.species as keyof typeof allBreeds] || [];
     BREED_CACHE.set(cacheKey, { breeds, timestamp: Date.now() });
     return breeds;
   }, [petData.species, allBreeds]);
