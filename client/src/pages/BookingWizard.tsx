@@ -324,9 +324,10 @@ export default function BookingWizard() {
                   <Input
                     id="name"
                     value={customerData.name}
-                    onChange={(e) => setCustomerData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Nombre del cliente"
+                    onChange={(e) => setCustomerData(prev => ({ ...prev, name: e.target.value.toUpperCase() }))}
+                    placeholder="NOMBRE DEL CLIENTE"
                     required
+                    className="uppercase"
                   />
                 </div>
                 <div>
@@ -345,8 +346,9 @@ export default function BookingWizard() {
                     id="email"
                     type="email"
                     value={customerData.email}
-                    onChange={(e) => setCustomerData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="email@ejemplo.com"
+                    onChange={(e) => setCustomerData(prev => ({ ...prev, email: e.target.value.toUpperCase() }))}
+                    placeholder="EMAIL@EJEMPLO.COM"
+                    className="uppercase"
                   />
                 </div>
               </div>
@@ -362,9 +364,10 @@ export default function BookingWizard() {
                   <Input
                     id="address"
                     value={customerData.address}
-                    onChange={(e) => setCustomerData(prev => ({ ...prev, address: e.target.value }))}
-                    placeholder="Ej: Vía Láctea 1000, Satelite 245, Cerrada Luna 89"
+                    onChange={(e) => setCustomerData(prev => ({ ...prev, address: e.target.value.toUpperCase() }))}
+                    placeholder="EJ: VÍA LÁCTEA 1000, SATELITE 245, CERRADA LUNA 89"
                     required
+                    className="uppercase"
                   />
                 </div>
                 <div>
@@ -372,9 +375,10 @@ export default function BookingWizard() {
                   <Input
                     id="fraccionamiento"
                     value={customerData.fraccionamiento}
-                    onChange={(e) => setCustomerData(prev => ({ ...prev, fraccionamiento: e.target.value }))}
-                    placeholder="Ej: Residencial San Nicolás, Fraccionamiento Las Palmas"
+                    onChange={(e) => setCustomerData(prev => ({ ...prev, fraccionamiento: e.target.value.toUpperCase() }))}
+                    placeholder="EJ: RESIDENCIAL SAN NICOLÁS, FRACCIONAMIENTO LAS PALMAS"
                     required
+                    className="uppercase"
                   />
                 </div>
                 <div>
@@ -383,7 +387,7 @@ export default function BookingWizard() {
                     id="postalCode"
                     value={customerData.postalCode}
                     onChange={(e) => setCustomerData(prev => ({ ...prev, postalCode: e.target.value }))}
-                    placeholder="Ej: 66260, 64720, 67190"
+                    placeholder="EJ: 66260, 64720, 67190"
                   />
                 </div>
               </div>
@@ -492,9 +496,10 @@ export default function BookingWizard() {
                   <Input
                     id="petName"
                     value={petData.name}
-                    onChange={(e) => setPetData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Frodo"
+                    onChange={(e) => setPetData(prev => ({ ...prev, name: e.target.value.toUpperCase() }))}
+                    placeholder="FRODO"
                     required
+                    className="uppercase"
                   />
                 </div>
                 <div>
@@ -654,8 +659,9 @@ export default function BookingWizard() {
                 <Textarea
                   id="notes"
                   value={bookingData.notes}
-                  onChange={(e) => setBookingData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Información adicional sobre la mascota o el servicio..."
+                  onChange={(e) => setBookingData(prev => ({ ...prev, notes: e.target.value.toUpperCase() }))}
+                  placeholder="INFORMACIÓN ADICIONAL SOBRE LA MASCOTA O EL SERVICIO..."
+                  className="uppercase"
                 />
               </div>
             </div>
