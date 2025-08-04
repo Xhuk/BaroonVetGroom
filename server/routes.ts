@@ -3014,35 +3014,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI-powered mass inventory import
-  app.post("/api/inventory/mass-import", isAuthenticated, async (req, res) => {
-    try {
-      const { text, tenantId } = req.body;
-      
-      if (!text || !tenantId) {
-        return res.status(400).json({ message: "Text description and tenant ID are required" });
-      }
 
-      if (!process.env.OPENAI_API_KEY) {
-        return res.status(500).json({ message: "OpenAI API key not configured" });
-      }
-
-      const aiProcessor = await import("./aiInventoryProcessor");
-      const result = await aiProcessor.processInventoryWithAI(text, tenantId);
-      
-      res.json({
-        message: "Inventory imported successfully with AI",
-        imported: result.length,
-        data: result
-      });
-    } catch (error) {
-      console.error("Error processing AI inventory import:", error);
-      res.status(500).json({ 
-        message: "Failed to process inventory with AI",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
 
   // CSV-powered inventory import
   app.post("/api/inventory/csv-import", isAuthenticated, async (req, res) => {

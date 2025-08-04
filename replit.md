@@ -62,4 +62,3 @@ Preferred communication style: Simple, everyday language.
 
 ## Integrations
 - **Messaging**: n8n for WhatsApp API integration (for confirmations/notifications).
-- **AI**: OpenAI GPT-4o (for inventory import, though CSV import is now preferred).
