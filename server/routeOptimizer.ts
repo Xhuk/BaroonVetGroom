@@ -229,3 +229,9 @@ export {
   type OptimizedRoute,
   type RouteOptimizationOptions
 };
+
+// Export aliases for backward compatibility
+export const optimizeDeliveryRoute = advancedRouteOptimization;
+export function generateOptimizationPrompt(options: RouteOptimizationOptions): string {
+  return `Optimizing delivery route for ${options.appointments.length} appointments with ${options.vanCapacity} van capacity.`;
+}

@@ -3,7 +3,21 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookMonitor } from "./webhookMonitor";
-import { optimizeDeliveryRoute, generateOptimizationPrompt } from "./routeOptimizer";
+import { advancedRouteOptimization, type OptimizedRoute, type RouteOptimizationOptions } from "./routeOptimizer";
+
+// Helper function to check system admin access
+async function isSystemAdmin(req: any): Promise<boolean> {
+  try {
+    const user = req.user;
+    if (!user?.claims?.sub) {
+      return false;
+    }
+    return await storage.hasSystemRole(user.claims.sub);
+  } catch (error) {
+    console.error('Error checking system admin access:', error);
+    return false;
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -750,7 +764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         actualTenantId, 
         'whatsapp', 
         process.env.N8N_WEBHOOK_URL || 'N/A', 
-        new Error(`n8n webhook en mantenimiento - ${error.message}`),
+        new Error(`n8n webhook en mantenimiento - ${error instanceof Error ? error.message : 'Unknown error'}`),
         { phone, message, type: 'whatsapp_appointment_confirmation' }
       );
       
@@ -775,7 +789,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedTenant);
     } catch (error) {
-      console.error("Error updating business hours:", error);
+      console.error("Error updating business hours:", error instanceof Error ? error.message : error);
       res.status(500).json({ message: "Failed to update business hours" });
     }
   });
@@ -804,7 +818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error testing webhook monitoring:", error);
-      res.status(500).json({ message: `Failed to test webhook monitoring: ${error.message}` });
+      res.status(500).json({ message: `Failed to test webhook monitoring: ${error instanceof Error ? error.message : 'Unknown error'}` });
     }
   });
 
@@ -812,7 +826,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/superadmin/webhook-stats', isAuthenticated, async (req: any, res) => {
     try {
       // Check if user is super admin (this could be enhanced with proper role checking)
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       
       const stats = await webhookMonitor.getWebhookStats();
       res.json(stats);
@@ -1077,7 +1091,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get company's route optimization configuration
       const tenant = await storage.getTenant(tenantId);
-      const config = tenant ? await storage.getRouteOptimizationConfig(tenant.companyId) : null;
+      const config = tenant ? await storage.getRouteOptimizationConfig(tenant.companyId) : undefined;
 
       // Transform appointments to route points
       const routePoints = appointments.map((apt: any) => ({
@@ -1112,7 +1126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Track beta feature usage
       if (tenant) {
-        await storage.trackBetaFeatureUsage('route_optimization', tenant.companyId, tenantId, req.user?.claims?.sub);
+        await storage.trackBetaFeatureUsage('route_optimization', tenant.companyId, tenantId, (req.user as any)?.claims?.sub);
       }
 
       res.json({
@@ -1239,10 +1253,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return {
             ...delivery,
             vanName: van?.name || "Unknown Van",
-            driverName: driver?.name || "Unknown Driver",
+            driverName: Array.isArray(driver) ? (driver[0]?.name || "Unknown Driver") : "Unknown Driver",
             route: {
               id: delivery.routeId,
-              name: `Ruta ${new Date(delivery.createdAt).toLocaleDateString()}`,
+              name: `Ruta ${new Date(delivery.createdAt || new Date()).toLocaleDateString()}`,
               totalStops: 0, // TODO: Get from delivery route
               completedStops: 0, // TODO: Calculate from check-ins
             }
@@ -1274,7 +1288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return {
             ...alert,
             vanName: van?.name || "Unknown Van",
-            driverName: driver?.name || "Unknown Driver",
+            driverName: Array.isArray(driver) ? (driver[0]?.name || "Unknown Driver") : "Unknown Driver",
           };
         })
       );
@@ -1330,7 +1344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/delivery-alerts/:alertId/resolve", isAuthenticated, async (req, res) => {
     try {
       const { alertId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       
       const resolvedAlert = await storage.resolveDeliveryAlert(alertId, userId);
       res.json(resolvedAlert);
@@ -1724,8 +1738,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             groomingRecordId: record.id,
             clientId: recordData.clientId,
             invoiceNumber,
-            totalAmount: totalCost,
-            servicesCost: totalCost,
+            totalAmount: totalCost.toString(),
+            servicesCost: totalCost.toString(),
             status: 'pending'
           });
         }

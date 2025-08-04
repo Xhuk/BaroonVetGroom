@@ -410,7 +410,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(appointments.tenantId, tenantId));
 
     if (date) {
-      appointmentsQuery = appointmentsQuery.where(and(eq(appointments.tenantId, tenantId), eq(appointments.scheduledDate, date)));
+      appointmentsQuery = db
+        .select()
+        .from(appointments)
+        .where(and(eq(appointments.tenantId, tenantId), eq(appointments.scheduledDate, date)));
     }
 
     const appointmentResults = await appointmentsQuery;
@@ -591,11 +594,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(roles).where(eq(roles.id, roleId));
   }
 
-  // Slot reservation operations
-  async reserveSlot(reservation: InsertTempSlotReservation): Promise<TempSlotReservation> {
-    const [newReservation] = await db.insert(tempSlotReservations).values(reservation).returning();
-    return newReservation;
-  }
+
 
   async releaseSlot(reservationId: string): Promise<void> {
     await db.delete(tempSlotReservations).where(eq(tempSlotReservations.id, reservationId));
@@ -645,10 +644,19 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(webhookErrorLogs);
     
     if (tenantId) {
-      query = query.where(eq(webhookErrorLogs.tenantId, tenantId));
+      return await db
+        .select()
+        .from(webhookErrorLogs)
+        .where(eq(webhookErrorLogs.tenantId, tenantId))
+        .orderBy(sql`${webhookErrorLogs.createdAt} DESC`)
+        .limit(limit);
     }
     
-    return query.orderBy(sql`${webhookErrorLogs.createdAt} DESC`).limit(limit);
+    return await db
+      .select()
+      .from(webhookErrorLogs)
+      .orderBy(sql`${webhookErrorLogs.createdAt} DESC`)
+      .limit(limit);
   }
 
   async updateWebhookErrorStatus(logId: string, status: string, resolvedAt?: Date): Promise<void> {
@@ -738,7 +746,6 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(webhookMonitoring)
       .set({
-        lastRetryAt: new Date(),
         updatedAt: new Date()
       })
       .where(and(
@@ -842,9 +849,11 @@ export class DatabaseStorage implements IStorage {
     const [savedRoute] = await db
       .select()
       .from(savedRoutes)
-      .where(eq(savedRoutes.tenantId, tenantId))
-      .where(eq(savedRoutes.date, date))
-      .where(eq(savedRoutes.routeHash, routeHash));
+      .where(and(
+        eq(savedRoutes.tenantId, tenantId),
+        eq(savedRoutes.date, date),
+        eq(savedRoutes.routeHash, routeHash)
+      ));
     return savedRoute;
   }
 
