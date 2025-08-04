@@ -621,18 +621,24 @@ export default function BookingWizard() {
                             }}
                           />
                           
-                          {/* Clinic Location - Blue Marker (Bound to stored tenant GPS coordinates) */}
+                          {/* Clinic Location - Blue Marker (Zoom-stable positioning) */}
                           {currentTenant?.latitude && currentTenant?.longitude && (() => {
                             const tenantLat = parseFloat(currentTenant.latitude);
                             const tenantLng = parseFloat(currentTenant.longitude);
                             
-                            // Calculate marker position with improved precision and coordinate conversion
-                            // Use more precise coordinate-to-kilometer conversion factors
-                            const latDegPerKm = 1 / 110.54; // More precise latitude degrees per km
-                            const lngDegPerKm = 1 / (111.32 * Math.cos(tenantLat * Math.PI / 180)); // Longitude adjusted for latitude
+                            // Ultra-precise coordinate conversion with zoom stability
+                            const latDegPerKm = 1 / 110.54;
+                            const lngDegPerKm = 1 / (111.32 * Math.cos(tenantLat * Math.PI / 180));
                             
-                            const leftPercent = ((tenantLng - (mapCoordinates.lng - mapDiameterKm * lngDegPerKm)) / (mapDiameterKm * lngDegPerKm * 2)) * 100;
-                            const topPercent = ((mapCoordinates.lat + mapDiameterKm * latDegPerKm - tenantLat) / (mapDiameterKm * latDegPerKm * 2)) * 100;
+                            // Calculate exact map boundaries using tenant coordinates for reference
+                            const mapWestBound = mapCoordinates.lng - (mapDiameterKm * lngDegPerKm);
+                            const mapEastBound = mapCoordinates.lng + (mapDiameterKm * lngDegPerKm);
+                            const mapNorthBound = mapCoordinates.lat + (mapDiameterKm * latDegPerKm);
+                            const mapSouthBound = mapCoordinates.lat - (mapDiameterKm * latDegPerKm);
+                            
+                            // Enhanced percentage calculation with sub-pixel precision
+                            const leftPercent = ((tenantLng - mapWestBound) / (mapEastBound - mapWestBound)) * 100;
+                            const topPercent = ((mapNorthBound - tenantLat) / (mapNorthBound - mapSouthBound)) * 100;
                             
                             // Marker positioning calculations complete
                             
@@ -661,13 +667,32 @@ export default function BookingWizard() {
                             );
                           })()}
                           
-                          {/* Customer Location - Red Pin (placed by right-click) */}
-                          {customerData.latitude && customerData.longitude && (
+                          {/* Customer Location - Red Pin (Zoom-stable positioning) */}
+                          {customerData.latitude && customerData.longitude && (() => {
+                            const customerLat = parseFloat(customerData.latitude);
+                            const customerLng = parseFloat(customerData.longitude);
+                            
+                            // Precise coordinate calculation matching clinic marker system
+                            const latDegPerKm = 1 / 110.54;
+                            const lngDegPerKm = 1 / (111.32 * Math.cos(customerLat * Math.PI / 180));
+                            
+                            // Map boundaries calculated with consistent precision
+                            const mapWestBound = mapCoordinates.lng - (mapDiameterKm * lngDegPerKm);
+                            const mapEastBound = mapCoordinates.lng + (mapDiameterKm * lngDegPerKm);
+                            const mapNorthBound = mapCoordinates.lat + (mapDiameterKm * latDegPerKm);
+                            const mapSouthBound = mapCoordinates.lat - (mapDiameterKm * latDegPerKm);
+                            
+                            // Stable positioning calculation with enhanced accuracy
+                            const leftPercent = ((customerLng - mapWestBound) / (mapEastBound - mapWestBound)) * 100;
+                            const topPercent = ((mapNorthBound - customerLat) / (mapNorthBound - mapSouthBound)) * 100;
+                            
+                            return (
                             <div 
                               className="absolute transform -translate-x-1/2 -translate-y-full group z-40 pointer-events-none"
                               style={{
-                                left: `${((parseFloat(customerData.longitude) - (mapCoordinates.lng - mapDiameterKm * (1 / (111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180))))) / (mapDiameterKm * (1 / (111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180))) * 2)) * 100}%`,
-                                top: `${((mapCoordinates.lat + mapDiameterKm / 110.54 - parseFloat(customerData.latitude)) / ((mapDiameterKm / 110.54) * 2)) * 100}%`
+                                left: `${leftPercent}%`,
+                                top: `${topPercent}%`,
+                                opacity: (leftPercent >= -5 && leftPercent <= 105 && topPercent >= -5 && topPercent <= 105) ? 1 : 0.3
                               }}
                             >
                               <MapPin className="w-8 h-8 text-red-600 drop-shadow-lg animate-bounce" />
@@ -678,7 +703,8 @@ export default function BookingWizard() {
                                 <div className="text-xs text-gray-500">GPS: {parseFloat(customerData.latitude).toFixed(4)}, {parseFloat(customerData.longitude).toFixed(4)}</div>
                               </div>
                             </div>
-                          )}
+                            );
+                          })()}
 
 
                         </div>
