@@ -32,28 +32,13 @@ import blueMarkerIconPath from "@assets/marker-icon_1754283680600.png";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Leaflet imports
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import { customBlueIcon, customRedIcon } from '@/lib/leafletIcons';
+import { lazy, Suspense } from 'react';
 import 'leaflet/dist/leaflet.css';
 import type { Client, Pet, Service } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 
-// Map Click Handler Component for Leaflet
-function MapClickHandler({ onMapClick, onMapMove }: { 
-  onMapClick: (lat: number, lng: number) => void;
-  onMapMove: (lat: number, lng: number) => void;
-}) {
-  useMapEvents({
-    click(e) {
-      onMapClick(e.latlng.lat, e.latlng.lng);
-    },
-    move(e) {
-      const center = e.target.getCenter();
-      onMapMove(center.lat, center.lng);
-    }
-  });
-  return null;
-}
+// Lazy load LeafletMap component
+const LeafletMap = lazy(() => import('@/components/LeafletMap'));
 
 export default function BookingWizard() {
   const { currentTenant } = useTenant();
@@ -528,20 +513,22 @@ export default function BookingWizard() {
                     <div>
                       {/* Leaflet Map with Stable Marker Positioning */}
                       <div className="h-80 relative border-b">
-                        <MapContainer
-                          center={[mapCoordinates.lat, mapCoordinates.lng]}
-                          zoom={15 - Math.floor(mapDiameterKm / 2)}
-                          style={{ height: '100%', width: '100%' }}
-                          className="rounded-lg"
-                          key={`${mapCoordinates.lat}-${mapCoordinates.lng}`}
-                        >
-                          <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                          />
-                          
-                          {/* Map Click Handler */}
-                          <MapClickHandler 
+                        <Suspense fallback={<div className="h-full w-full bg-gray-100 flex items-center justify-center">Cargando mapa...</div>}>
+                          <LeafletMap
+                            center={[mapCoordinates.lat, mapCoordinates.lng]}
+                            zoom={15 - Math.floor(mapDiameterKm / 2)}
+                            tenantLocation={tenantLocation}
+                            customerLocation={
+                              customerData.latitude && customerData.longitude
+                                ? {
+                                    lat: parseFloat(customerData.latitude),
+                                    lng: parseFloat(customerData.longitude),
+                                    address: customerData.address,
+                                    fraccionamiento: customerData.fraccionamiento
+                                  }
+                                : null
+                            }
+                            tenantName={currentTenant?.name}
                             onMapClick={(lat, lng) => {
                               setCustomerData(prev => ({
                                 ...prev,
@@ -558,44 +545,7 @@ export default function BookingWizard() {
                               setMapCoordinates({ lat, lng });
                             }}
                           />
-                          
-                          {/* Clinic Marker - Blue */}
-                          {tenantLocation.lat && tenantLocation.lng && (
-                            <Marker
-                              position={[tenantLocation.lat, tenantLocation.lng]}
-                              icon={customBlueIcon}
-                            >
-                              <Popup>
-                                <div className="text-center">
-                                  <div className="font-semibold">Clínica Veterinaria</div>
-                                  <div className="text-blue-600">{currentTenant?.name}</div>
-                                  <div className="text-xs text-gray-500">
-                                    GPS: {tenantLocation.lat}, {tenantLocation.lng}
-                                  </div>
-                                </div>
-                              </Popup>
-                            </Marker>
-                          )}
-                          
-                          {/* Customer Marker - Red */}
-                          {customerData.latitude && customerData.longitude && (
-                            <Marker
-                              position={[parseFloat(customerData.latitude), parseFloat(customerData.longitude)]}
-                              icon={customRedIcon}
-                            >
-                              <Popup>
-                                <div className="text-center">
-                                  <div className="font-semibold text-red-700">Ubicación del Cliente</div>
-                                  <div className="text-red-600">{customerData.address || 'Ubicación manual'}</div>
-                                  <div className="text-red-600">{customerData.fraccionamiento || 'Clic en mapa'}</div>
-                                  <div className="text-xs text-gray-500">
-                                    GPS: {parseFloat(customerData.latitude).toFixed(4)}, {parseFloat(customerData.longitude).toFixed(4)}
-                                  </div>
-                                </div>
-                              </Popup>
-                            </Marker>
-                          )}
-                        </MapContainer>
+                        </Suspense>
                       </div>
                       
                       {/* Enhanced Map Info with Legend */}
