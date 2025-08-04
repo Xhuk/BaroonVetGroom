@@ -72,7 +72,7 @@ export function HourlyAppointmentList() {
   // Helper functions to get names from IDs
   const getClientName = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
-    return client ? `${client.firstName} ${client.lastName}` : `Cliente #${clientId}`;
+    return client ? client.name : `Cliente #${clientId}`;
   };
 
   const getPetName = (petId: string) => {
@@ -89,7 +89,7 @@ export function HourlyAppointmentList() {
   const getStaffName = (staffId: string | null) => {
     if (!staffId) return 'Sin asignar';
     const staffMember = staff.find(s => s.id === staffId);
-    return staffMember ? `${staffMember.firstName} ${staffMember.lastName}` : `Staff #${staffId}`;
+    return staffMember ? staffMember.name : `Staff #${staffId}`;
   };
 
   const handleCreateAppointment = (hour: string) => {
