@@ -15,6 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { DebugControls } from "@/components/DebugControls";
+import { BackButton } from "@/components/BackButton";
+import { Header } from "@/components/Header";
 import { format } from "date-fns";
 
 const WEBHOOK_TYPES = [
@@ -226,16 +228,23 @@ export default function WebhookIntegrations() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">LateNode Webhook Integrations</h1>
-          <p className="text-gray-600 mt-2">
-            Configure automated notifications and integrations for veterinary operations
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      <Header>
+        <div className="flex items-center space-x-4">
+          <BackButton />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              LateNode Webhook Integrations
+            </h1>
+            <p className="text-sm text-gray-600">
+              Configure automated notifications and integrations for veterinary operations
+            </p>
+          </div>
         </div>
         <DebugControls />
-      </div>
+      </Header>
+
+      <div className="p-6 space-y-6">
 
       {/* Company Selection */}
       <Card>
@@ -647,6 +656,7 @@ export default function WebhookIntegrations() {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
