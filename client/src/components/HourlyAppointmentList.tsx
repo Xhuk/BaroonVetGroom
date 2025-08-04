@@ -139,7 +139,7 @@ export function HourlyAppointmentList() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="max-h-96 overflow-y-auto">
+          <div className="h-80 overflow-y-auto">
             {businessHours.map(hour => {
               const hourAppointments = appointmentsByHour[hour] || [];
               const displayHour = parseInt(hour);

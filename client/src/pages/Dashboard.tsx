@@ -85,7 +85,9 @@ export default function Dashboard() {
         </div>
 
         {/* Hourly Appointment List */}
-        <HourlyAppointmentList />
+        <div className="mb-6">
+          <HourlyAppointmentList />
+        </div>
       </main>
 
       {/* Bottom Statistics Ribbon */}
