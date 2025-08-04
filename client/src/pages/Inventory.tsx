@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { BackButton } from "@/components/BackButton";
+import { DebugControls } from "@/components/DebugControls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -183,13 +184,16 @@ export default function Inventory() {
       <BackButton className="mb-4" />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-blue-800">Gestión de Inventario</h1>
-        <Button 
-          onClick={() => setShowItemForm(true)}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nuevo Producto
-        </Button>
+        <div className="flex items-center space-x-3">
+          <DebugControls />
+          <Button 
+            onClick={() => setShowItemForm(true)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo Producto
+          </Button>
+        </div>
       </div>
 
       {/* Statistics Cards */}

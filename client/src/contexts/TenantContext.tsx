@@ -67,7 +67,18 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
           companyId: 'vetgroom-corp',
           address: 'Sucursal Principal - Av. Mascotas 456',
           phone: '+1-555-2001',
-          email: 'vetgroom1@vetgroom.com'
+          email: 'vetgroom1@vetgroom.com',
+          latitude: '25.74055709021775',
+          longitude: '-100.407349161356',
+          postalCode: null,
+          openTime: '08:00:00',
+          closeTime: '18:00:00',
+          timeSlotDuration: 30,
+          reservationTimeout: 5,
+          deliveryTrackingEnabled: false,
+          settings: { language: 'es', timezone: 'America/Mexico_City' },
+          createdAt: new Date(),
+          updatedAt: new Date()
         },
         {
           id: 'tenant-1', 
@@ -76,7 +87,18 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
           companyId: 'comp-1',
           address: 'Centro Veterinario - Calle Principal 123',
           phone: '+1-555-1001',
-          email: 'central@vetcorp.com'
+          email: 'central@vetcorp.com',
+          latitude: '25.6866',
+          longitude: '-100.3161',
+          postalCode: null,
+          openTime: '09:00:00',
+          closeTime: '19:00:00',
+          timeSlotDuration: 30,
+          reservationTimeout: 5,
+          deliveryTrackingEnabled: true,
+          settings: { language: 'es', timezone: 'America/Mexico_City' },
+          createdAt: new Date(),
+          updatedAt: new Date()
         }
       ];
       

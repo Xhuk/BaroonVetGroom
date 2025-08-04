@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { DebugControls } from "@/components/DebugControls";
 import { 
   Plus, 
   Map, 
@@ -179,6 +180,7 @@ export default function DeliveryPlan() {
           <h1 className="text-2xl font-bold text-blue-800">Planificación de Entregas</h1>
         </div>
         <div className="flex gap-3 items-center">
+          <DebugControls />
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-gray-700">Fecha:</label>
             <select

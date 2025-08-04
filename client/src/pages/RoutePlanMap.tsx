@@ -10,6 +10,7 @@ import { ArrowLeft, Truck, MapPin, Route, Settings, Calculator, Scale } from "lu
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { DebugControls } from "@/components/DebugControls";
 
 // Create numbered customer icons for route order
 const createNumberedIcon = (number: number) => {
@@ -275,6 +276,7 @@ export default function RoutePlanMap() {
         </div>
         
         <div className="flex items-center gap-3">
+          <DebugControls />
           <select
             value={selectedVanCapacity}
             onChange={(e) => setSelectedVanCapacity(e.target.value as 'small' | 'medium' | 'large')}
