@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
+import { usePagePreCache } from "@/hooks/usePagePreCache";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 import { Navigation } from "@/components/Navigation";
@@ -16,6 +17,9 @@ export default function Dashboard() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const { currentTenant, isLoading: tenantLoading } = useTenant();
+  
+  // Initialize pre-caching
+  usePagePreCache();
 
   // Redirect to login if not authenticated
   useEffect(() => {
