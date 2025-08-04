@@ -103,6 +103,7 @@ export default function LeafletMap({
       {/* Customer Marker - Green Paw with stable positioning */}
       {customerLocation && customerLocation.lat && customerLocation.lng && (
         <Marker
+          key={`customer-${customerLocation.lat}-${customerLocation.lng}`}
           position={[Number(customerLocation.lat), Number(customerLocation.lng)]}
           icon={customRedIcon}
           ref={customerMarkerRef}

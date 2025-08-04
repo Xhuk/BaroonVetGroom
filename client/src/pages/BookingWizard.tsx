@@ -542,7 +542,9 @@ export default function BookingWizard() {
                             zoom={13}
                             tenantLocation={tenantLocation}
                             customerLocation={
-                              customerData.latitude && customerData.longitude
+                              customerData.latitude && customerData.longitude && 
+                              !isNaN(parseFloat(customerData.latitude)) && 
+                              !isNaN(parseFloat(customerData.longitude))
                                 ? {
                                     lat: parseFloat(customerData.latitude),
                                     lng: parseFloat(customerData.longitude),
