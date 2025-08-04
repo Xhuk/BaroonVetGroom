@@ -3,8 +3,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
-import { FastNavigation } from "@/components/FastNavigation";
-import { OptimizedBottomStats } from "@/components/OptimizedBottomStats";
+import { Navigation } from "@/components/Navigation";
+import { BottomStatsRibbon } from "@/components/BottomStatsRibbon";
 import { HourlyAppointmentList } from "@/components/HourlyAppointmentList";
 import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -58,7 +58,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <Header />
-      <FastNavigation />
+      <Navigation />
       
       {/* Main Content */}
       <main className="lg:ml-64 pb-40">
@@ -89,7 +89,7 @@ export default function Dashboard() {
       </main>
 
       {/* Bottom Statistics Ribbon */}
-      <OptimizedBottomStats />
+      <BottomStatsRibbon />
     </div>
   );
 }

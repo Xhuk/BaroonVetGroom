@@ -19,16 +19,18 @@ export function HourlyAppointmentList() {
 
   // Filter appointments for today and sort by time
   const todayAppointments = appointments
-    .filter(apt => apt.appointmentDate.startsWith(today))
-    .sort((a, b) => a.appointmentTime.localeCompare(b.appointmentTime));
+    .filter(apt => apt.scheduledDate && apt.scheduledDate.startsWith(today))
+    .sort((a, b) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
 
   // Group appointments by hour
   const appointmentsByHour = todayAppointments.reduce((acc, appointment) => {
-    const hour = appointment.appointmentTime.split(':')[0];
-    if (!acc[hour]) {
-      acc[hour] = [];
+    if (appointment.scheduledTime) {
+      const hour = appointment.scheduledTime.split(':')[0];
+      if (!acc[hour]) {
+        acc[hour] = [];
+      }
+      acc[hour].push(appointment);
     }
-    acc[hour].push(appointment);
     return acc;
   }, {} as Record<string, Appointment[]>);
 
@@ -113,17 +115,17 @@ export function HourlyAppointmentList() {
                                   {getAppointmentIcon(appointment.type)}
                                   <div>
                                     <div className="font-medium text-gray-900 text-sm">
-                                      {appointment.appointmentTime} - {appointment.clientName}
+                                      {appointment.scheduledTime} - Cliente #{appointment.clientId}
                                     </div>
                                     <div className="text-xs text-gray-600 mt-1">
                                       <span className="inline-flex items-center">
                                         <User className="w-3 h-3 mr-1" />
-                                        {appointment.petName}
+                                        Mascota #{appointment.petId}
                                       </span>
-                                      {appointment.roomName && (
+                                      {appointment.roomId && (
                                         <span className="inline-flex items-center ml-3">
                                           <MapPin className="w-3 h-3 mr-1" />
-                                          {appointment.roomName}
+                                          Sala #{appointment.roomId}
                                         </span>
                                       )}
                                     </div>
@@ -136,7 +138,7 @@ export function HourlyAppointmentList() {
                                      appointment.type === 'vaccination' ? 'Vacunación' : appointment.type}
                                   </div>
                                   <div className="text-xs text-gray-500 mt-1">
-                                    {appointment.staffName}
+                                    {appointment.staffId ? `Staff #${appointment.staffId}` : 'Sin asignar'}
                                   </div>
                                 </div>
                               </div>
