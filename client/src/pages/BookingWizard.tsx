@@ -555,11 +555,16 @@ export default function BookingWizard() {
                             }
                             tenantName={currentTenant?.name}
                             onMapClick={(lat, lng) => {
+                              // Set coordinates immediately without any delay
+                              const exactLat = lat.toFixed(6);
+                              const exactLng = lng.toFixed(6);
+                              
                               setCustomerData(prev => ({
                                 ...prev,
-                                latitude: lat.toFixed(6),
-                                longitude: lng.toFixed(6)
+                                latitude: exactLat,
+                                longitude: exactLng
                               }));
+                              
                               toast({
                                 title: "Ubicación del cliente establecida",
                                 description: `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`,

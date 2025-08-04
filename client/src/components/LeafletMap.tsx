@@ -100,10 +100,10 @@ export default function LeafletMap({
         </Marker>
       )}
       
-      {/* Customer Marker - Green Paw with CSS Bounce Animation */}
-      {customerLocation && (
+      {/* Customer Marker - Green Paw with stable positioning */}
+      {customerLocation && customerLocation.lat && customerLocation.lng && (
         <Marker
-          position={[customerLocation.lat, customerLocation.lng]}
+          position={[Number(customerLocation.lat), Number(customerLocation.lng)]}
           icon={customRedIcon}
           ref={customerMarkerRef}
           eventHandlers={{
@@ -121,10 +121,10 @@ export default function LeafletMap({
               <div className="font-semibold text-green-700">
                 🐾 {customerLocation.clientName && customerLocation.petName 
                     ? `${customerLocation.clientName} - ${customerLocation.petName}` 
-                    : 'Marco Bolado - Frodo'}
+                    : 'Cliente - Mascota'}
               </div>
               <div className="text-xs text-gray-500">
-                {customerLocation.address || 'Ubicación manual'}
+                {customerLocation.address || 'Ubicación seleccionada'}
                 {customerLocation.fraccionamiento && `, ${customerLocation.fraccionamiento}`}
               </div>
             </div>
