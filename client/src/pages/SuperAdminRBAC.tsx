@@ -328,29 +328,7 @@ export default function SuperAdminRBAC() {
             </div>
           )}
 
-          {/* Company Selection */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="w-5 h-5" />
-                Seleccionar Compañía para Gestión RBAC
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleccionar compañía para gestionar roles..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies?.map((company: any) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
+
 
           {selectedCompany && (
             <Tabs defaultValue="roles" className="w-full">

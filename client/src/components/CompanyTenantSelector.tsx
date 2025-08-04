@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Users, Search } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Building2, Users, Search, Check } from "lucide-react";
 
 interface Company {
   id: string;
@@ -21,8 +22,10 @@ interface Tenant {
 
 export function CompanyTenantSelector() {
   const { canDebugTenants } = useAccessControl();
+  const { toast } = useToast();
   const [selectedCompany, setSelectedCompany] = useState<string>("");
   const [selectedTenant, setSelectedTenant] = useState<string>("");
+  const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
 
   const { data: companies } = useQuery<Company[]>({
     queryKey: ['/api/superadmin/companies'],
@@ -119,6 +122,7 @@ export function CompanyTenantSelector() {
               onClick={() => {
                 setSelectedCompany("");
                 setSelectedTenant("");
+                setIsConfirmed(false);
               }}
               className="ml-auto bg-white text-yellow-800 border-yellow-300 hover:bg-yellow-50"
             >
@@ -126,6 +130,47 @@ export function CompanyTenantSelector() {
             </Button>
           </div>
         )}
+
+        {/* Confirm Button */}
+        <div className="flex items-center justify-between pt-4 border-t border-yellow-200">
+          <div className="text-xs text-yellow-700">
+            {selectedCompany && selectedTenant ? (
+              <>Empresa: <strong>{companies?.find(c => c.id === selectedCompany)?.name}</strong>, Tenant: <strong>{allTenants?.find(t => t.id === selectedTenant)?.name}</strong></>
+            ) : (
+              "Selecciona empresa y tenant para continuar"
+            )}
+          </div>
+          <Button 
+            onClick={() => {
+              if (selectedCompany && selectedTenant) {
+                setIsConfirmed(true);
+                toast({
+                  title: "Configuración confirmada",
+                  description: `Debug activo para ${companies?.find(c => c.id === selectedCompany)?.name} - ${allTenants?.find(t => t.id === selectedTenant)?.name}`,
+                });
+              } else {
+                toast({
+                  title: "Selección incompleta",
+                  description: "Debes seleccionar tanto empresa como tenant",
+                  variant: "destructive",
+                });
+              }
+            }}
+            disabled={!selectedCompany || !selectedTenant || isConfirmed}
+            size="sm"
+            className={isConfirmed ? "bg-green-600 hover:bg-green-700" : ""}
+            data-testid="button-confirm-debug-selection"
+          >
+            {isConfirmed ? (
+              <>
+                <Check className="w-4 h-4 mr-1" />
+                Confirmado
+              </>
+            ) : (
+              "Confirmar Selección"
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
