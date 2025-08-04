@@ -382,6 +382,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Customer lookup route
+  app.get('/api/customers/lookup', isAuthenticated, async (req: any, res) => {
+    try {
+      const { name, phone, email } = req.query;
+      
+      if (!name || !phone || !email) {
+        return res.status(400).json({ message: "Name, phone, and email are required" });
+      }
+      
+      const customer = await storage.findCustomerByInfo(name as string, phone as string, email as string);
+      
+      if (customer) {
+        res.json(customer);
+      } else {
+        res.status(404).json({ message: "Customer not found" });
+      }
+    } catch (error) {
+      console.error("Error looking up customer:", error);
+      res.status(500).json({ message: "Failed to lookup customer" });
+    }
+  });
+
   app.post('/api/admin/services/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;

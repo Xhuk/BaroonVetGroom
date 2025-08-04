@@ -69,6 +69,7 @@ export interface IStorage {
   // Client operations
   getClients(tenantId: string): Promise<Client[]>;
   createClient(client: InsertClient): Promise<Client>;
+  findCustomerByInfo(name: string, phone: string, email: string): Promise<any>;
   
   // Pet operations
   getPets(clientId: string): Promise<Pet[]>;
@@ -234,6 +235,29 @@ export class DatabaseStorage implements IStorage {
   async createClient(client: InsertClient): Promise<Client> {
     const [newClient] = await db.insert(clients).values(client).returning();
     return newClient;
+  }
+
+  async findCustomerByInfo(name: string, phone: string, email: string): Promise<any> {
+    // Search for existing customer/client with matching info
+    const [existingClient] = await db
+      .select()
+      .from(clients)
+      .where(sql`LOWER(${clients.name}) = LOWER(${name}) OR ${clients.phone} = ${phone} OR LOWER(${clients.email}) = LOWER(${email})`);
+    
+    if (!existingClient) {
+      return null;
+    }
+
+    // Get pets for this client
+    const clientPets = await db
+      .select()
+      .from(pets)
+      .where(eq(pets.clientId, existingClient.id));
+
+    return {
+      ...existingClient,
+      pets: clientPets
+    };
   }
 
   // Pet operations

@@ -1,9 +1,9 @@
+/* Import Leaflet CSS first */
+@import 'leaflet/dist/leaflet.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Leaflet CSS */
-@import 'leaflet/dist/leaflet.css';
 
 /* Fix Leaflet map rendering issues */
 .leaflet-container {

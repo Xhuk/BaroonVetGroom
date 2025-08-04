@@ -131,6 +131,49 @@ export default function BookingWizard() {
     return breeds;
   }, [petData.species, allBreeds]);
 
+  // User lookup function
+  const lookupUser = async (name: string, phone: string, email: string) => {
+    try {
+      const response = await apiRequest(`/api/customers/lookup?name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&email=${encodeURIComponent(email)}`);
+      if (response) {
+        // Auto-fill existing customer data
+        setCustomerData(prev => ({
+          ...prev,
+          address: response.address || prev.address,
+          fraccionamiento: response.fraccionamiento || prev.fraccionamiento,
+          postalCode: response.postalCode || prev.postalCode,
+          latitude: response.latitude || prev.latitude,
+          longitude: response.longitude || prev.longitude
+        }));
+        
+        // If customer has pets, auto-fill the most recent pet
+        if (response.pets && response.pets.length > 0) {
+          const recentPet = response.pets[0];
+          setPetData(prev => ({
+            ...prev,
+            name: recentPet.name || prev.name,
+            species: recentPet.species || prev.species,
+            breed: recentPet.breed || prev.breed,
+            age: recentPet.age || prev.age,
+            weight: recentPet.weight || prev.weight,
+            medicalHistory: recentPet.medicalHistory || prev.medicalHistory
+          }));
+        }
+        
+        toast({
+          title: "Cliente encontrado",
+          description: "Se ha autocompletado la información del cliente existente",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      // User not found, continue with new customer flow
+      console.log('Customer not found, continuing with new customer');
+    }
+  };
+
+  const debouncedUserLookup = debounce(lookupUser, 800);
+
   // Geocoding function
   const geocodeAddress = async (address: string, fraccionamiento: string, postalCode: string) => {
     try {
@@ -307,7 +350,14 @@ export default function BookingWizard() {
                     <Input
                       id="name"
                       value={customerData.name}
-                      onChange={(e) => setCustomerData(prev => ({ ...prev, name: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
+                      onChange={(e) => {
+                        const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+                        setCustomerData(prev => ({ ...prev, name: formattedValue }));
+                        // Trigger user lookup when name, phone and email are filled
+                        if (formattedValue && customerData.phone && customerData.email) {
+                          debouncedUserLookup(formattedValue, customerData.phone, customerData.email);
+                        }
+                      }}
                       placeholder="María González"
                       required
                       className="capitalize"
@@ -319,7 +369,13 @@ export default function BookingWizard() {
                     <Input
                       id="phone"
                       value={customerData.phone}
-                      onChange={(e) => setCustomerData(prev => ({ ...prev, phone: e.target.value }))}
+                      onChange={(e) => {
+                        setCustomerData(prev => ({ ...prev, phone: e.target.value }));
+                        // Trigger user lookup when name, phone and email are filled
+                        if (customerData.name && e.target.value && customerData.email) {
+                          debouncedUserLookup(customerData.name, e.target.value, customerData.email);
+                        }
+                      }}
                       placeholder="000 000 0000"
                       required
                       data-testid="input-customer-phone"
@@ -331,7 +387,14 @@ export default function BookingWizard() {
                       id="email"
                       type="email"
                       value={customerData.email}
-                      onChange={(e) => setCustomerData(prev => ({ ...prev, email: e.target.value.toLowerCase() }))}
+                      onChange={(e) => {
+                        const emailValue = e.target.value.toLowerCase();
+                        setCustomerData(prev => ({ ...prev, email: emailValue }));
+                        // Trigger user lookup when name, phone and email are filled
+                        if (customerData.name && customerData.phone && emailValue) {
+                          debouncedUserLookup(customerData.name, customerData.phone, emailValue);
+                        }
+                      }}
                       placeholder="maria@ejemplo.com"
                       className="lowercase"
                       data-testid="input-customer-email"
