@@ -62,7 +62,7 @@ import {
   type InsertDriverCheckIn,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql, and, lt, gte } from "drizzle-orm";
+import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -1031,6 +1031,22 @@ export class DatabaseStorage implements IStorage {
       .from(tenants)
       .leftJoin(companies, eq(tenants.companyId, companies.id))
       .orderBy(companies.name, tenants.name);
+  }
+
+  async hasSystemRole(userId: string): Promise<boolean> {
+    const result = await db
+      .select({ count: sql`count(*)` })
+      .from(userSystemRoles)
+      .innerJoin(systemRoles, eq(userSystemRoles.systemRoleId, systemRoles.id))
+      .where(
+        and(
+          eq(userSystemRoles.userId, userId),
+          eq(userSystemRoles.isActive, true),
+          eq(systemRoles.systemLevel, true)
+        )
+      );
+    
+    return parseInt(result[0].count as string) > 0;
   }
 }
 

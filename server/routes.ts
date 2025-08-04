@@ -1370,15 +1370,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // SuperAdmin RBAC endpoints - VetGroom developer/sysadmin only
-  const isSystemAdmin = (req: any) => {
+  const isSystemAdmin = async (req: any) => {
     const user = req.user;
-    return user?.claims?.email?.includes('vetgroom') || false;
+    if (!user?.claims?.sub) return false;
+    
+    try {
+      // Check if user has system admin roles in database
+      const hasSystemRole = await storage.hasSystemRole(user.claims.sub);
+      return hasSystemRole || user?.claims?.email?.includes('vetgroom') || false;
+    } catch (error) {
+      console.error('Error checking system admin role:', error);
+      return user?.claims?.email?.includes('vetgroom') || false;
+    }
   };
 
   // Get all companies for SuperAdmin
   app.get('/api/superadmin/companies', isAuthenticated, async (req: any, res) => {
     try {
-      if (!isSystemAdmin(req)) {
+      if (!(await isSystemAdmin(req))) {
         return res.status(403).json({ message: "System admin access required" });
       }
       
@@ -1393,7 +1402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get system roles
   app.get('/api/superadmin/system-roles', isAuthenticated, async (req: any, res) => {
     try {
-      if (!isSystemAdmin(req)) {
+      if (!(await isSystemAdmin(req))) {
         return res.status(403).json({ message: "System admin access required" });
       }
       
@@ -1408,7 +1417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get roles for a company
   app.get('/api/superadmin/roles/:companyId', isAuthenticated, async (req: any, res) => {
     try {
-      if (!isSystemAdmin(req)) {
+      if (!(await isSystemAdmin(req))) {
         return res.status(403).json({ message: "System admin access required" });
       }
       
@@ -1424,7 +1433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new role
   app.post('/api/superadmin/roles', isAuthenticated, async (req: any, res) => {
     try {
-      if (!isSystemAdmin(req)) {
+      if (!(await isSystemAdmin(req))) {
         return res.status(403).json({ message: "System admin access required" });
       }
       
@@ -1440,7 +1449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get users for a company
   app.get('/api/superadmin/users/:companyId', isAuthenticated, async (req: any, res) => {
     try {
-      if (!isSystemAdmin(req)) {
+      if (!(await isSystemAdmin(req))) {
         return res.status(403).json({ message: "System admin access required" });
       }
       
@@ -1456,7 +1465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user assignments for a company
   app.get('/api/superadmin/user-assignments/:companyId', isAuthenticated, async (req: any, res) => {
     try {
-      if (!isSystemAdmin(req)) {
+      if (!(await isSystemAdmin(req))) {
         return res.status(403).json({ message: "System admin access required" });
       }
       
@@ -1472,7 +1481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Assign system role to user
   app.post('/api/superadmin/assign-system-role', isAuthenticated, async (req: any, res) => {
     try {
-      if (!isSystemAdmin(req)) {
+      if (!(await isSystemAdmin(req))) {
         return res.status(403).json({ message: "System admin access required" });
       }
       
@@ -1488,7 +1497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Debug endpoint for system admins to access all tenants
   app.get('/api/debug/all-tenants', isAuthenticated, async (req: any, res) => {
     try {
-      if (!isSystemAdmin(req)) {
+      if (!(await isSystemAdmin(req))) {
         return res.status(403).json({ message: "Debug access requires system admin role" });
       }
       
