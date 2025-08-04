@@ -30,8 +30,12 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [availableTenants, setAvailableTenants] = useState<Tenant[]>([]);
   const [isDebugMode, setIsDebugMode] = useState(false);
 
-  // Check if user has debug access
-  const isDebugUser = user?.email?.includes('vetgroom') || false;
+  // Check if user has debug access through access control
+  const { data: accessInfo } = useQuery({
+    queryKey: ['/api/auth/access-info'],
+    enabled: isAuthenticated,
+  });
+  const isDebugUser = accessInfo?.canDebugTenants || user?.email?.includes('vetgroom') || false;
 
   const { data: userTenants = [], isLoading: isLoadingTenants } = useQuery<UserTenant[]>({
     queryKey: ["/api/tenants/user"],
@@ -71,6 +75,15 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       return; // Skip normal tenant logic in debug mode
     }
     
+    // Handle users with debug privileges but no regular tenant assignments
+    if (isDebugUser && userTenants.length === 0 && !currentTenant && !debugMode) {
+      // User has debug privileges - activate debug mode automatically
+      setIsDebugMode(true);
+      setShowDebugTenantSelector(true);
+      sessionStorage.setItem('debugMode', 'true');
+      return;
+    }
+    
     // Normal tenant selection logic for non-debug users
     if (userTenants.length > 0 && !currentTenant && !debugMode) {
       // Fetch full tenant data for all user tenants
@@ -97,7 +110,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         }
       });
     }
-  }, [userTenants, currentTenant, user, isDebugUser]);
+  }, [userTenants, currentTenant, user, isDebugUser, accessInfo]);
 
   const handleTenantSelect = (selectedTenant: Tenant) => {
     setCurrentTenant(selectedTenant);
