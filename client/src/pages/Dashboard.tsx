@@ -61,7 +61,7 @@ export default function Dashboard() {
       <Navigation />
       
       {/* Main Content */}
-      <main className="lg:ml-64 pb-40">
+      <main className="lg:ml-80 pb-40">
         {/* Action Buttons */}
         <div className="mb-6 flex flex-wrap gap-4 px-6 pt-6">
           <Link href="/booking">
