@@ -21,6 +21,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Temporary preview mode bypass for development
+  app.get('/api/preview/user', async (req, res) => {
+    try {
+      // Return your user data directly for preview mode
+      const user = await storage.getUser('45804040');
+      if (user) {
+        res.json(user);
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      console.error("Error in preview user endpoint:", error);
+      res.status(500).json({ message: "Failed to fetch preview user" });
+    }
+  });
+
+  app.get('/api/preview/tenants', async (req, res) => {
+    try {
+      // Return VetGroom1 tenant data directly for preview mode
+      res.json([{
+        id: "vetgroom1",
+        tenantId: "vetgroom1",
+        name: "Vetgroom1",
+        subdomain: "vetgroom1",
+        companyId: "vetgroom-corp"
+      }]);
+    } catch (error) {
+      console.error("Error in preview tenants endpoint:", error);
+      res.status(500).json({ message: "Failed to fetch preview tenants" });
+    }
+  });
+
   // Get all tenants for system admin users - MUST BE BEFORE tenant-specific routes
   app.get('/api/tenants/all', isAuthenticated, async (req: any, res) => {
     try {

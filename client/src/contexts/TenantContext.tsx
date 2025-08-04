@@ -33,10 +33,17 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   // Check if user has debug access
   const isDebugUser = user?.email?.includes('vetgroom') || false;
 
-  const { data: userTenants = [], isLoading: isLoadingTenants } = useQuery<UserTenant[]>({
+  const { data: userTenants, isLoading: isLoadingTenants } = useQuery<UserTenant[]>({
     queryKey: ["/api/tenants/user"],
     enabled: isAuthenticated,
   });
+
+  const { data: previewTenants } = useQuery<UserTenant[]>({
+    queryKey: ["/api/preview/tenants"],
+    enabled: isAuthenticated && (!userTenants || userTenants.length === 0),
+  });
+
+  const finalTenants = userTenants || previewTenants || [];
 
   const { data: tenant, isLoading: isLoadingCurrentTenant } = useQuery<Tenant>({
     queryKey: ["/api/tenants", currentTenant?.id],
@@ -72,7 +79,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     }
     
     // Normal tenant selection logic for non-debug users
-    if (userTenants.length > 0 && !currentTenant && !debugMode) {
+    if (finalTenants.length > 0 && !currentTenant && !debugMode) {
       // Fetch full tenant data for all user tenants
       Promise.all(
         userTenants.map(ut => 
