@@ -1,12 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Clock, User, Phone, Calendar, MapPin, Scissors, Stethoscope, Syringe } from "lucide-react";
-import type { Appointment } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { Clock, User, Phone, Calendar, MapPin, Scissors, Stethoscope, Syringe, Plus } from "lucide-react";
+import type { Appointment, Client, Pet, Room, Staff } from "@shared/schema";
 import { FastLoadingSpinner } from "./FastLoadingSpinner";
+
+import { useLocation } from "wouter";
 
 export function HourlyAppointmentList() {
   const { currentTenant } = useTenant();
+  const [, setLocation] = useLocation();
   
   // Get today's appointments
   const today = new Date().toISOString().split('T')[0];
@@ -15,6 +19,31 @@ export function HourlyAppointmentList() {
     queryKey: [`/api/appointments`, currentTenant?.id],
     enabled: !!currentTenant?.id,
     staleTime: 2 * 60 * 1000, // 2 minutes cache
+  });
+
+  // Get all related data to show names instead of IDs
+  const { data: clients = [] } = useQuery<Client[]>({
+    queryKey: ["/api/clients", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+  });
+
+  const { data: pets = [] } = useQuery<Pet[]>({
+    queryKey: ["/api/pets", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+  });
+
+  const { data: rooms = [] } = useQuery<Room[]>({
+    queryKey: ["/api/rooms", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+    staleTime: 30 * 60 * 1000, // 30 minutes cache
+  });
+
+  const { data: staff = [] } = useQuery<Staff[]>({
+    queryKey: ["/api/staff", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+    staleTime: 30 * 60 * 1000, // 30 minutes cache
   });
 
   // Filter appointments for today and sort by time
@@ -39,6 +68,34 @@ export function HourlyAppointmentList() {
     const hour = i + 6;
     return hour.toString().padStart(2, '0');
   });
+
+  // Helper functions to get names from IDs
+  const getClientName = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    return client ? `${client.firstName} ${client.lastName}` : `Cliente #${clientId}`;
+  };
+
+  const getPetName = (petId: string) => {
+    const pet = pets.find(p => p.id === petId);
+    return pet ? pet.name : `Mascota #${petId}`;
+  };
+
+  const getRoomName = (roomId: string | null) => {
+    if (!roomId) return null;
+    const room = rooms.find(r => r.id === roomId);
+    return room ? room.name : `Sala #${roomId}`;
+  };
+
+  const getStaffName = (staffId: string | null) => {
+    if (!staffId) return 'Sin asignar';
+    const staffMember = staff.find(s => s.id === staffId);
+    return staffMember ? `${staffMember.firstName} ${staffMember.lastName}` : `Staff #${staffId}`;
+  };
+
+  const handleCreateAppointment = (hour: string) => {
+    const timeSlot = `${hour}:00`;
+    setLocation(`/appointments?date=${today}&time=${timeSlot}&new=true`);
+  };
 
   const getAppointmentIcon = (type: string) => {
     switch (type) {
@@ -102,7 +159,18 @@ export function HourlyAppointmentList() {
                     {/* Appointments Column */}
                     <div className="flex-1 ml-4">
                       {hourAppointments.length === 0 ? (
-                        <div className="text-gray-400 text-sm italic py-2">Sin citas programadas</div>
+                        <div className="flex items-center justify-between py-2">
+                          <div className="text-gray-400 text-sm italic">Sin citas programadas</div>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleCreateAppointment(hour)}
+                            className="text-xs px-2 py-1 h-6"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Nueva Cita
+                          </Button>
+                        </div>
                       ) : (
                         <div className="space-y-2">
                           {hourAppointments.map(appointment => (
@@ -115,17 +183,17 @@ export function HourlyAppointmentList() {
                                   {getAppointmentIcon(appointment.type)}
                                   <div>
                                     <div className="font-medium text-gray-900 text-sm">
-                                      {appointment.scheduledTime} - Cliente #{appointment.clientId}
+                                      {appointment.scheduledTime} - {getClientName(appointment.clientId)}
                                     </div>
                                     <div className="text-xs text-gray-600 mt-1">
                                       <span className="inline-flex items-center">
                                         <User className="w-3 h-3 mr-1" />
-                                        Mascota #{appointment.petId}
+                                        {getPetName(appointment.petId)}
                                       </span>
                                       {appointment.roomId && (
                                         <span className="inline-flex items-center ml-3">
                                           <MapPin className="w-3 h-3 mr-1" />
-                                          Sala #{appointment.roomId}
+                                          {getRoomName(appointment.roomId)}
                                         </span>
                                       )}
                                     </div>
@@ -138,7 +206,7 @@ export function HourlyAppointmentList() {
                                      appointment.type === 'vaccination' ? 'Vacunación' : appointment.type}
                                   </div>
                                   <div className="text-xs text-gray-500 mt-1">
-                                    {appointment.staffId ? `Staff #${appointment.staffId}` : 'Sin asignar'}
+                                    {getStaffName(appointment.staffId)}
                                   </div>
                                 </div>
                               </div>
@@ -149,6 +217,18 @@ export function HourlyAppointmentList() {
                               )}
                             </div>
                           ))}
+                          {/* Add new appointment button for time slots with existing appointments */}
+                          <div className="mt-2 pt-2 border-t border-gray-200">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleCreateAppointment(hour)}
+                              className="text-xs px-2 py-1 h-6 w-full"
+                            >
+                              <Plus className="w-3 h-3 mr-1" />
+                              Agregar otra cita en esta hora
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
