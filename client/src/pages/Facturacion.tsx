@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { WhatsAppCopyModal } from '@/components/WhatsAppCopyModal';
 import { Header } from '@/components/Header';
+import { BackButton } from '@/components/BackButton';
 
 interface PendingInvoice {
   id: string;
@@ -360,6 +361,8 @@ _Mensaje generado automáticamente por VetGroom_`;
       <Header />
       
       <div className="container mx-auto px-4 py-6">
+        <BackButton />
+        
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Facturas Pendientes</h1>
