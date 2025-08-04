@@ -123,25 +123,27 @@ export default function GroomingServices() {
   // Get available grooming services from admin configuration
   const { data: availableServices = [] } = useQuery({
     queryKey: ["/api/services", currentTenant?.id, "grooming"],
-    queryFn: () => apiRequest(`/api/services/${currentTenant?.id}?type=grooming`),
+    queryFn: () => fetch(`/api/services/${currentTenant?.id}?type=grooming`).then(res => res.json()),
     enabled: !!currentTenant?.id,
   });
 
   // Create a mapping function for services
   const getServiceDisplayInfo = (serviceCode: string) => {
-    // Try to find matching admin service first
-    const adminService = availableServices?.find(s => 
-      s?.name?.toLowerCase().includes(serviceCode.replace('_', ' ')) ||
-      serviceCode.includes(s?.name?.toLowerCase().replace(' ', '_'))
-    );
-    
-    if (adminService) {
-      return {
-        name: adminService.name,
-        price: adminService.price,
-        duration: adminService.duration,
-        description: adminService.description
-      };
+    // Only try to find admin service if data is loaded and is an array
+    if (Array.isArray(availableServices) && availableServices.length > 0) {
+      const adminService = availableServices.find(s => 
+        s?.name?.toLowerCase().includes(serviceCode.replace('_', ' ')) ||
+        serviceCode.includes(s?.name?.toLowerCase().replace(' ', '_'))
+      );
+      
+      if (adminService) {
+        return {
+          name: adminService.name,
+          price: adminService.price,
+          duration: adminService.duration,
+          description: adminService.description
+        };
+      }
     }
     
     // Fallback to hardcoded labels
