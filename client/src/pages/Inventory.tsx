@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
@@ -22,7 +25,10 @@ import {
   Search,
   Filter,
   Calendar,
-  FileText
+  FileText,
+  ChevronDown,
+  FileSpreadsheet,
+  Zap
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { InventoryItem, InventoryTransaction } from "@shared/schema";
@@ -32,9 +38,12 @@ export default function Inventory() {
   const { toast } = useToast();
   const [showItemForm, setShowItemForm] = useState(false);
   const [showTransactionForm, setShowTransactionForm] = useState(false);
+  const [showMassImport, setShowMassImport] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [importText, setImportText] = useState("");
+  const [isProcessingImport, setIsProcessingImport] = useState(false);
 
   const { data: inventoryItems, isLoading } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory", currentTenant?.id],
@@ -91,6 +100,32 @@ export default function Inventory() {
       toast({
         title: "Error",
         description: error.message || "No se pudo registrar la transacción",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const massImportMutation = useMutation({
+    mutationFn: async (data: { text: string; tenantId: string }) => {
+      const response = await apiRequest('/api/inventory/mass-import', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+      toast({
+        title: "Importación completada",
+        description: `Se han importado ${data.imported} productos correctamente.`,
+      });
+      setShowMassImport(false);
+      setImportText("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error en importación",
+        description: error.message || "No se pudo procesar la importación masiva.",
         variant: "destructive",
       });
     },
@@ -211,13 +246,32 @@ export default function Inventory() {
           >
             📦 Poblar Inventario
           </Button>
-          <Button 
-            onClick={() => setShowItemForm(true)}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nuevo Producto
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Nuevo Producto
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem 
+                onClick={() => setShowItemForm(true)}
+                data-testid="menu-item-single-product"
+              >
+                <Package className="w-4 h-4 mr-2" />
+                Producto Individual
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setShowMassImport(true)}
+                data-testid="menu-item-mass-import"
+              >
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                Importación Masiva
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -673,6 +727,89 @@ export default function Inventory() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Mass Import Dialog */}
+      <Dialog open={showMassImport} onOpenChange={setShowMassImport}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-blue-600" />
+              Importación Masiva con IA
+            </DialogTitle>
+            <DialogDescription>
+              Describe tus productos de forma natural y la IA los procesará automáticamente.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Alert className="border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              <strong>Atención:</strong> Esta acción eliminará todo el inventario actual antes de importar los nuevos productos. 
+              Esta operación no se puede deshacer.
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="import-text">Describe tus productos de inventario</Label>
+              <Textarea
+                id="import-text"
+                placeholder="Ejemplo: Necesito medicamentos como amoxicilina 500mg, meloxicam, dexametasona. También vacunas antirrábicas, séxtuple canina. Suministros como jeringas, gasas, alcohol. Precios en pesos mexicanos..."
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                rows={6}
+                className="resize-none"
+                data-testid="textarea-import-text"
+              />
+              <p className="text-sm text-gray-500 mt-2">
+                Describe medicamentos, vacunas, suministros, accesorios o cualquier producto veterinario. 
+                La IA interpretará la información y creará el inventario automáticamente.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowMassImport(false)}
+              disabled={massImportMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                if (!importText.trim()) {
+                  toast({
+                    title: "Error",
+                    description: "Por favor describe los productos a importar.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                
+                massImportMutation.mutate({ 
+                  text: importText, 
+                  tenantId: currentTenant?.id || '' 
+                });
+              }}
+              disabled={massImportMutation.isPending || !importText.trim()}
+              data-testid="button-process-import"
+            >
+              {massImportMutation.isPending ? (
+                <>
+                  <Zap className="w-4 h-4 mr-2 animate-spin" />
+                  Procesando con IA...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Procesar con IA
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
