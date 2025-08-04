@@ -33,17 +33,14 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   // Check if user has debug access
   const isDebugUser = user?.email?.includes('vetgroom') || false;
 
-  const { data: userTenants, isLoading: isLoadingTenants } = useQuery<UserTenant[]>({
-    queryKey: ["/api/tenants/user"],
+  // Check if we're on Replit domain to decide which endpoint to use
+  const isReplitDomain = window.location.hostname.includes('replit.dev');
+  const tenantsEndpoint = isReplitDomain ? "/api/preview/tenants" : "/api/tenants/user";
+  
+  const { data: finalTenants = [], isLoading: isLoadingTenants } = useQuery<UserTenant[]>({
+    queryKey: [tenantsEndpoint],
     enabled: isAuthenticated,
   });
-
-  const { data: previewTenants } = useQuery<UserTenant[]>({
-    queryKey: ["/api/preview/tenants"],
-    enabled: isAuthenticated && (!userTenants || userTenants.length === 0),
-  });
-
-  const finalTenants = userTenants || previewTenants || [];
 
   const { data: tenant, isLoading: isLoadingCurrentTenant } = useQuery<Tenant>({
     queryKey: ["/api/tenants", currentTenant?.id],

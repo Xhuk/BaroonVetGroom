@@ -2,25 +2,21 @@ import { useQuery } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
 
 export function useAuth() {
-  // Try normal auth first, fallback to preview mode if needed
-  const { data: user, isLoading: authLoading, error } = useQuery<User>({
-    queryKey: ["/api/auth/user"],
+  // Check if we're on Replit domain to decide which endpoint to use
+  const isReplitDomain = window.location.hostname.includes('replit.dev');
+  
+  // Use preview endpoints for Replit domain, normal auth for localhost
+  const authEndpoint = isReplitDomain ? "/api/preview/user" : "/api/auth/user";
+  
+  const { data: user, isLoading } = useQuery<User>({
+    queryKey: [authEndpoint],
     retry: false,
   });
-
-  const { data: previewUser, isLoading: previewLoading } = useQuery<User>({
-    queryKey: ["/api/preview/user"],
-    enabled: !user && !authLoading, // Only try preview if normal auth failed
-    retry: false,
-  });
-
-  const finalUser = user || previewUser;
-  const finalLoading = authLoading || previewLoading;
 
   return {
-    user: finalUser,
-    isLoading: finalLoading,
-    isAuthenticated: !!finalUser,
-    isPreviewMode: !!previewUser && !user,
+    user,
+    isLoading,
+    isAuthenticated: !!user,
+    isPreviewMode: isReplitDomain,
   };
 }
