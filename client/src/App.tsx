@@ -34,7 +34,7 @@ import MobileUpload from "@/pages/MobileUpload";
 import FollowUpTasks from "@/pages/FollowUpTasks";
 import AdminPaymentGateways from "@/pages/AdminPaymentGateways";
 import AdminFollowUpConfig from "@/pages/AdminFollowUpConfig";
-import Facturacion from "@/pages/Facturacion";
+
 import WebhookIntegrations from "@/pages/WebhookIntegrations";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
 
@@ -71,7 +71,7 @@ function Router() {
           <Route path="/admin/payment-gateways" component={AdminPaymentGateways} />
           <Route path="/admin/follow-up-config" component={AdminFollowUpConfig} />
           <Route path="/admin/van-config" component={AdminVanConfig} />
-          <Route path="/facturacion" component={Facturacion} />
+
           <Route path="/superadmin" component={SuperAdmin} />
           <Route path="/superadmin/monitoring" component={SuperAdminMonitoring} />
           <Route path="/superadmin/route-config" component={SuperAdminRouteConfig} />

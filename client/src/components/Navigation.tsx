@@ -79,7 +79,7 @@ export function Navigation({ className }: NavigationProps) {
     { icon: Package, label: "Inventario", href: "/inventory" },
     { icon: Truck, label: "Plan de Entregas", href: "/delivery-plan" },
     { icon: DollarSign, label: "Facturación", href: "/billing" },
-    { icon: Receipt, label: "Facturas Pendientes", href: "/facturacion" },
+
   ];
 
   const adminItems = [
