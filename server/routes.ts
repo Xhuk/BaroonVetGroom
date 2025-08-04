@@ -2993,6 +2993,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Route for seeding inventory data
+  app.post("/api/seed/inventory-data", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.body;
+      
+      if (!tenantId) {
+        return res.status(400).json({ message: "Tenant ID is required" });
+      }
+      
+      const { seedInventoryData } = await import("./seedInventoryData");
+      const result = await seedInventoryData(tenantId);
+      res.json({ 
+        message: "Inventory data seeded successfully", 
+        data: result 
+      });
+    } catch (error) {
+      console.error("Error seeding inventory data:", error);
+      res.status(500).json({ message: "Failed to seed inventory data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

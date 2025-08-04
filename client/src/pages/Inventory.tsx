@@ -187,6 +187,31 @@ export default function Inventory() {
         <div className="flex items-center space-x-3">
           <DebugControls />
           <Button 
+            variant="outline"
+            onClick={async () => {
+              try {
+                await apiRequest(`/api/seed/inventory-data`, {
+                  method: "POST",
+                  body: JSON.stringify({ tenantId: currentTenant?.id }),
+                });
+                toast({
+                  title: "Inventario poblado",
+                  description: "Se han agregado productos, medicamentos, vacunas y accesorios veterinarios.",
+                });
+                queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+              } catch (error) {
+                toast({
+                  title: "Error",
+                  description: "No se pudo poblar el inventario",
+                  variant: "destructive",
+                });
+              }
+            }}
+            data-testid="button-seed-inventory"
+          >
+            📦 Poblar Inventario
+          </Button>
+          <Button 
             onClick={() => setShowItemForm(true)}
             className="bg-blue-600 hover:bg-blue-700"
           >
