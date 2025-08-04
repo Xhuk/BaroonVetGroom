@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { webhookMonitor } from "./webhookMonitor";
+import { deliveryMonitor } from "./deliveryMonitor";
 
 const app = express();
 app.use(express.json());
@@ -72,5 +73,9 @@ app.use((req, res, next) => {
     // Start webhook monitoring service
     webhookMonitor.start();
     log('Webhook monitoring service started');
+
+    // Start delivery monitoring service
+    deliveryMonitor.start();
+    log('Delivery monitoring service started');
   });
 })();

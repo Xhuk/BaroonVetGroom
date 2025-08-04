@@ -21,6 +21,7 @@ import Clients from "@/pages/Clients";
 import Inventory from "@/pages/Inventory";
 import DeliveryPlan from "@/pages/DeliveryPlan";
 import RoutePlanMap from "@/pages/RoutePlanMap";
+import DeliveryTracking from "@/pages/DeliveryTracking";
 import AdminVanConfig from "@/pages/AdminVanConfig";
 import Billing from "@/pages/Billing";
 
@@ -40,6 +41,7 @@ function Router() {
           <Route path="/inventory" component={Inventory} />
           <Route path="/delivery-plan" component={DeliveryPlan} />
           <Route path="/route-map" component={RoutePlanMap} />
+          <Route path="/delivery-tracking" component={DeliveryTracking} />
           <Route path="/billing" component={Billing} />
           <Route path="/admin" component={Admin} />
           <Route path="/admin/settings" component={AdminSettings} />

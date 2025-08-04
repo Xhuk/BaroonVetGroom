@@ -1175,6 +1175,171 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delivery tracking routes
+  app.get("/api/delivery-tracking/:tenantId", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const activeDeliveries = await storage.getActiveDeliveryTracking(tenantId);
+      
+      // Enhance with van and driver details, route information
+      const enhancedDeliveries = await Promise.all(
+        activeDeliveries.map(async (delivery) => {
+          const van = await storage.getVan(delivery.vanId);
+          const driver = await storage.getStaff(delivery.driverId);
+          
+          return {
+            ...delivery,
+            vanName: van?.name || "Unknown Van",
+            driverName: driver?.name || "Unknown Driver",
+            route: {
+              id: delivery.routeId,
+              name: `Ruta ${new Date(delivery.createdAt).toLocaleDateString()}`,
+              totalStops: 0, // TODO: Get from delivery route
+              completedStops: 0, // TODO: Calculate from check-ins
+            }
+          };
+        })
+      );
+      
+      res.json(enhancedDeliveries);
+    } catch (error) {
+      console.error("Error fetching delivery tracking:", error);
+      res.status(500).json({ message: "Failed to fetch delivery tracking" });
+    }
+  });
+
+  app.get("/api/delivery-alerts/:tenantId", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const alerts = await storage.getDeliveryAlerts(tenantId);
+      
+      // Enhance with van and driver details
+      const enhancedAlerts = await Promise.all(
+        alerts.map(async (alert) => {
+          const tracking = await storage.getDeliveryTracking(alert.deliveryTrackingId);
+          if (!tracking) return { ...alert, vanName: "Unknown", driverName: "Unknown" };
+          
+          const van = await storage.getVan(tracking.vanId);
+          const driver = await storage.getStaff(tracking.driverId);
+          
+          return {
+            ...alert,
+            vanName: van?.name || "Unknown Van",
+            driverName: driver?.name || "Unknown Driver",
+          };
+        })
+      );
+      
+      res.json(enhancedAlerts);
+    } catch (error) {
+      console.error("Error fetching delivery alerts:", error);
+      res.status(500).json({ message: "Failed to fetch delivery alerts" });
+    }
+  });
+
+  app.post("/api/delivery-tracking/:trackingId/emergency", isAuthenticated, async (req, res) => {
+    try {
+      const { trackingId } = req.params;
+      
+      // Update delivery status to emergency
+      await storage.updateDeliveryTracking(trackingId, { 
+        status: "emergency",
+        updatedAt: new Date() 
+      });
+
+      // Create emergency alert
+      const tracking = await storage.getDeliveryTracking(trackingId);
+      if (tracking) {
+        await storage.createDeliveryAlert({
+          tenantId: tracking.tenantId,
+          deliveryTrackingId: trackingId,
+          alertType: "emergency",
+          severity: "critical",
+          recipientType: "admin",
+          message: "Alerta de emergencia activada manualmente para la entrega",
+        });
+
+        // Send WhatsApp notification via n8n webhook
+        try {
+          await sendWhatsAppAlert({
+            tenantId: tracking.tenantId,
+            message: `🚨 EMERGENCIA: Entrega ${trackingId} necesita atención inmediata`,
+            type: "emergency"
+          });
+        } catch (webhookError) {
+          console.error("Failed to send WhatsApp emergency alert:", webhookError);
+        }
+      }
+
+      res.json({ message: "Emergency alert sent successfully" });
+    } catch (error) {
+      console.error("Error sending emergency alert:", error);
+      res.status(500).json({ message: "Failed to send emergency alert" });
+    }
+  });
+
+  app.patch("/api/delivery-alerts/:alertId/resolve", isAuthenticated, async (req, res) => {
+    try {
+      const { alertId } = req.params;
+      const userId = req.user?.claims?.sub;
+      
+      const resolvedAlert = await storage.resolveDeliveryAlert(alertId, userId);
+      res.json(resolvedAlert);
+    } catch (error) {
+      console.error("Error resolving alert:", error);
+      res.status(500).json({ message: "Failed to resolve alert" });
+    }
+  });
+
+  // Driver check-in endpoint
+  app.post("/api/driver-checkin", isAuthenticated, async (req, res) => {
+    try {
+      const checkInData = req.body;
+      const newCheckIn = await storage.createDriverCheckIn(checkInData);
+      
+      // Update delivery tracking with latest check-in
+      await storage.updateDeliveryTracking(checkInData.deliveryTrackingId, {
+        lastCheckIn: new Date(),
+        currentLocation: checkInData.location,
+        nextCheckInDue: checkInData.estimatedNextCheckIn,
+      });
+
+      res.json(newCheckIn);
+    } catch (error) {
+      console.error("Error creating driver check-in:", error);
+      res.status(500).json({ message: "Failed to create check-in" });
+    }
+  });
+
+  // WhatsApp alert function
+  async function sendWhatsAppAlert({ tenantId, message, type }: { tenantId: string, message: string, type: string }) {
+    if (!process.env.N8N_WEBHOOK_URL || !process.env.N8N_JWT_TOKEN) {
+      throw new Error("n8n webhook not configured");
+    }
+
+    const webhookPayload = {
+      tenantId,
+      message,
+      type: `delivery_${type}`,
+      timestamp: new Date().toISOString(),
+    };
+
+    const response = await fetch(process.env.N8N_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.N8N_JWT_TOKEN}`,
+      },
+      body: JSON.stringify(webhookPayload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`n8n webhook failed: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
   const httpServer = createServer(app);
   return httpServer;
 }

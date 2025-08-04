@@ -15,6 +15,9 @@ import {
   webhookMonitoring,
   vans,
   routeOptimizationConfig,
+  deliveryTracking,
+  deliveryAlerts,
+  driverCheckIns,
   type User,
   type UpsertUser,
   type Company,
@@ -46,6 +49,12 @@ import {
   type InsertVan,
   type RouteOptimizationConfig,
   type InsertRouteOptimizationConfig,
+  type DeliveryTracking,
+  type InsertDeliveryTracking,
+  type DeliveryAlert,
+  type InsertDeliveryAlert,
+  type DriverCheckIn,
+  type InsertDriverCheckIn,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte } from "drizzle-orm";
@@ -725,6 +734,110 @@ export class DatabaseStorage implements IStorage {
       .where(eq(routeOptimizationConfig.companyId, companyId))
       .returning();
     return updatedConfig;
+  }
+
+  // Delivery tracking operations
+  async getActiveDeliveryTracking(tenantId: string): Promise<DeliveryTracking[]> {
+    const activeDeliveries = await db
+      .select()
+      .from(deliveryTracking)
+      .where(
+        and(
+          eq(deliveryTracking.tenantId, tenantId),
+          sql`status IN ('preparing', 'en_route', 'delayed', 'emergency')`
+        )
+      );
+    return activeDeliveries;
+  }
+
+  async createDeliveryTracking(trackingData: InsertDeliveryTracking): Promise<DeliveryTracking> {
+    const [newTracking] = await db
+      .insert(deliveryTracking)
+      .values(trackingData)
+      .returning();
+    return newTracking;
+  }
+
+  async updateDeliveryTracking(trackingId: string, updates: Partial<InsertDeliveryTracking>): Promise<DeliveryTracking> {
+    const [updatedTracking] = await db
+      .update(deliveryTracking)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(deliveryTracking.id, trackingId))
+      .returning();
+    return updatedTracking;
+  }
+
+  // Delivery alerts operations
+  async getDeliveryAlerts(tenantId: string): Promise<DeliveryAlert[]> {
+    const alerts = await db
+      .select()
+      .from(deliveryAlerts)
+      .where(eq(deliveryAlerts.tenantId, tenantId))
+      .orderBy(sql`created_at DESC`);
+    return alerts;
+  }
+
+  async createDeliveryAlert(alertData: InsertDeliveryAlert): Promise<DeliveryAlert> {
+    const [newAlert] = await db
+      .insert(deliveryAlerts)
+      .values(alertData)
+      .returning();
+    return newAlert;
+  }
+
+  async updateDeliveryAlert(alertId: string, updates: Partial<InsertDeliveryAlert>): Promise<DeliveryAlert> {
+    const [updatedAlert] = await db
+      .update(deliveryAlerts)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(deliveryAlerts.id, alertId))
+      .returning();
+    return updatedAlert;
+  }
+
+  async resolveDeliveryAlert(alertId: string, resolvedBy: string): Promise<DeliveryAlert> {
+    const [resolvedAlert] = await db
+      .update(deliveryAlerts)
+      .set({
+        isResolved: true,
+        resolvedAt: new Date(),
+        resolvedBy,
+        updatedAt: new Date(),
+      })
+      .where(eq(deliveryAlerts.id, alertId))
+      .returning();
+    return resolvedAlert;
+  }
+
+  // Driver check-ins operations
+  async createDriverCheckIn(checkInData: InsertDriverCheckIn): Promise<DriverCheckIn> {
+    const [newCheckIn] = await db
+      .insert(driverCheckIns)
+      .values(checkInData)
+      .returning();
+    return newCheckIn;
+  }
+
+  async getDriverCheckIns(deliveryTrackingId: string): Promise<DriverCheckIn[]> {
+    const checkIns = await db
+      .select()
+      .from(driverCheckIns)
+      .where(eq(driverCheckIns.deliveryTrackingId, deliveryTrackingId))
+      .orderBy(sql`created_at DESC`);
+    return checkIns;
+  }
+
+  async getDeliveryTracking(trackingId: string): Promise<DeliveryTracking | undefined> {
+    const [tracking] = await db
+      .select()
+      .from(deliveryTracking)
+      .where(eq(deliveryTracking.id, trackingId));
+    return tracking;
   }
 }
 

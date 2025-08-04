@@ -312,3 +312,116 @@ export const routeOptimizationConfig = pgTable("route_optimization_config", {
 
 export type RouteOptimizationConfig = typeof routeOptimizationConfig.$inferSelect;
 export type InsertRouteOptimizationConfig = typeof routeOptimizationConfig.$inferInsert;
+
+// Delivery tracking for real-time monitoring
+export const deliveryTracking = pgTable("delivery_tracking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  vanId: varchar("van_id").notNull().references(() => vans.id),
+  driverId: varchar("driver_id").notNull().references(() => staff.id),
+  routeId: varchar("route_id").notNull(),
+  status: varchar("status", { enum: ["preparing", "en_route", "delayed", "completed", "emergency"] }).default("preparing"),
+  departureTime: timestamp("departure_time"),
+  estimatedReturnTime: timestamp("estimated_return_time"),
+  actualReturnTime: timestamp("actual_return_time"),
+  delayMinutes: integer("delay_minutes").default(0),
+  currentLocation: jsonb("current_location"), // { lat, lng, timestamp }
+  lastCheckIn: timestamp("last_check_in"),
+  nextCheckInDue: timestamp("next_check_in_due"),
+  alertsSent: integer("alerts_sent").default(0),
+  emergencyContact: varchar("emergency_contact"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Delivery alerts for admin, owner, and driver notifications
+export const deliveryAlerts = pgTable("delivery_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  deliveryTrackingId: varchar("delivery_tracking_id").notNull().references(() => deliveryTracking.id),
+  alertType: varchar("alert_type", { enum: ["delay_warning", "delay_critical", "missed_checkin", "emergency", "route_complete"] }).notNull(),
+  severity: varchar("severity", { enum: ["low", "medium", "high", "critical"] }).default("medium"),
+  recipientType: varchar("recipient_type", { enum: ["admin", "owner", "driver", "backup_driver"] }).notNull(),
+  recipientId: varchar("recipient_id").references(() => staff.id),
+  message: text("message").notNull(),
+  whatsappSent: boolean("whatsapp_sent").default(false),
+  whatsappResponse: jsonb("whatsapp_response"),
+  isRead: boolean("is_read").default(false),
+  isResolved: boolean("is_resolved").default(false),
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: varchar("resolved_by").references(() => staff.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Driver check-ins for monitoring delivery progress
+export const driverCheckIns = pgTable("driver_check_ins", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  deliveryTrackingId: varchar("delivery_tracking_id").notNull().references(() => deliveryTracking.id),
+  driverId: varchar("driver_id").notNull().references(() => staff.id),
+  checkInType: varchar("check_in_type", { enum: ["departure", "pickup", "delivery", "break", "return", "emergency"] }).notNull(),
+  location: jsonb("location"), // { lat, lng, address }
+  notes: text("notes"),
+  photoUrl: varchar("photo_url"), // Optional photo proof
+  estimatedNextCheckIn: timestamp("estimated_next_check_in"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const deliveryTrackingRelations = relations(deliveryTracking, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [deliveryTracking.tenantId],
+    references: [tenants.id],
+  }),
+  van: one(vans, {
+    fields: [deliveryTracking.vanId],
+    references: [vans.id],
+  }),
+  driver: one(staff, {
+    fields: [deliveryTracking.driverId],
+    references: [staff.id],
+  }),
+  // route: one(deliveryRoutes, {
+  //   fields: [deliveryTracking.routeId],
+  //   references: [deliveryRoutes.id],
+  // }),
+  alerts: many(deliveryAlerts),
+  checkIns: many(driverCheckIns),
+}));
+
+export const deliveryAlertsRelations = relations(deliveryAlerts, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [deliveryAlerts.tenantId],
+    references: [tenants.id],
+  }),
+  deliveryTracking: one(deliveryTracking, {
+    fields: [deliveryAlerts.deliveryTrackingId],
+    references: [deliveryTracking.id],
+  }),
+  recipient: one(staff, {
+    fields: [deliveryAlerts.recipientId],
+    references: [staff.id],
+  }),
+  resolvedBy: one(staff, {
+    fields: [deliveryAlerts.resolvedBy],
+    references: [staff.id],
+  }),
+}));
+
+export const driverCheckInsRelations = relations(driverCheckIns, ({ one }) => ({
+  deliveryTracking: one(deliveryTracking, {
+    fields: [driverCheckIns.deliveryTrackingId],
+    references: [deliveryTracking.id],
+  }),
+  driver: one(staff, {
+    fields: [driverCheckIns.driverId],
+    references: [staff.id],
+  }),
+}));
+
+export type DeliveryTracking = typeof deliveryTracking.$inferSelect;
+export type InsertDeliveryTracking = typeof deliveryTracking.$inferInsert;
+export type DeliveryAlert = typeof deliveryAlerts.$inferSelect;
+export type InsertDeliveryAlert = typeof deliveryAlerts.$inferInsert;
+export type DriverCheckIn = typeof driverCheckIns.$inferSelect;
+export type InsertDriverCheckIn = typeof driverCheckIns.$inferInsert;
