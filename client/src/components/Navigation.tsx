@@ -20,7 +20,7 @@ export function Navigation({ className }: NavigationProps) {
     { icon: Calendar, label: "Citas", href: "/appointments" },
     { icon: Users, label: "Clientes", href: "/clients" },
     { icon: Package, label: "Inventario", href: "/inventory" },
-    { icon: Truck, label: "Plan de Entregas", href: "/delivery" },
+    { icon: Truck, label: "Plan de Entregas", href: "/delivery-plan" },
     { icon: DollarSign, label: "Facturación", href: "/billing" },
   ];
 
