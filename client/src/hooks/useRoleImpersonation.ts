@@ -1,4 +1,4 @@
-import { useState, useContext, createContext, useEffect, ReactNode, createElement } from 'react';
+import { useState, useContext, createContext, useEffect, ReactNode } from 'react';
 import { useAccessControl } from '@/hooks/useAccessControl';
 
 interface RoleImpersonationContextType {
@@ -192,16 +192,23 @@ export function RoleImpersonationProvider({ children }: { children: ReactNode })
     impersonatedPermissions
   };
 
-  return createElement(RoleImpersonationContext.Provider, { value: contextValue }, children);
+  const Provider = RoleImpersonationContext.Provider;
+  return Provider({ value: contextValue, children });
 }
 
 // Enhanced access control hook that considers impersonation
 export function useImpersonatedAccessControl() {
-  const { isImpersonating, impersonatedPermissions, originalPermissions } = useRoleImpersonation();
-  
-  if (isImpersonating && impersonatedPermissions) {
-    return impersonatedPermissions;
+  try {
+    const { isImpersonating, impersonatedPermissions, originalPermissions } = useRoleImpersonation();
+    
+    if (isImpersonating && impersonatedPermissions) {
+      return impersonatedPermissions;
+    }
+    
+    return originalPermissions;
+  } catch (error) {
+    // Fallback to regular access control if impersonation context is not available
+    const { useAccessControl } = require('@/hooks/useAccessControl');
+    return useAccessControl();
   }
-  
-  return originalPermissions;
 }

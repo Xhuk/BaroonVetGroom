@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { RoleImpersonationProvider } from "@/hooks/useRoleImpersonation";
+// import { RoleImpersonationProvider } from "@/hooks/useRoleImpersonation";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
@@ -66,10 +66,8 @@ function App() {
       <TooltipProvider>
         <ThemeProvider>
           <TenantProvider>
-            <RoleImpersonationProvider>
-              <Toaster />
-              <Router />
-            </RoleImpersonationProvider>
+            <Toaster />
+            <Router />
           </TenantProvider>
         </ThemeProvider>
       </TooltipProvider>

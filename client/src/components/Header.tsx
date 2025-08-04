@@ -45,11 +45,18 @@ export function Header() {
     window.location.reload();
   };
 
-  // Get all available roles for current tenant
-  const { data: roles } = useQuery({
-    queryKey: ['/api/superadmin/roles', currentTenant?.id],
-    enabled: canDebugTenants && isDebugMode && !!currentTenant?.id,
-  });
+  // Define available roles for impersonation
+  const availableRoles = [
+    { value: "system_admin", label: "Administrador Sistema" },
+    { value: "company_admin", label: "Administrador Empresa" },
+    { value: "tenant_admin", label: "Administrador Tenant" },
+    { value: "veterinario", label: "Veterinario" },
+    { value: "asistente", label: "Asistente" },
+    { value: "recepcionista", label: "Recepcionista" },
+    { value: "groomer", label: "Groomer" },
+    { value: "delivery_driver", label: "Conductor Delivery" },
+    { value: "viewer", label: "Solo Lectura" }
+  ];
   
   // Check if user has debug access
   const isDebugUser = user?.email?.includes('vetgroom') || false;
@@ -114,18 +121,9 @@ export function Header() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Sin impersonación</SelectItem>
-                  <SelectItem value="system_admin">Administrador Sistema</SelectItem>
-                  <SelectItem value="company_admin">Administrador Empresa</SelectItem>
-                  <SelectItem value="tenant_admin">Administrador Tenant</SelectItem>
-                  <SelectItem value="veterinario">Veterinario</SelectItem>
-                  <SelectItem value="asistente">Asistente</SelectItem>
-                  <SelectItem value="recepcionista">Recepcionista</SelectItem>
-                  <SelectItem value="groomer">Groomer</SelectItem>
-                  <SelectItem value="delivery_driver">Conductor Delivery</SelectItem>
-                  <SelectItem value="viewer">Solo Lectura</SelectItem>
-                  {roles?.map((role: any) => (
-                    <SelectItem key={role.id} value={role.name}>
-                      {role.displayName || role.name}
+                  {availableRoles.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
