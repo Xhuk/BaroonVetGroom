@@ -25,21 +25,21 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { DeliveryRoute, DeliveryStop, Fraccionamiento, Staff, Appointment } from "@shared/schema";
+import type { Staff, Appointment } from "@shared/schema";
 
 export default function DeliveryPlan() {
   const { currentTenant } = useTenant();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showRouteForm, setShowRouteForm] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState("2025-08-25"); // Date with pickup appointments
 
-  const { data: routes, isLoading } = useQuery<DeliveryRoute[]>({
+  const { data: routes, isLoading } = useQuery<any[]>({
     queryKey: ["/api/delivery-routes", currentTenant?.id, selectedDate],
     enabled: !!currentTenant?.id,
   });
 
-  const { data: fraccionamientos } = useQuery<Fraccionamiento[]>({
+  const { data: fraccionamientos } = useQuery<any[]>({
     queryKey: ["/api/fraccionamientos", currentTenant?.id],
     enabled: !!currentTenant?.id,
   });
@@ -56,10 +56,7 @@ export default function DeliveryPlan() {
 
   const createRouteMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest(`/api/delivery-routes`, {
-        method: "POST",
-        body: JSON.stringify({ ...data, tenantId: currentTenant?.id }),
-      });
+      return apiRequest(`/api/delivery-routes`, "POST", { ...data, tenantId: currentTenant?.id });
     },
     onSuccess: () => {
       toast({
@@ -425,40 +422,43 @@ export default function DeliveryPlan() {
             </CardContent>
           </Card>
 
-          {/* Fraccionamientos List */}
+          {/* Pickup Appointments List */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="w-5 h-5" />
-                Fraccionamientos con Recolecciones
+                <Truck className="w-5 h-5" />
+                Recolecciones Programadas ({pickupAppointments.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {fraccionamientosWithWeights.filter(f => f.appointments > 0).map((fracciona) => (
-                  <div key={fracciona.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                {pickupAppointments.map((appointment) => (
+                  <div key={appointment.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
-                        {fracciona.weight}
+                      <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-medium">
+                        <Truck className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="font-medium">{fracciona.name}</h4>
-                        <p className="text-sm text-gray-600">{fracciona.zone}</p>
+                        <h4 className="font-medium">{appointment.client?.name || "Cliente"}</h4>
+                        <p className="text-sm text-gray-600">Mascota: {appointment.pet?.name || "Sin nombre"}</p>
+                        <p className="text-xs text-gray-500">{appointment.client?.fraccionamiento || "Zona no especificada"}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <Badge variant="secondary">
-                        {fracciona.appointments} recolecciones
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        {appointment.scheduledTime}
                       </Badge>
-                      <p className="text-xs text-gray-500 mt-1">Peso: {fracciona.weight}</p>
+                      <p className="text-xs text-gray-500 mt-1">${appointment.totalCost}</p>
                     </div>
                   </div>
                 ))}
 
-                {fraccionamientosWithWeights.filter(f => f.appointments > 0).length === 0 && (
+                {pickupAppointments.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
-                    <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <Truck className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                     <p>No hay recolecciones programadas para {new Date(selectedDate).toLocaleDateString()}</p>
+                    <p className="text-xs mt-2">Total citas: {appointments?.length || 0}</p>
+                    <p className="text-xs">Cambie la fecha para ver las recolecciones disponibles</p>
                   </div>
                 )}
               </div>

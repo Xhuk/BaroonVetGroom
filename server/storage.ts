@@ -298,18 +298,59 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Appointment operations
-  async getAppointments(tenantId: string, date?: string): Promise<Appointment[]> {
+  async getAppointments(tenantId: string, date?: string): Promise<any[]> {
+    const query = db
+      .select({
+        // Appointment fields
+        id: appointments.id,
+        tenantId: appointments.tenantId,
+        clientId: appointments.clientId,
+        petId: appointments.petId,
+        serviceId: appointments.serviceId,
+        roomId: appointments.roomId,
+        scheduledDate: appointments.scheduledDate,
+        scheduledTime: appointments.scheduledTime,
+        duration: appointments.duration,
+        status: appointments.status,
+        type: appointments.type,
+        logistics: appointments.logistics,
+        notes: appointments.notes,
+        totalCost: appointments.totalCost,
+        paymentStatus: appointments.paymentStatus,
+        createdAt: appointments.createdAt,
+        updatedAt: appointments.updatedAt,
+        // Client fields
+        client: {
+          id: clients.id,
+          name: clients.name,
+          phone: clients.phone,
+          email: clients.email,
+          address: clients.address,
+          fraccionamiento: clients.fraccionamiento,
+          latitude: clients.latitude,
+          longitude: clients.longitude,
+        },
+        // Pet fields
+        pet: {
+          id: pets.id,
+          name: pets.name,
+          species: pets.species,
+          breed: pets.breed,
+          age: pets.age,
+          weight: pets.weight,
+          color: pets.color,
+        }
+      })
+      .from(appointments)
+      .leftJoin(clients, eq(appointments.clientId, clients.id))
+      .leftJoin(pets, eq(appointments.petId, pets.id))
+      .where(eq(appointments.tenantId, tenantId));
+
     if (date) {
-      return await db
-        .select()
-        .from(appointments)
-        .where(eq(appointments.tenantId, tenantId));
+      return await query.where(and(eq(appointments.tenantId, tenantId), eq(appointments.scheduledDate, date)));
     }
     
-    return await db
-      .select()
-      .from(appointments)
-      .where(eq(appointments.tenantId, tenantId));
+    return await query;
   }
 
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
