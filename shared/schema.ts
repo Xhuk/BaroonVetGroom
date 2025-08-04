@@ -482,6 +482,22 @@ export const prescriptions = pgTable("prescriptions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Medical Documents - files and images associated with medical appointments
+export const medicalDocuments = pgTable("medical_documents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  appointmentId: varchar("appointment_id").notNull().references(() => medicalAppointments.id),
+  petId: varchar("pet_id").notNull().references(() => pets.id),
+  fileName: varchar("file_name").notNull(),
+  fileUrl: varchar("file_url").notNull(),
+  fileType: varchar("file_type").notNull(), // image/jpeg, application/pdf, etc.
+  fileSize: integer("file_size"), // in bytes
+  documentType: varchar("document_type").notNull(), // x_ray, lab_result, prescription, photo, form, report, other
+  description: text("description"),
+  uploadedBy: varchar("uploaded_by").references(() => staff.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Vaccination Records - track pet vaccinations
 export const vaccinationRecords = pgTable("vaccination_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -570,22 +586,8 @@ export type InsertGroomingRecord = typeof groomingRecords.$inferInsert;
 export type PetHealthProfile = typeof petHealthProfiles.$inferSelect;
 export type InsertPetHealthProfile = typeof petHealthProfiles.$inferInsert;
 
-// Medical appointment documents/images
-export const medicalDocuments = pgTable("medical_documents", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  medicalAppointmentId: varchar("medical_appointment_id").notNull().references(() => medicalAppointments.id),
-  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
-  fileName: varchar("file_name").notNull(),
-  fileType: varchar("file_type").notNull(),
-  fileSize: integer("file_size"),
-  fileUrl: varchar("file_url").notNull(),
-  documentType: varchar("document_type", { 
-    enum: ["x_ray", "lab_result", "prescription", "photo", "form", "report", "other"] 
-  }).notNull(),
-  description: text("description"),
-  uploadedBy: varchar("uploaded_by").notNull().references(() => staff.id),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+export type MedicalDocument = typeof medicalDocuments.$inferSelect;
+export type InsertMedicalDocument = typeof medicalDocuments.$inferInsert;
 
 // Invoice queue for confirmed services
 export const invoiceQueue = pgTable("invoice_queue", {
@@ -626,9 +628,6 @@ export const staffRoomAssignments = pgTable("staff_room_assignments", {
 // New type exports
 export type MedicalAppointment = typeof medicalAppointments.$inferSelect;
 export type InsertMedicalAppointment = typeof medicalAppointments.$inferInsert;
-
-export type MedicalDocument = typeof medicalDocuments.$inferSelect;
-export type InsertMedicalDocument = typeof medicalDocuments.$inferInsert;
 
 export type InvoiceQueue = typeof invoiceQueue.$inferSelect;
 export type InsertInvoiceQueue = typeof invoiceQueue.$inferInsert;

@@ -10,7 +10,8 @@ import {
   Settings, 
   Crown,
   Stethoscope,
-  Scissors
+  Scissors,
+  Heart
 } from "lucide-react";
 
 interface NavigationProps {
@@ -26,6 +27,7 @@ export function Navigation({ className }: NavigationProps) {
     { icon: Users, label: "Clientes", href: "/clients" },
     { icon: Stethoscope, label: "Medical", href: "/medical-appointments" },
     { icon: Scissors, label: "Estética", href: "/grooming-services" },
+    { icon: Heart, label: "Seguimientos", href: "/follow-up-tasks" },
     { icon: Package, label: "Inventario", href: "/inventory" },
     { icon: Truck, label: "Plan de Entregas", href: "/delivery-plan" },
     { icon: DollarSign, label: "Facturación", href: "/billing" },

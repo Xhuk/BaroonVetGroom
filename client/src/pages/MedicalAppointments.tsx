@@ -10,7 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Calendar, CalendarIcon, Plus, Search, Stethoscope, FileText, Clock, 
-  AlertCircle, CheckCircle, User, MapPin, Camera, Upload, Download 
+  AlertCircle, CheckCircle, User, MapPin, Camera, Upload, Download, QrCode,
+  FolderOpen, Eye, Zap
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -20,6 +21,8 @@ import { z } from "zod";
 import { useTenant } from "@/contexts/TenantContext";
 import { BackButton } from "@/components/BackButton";
 import { DebugControls } from "@/components/DebugControls";
+import { QRCodeGenerator } from "@/components/QRCodeGenerator";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -788,38 +791,89 @@ export default function MedicalAppointments() {
               </div>
 
               <div className="border-t pt-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Catálogo de Imágenes</h4>
-                    <p className="text-sm text-gray-600">Documentos médicos asociados</p>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <h4 className="font-medium flex items-center gap-2 mb-2">
+                      <FolderOpen className="w-5 h-5" />
+                      Imágenes y Documentos
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">Documentos médicos asociados</p>
+                    
+                    <ObjectUploader
+                      maxNumberOfFiles={10}
+                      maxFileSize={10485760}
+                      onGetUploadParameters={async () => {
+                        const response = await apiRequest("/api/objects/upload", { method: "POST" });
+                        return { method: "PUT" as const, url: response.uploadURL };
+                      }}
+                      onComplete={(result) => {
+                        console.log("Files uploaded:", result);
+                        // TODO: Save file references to appointment
+                      }}
+                      buttonClassName="w-full mb-2"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Subir desde Computadora
+                    </ObjectUploader>
+                    
+                    <div className="mt-2 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center text-gray-500">
+                      <Upload className="w-8 h-8 mx-auto mb-2" />
+                      <p>Arrastra archivos aquí</p>
+                      <p className="text-xs">Rayos X, resultados de laboratorio, fotografías, etc.</p>
+                    </div>
                   </div>
-                  <Button type="button" variant="outline" size="sm">
-                    <Camera className="w-4 h-4 mr-2" />
-                    Agregar Imagen
-                  </Button>
-                </div>
-                <div className="mt-2 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center text-gray-500">
-                  <Upload className="w-8 h-8 mx-auto mb-2" />
-                  <p>Arrastra imágenes aquí o haz clic para seleccionar</p>
-                  <p className="text-xs">Rayos X, resultados de laboratorio, fotografías, etc.</p>
+                  
+                  <div className="flex-shrink-0">
+                    {selectedAppointment && (
+                      <QRCodeGenerator 
+                        appointmentId={selectedAppointment.id}
+                        appointmentType="medical"
+                        size={200}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4">
+              <div className="border-t pt-4">
                 <FormField
                   control={diagnosisForm.control}
                   name="followUpRequired"
                   render={({ field }) => (
-                    <FormItem className="flex items-center space-x-2">
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          data-testid="checkbox-followup-required"
-                        />
-                      </FormControl>
-                      <FormLabel className="!mt-0">Requiere seguimiento</FormLabel>
+                    <FormItem>
+                      <div className="flex items-center justify-center">
+                        <Button
+                          type="button"
+                          variant={field.value ? "default" : "outline"}
+                          size="lg"
+                          onClick={() => field.onChange(!field.value)}
+                          className={cn(
+                            "w-full max-w-md h-16 text-lg font-semibold transition-all duration-300",
+                            field.value 
+                              ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform scale-105 animate-pulse" 
+                              : "border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+                          )}
+                          data-testid="button-followup-required"
+                        >
+                          <Eye className={cn("w-6 h-6 mr-3", field.value ? "text-white" : "text-gray-500")} />
+                          {field.value ? (
+                            <span className="flex items-center gap-2">
+                              <Zap className="w-5 h-5" />
+                              Seguimiento Requerido
+                              <Zap className="w-5 h-5" />
+                            </span>
+                          ) : (
+                            "¿Requiere Seguimiento?"
+                          )}
+                        </Button>
+                      </div>
+                      {field.value && (
+                        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <p className="text-sm text-blue-800 text-center">
+                            📋 Este paciente será añadido a las tareas de seguimiento del equipo médico
+                          </p>
+                        </div>
+                      )}
                     </FormItem>
                   )}
                 />

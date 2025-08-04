@@ -199,6 +199,11 @@ export interface IStorage {
   getMedicalAppointment(appointmentId: string): Promise<MedicalAppointment | undefined>;
   createMedicalAppointment(appointment: InsertMedicalAppointment): Promise<MedicalAppointment>;
   updateMedicalAppointment(appointmentId: string, appointment: Partial<InsertMedicalAppointment>): Promise<MedicalAppointment>;
+  getFollowUpTasks(tenantId: string): Promise<any[]>;
+
+  // Medical Documents
+  createMedicalDocument(document: InsertMedicalDocument): Promise<MedicalDocument>;
+  getMedicalDocuments(appointmentId: string): Promise<MedicalDocument[]>;
   
   // Invoice Queue operations
   createInvoiceQueueItem(item: InsertInvoiceQueue): Promise<InvoiceQueue>;
@@ -1342,6 +1347,67 @@ export class DatabaseStorage implements IStorage {
       .where(eq(deliverySchedule.id, scheduleId))
       .returning();
     return updatedSchedule;
+  }
+
+  // Medical Documents operations
+  async createMedicalDocument(document: InsertMedicalDocument): Promise<MedicalDocument> {
+    const [newDocument] = await db.insert(medicalDocuments).values(document).returning();
+    return newDocument;
+  }
+
+  async getMedicalDocuments(appointmentId: string): Promise<MedicalDocument[]> {
+    return await db
+      .select()
+      .from(medicalDocuments)
+      .where(eq(medicalDocuments.appointmentId, appointmentId))
+      .orderBy(desc(medicalDocuments.createdAt));
+  }
+
+  // Follow-up Tasks operations
+  async getFollowUpTasks(tenantId: string): Promise<any[]> {
+    const result = await db
+      .select({
+        id: medicalAppointments.id,
+        appointmentDate: medicalAppointments.appointmentDate,
+        appointmentTime: medicalAppointments.appointmentTime,
+        followUpRequired: medicalAppointments.followUpRequired,
+        followUpDate: medicalAppointments.followUpDate,
+        isConfirmed: medicalAppointments.isConfirmed,
+        confirmedAt: medicalAppointments.confirmedAt,
+        client: {
+          id: clients.id,
+          name: clients.name,
+          phone: clients.phone,
+          email: clients.email,
+        },
+        pet: {
+          id: pets.id,
+          name: pets.name,
+          species: pets.species,
+          breed: pets.breed,
+        },
+        veterinarian: {
+          id: staff.id,
+          name: staff.name,
+        }
+      })
+      .from(medicalAppointments)
+      .leftJoin(clients, eq(medicalAppointments.clientId, clients.id))
+      .leftJoin(pets, eq(medicalAppointments.petId, pets.id))
+      .leftJoin(staff, eq(medicalAppointments.veterinarianId, staff.id))
+      .where(
+        and(
+          eq(medicalAppointments.tenantId, tenantId),
+          eq(medicalAppointments.followUpRequired, true),
+          or(
+            eq(medicalAppointments.isConfirmed, false),
+            isNull(medicalAppointments.isConfirmed)
+          )
+        )
+      )
+      .orderBy(asc(medicalAppointments.followUpDate), asc(medicalAppointments.appointmentDate));
+
+    return result;
   }
 }
 

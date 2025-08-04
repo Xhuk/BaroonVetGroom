@@ -30,6 +30,8 @@ import Billing from "@/pages/Billing";
 import MedicalRecords from "@/pages/MedicalRecords";
 import MedicalAppointments from "@/pages/MedicalAppointments";
 import GroomingServices from "@/pages/GroomingServices";
+import MobileUpload from "@/pages/MobileUpload";
+import FollowUpTasks from "@/pages/FollowUpTasks";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -47,6 +49,8 @@ function Router() {
           <Route path="/medical-records" component={MedicalRecords} />
           <Route path="/medical-appointments" component={MedicalAppointments} />
           <Route path="/grooming-services" component={GroomingServices} />
+          <Route path="/follow-up-tasks" component={FollowUpTasks} />
+          <Route path="/upload/:type/:appointmentId" component={MobileUpload} />
           <Route path="/inventory" component={Inventory} />
           <Route path="/delivery-plan" component={DeliveryPlan} />
           <Route path="/route-map" component={RoutePlanMap} />

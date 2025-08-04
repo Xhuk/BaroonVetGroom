@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookMonitor } from "./webhookMonitor";
 import { advancedRouteOptimization, type OptimizedRoute, type RouteOptimizationOptions } from "./routeOptimizer";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 // Helper function to check system admin access
 async function isSystemAdmin(req: any): Promise<boolean> {
@@ -1609,6 +1610,180 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error assigning system role:", error);
       res.status(500).json({ message: "Failed to assign system role" });
+    }
+  });
+
+  // Object Storage Routes
+  app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  app.get('/objects/:objectPath(*)', async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error accessing object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  app.get('/public-objects/:filePath(*)', async (req, res) => {
+    const filePath = req.params.filePath;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Medical Appointments API
+  app.get('/api/medical-appointments/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const appointments = await storage.getMedicalAppointments(tenantId);
+      res.json(appointments);
+    } catch (error) {
+      console.error("Error fetching medical appointments:", error);
+      res.status(500).json({ message: "Failed to fetch medical appointments" });
+    }
+  });
+
+  app.get('/api/medical-appointments/:appointmentId', isAuthenticated, async (req, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const appointment = await storage.getMedicalAppointment(appointmentId);
+      if (!appointment) {
+        return res.status(404).json({ message: "Medical appointment not found" });
+      }
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error fetching medical appointment:", error);
+      res.status(500).json({ message: "Failed to fetch medical appointment" });
+    }
+  });
+
+  app.post('/api/medical-appointments/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const appointmentData = { ...req.body, tenantId };
+      const appointment = await storage.createMedicalAppointment(appointmentData);
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error creating medical appointment:", error);
+      res.status(500).json({ message: "Failed to create medical appointment" });
+    }
+  });
+
+  app.put('/api/medical-appointments/:appointmentId', isAuthenticated, async (req, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const appointment = await storage.updateMedicalAppointment(appointmentId, req.body);
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error updating medical appointment:", error);
+      res.status(500).json({ message: "Failed to update medical appointment" });
+    }
+  });
+
+  // Medical Document Routes
+  app.post('/api/medical-appointments/:appointmentId/documents', isAuthenticated, async (req, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const userId = req.user?.claims?.sub;
+      
+      const appointment = await storage.getMedicalAppointment(appointmentId);
+      if (!appointment) {
+        return res.status(404).json({ message: "Medical appointment not found" });
+      }
+
+      const documentData = { 
+        ...req.body, 
+        appointmentId, 
+        tenantId: appointment.tenantId,
+        petId: appointment.petId,
+        uploadedBy: userId 
+      };
+      
+      const document = await storage.createMedicalDocument(documentData);
+      res.json(document);
+    } catch (error) {
+      console.error("Error creating medical document:", error);
+      res.status(500).json({ message: "Failed to create medical document" });
+    }
+  });
+
+  app.get('/api/medical-appointments/:appointmentId/documents', isAuthenticated, async (req, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const documents = await storage.getMedicalDocuments(appointmentId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching medical documents:", error);
+      res.status(500).json({ message: "Failed to fetch medical documents" });
+    }
+  });
+
+  // Follow-up Tasks API
+  app.get('/api/medical-appointments/follow-up/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const followUpTasks = await storage.getFollowUpTasks(tenantId);
+      res.json(followUpTasks);
+    } catch (error) {
+      console.error("Error fetching follow-up tasks:", error);
+      res.status(500).json({ message: "Failed to fetch follow-up tasks" });
+    }
+  });
+
+  app.put('/api/medical-appointments/:appointmentId/complete-followup', isAuthenticated, async (req, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const userId = req.user?.claims?.sub;
+      
+      const appointment = await storage.updateMedicalAppointment(appointmentId, {
+        isConfirmed: true,
+        confirmedAt: new Date().toISOString(),
+        confirmedBy: userId
+      });
+      
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error completing follow-up:", error);
+      res.status(500).json({ message: "Failed to complete follow-up" });
+    }
+  });
+
+  app.put('/api/medical-appointments/:appointmentId/schedule-followup', isAuthenticated, async (req, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const { followUpDate } = req.body;
+      
+      const appointment = await storage.updateMedicalAppointment(appointmentId, {
+        followUpDate
+      });
+      
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error scheduling follow-up:", error);
+      res.status(500).json({ message: "Failed to schedule follow-up" });
     }
   });
 
