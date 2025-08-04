@@ -1438,9 +1438,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all tenants for debug users
   app.get('/api/tenants/all', isAuthenticated, async (req: any, res) => {
     try {
-      const hasDebug = await hasDebugAccess(req);
-      if (!hasDebug) {
-        return res.status(403).json({ message: "Debug access required" });
+      const hasSystemAccess = await isSystemAdmin(req);
+      if (!hasSystemAccess) {
+        return res.status(403).json({ message: "System admin access required" });
       }
       
       const tenants = await storage.getTenants();

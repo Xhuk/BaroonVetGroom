@@ -8,8 +8,7 @@ import {
   Truck, 
   DollarSign, 
   Settings, 
-  Crown,
-  Shield 
+  Crown
 } from "lucide-react";
 
 interface NavigationProps {
@@ -31,8 +30,7 @@ export function Navigation({ className }: NavigationProps) {
   const adminItems = [
     ...(canAccessAdmin ? [{ icon: Settings, label: "Admin Dashboard", href: "/admin" }] : []),
     ...(canAccessSuperAdmin ? [
-      { icon: Crown, label: "Super-Admin Dashboard", href: "/superadmin" },
-      { icon: Shield, label: "RBAC Management", href: "/superadmin/rbac" }
+      { icon: Crown, label: "Super-Admin Dashboard", href: "/superadmin" }
     ] : []),
   ];
 

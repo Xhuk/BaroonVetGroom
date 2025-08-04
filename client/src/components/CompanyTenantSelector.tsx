@@ -66,7 +66,7 @@ export function CompanyTenantSelector() {
                 <SelectValue placeholder="Seleccionar empresa..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas las empresas</SelectItem>
+                <SelectItem value="all">Todas las empresas</SelectItem>
                 {companies?.map((company) => (
                   <SelectItem key={company.id} value={company.id}>
                     {company.name}
@@ -87,7 +87,7 @@ export function CompanyTenantSelector() {
                 <SelectValue placeholder="Seleccionar tenant..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los tenants</SelectItem>
+                <SelectItem value="all">Todos los tenants</SelectItem>
                 {filteredTenants?.map((tenant) => (
                   <SelectItem key={tenant.id} value={tenant.id}>
                     {tenant.name}
