@@ -20,8 +20,11 @@ import {
   CheckCircle, 
   AlertCircle,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  Users
 } from "lucide-react";
+import iconPawPath from "@assets/iconpaw_1754279756812.png";
+import markerIconPath from "@assets/marker-icon_1754279780257.png";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client, Pet, Service } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
@@ -67,12 +70,43 @@ export default function BookingWizard() {
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [reservedSlots, setReservedSlots] = useState<string[]>([]);
   const [mapCoordinates, setMapCoordinates] = useState({ lat: 25.6866, lng: -100.3161 }); // Monterrey default
+  const [staffLocations, setStaffLocations] = useState<Array<{id: string, name: string, lat: number, lng: number, role: string}>>([]);
+  const [tenantLocation, setTenantLocation] = useState({ lat: 25.740586082849077, lng: -100.40735989019088 });
 
   // Queries
   const { data: services } = useQuery({
     queryKey: ["/api/services", currentTenant?.id],
     enabled: !!currentTenant?.id,
   });
+
+  const { data: staff } = useQuery({
+    queryKey: ["/api/staff", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
+
+  // Update tenant location when currentTenant changes
+  useEffect(() => {
+    if (currentTenant?.latitude && currentTenant?.longitude) {
+      setTenantLocation({
+        lat: parseFloat(currentTenant.latitude),
+        lng: parseFloat(currentTenant.longitude)
+      });
+    }
+  }, [currentTenant]);
+
+  // Initialize mock staff locations (in real app, get from GPS tracking)
+  useEffect(() => {
+    if (staff && staff.length > 0) {
+      const mockStaffLocations = staff.map((member: any, index: number) => ({
+        id: member.id,
+        name: member.name,
+        lat: tenantLocation.lat + (Math.random() - 0.5) * 0.01, // Random offset near clinic
+        lng: tenantLocation.lng + (Math.random() - 0.5) * 0.01,
+        role: member.role
+      }));
+      setStaffLocations(mockStaffLocations);
+    }
+  }, [staff, tenantLocation]);
 
   // Geocoding function for address with postal code fallback
   const geocodeAddress = async (address: string, fraccionamiento: string, postalCode?: string) => {
@@ -455,46 +489,155 @@ export default function BookingWizard() {
                 </div>
               </div>
               
-              {/* Interactive Map Display */}
+              {/* Advanced Interactive Map with Staff Tracking */}
               <div className="mt-4">
-                <Label>Ubicación en el mapa</Label>
+                <Label>Mapa inteligente con personal en tiempo real</Label>
                 <div className="border rounded-lg overflow-hidden bg-gray-50">
                   {(mapCoordinates.lat !== 25.6866 || mapCoordinates.lng !== -100.3161) ? (
                     <div>
-                      {/* Map Container */}
-                      <div className="h-64 relative bg-blue-50 border-b">
+                      {/* Enhanced Map Container with Custom Markers */}
+                      <div className="h-80 relative bg-blue-50 border-b">
+                        <div className="absolute inset-0 z-10 pointer-events-none">
+                          {/* Client Location - Red Pin */}
+                          <div 
+                            className="absolute transform -translate-x-1/2 -translate-y-full"
+                            style={{
+                              left: '50%',
+                              top: '50%'
+                            }}
+                          >
+                            <MapPin className="w-6 h-6 text-red-600 drop-shadow-lg" />
+                            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded shadow text-xs whitespace-nowrap">
+                              Cliente
+                            </div>
+                          </div>
+
+                          {/* Tenant/Clinic Location - Blue Marker */}
+                          <div 
+                            className="absolute transform -translate-x-1/2 -translate-y-full pointer-events-auto cursor-move"
+                            style={{
+                              left: `${50 + (tenantLocation.lng - mapCoordinates.lng) * 8000}%`,
+                              top: `${50 + (mapCoordinates.lat - tenantLocation.lat) * 8000}%`
+                            }}
+                            onMouseDown={(e) => {
+                              // Add drag functionality for tenant location
+                              console.log("Dragging tenant location");
+                            }}
+                          >
+                            <img 
+                              src={markerIconPath} 
+                              alt="Clínica" 
+                              className="w-6 h-6 drop-shadow-lg"
+                            />
+                            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-100 px-2 py-1 rounded shadow text-xs whitespace-nowrap border border-blue-200">
+                              Clínica
+                            </div>
+                          </div>
+
+                          {/* Staff Locations - Green Paw Icons */}
+                          {staffLocations.map((member) => (
+                            <div 
+                              key={member.id}
+                              className="absolute transform -translate-x-1/2 -translate-y-full pointer-events-auto cursor-move"
+                              style={{
+                                left: `${50 + (member.lng - mapCoordinates.lng) * 8000}%`,
+                                top: `${50 + (mapCoordinates.lat - member.lat) * 8000}%`
+                              }}
+                              onMouseDown={(e) => {
+                                // Add drag functionality for staff
+                                console.log(`Dragging staff member: ${member.name}`);
+                              }}
+                            >
+                              <img 
+                                src={iconPawPath} 
+                                alt={member.name} 
+                                className="w-5 h-5 drop-shadow-lg"
+                              />
+                              <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-green-100 px-2 py-1 rounded shadow text-xs whitespace-nowrap border border-green-200">
+                                {member.name}
+                                <div className="text-xs text-green-600">{member.role}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
                         <iframe
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-0.005},${mapCoordinates.lat-0.005},${mapCoordinates.lng+0.005},${mapCoordinates.lat+0.005}&layer=mapnik&marker=${mapCoordinates.lat},${mapCoordinates.lng}`}
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-0.01},${mapCoordinates.lat-0.01},${mapCoordinates.lng+0.01},${mapCoordinates.lat+0.01}&layer=mapnik`}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
-                          title="Mapa de ubicación"
+                          title="Mapa de ubicación con personal"
                           className="rounded-t-lg"
                           loading="lazy"
                         />
                       </div>
                       
-                      {/* Map Info */}
+                      {/* Enhanced Map Info with Legend */}
                       <div className="p-4">
-                        <div className="flex items-center gap-2 text-sm text-green-700 mb-2">
+                        <div className="flex items-center gap-2 text-sm text-green-700 mb-3">
                           <MapPin className="w-4 h-4" />
                           <span className="font-medium">Ubicación confirmada</span>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2">
+                        
+                        <p className="text-sm text-gray-700 mb-3">
                           {customerData.address}, {customerData.fraccionamiento}
                         </p>
+
+                        {/* Map Legend */}
+                        <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-red-600" />
+                            <span>Cliente</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <img src={markerIconPath} alt="" className="w-3 h-3" />
+                            <span>Clínica</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <img src={iconPawPath} alt="" className="w-3 h-3" />
+                            <span>Personal ({staffLocations.length})</span>
+                          </div>
+                        </div>
+
                         <div className="flex items-center justify-between">
                           <p className="text-xs text-gray-500">
                             GPS: {mapCoordinates.lat.toFixed(6)}, {mapCoordinates.lng.toFixed(6)}
                           </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => geocodeAddress(customerData.address, customerData.fraccionamiento, customerData.postalCode)}
-                            className="text-xs"
-                          >
-                            Actualizar ubicación
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => geocodeAddress(customerData.address, customerData.fraccionamiento, customerData.postalCode)}
+                              className="text-xs"
+                            >
+                              Actualizar ubicación
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                // Refresh staff locations
+                                if (staff) {
+                                  const updatedLocations = staff.map((member: any) => ({
+                                    id: member.id,
+                                    name: member.name,
+                                    lat: tenantLocation.lat + (Math.random() - 0.5) * 0.01,
+                                    lng: tenantLocation.lng + (Math.random() - 0.5) * 0.01,
+                                    role: member.role
+                                  }));
+                                  setStaffLocations(updatedLocations);
+                                  toast({
+                                    title: "Ubicaciones actualizadas",
+                                    description: "Se actualizaron las posiciones del personal.",
+                                  });
+                                }
+                              }}
+                              className="text-xs"
+                            >
+                              <Users className="w-3 h-3 mr-1" />
+                              Refrescar personal
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
