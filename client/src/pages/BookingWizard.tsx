@@ -575,12 +575,12 @@ export default function BookingWizard() {
 
                         </div>
 
-                        {/* Base OpenStreetMap without left controls */}
+                        {/* Base OpenStreetMap with interactive controls */}
                         <iframe
                           src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-(mapDiameterKm/111.32)},${mapCoordinates.lat-(mapDiameterKm/110.54)},${mapCoordinates.lng+(mapDiameterKm/111.32)},${mapCoordinates.lat+(mapDiameterKm/110.54)}&layer=mapnik`}
                           width="100%"
                           height="100%"
-                          style={{ border: 0, pointerEvents: 'none' }}
+                          style={{ border: 0 }}
                           title="Mapa navegable para planificación de entrega"
                           className="rounded-t-lg"
                           loading="lazy"
@@ -619,7 +619,7 @@ export default function BookingWizard() {
 
                         {/* Map navigation instructions */}
                         <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded text-xs text-gray-600">
-                          +/- para zoom • Clic derecho para ubicar cliente
+                          Arrastra para mover • +/- para zoom • Clic derecho para ubicar cliente
                         </div>
                       </div>
                       
