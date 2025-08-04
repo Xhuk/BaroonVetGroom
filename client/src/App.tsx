@@ -12,6 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import Admin from "@/pages/Admin";
 import SuperAdmin from "@/pages/SuperAdmin";
 import SuperAdminMonitoring from "@/pages/SuperAdminMonitoring";
+import SuperAdminRouteConfig from "@/pages/SuperAdminRouteConfig";
 import AdminSettings from "@/pages/AdminSettings";
 import AdminBusinessHours from "@/pages/AdminBusinessHours";
 import Appointments from "@/pages/Appointments";
@@ -46,6 +47,7 @@ function Router() {
           <Route path="/admin/van-config" component={AdminVanConfig} />
           <Route path="/superadmin" component={SuperAdmin} />
           <Route path="/superadmin/monitoring" component={SuperAdminMonitoring} />
+          <Route path="/superadmin/route-config" component={SuperAdminRouteConfig} />
         </>
       )}
       <Route component={NotFound} />

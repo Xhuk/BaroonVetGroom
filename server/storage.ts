@@ -14,6 +14,7 @@ import {
   webhookErrorLogs,
   webhookMonitoring,
   vans,
+  routeOptimizationConfig,
   type User,
   type UpsertUser,
   type Company,
@@ -43,6 +44,8 @@ import {
   type InsertWebhookMonitoring,
   type Van,
   type InsertVan,
+  type RouteOptimizationConfig,
+  type InsertRouteOptimizationConfig,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte } from "drizzle-orm";
@@ -683,6 +686,45 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(vans)
       .where(eq(vans.id, vanId));
+  }
+
+  // Route optimization configuration operations
+  async getRouteOptimizationConfig(companyId: string): Promise<RouteOptimizationConfig | undefined> {
+    const [config] = await db
+      .select()
+      .from(routeOptimizationConfig)
+      .where(eq(routeOptimizationConfig.companyId, companyId));
+    return config;
+  }
+
+  async createRouteOptimizationConfig(configData: InsertRouteOptimizationConfig): Promise<RouteOptimizationConfig> {
+    const [newConfig] = await db
+      .insert(routeOptimizationConfig)
+      .values({
+        ...configData,
+        id: undefined, // Let DB generate ID
+      })
+      .onConflictDoUpdate({
+        target: routeOptimizationConfig.companyId,
+        set: {
+          ...configData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return newConfig;
+  }
+
+  async updateRouteOptimizationConfig(companyId: string, updates: Partial<InsertRouteOptimizationConfig>): Promise<RouteOptimizationConfig> {
+    const [updatedConfig] = await db
+      .update(routeOptimizationConfig)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(routeOptimizationConfig.companyId, companyId))
+      .returning();
+    return updatedConfig;
   }
 }
 

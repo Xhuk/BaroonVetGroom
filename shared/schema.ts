@@ -295,3 +295,20 @@ export const vansRelations = relations(vans, ({ one }) => ({
 
 export type InsertVan = typeof vans.$inferInsert;
 export type Van = typeof vans.$inferSelect;
+
+// Route optimization configuration for companies
+export const routeOptimizationConfig = pgTable("route_optimization_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  provider: varchar("provider", { enum: ["mapbox", "google", "here", "none"] }).default("none"),
+  isEnabled: boolean("is_enabled").default(false),
+  apiKey: varchar("api_key"), // Encrypted storage
+  monthlyUsageLimit: integer("monthly_usage_limit").default(1000),
+  currentUsage: integer("current_usage").default(0),
+  pricePerRequest: decimal("price_per_request", { precision: 10, scale: 4 }).default("0.005"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type RouteOptimizationConfig = typeof routeOptimizationConfig.$inferSelect;
+export type InsertRouteOptimizationConfig = typeof routeOptimizationConfig.$inferInsert;

@@ -11,14 +11,14 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Custom paw icon for customer locations
-const pawIcon = new L.Icon({
-  iconUrl: '/attached_assets/iconpaw_1754286092477.png',
+// Green GPS icon for customer locations
+const customerIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-  iconSize: [25, 25],
-  iconAnchor: [12, 12],
-  popupAnchor: [1, -12],
-  shadowSize: [25, 25]
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
 });
 
 // Clinic location icon (blue)
@@ -87,7 +87,8 @@ export default function RoutePlanMap() {
   // Route optimization mutation
   const optimizeRouteMutation = useMutation({
     mutationFn: async (data: RouteOptimizationRequest) => {
-      return apiRequest("/api/optimize-route", "POST", data);
+      if (!currentTenant?.id) throw new Error("No tenant selected");
+      return apiRequest(`/api/optimize-route/${currentTenant.id}`, "POST", data);
     },
     onSuccess: (result: any) => {
       setOptimizedRoute(result.optimizedRoute || []);
@@ -118,6 +119,15 @@ export default function RoutePlanMap() {
       toast({
         title: "Sin Recolecciones",
         description: "No hay recolecciones programadas para optimizar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!currentTenant?.id) {
+      toast({
+        title: "Error",
+        description: "No se pudo identificar el tenant",
         variant: "destructive",
       });
       return;
@@ -225,7 +235,7 @@ export default function RoutePlanMap() {
                     <Marker
                       key={appointment.id}
                       position={[appointment.client.latitude, appointment.client.longitude]}
-                      icon={pawIcon}
+                      icon={customerIcon}
                     >
                       <Popup>
                         <div className="min-w-[200px]">

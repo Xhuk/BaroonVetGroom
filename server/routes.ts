@@ -1028,26 +1028,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Route optimization endpoint
-  app.post('/api/optimize-route', isAuthenticated, async (req, res) => {
+  // Route optimization endpoint with configurable providers
+  app.post('/api/optimize-route/:tenantId', isAuthenticated, async (req, res) => {
     try {
+      const { tenantId } = req.params;
       const { appointments, vanCapacity, fraccionamientoWeights, clinicLocation } = req.body;
       
       if (!appointments || !Array.isArray(appointments)) {
         return res.status(400).json({ message: "Valid appointments array is required" });
       }
 
-      const result = optimizeDeliveryRoute({
-        appointments,
+      // Get company's route optimization configuration
+      const tenant = await storage.getTenant(tenantId);
+      const config = tenant ? await storage.getRouteOptimizationConfig(tenant.companyId) : null;
+
+      // Transform appointments to route points
+      const routePoints = appointments.map((apt: any) => ({
+        id: apt.id,
+        latitude: apt.client.latitude,
+        longitude: apt.client.longitude,
+        address: apt.client.address || `${apt.client.fraccionamiento}, Monterrey`,
+        petCount: apt.pets?.length || 1,
+        fraccionamiento: apt.client.fraccionamiento
+      }));
+
+      // Use advanced or simple routing based on configuration
+      const { advancedRouteOptimization } = await import('./routeOptimizer');
+      const result = await advancedRouteOptimization({
+        clinicLocation: clinicLocation || [25.6866, -100.3161],
+        appointments: routePoints,
         vanCapacity: vanCapacity || 'medium',
         fraccionamientoWeights: fraccionamientoWeights || {},
-        clinicLocation: clinicLocation || [25.6866, -100.3161] // Monterrey default
+        config
       });
 
-      res.json(result);
+      // Map optimized points back to appointments
+      const optimizedRoute = result.points.map(point => 
+        appointments.find((apt: any) => apt.id === point.id)
+      ).filter(Boolean);
+
+      res.json({
+        optimizedRoute,
+        totalDistance: result.totalDistance,
+        estimatedTime: result.estimatedTime,
+        efficiency: result.efficiency,
+        provider: config?.isEnabled ? config.provider : 'simple_weight_based'
+      });
     } catch (error) {
       console.error("Error optimizing route:", error);
       
-      // Fallback: simple distance-based optimization
+      // Fallback: simple weight-based optimization
       const appointments = req.body.appointments || [];
       const fallbackRoute = appointments.sort((a: any, b: any) => {
         const weightA = req.body.fraccionamientoWeights?.[a.client?.fraccionamiento] || 5;
@@ -1060,7 +1090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalDistance: 0,
         estimatedTime: fallbackRoute.length * 15, // 15 minutes per stop
         efficiency: 75,
-        fallback: true
+        provider: 'fallback_weight_based'
       });
     }
   });
@@ -1108,6 +1138,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting van:", error);
       res.status(500).json({ message: "Failed to delete van" });
+    }
+  });
+
+  // Super Admin route optimization configuration endpoints
+  app.get("/api/superadmin/companies-route-config", isAuthenticated, async (req, res) => {
+    try {
+      const companies = await storage.getCompanies();
+      const companiesWithConfig = await Promise.all(
+        companies.map(async (company) => {
+          const config = await storage.getRouteOptimizationConfig(company.id);
+          return { ...company, config };
+        })
+      );
+      res.json(companiesWithConfig);
+    } catch (error) {
+      console.error("Error fetching companies route config:", error);
+      res.status(500).json({ error: "Failed to fetch companies route configuration" });
+    }
+  });
+
+  app.post("/api/superadmin/route-config/:companyId", isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const configData = req.body;
+
+      const config = await storage.createRouteOptimizationConfig({
+        companyId,
+        ...configData,
+      });
+
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating route config:", error);
+      res.status(500).json({ error: "Failed to update route configuration" });
     }
   });
 

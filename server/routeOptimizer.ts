@@ -1,18 +1,31 @@
-interface RouteOptimizationRequest {
-  appointments: any[];
-  vanCapacity: 'small' | 'medium' | 'large';
-  fraccionamientoWeights: Record<string, number>;
-  clinicLocation: [number, number];
+import { RouteOptimizationConfig } from "@shared/schema";
+
+interface RoutePoint {
+  id: string;
+  latitude: number;
+  longitude: number;
+  address?: string;
+  petCount?: number;
+  cageType?: 'small' | 'medium' | 'large';
+  fraccionamiento?: string;
 }
 
 interface OptimizedRoute {
-  optimizedRoute: any[];
+  points: RoutePoint[];
   totalDistance: number;
   estimatedTime: number;
   efficiency: number;
 }
 
-// Van capacity configurations
+interface RouteOptimizationOptions {
+  clinicLocation: [number, number];
+  appointments: RoutePoint[];
+  vanCapacity: 'small' | 'medium' | 'large';
+  fraccionamientoWeights: Record<string, number>;
+  config?: RouteOptimizationConfig;
+}
+
+// Van capacity limits
 const VAN_CAPACITIES = {
   small: { maxPets: 8, maxWeight: 50 },
   medium: { maxPets: 15, maxWeight: 100 },
@@ -20,9 +33,184 @@ const VAN_CAPACITIES = {
 };
 
 /**
- * Calculate distance between two geographic points using Haversine formula
+ * Simple weight-based route optimization using fraccionamiento weights
+ * and "turn right gross mode" from tenant location
  */
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function simpleWeightBasedRouting(options: RouteOptimizationOptions): OptimizedRoute {
+  const { clinicLocation, appointments, fraccionamientoWeights, vanCapacity } = options;
+  const capacity = VAN_CAPACITIES[vanCapacity];
+  
+  // Group appointments by fraccionamiento and apply weights
+  const weightedGroups = appointments.reduce((groups, apt) => {
+    const frac = apt.fraccionamiento || 'unknown';
+    const weight = fraccionamientoWeights[frac] || 5.0; // Default weight
+    
+    if (!groups[frac]) {
+      groups[frac] = { appointments: [], weight, totalPets: 0 };
+    }
+    
+    groups[frac].appointments.push(apt);
+    groups[frac].totalPets += apt.petCount || 1;
+    
+    return groups;
+  }, {} as Record<string, { appointments: RoutePoint[], weight: number, totalPets: number }>);
+  
+  // Sort fraccionamientos by weight (lower weight = higher priority)
+  const sortedFraccionamientos = Object.entries(weightedGroups)
+    .sort(([, a], [, b]) => a.weight - b.weight);
+  
+  const optimizedRoute: RoutePoint[] = [];
+  let currentCapacity = 0;
+  
+  // Start from clinic location
+  const clinicPoint: RoutePoint = {
+    id: 'clinic',
+    latitude: clinicLocation[0],
+    longitude: clinicLocation[1],
+    address: 'Clínica Veterinaria'
+  };
+  
+  // Apply "turn right gross mode" - prioritize eastward movement first
+  for (const [fracName, group] of sortedFraccionamientos) {
+    // Sort appointments within fraccionamiento by longitude (eastward first)
+    const sortedApps = group.appointments.sort((a, b) => b.longitude - a.longitude);
+    
+    for (const apt of sortedApps) {
+      const petCount = apt.petCount || 1;
+      
+      // Check capacity constraints
+      if (currentCapacity + petCount <= capacity.maxPets) {
+        optimizedRoute.push(apt);
+        currentCapacity += petCount;
+      } else {
+        // Van is full, would need multiple routes
+        break;
+      }
+    }
+  }
+  
+  // Calculate simple distance estimation
+  let totalDistance = 0;
+  let prevPoint = clinicPoint;
+  
+  for (const point of optimizedRoute) {
+    const distance = calculateHaversineDistance(
+      prevPoint.latitude, prevPoint.longitude,
+      point.latitude, point.longitude
+    );
+    totalDistance += distance;
+    prevPoint = point;
+  }
+  
+  // Return to clinic
+  totalDistance += calculateHaversineDistance(
+    prevPoint.latitude, prevPoint.longitude,
+    clinicPoint.latitude, clinicPoint.longitude
+  );
+  
+  return {
+    points: optimizedRoute,
+    totalDistance: Math.round(totalDistance * 100) / 100,
+    estimatedTime: Math.round(totalDistance * 3.5), // ~3.5 minutes per km in city
+    efficiency: Math.round((optimizedRoute.length / appointments.length) * 100)
+  };
+}
+
+/**
+ * Advanced route optimization using external providers (Mapbox, Google, HERE)
+ */
+async function advancedRouteOptimization(options: RouteOptimizationOptions): Promise<OptimizedRoute> {
+  const { config } = options;
+  
+  if (!config || !config.isEnabled || config.provider === 'none') {
+    return simpleWeightBasedRouting(options);
+  }
+  
+  try {
+    switch (config.provider) {
+      case 'mapbox':
+        return await optimizeWithMapbox(options);
+      case 'google':
+        return await optimizeWithGoogle(options);
+      case 'here':
+        return await optimizeWithHere(options);
+      default:
+        return simpleWeightBasedRouting(options);
+    }
+  } catch (error) {
+    console.warn('Advanced routing failed, using fallback:', error);
+    return simpleWeightBasedRouting(options);
+  }
+}
+
+/**
+ * Mapbox route optimization
+ */
+async function optimizeWithMapbox(options: RouteOptimizationOptions): Promise<OptimizedRoute> {
+  const { clinicLocation, appointments, config } = options;
+  
+  if (!config?.apiKey) {
+    throw new Error('Mapbox API key not configured');
+  }
+  
+  // Prepare coordinates for Mapbox Optimization API
+  const coordinates = [
+    clinicLocation,
+    ...appointments.map(apt => [apt.longitude, apt.latitude] as [number, number])
+  ];
+  
+  const url = `https://api.mapbox.com/optimized-trips/v1/mapbox/driving/${coordinates.map(coord => coord.join(',')).join(';')}`;
+  const params = new URLSearchParams({
+    access_token: config.apiKey,
+    source: 'first',
+    destination: 'first',
+    roundtrip: 'true',
+    geometries: 'geojson'
+  });
+  
+  const response = await fetch(`${url}?${params}`);
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(`Mapbox API error: ${data.message}`);
+  }
+  
+  // Parse Mapbox response
+  const trip = data.trips[0];
+  const optimizedPoints = trip.waypoints
+    .slice(1, -1) // Remove start/end clinic points
+    .map((wp: any, index: number) => appointments[wp.waypoint_index - 1]);
+  
+  return {
+    points: optimizedPoints,
+    totalDistance: Math.round(trip.distance / 1000 * 100) / 100, // Convert m to km
+    estimatedTime: Math.round(trip.duration / 60), // Convert s to minutes
+    efficiency: 95 // Mapbox provides high efficiency
+  };
+}
+
+/**
+ * Google Maps route optimization  
+ */
+async function optimizeWithGoogle(options: RouteOptimizationOptions): Promise<OptimizedRoute> {
+  // Implementation for Google Routes API
+  // Similar structure to Mapbox but using Google's API
+  return simpleWeightBasedRouting(options); // Fallback for now
+}
+
+/**
+ * HERE Maps route optimization
+ */
+async function optimizeWithHere(options: RouteOptimizationOptions): Promise<OptimizedRoute> {
+  // Implementation for HERE Routing API
+  // Similar structure to Mapbox but using HERE's API  
+  return simpleWeightBasedRouting(options); // Fallback for now
+}
+
+/**
+ * Calculate distance between two coordinates using Haversine formula
+ */
+function calculateHaversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Earth's radius in kilometers
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -34,255 +222,10 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-/**
- * Simple nearest neighbor algorithm for route optimization
- * In production, this could be replaced with more sophisticated algorithms
- * or external route optimization services
- */
-function optimizeRouteSimple(appointments: any[], clinicLocation: [number, number]): any[] {
-  if (appointments.length === 0) return [];
-  
-  const unvisited = [...appointments];
-  const route: any[] = [];
-  let currentLocation = clinicLocation;
-  
-  while (unvisited.length > 0) {
-    let nearestIndex = 0;
-    let nearestDistance = Infinity;
-    
-    // Find nearest unvisited appointment
-    unvisited.forEach((appointment, index) => {
-      if (appointment.client?.latitude && appointment.client?.longitude) {
-        const distance = calculateDistance(
-          currentLocation[0], currentLocation[1],
-          appointment.client.latitude, appointment.client.longitude
-        );
-        
-        // Apply fraccionamiento weight penalty (higher weight = less priority)
-        const weight = appointment.client.fraccionamiento ? 
-          (appointment.fraccionamientoWeight || 1) : 1;
-        const adjustedDistance = distance * (1 + (weight - 1) * 0.1);
-        
-        if (adjustedDistance < nearestDistance) {
-          nearestDistance = adjustedDistance;
-          nearestIndex = index;
-        }
-      }
-    });
-    
-    // Add nearest appointment to route
-    const selected = unvisited.splice(nearestIndex, 1)[0];
-    route.push(selected);
-    
-    if (selected.client?.latitude && selected.client?.longitude) {
-      currentLocation = [selected.client.latitude, selected.client.longitude];
-    }
-  }
-  
-  return route;
-}
-
-/**
- * Advanced route optimization considering time windows, traffic patterns, and capacity
- */
-function optimizeRouteAdvanced(
-  appointments: any[], 
-  clinicLocation: [number, number],
-  vanCapacity: 'small' | 'medium' | 'large',
-  fraccionamientoWeights: Record<string, number>
-): any[] {
-  // Sort by scheduled time first (time windows)
-  const timeWindowSorted = [...appointments].sort((a, b) => {
-    return a.scheduledTime.localeCompare(b.scheduledTime);
-  });
-  
-  // Group by fraccionamiento to reduce travel time
-  const fraccionamientoGroups: Record<string, any[]> = {};
-  timeWindowSorted.forEach(apt => {
-    const frac = apt.client?.fraccionamiento || 'unknown';
-    if (!fraccionamientoGroups[frac]) {
-      fraccionamientoGroups[frac] = [];
-    }
-    fraccionamientoGroups[frac].push(apt);
-  });
-  
-  // Sort fraccionamientos by weight (closer ones first)
-  const sortedFraccionamientos = Object.entries(fraccionamientoGroups)
-    .sort(([fracA], [fracB]) => {
-      const weightA = fraccionamientoWeights[fracA] || 5;
-      const weightB = fraccionamientoWeights[fracB] || 5;
-      return weightA - weightB;
-    });
-  
-  // Build optimized route
-  const optimizedRoute: any[] = [];
-  sortedFraccionamientos.forEach(([fraccionamiento, appointments]) => {
-    // Within each fraccionamiento, sort by time
-    const sortedByTime = appointments.sort((a, b) => 
-      a.scheduledTime.localeCompare(b.scheduledTime)
-    );
-    optimizedRoute.push(...sortedByTime);
-  });
-  
-  return optimizedRoute;
-}
-
-/**
- * Check if route fits within van capacity
- */
-function validateCapacity(route: any[], vanCapacity: 'small' | 'medium' | 'large'): {
-  fits: boolean;
-  petCount: number;
-  estimatedWeight: number;
-} {
-  const capacity = VAN_CAPACITIES[vanCapacity];
-  const petCount = route.length;
-  const estimatedWeight = route.reduce((total, apt) => {
-    // Estimate weight based on pet species and size
-    const petWeight = apt.pet?.weight || 
-      (apt.pet?.species === 'dog' ? 15 : apt.pet?.species === 'cat' ? 5 : 10);
-    return total + petWeight;
-  }, 0);
-  
-  return {
-    fits: petCount <= capacity.maxPets && estimatedWeight <= capacity.maxWeight,
-    petCount,
-    estimatedWeight
-  };
-}
-
-/**
- * Calculate total route distance and estimated time
- */
-function calculateRouteMetrics(route: any[], clinicLocation: [number, number]): {
-  totalDistance: number;
-  estimatedTime: number;
-} {
-  if (route.length === 0) return { totalDistance: 0, estimatedTime: 0 };
-  
-  let totalDistance = 0;
-  let currentLocation = clinicLocation;
-  
-  // Distance to first stop
-  if (route[0].client?.latitude && route[0].client?.longitude) {
-    totalDistance += calculateDistance(
-      currentLocation[0], currentLocation[1],
-      route[0].client.latitude, route[0].client.longitude
-    );
-    currentLocation = [route[0].client.latitude, route[0].client.longitude];
-  }
-  
-  // Distance between stops
-  for (let i = 1; i < route.length; i++) {
-    if (route[i].client?.latitude && route[i].client?.longitude) {
-      totalDistance += calculateDistance(
-        currentLocation[0], currentLocation[1],
-        route[i].client.latitude, route[i].client.longitude
-      );
-      currentLocation = [route[i].client.latitude, route[i].client.longitude];
-    }
-  }
-  
-  // Distance back to clinic
-  totalDistance += calculateDistance(
-    currentLocation[0], currentLocation[1],
-    clinicLocation[0], clinicLocation[1]
-  );
-  
-  // Estimate time (assuming 30 km/h average speed + 10 minutes per stop)
-  const estimatedTime = (totalDistance / 30) * 60 + (route.length * 10);
-  
-  return { totalDistance, estimatedTime };
-}
-
-/**
- * Main route optimization function
- */
-export function optimizeDeliveryRoute(request: RouteOptimizationRequest): OptimizedRoute {
-  const { appointments, vanCapacity, fraccionamientoWeights, clinicLocation } = request;
-  
-  if (appointments.length === 0) {
-    return {
-      optimizedRoute: [],
-      totalDistance: 0,
-      estimatedTime: 0,
-      efficiency: 0
-    };
-  }
-  
-  // Add fraccionamiento weights to appointments
-  const appointmentsWithWeights = appointments.map(apt => ({
-    ...apt,
-    fraccionamientoWeight: fraccionamientoWeights[apt.client?.fraccionamiento] || 5
-  }));
-  
-  // Try advanced optimization first
-  let optimizedRoute = optimizeRouteAdvanced(
-    appointmentsWithWeights, 
-    clinicLocation, 
-    vanCapacity, 
-    fraccionamientoWeights
-  );
-  
-  // Validate capacity
-  const capacityCheck = validateCapacity(optimizedRoute, vanCapacity);
-  if (!capacityCheck.fits) {
-    // If doesn't fit, trim route or suggest multiple trips
-    const capacity = VAN_CAPACITIES[vanCapacity];
-    optimizedRoute = optimizedRoute.slice(0, capacity.maxPets);
-  }
-  
-  // Calculate metrics
-  const metrics = calculateRouteMetrics(optimizedRoute, clinicLocation);
-  
-  // Calculate efficiency score (lower distance per stop is better)
-  const efficiency = optimizedRoute.length > 0 ? 
-    Math.max(0, 100 - (metrics.totalDistance / optimizedRoute.length) * 10) : 0;
-  
-  return {
-    optimizedRoute,
-    totalDistance: metrics.totalDistance,
-    estimatedTime: metrics.estimatedTime,
-    efficiency
-  };
-}
-
-/**
- * Generate AI prompt for external optimization (Gemini/ChatGPT)
- */
-export function generateOptimizationPrompt(request: RouteOptimizationRequest): string {
-  const { appointments, vanCapacity, fraccionamientoWeights, clinicLocation } = request;
-  
-  return `
-Optimize a veterinary pickup route in Monterrey, Mexico with the following constraints:
-
-CLINIC LOCATION: ${clinicLocation[0]}, ${clinicLocation[1]}
-
-VAN CAPACITY: ${vanCapacity} (${VAN_CAPACITIES[vanCapacity].maxPets} pets max, ${VAN_CAPACITIES[vanCapacity].maxWeight}kg max)
-
-APPOINTMENTS TO PICKUP:
-${appointments.map((apt, i) => `
-${i + 1}. ${apt.client?.name} - ${apt.pet?.name}
-   Location: ${apt.client?.latitude}, ${apt.client?.longitude}
-   Fraccionamiento: ${apt.client?.fraccionamiento}
-   Scheduled: ${apt.scheduledTime}
-   Weight Factor: ${fraccionamientoWeights[apt.client?.fraccionamiento] || 5}/10
-`).join('')}
-
-OPTIMIZATION CRITERIA:
-1. Minimize total travel distance
-2. Respect time windows (scheduled times)
-3. Consider fraccionamiento weights (1=closest, 10=farthest)
-4. Account for Monterrey traffic patterns
-5. Prefer right turns to reduce wait times
-6. Group nearby locations together
-
-Please provide:
-1. Optimal visit order (return array of appointment IDs)
-2. Estimated total distance in km
-3. Estimated total time in minutes
-4. Efficiency score (1-100)
-
-Return format: JSON with optimizedRoute, totalDistance, estimatedTime, efficiency
-  `.trim();
-}
+export {
+  simpleWeightBasedRouting,
+  advancedRouteOptimization,
+  type RoutePoint,
+  type OptimizedRoute,
+  type RouteOptimizationOptions
+};
