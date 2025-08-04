@@ -120,7 +120,7 @@ export function HourlyAppointmentList() {
   }
 
   return (
-    <Card className="shadow-lg h-96 flex flex-col">
+    <Card className="shadow-lg h-[600px] flex flex-col">
         <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold flex items-center">
