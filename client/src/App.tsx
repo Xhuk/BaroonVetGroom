@@ -38,13 +38,18 @@ import AdminExternalServices from "@/pages/AdminExternalServices";
 
 import WebhookIntegrations from "@/pages/WebhookIntegrations";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
+import { PageLoader } from "@/components/LoadingSpinner";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  if (isLoading) {
+    return <PageLoader text="Iniciando sesión..." />;
+  }
+
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
+      {!isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
           <Route path="/plans" component={SubscriptionLanding} />

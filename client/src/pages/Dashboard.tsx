@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, History, Truck, Phone, CalendarIcon } from "lucide-react";
 import { Link } from "wouter";
+import { PageLoader } from "@/components/LoadingSpinner";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -32,11 +33,7 @@ export default function Dashboard() {
   }, [isAuthenticated, isLoading, toast]);
 
   if (isLoading || tenantLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <PageLoader text="Cargando tablero..." />;
   }
 
   if (!isAuthenticated) {

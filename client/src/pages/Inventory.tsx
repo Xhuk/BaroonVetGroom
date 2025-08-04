@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { InventoryItem, InventoryTransaction } from "@shared/schema";
+import { ComponentLoader } from "@/components/LoadingSpinner";
 
 export default function Inventory() {
   const { currentTenant } = useTenant();
@@ -214,6 +215,10 @@ export default function Inventory() {
 
   const lowStockItems = inventoryItems?.filter(item => item.currentStock <= item.minStockLevel) || [];
   const totalInventoryValue = inventoryItems?.reduce((sum, item) => sum + (item.currentStock * (item.unitPrice || 0)), 0) || 0;
+
+  if (isLoading) {
+    return <ComponentLoader text="Cargando inventario..." />;
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, User, Phone, Mail, MapPin, Heart, Camera, QrCode, History } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client, Pet, Appointment, PetMedia } from "@shared/schema";
+import { ComponentLoader } from "@/components/LoadingSpinner";
 
 export default function Clients() {
   const { currentTenant } = useTenant();
@@ -87,18 +88,7 @@ export default function Clients() {
   });
 
   if (clientsLoading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-blue-800">Clientes y Mascotas</h1>
-        </div>
-        <div className="grid gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 animate-pulse rounded-lg"></div>
-          ))}
-        </div>
-      </div>
-    );
+    return <ComponentLoader text="Cargando clientes..." />;
   }
 
   const handleCreateClient = (e: React.FormEvent<HTMLFormElement>) => {
