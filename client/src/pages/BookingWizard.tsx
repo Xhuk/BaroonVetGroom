@@ -106,6 +106,9 @@ export default function BookingWizard() {
       }));
       setStaffLocations(mockStaffLocations);
     }
+    
+    // Set initial map coordinates to tenant location to show the map
+    setMapCoordinates(tenantLocation);
   }, [staff, tenantLocation]);
 
   // Geocoding function for address with postal code fallback
@@ -493,7 +496,7 @@ export default function BookingWizard() {
               <div className="mt-4">
                 <Label>Mapa inteligente con personal en tiempo real</Label>
                 <div className="border rounded-lg overflow-hidden bg-gray-50">
-                  {(mapCoordinates.lat !== 25.6866 || mapCoordinates.lng !== -100.3161) ? (
+                  {(currentTenant && currentTenant.latitude && currentTenant.longitude) ? (
                     <div>
                       {/* Enhanced Map Container with Custom Markers */}
                       <div className="h-80 relative bg-blue-50 border-b">
