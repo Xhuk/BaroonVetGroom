@@ -34,7 +34,7 @@ export class WebhookMonitor {
       const sameErrorRecently = recentLogs.find(log => 
         log.webhookType === webhookType && 
         log.errorMessage === error.message &&
-        new Date(log.createdAt).getTime() > Date.now() - (5 * 60 * 1000) // Within last 5 minutes
+        log.createdAt && new Date(log.createdAt).getTime() > Date.now() - (5 * 60 * 1000) // Within last 5 minutes
       );
 
       if (sameErrorRecently) {
@@ -162,13 +162,18 @@ export class WebhookMonitor {
   // Test if webhook endpoint is available
   private async testWebhookAvailability(endpoint: string): Promise<boolean> {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
       const response = await fetch(endpoint, {
         method: 'GET',
-        timeout: 5000,
+        signal: controller.signal,
         headers: {
           'User-Agent': 'VetGroom-Webhook-Monitor/1.0'
         }
       });
+      
+      clearTimeout(timeoutId);
       
       // Consider 2xx, 3xx, or 405 (Method Not Allowed) as available
       return response.status < 500 || response.status === 405;
