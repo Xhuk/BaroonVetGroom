@@ -40,6 +40,9 @@ import {
   subscriptionPlans,
   companySubscriptions,
   subscriptionPromotions,
+  taxConfiguration,
+  pendingInvoices,
+  invoiceLineItems,
   type User,
   type UpsertUser,
   type Company,
@@ -111,6 +114,12 @@ import {
   type InsertCompanySubscription,
   type SubscriptionPromotion,
   type InsertSubscriptionPromotion,
+  type TaxConfiguration,
+  type InsertTaxConfiguration,
+  type PendingInvoice,
+  type InsertPendingInvoice,
+  type InvoiceLineItem,
+  type InsertInvoiceLineItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
@@ -278,6 +287,24 @@ export interface IStorage {
   getFollowUpCount(tenantId: string): Promise<number>;
   getCompanyFollowUpConfig(companyId: string): Promise<any>;
   updateCompanyFollowUpConfig(companyId: string, config: any): Promise<any>;
+
+  // Tax configuration operations
+  getTaxConfiguration(tenantId?: string, companyId?: string): Promise<TaxConfiguration | undefined>;
+  upsertTaxConfiguration(config: InsertTaxConfiguration): Promise<TaxConfiguration>;
+  updateTaxConfiguration(id: string, config: Partial<InsertTaxConfiguration>): Promise<TaxConfiguration>;
+
+  // Pending invoices operations
+  getPendingInvoices(tenantId: string): Promise<PendingInvoice[]>;
+  getPendingInvoice(invoiceId: string): Promise<PendingInvoice | undefined>;
+  createPendingInvoice(invoice: InsertPendingInvoice): Promise<PendingInvoice>;
+  updatePendingInvoice(invoiceId: string, invoice: Partial<InsertPendingInvoice>): Promise<PendingInvoice>;
+  generateInvoiceNumber(tenantId: string): Promise<string>;
+
+  // Invoice line items operations
+  getInvoiceLineItems(invoiceId: string): Promise<InvoiceLineItem[]>;
+  createInvoiceLineItem(lineItem: InsertInvoiceLineItem): Promise<InvoiceLineItem>;
+  updateInvoiceLineItem(lineItemId: string, lineItem: Partial<InsertInvoiceLineItem>): Promise<InvoiceLineItem>;
+  deleteInvoiceLineItem(lineItemId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1274,8 +1301,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(userSystemRoles)
       .set({ 
-        isActive: false,
-        updatedAt: new Date()
+        isActive: false
       })
       .where(
         and(
@@ -1772,6 +1798,139 @@ export class DatabaseStorage implements IStorage {
         followUpShowCount: companies.followUpShowCount,
       });
     return updatedCompany;
+  }
+
+  // Tax configuration operations
+  async getTaxConfiguration(tenantId?: string, companyId?: string): Promise<TaxConfiguration | undefined> {
+    if (tenantId) {
+      const [config] = await db
+        .select()
+        .from(taxConfiguration)
+        .where(eq(taxConfiguration.tenantId, tenantId));
+      return config;
+    } else if (companyId) {
+      const [config] = await db
+        .select()
+        .from(taxConfiguration)
+        .where(eq(taxConfiguration.companyId, companyId));
+      return config;
+    }
+    
+    return undefined;
+  }
+
+  async upsertTaxConfiguration(config: InsertTaxConfiguration): Promise<TaxConfiguration> {
+    const [newConfig] = await db
+      .insert(taxConfiguration)
+      .values(config)
+      .onConflictDoUpdate({
+        target: config.tenantId ? taxConfiguration.tenantId : taxConfiguration.companyId,
+        set: {
+          ...config,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return newConfig;
+  }
+
+  async updateTaxConfiguration(id: string, config: Partial<InsertTaxConfiguration>): Promise<TaxConfiguration> {
+    const [updatedConfig] = await db
+      .update(taxConfiguration)
+      .set({ ...config, updatedAt: new Date() })
+      .where(eq(taxConfiguration.id, id))
+      .returning();
+    return updatedConfig;
+  }
+
+  // Pending invoices operations
+  async getPendingInvoices(tenantId: string): Promise<PendingInvoice[]> {
+    return await db
+      .select()
+      .from(pendingInvoices)
+      .where(eq(pendingInvoices.tenantId, tenantId))
+      .orderBy(desc(pendingInvoices.createdAt));
+  }
+
+  async getPendingInvoice(invoiceId: string): Promise<PendingInvoice | undefined> {
+    const [invoice] = await db
+      .select()
+      .from(pendingInvoices)
+      .where(eq(pendingInvoices.id, invoiceId));
+    return invoice;
+  }
+
+  async createPendingInvoice(invoice: InsertPendingInvoice): Promise<PendingInvoice> {
+    const [newInvoice] = await db
+      .insert(pendingInvoices)
+      .values(invoice)
+      .returning();
+    return newInvoice;
+  }
+
+  async updatePendingInvoice(invoiceId: string, invoice: Partial<InsertPendingInvoice>): Promise<PendingInvoice> {
+    const [updatedInvoice] = await db
+      .update(pendingInvoices)
+      .set({ ...invoice, updatedAt: new Date() })
+      .where(eq(pendingInvoices.id, invoiceId))
+      .returning();
+    return updatedInvoice;
+  }
+
+  async generateInvoiceNumber(tenantId: string): Promise<string> {
+    // Get tax configuration for the tenant to get prefix and counter
+    const [config] = await db
+      .select()
+      .from(taxConfiguration)
+      .where(eq(taxConfiguration.tenantId, tenantId));
+    
+    const prefix = config?.invoiceNumberPrefix || "FAC";
+    const counter = config?.invoiceNumberCounter || 1;
+    
+    // Update counter
+    if (config) {
+      await db
+        .update(taxConfiguration)
+        .set({ 
+          invoiceNumberCounter: counter + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(taxConfiguration.id, config.id));
+    }
+    
+    return `${prefix}-${counter.toString().padStart(6, '0')}`;
+  }
+
+  // Invoice line items operations
+  async getInvoiceLineItems(invoiceId: string): Promise<InvoiceLineItem[]> {
+    return await db
+      .select()
+      .from(invoiceLineItems)
+      .where(eq(invoiceLineItems.invoiceId, invoiceId))
+      .orderBy(invoiceLineItems.sortOrder);
+  }
+
+  async createInvoiceLineItem(lineItem: InsertInvoiceLineItem): Promise<InvoiceLineItem> {
+    const [newLineItem] = await db
+      .insert(invoiceLineItems)
+      .values(lineItem)
+      .returning();
+    return newLineItem;
+  }
+
+  async updateInvoiceLineItem(lineItemId: string, lineItem: Partial<InsertInvoiceLineItem>): Promise<InvoiceLineItem> {
+    const [updatedLineItem] = await db
+      .update(invoiceLineItems)
+      .set(lineItem)
+      .where(eq(invoiceLineItems.id, lineItemId))
+      .returning();
+    return updatedLineItem;
+  }
+
+  async deleteInvoiceLineItem(lineItemId: string): Promise<void> {
+    await db
+      .delete(invoiceLineItems)
+      .where(eq(invoiceLineItems.id, lineItemId));
   }
 }
 

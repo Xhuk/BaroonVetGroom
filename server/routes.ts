@@ -2469,6 +2469,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Tax configuration routes
+  app.get('/api/tax-config/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const config = await storage.getTaxConfiguration(tenantId);
+      res.json(config || {
+        tenantId,
+        countryCode: 'MX',
+        vatRate: 16,
+        invoiceNumberPrefix: 'FAC',
+        invoiceNumberCounter: 1,
+        currency: 'MXN'
+      });
+    } catch (error) {
+      console.error("Error fetching tax configuration:", error);
+      res.status(500).json({ message: "Failed to fetch tax configuration" });
+    }
+  });
+
+  app.put('/api/tax-config/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const config = await storage.upsertTaxConfiguration({ 
+        ...req.body, 
+        tenantId 
+      });
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating tax configuration:", error);
+      res.status(500).json({ message: "Failed to update tax configuration" });
+    }
+  });
+
+  // Pending invoices routes
+  app.get('/api/pending-invoices/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const invoices = await storage.getPendingInvoices(tenantId);
+      res.json(invoices);
+    } catch (error) {
+      console.error("Error fetching pending invoices:", error);
+      res.status(500).json({ message: "Failed to fetch pending invoices" });
+    }
+  });
+
+  app.get('/api/pending-invoices/:tenantId/:invoiceId', isAuthenticated, async (req, res) => {
+    try {
+      const { invoiceId } = req.params;
+      const invoice = await storage.getPendingInvoice(invoiceId);
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error fetching pending invoice:", error);
+      res.status(500).json({ message: "Failed to fetch pending invoice" });
+    }
+  });
+
+  app.post('/api/pending-invoices/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      // Generate invoice number
+      const invoiceNumber = await storage.generateInvoiceNumber(tenantId);
+      
+      const invoiceData = { 
+        ...req.body, 
+        tenantId,
+        invoiceNumber
+      };
+      
+      const invoice = await storage.createPendingInvoice(invoiceData);
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error creating pending invoice:", error);
+      res.status(500).json({ message: "Failed to create pending invoice" });
+    }
+  });
+
+  app.put('/api/pending-invoices/:invoiceId', isAuthenticated, async (req, res) => {
+    try {
+      const { invoiceId } = req.params;
+      const invoice = await storage.updatePendingInvoice(invoiceId, req.body);
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error updating pending invoice:", error);
+      res.status(500).json({ message: "Failed to update pending invoice" });
+    }
+  });
+
+  // Invoice line items routes
+  app.get('/api/invoice-line-items/:invoiceId', isAuthenticated, async (req, res) => {
+    try {
+      const { invoiceId } = req.params;
+      const lineItems = await storage.getInvoiceLineItems(invoiceId);
+      res.json(lineItems);
+    } catch (error) {
+      console.error("Error fetching invoice line items:", error);
+      res.status(500).json({ message: "Failed to fetch invoice line items" });
+    }
+  });
+
+  app.post('/api/invoice-line-items/:invoiceId', isAuthenticated, async (req, res) => {
+    try {
+      const { invoiceId } = req.params;
+      const lineItemData = { ...req.body, invoiceId };
+      const lineItem = await storage.createInvoiceLineItem(lineItemData);
+      res.json(lineItem);
+    } catch (error) {
+      console.error("Error creating invoice line item:", error);
+      res.status(500).json({ message: "Failed to create invoice line item" });
+    }
+  });
+
+  app.put('/api/invoice-line-items/:lineItemId', isAuthenticated, async (req, res) => {
+    try {
+      const { lineItemId } = req.params;
+      const lineItem = await storage.updateInvoiceLineItem(lineItemId, req.body);
+      res.json(lineItem);
+    } catch (error) {
+      console.error("Error updating invoice line item:", error);
+      res.status(500).json({ message: "Failed to update invoice line item" });
+    }
+  });
+
+  app.delete('/api/invoice-line-items/:lineItemId', isAuthenticated, async (req, res) => {
+    try {
+      const { lineItemId } = req.params;
+      await storage.deleteInvoiceLineItem(lineItemId);
+      res.json({ message: "Invoice line item deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting invoice line item:", error);
+      res.status(500).json({ message: "Failed to delete invoice line item" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

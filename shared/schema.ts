@@ -867,3 +867,120 @@ export type InsertDeliveryAlert = typeof deliveryAlerts.$inferInsert;
 export type DriverCheckIn = typeof driverCheckIns.$inferSelect;
 export type InsertDriverCheckIn = typeof driverCheckIns.$inferInsert;
 
+// Tax configuration per company/tenant for international support
+export const taxConfiguration = pgTable("tax_configuration", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").references(() => companies.id),
+  tenantId: varchar("tenant_id").references(() => tenants.id),
+  country: varchar("country").notNull().default("Mexico"), // Mexico, USA, Canada, etc.
+  taxName: varchar("tax_name").notNull().default("IVA"), // IVA, VAT, GST, Sales Tax
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).notNull().default("16.00"), // 16% for Mexico IVA
+  isActive: boolean("is_active").default(true),
+  taxId: varchar("tax_id"), // RFC in Mexico, Tax ID in other countries
+  businessName: varchar("business_name").notNull(),
+  businessAddress: text("business_address").notNull(),
+  invoiceNumberPrefix: varchar("invoice_number_prefix").default("FAC"), // FAC, INV, etc.
+  invoiceNumberCounter: integer("invoice_number_counter").default(1),
+  currencyCode: varchar("currency_code").default("MXN"), // MXN, USD, CAD
+  currencySymbol: varchar("currency_symbol").default("$"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Pending invoices system for formal veterinary invoicing
+export const pendingInvoices = pgTable("pending_invoices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  invoiceNumber: varchar("invoice_number").notNull(),
+  clientId: varchar("client_id").notNull().references(() => clients.id),
+  petId: varchar("pet_id").references(() => pets.id),
+  serviceType: varchar("service_type", { enum: ["medical", "grooming", "surgery", "consultation", "vaccination", "emergency", "product"] }).notNull(),
+  serviceId: varchar("service_id").notNull(), // Reference to medical appointment, grooming record, etc.
+  serviceName: varchar("service_name").notNull(),
+  serviceDescription: text("service_description"),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).notNull(),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  itemizedCosts: jsonb("itemized_costs"), // Array of { item, quantity, unitPrice, total }
+  status: varchar("status", { enum: ["pending", "pdf_generated", "sent", "paid", "cancelled", "completed"] }).default("pending"),
+  pdfUrl: varchar("pdf_url"), // URL to generated PDF invoice
+  paymentLinkUrl: text("payment_link_url"), // Payment link for WhatsApp sharing
+  paymentGateway: varchar("payment_gateway", { enum: ["stripe", "mercadopago", "cash"] }),
+  whatsappMessage: text("whatsapp_message"), // Pre-formatted message for WhatsApp
+  generatedBy: varchar("generated_by").notNull().references(() => staff.id),
+  confirmedBy: varchar("confirmed_by").references(() => staff.id),
+  paidAt: timestamp("paid_at"),
+  completedAt: timestamp("completed_at"),
+  dueDate: timestamp("due_date").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Invoice line items for detailed cost breakdown
+export const invoiceLineItems = pgTable("invoice_line_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceId: varchar("invoice_id").notNull().references(() => pendingInvoices.id),
+  itemType: varchar("item_type", { enum: ["service", "medicine", "supply", "consultation", "procedure"] }).notNull(),
+  itemName: varchar("item_name").notNull(),
+  itemDescription: text("item_description"),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull().default("1.00"),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations for the new invoice tables
+export const taxConfigurationRelations = relations(taxConfiguration, ({ one }) => ({
+  company: one(companies, {
+    fields: [taxConfiguration.companyId],
+    references: [companies.id],
+  }),
+  tenant: one(tenants, {
+    fields: [taxConfiguration.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
+export const pendingInvoicesRelations = relations(pendingInvoices, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [pendingInvoices.tenantId],
+    references: [tenants.id],
+  }),
+  client: one(clients, {
+    fields: [pendingInvoices.clientId],
+    references: [clients.id],
+  }),
+  pet: one(pets, {
+    fields: [pendingInvoices.petId],
+    references: [pets.id],
+  }),
+  generatedBy: one(staff, {
+    fields: [pendingInvoices.generatedBy],
+    references: [staff.id],
+  }),
+  confirmedBy: one(staff, {
+    fields: [pendingInvoices.confirmedBy],
+    references: [staff.id],
+  }),
+  lineItems: many(invoiceLineItems),
+}));
+
+export const invoiceLineItemsRelations = relations(invoiceLineItems, ({ one }) => ({
+  invoice: one(pendingInvoices, {
+    fields: [invoiceLineItems.invoiceId],
+    references: [pendingInvoices.id],
+  }),
+}));
+
+// Type exports for invoice system
+export type TaxConfiguration = typeof taxConfiguration.$inferSelect;
+export type InsertTaxConfiguration = typeof taxConfiguration.$inferInsert;
+
+export type PendingInvoice = typeof pendingInvoices.$inferSelect;
+export type InsertPendingInvoice = typeof pendingInvoices.$inferInsert;
+
+export type InvoiceLineItem = typeof invoiceLineItems.$inferSelect;
+export type InsertInvoiceLineItem = typeof invoiceLineItems.$inferInsert;
+
