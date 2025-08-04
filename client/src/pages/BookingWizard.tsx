@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 
 import markerIconPath from "@assets/marker-icon_1754279780257.png";
+import blueMarkerIconPath from "@assets/marker-icon-2x_1754283652982.png";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client, Pet, Service } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
@@ -622,9 +623,11 @@ export default function BookingWizard() {
                                 zIndex: 30
                               }}
                             >
-                              <div className="w-8 h-8 bg-blue-600 rounded-full border-2 border-white drop-shadow-lg flex items-center justify-center">
-                                <div className="w-4 h-4 bg-white rounded-full"></div>
-                              </div>
+                              <img 
+                                src={blueMarkerIconPath} 
+                                alt="Clínica" 
+                                className="w-8 h-8 drop-shadow-lg"
+                              />
                               <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-blue-100 px-3 py-2 rounded shadow text-xs whitespace-nowrap border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <div className="font-semibold">Clínica Veterinaria</div>
                                 <div className="text-blue-600">{currentTenant?.name}</div>
@@ -722,7 +725,7 @@ export default function BookingWizard() {
                             <span>Cliente</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <img src={markerIconPath} alt="" className="w-3 h-3" />
+                            <img src={blueMarkerIconPath} alt="" className="w-3 h-3" />
                             <span>Clínica</span>
                           </div>
                         </div>
