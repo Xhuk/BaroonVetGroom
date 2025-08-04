@@ -14,6 +14,7 @@ export function HourlyAppointmentList() {
   
   // Get today's appointments
   const today = new Date().toISOString().split('T')[0];
+  const currentHour = new Date().getHours().toString().padStart(2, '0');
   
   const { data: appointments = [], isLoading } = useQuery<Appointment[]>({
     queryKey: [`/api/appointments`, currentTenant?.id],
@@ -120,7 +121,7 @@ export function HourlyAppointmentList() {
   }
 
   return (
-    <Card className="shadow-lg h-[600px] flex flex-col">
+    <Card className="shadow-lg h-[520px] flex flex-col">
         <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold flex items-center">
@@ -146,13 +147,18 @@ export function HourlyAppointmentList() {
                                displayHour > 12 ? `${displayHour - 12}:00 PM` : 
                                `${displayHour}:00 AM`;
               
+              const isCurrentHour = hour === currentHour;
+              
               return (
-                <div key={hour} className="border-b border-gray-100 last:border-b-0">
+                <div key={hour} className={`border-b border-gray-100 last:border-b-0 ${isCurrentHour ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''}`}>
                   <div className="flex items-start p-4">
                     {/* Time Column */}
                     <div className="flex items-center w-20 flex-shrink-0">
-                      <Clock className="w-4 h-4 text-gray-500 mr-2" />
-                      <span className="text-sm font-medium text-gray-700">{timeLabel}</span>
+                      <Clock className={`w-4 h-4 mr-2 ${isCurrentHour ? 'text-blue-600' : 'text-gray-500'}`} />
+                      <span className={`text-sm font-medium ${isCurrentHour ? 'text-blue-800 font-bold' : 'text-gray-700'}`}>
+                        {timeLabel}
+                        {isCurrentHour && <span className="ml-1 text-xs text-blue-600">• AHORA</span>}
+                      </span>
                     </div>
                     
                     {/* Appointments Column */}
