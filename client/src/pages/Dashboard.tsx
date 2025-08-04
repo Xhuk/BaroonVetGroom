@@ -85,7 +85,7 @@ export default function Dashboard() {
         </div>
 
         {/* Hourly Appointment List */}
-        <div className="mb-6">
+        <div className="mb-6 px-6">
           <HourlyAppointmentList />
         </div>
       </main>

@@ -120,8 +120,7 @@ export function HourlyAppointmentList() {
   }
 
   return (
-    <div className="px-6">
-      <Card className="shadow-lg h-96 flex flex-col">
+    <Card className="shadow-lg h-96 flex flex-col">
         <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold flex items-center">
@@ -138,7 +137,7 @@ export function HourlyAppointmentList() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0 flex-1">
+        <CardContent className="p-0 flex-1 overflow-hidden">
           <div className="h-full overflow-y-auto">
             {businessHours.map(hour => {
               const hourAppointments = appointmentsByHour[hour] || [];
@@ -239,6 +238,5 @@ export function HourlyAppointmentList() {
           </div>
         </CardContent>
       </Card>
-    </div>
   );
 }
