@@ -22,7 +22,9 @@ import {
   ArrowRight,
   ArrowLeft,
   Users,
-  Navigation
+  Navigation,
+  Plus,
+  Minus
 } from "lucide-react";
 
 import markerIconPath from "@assets/marker-icon_1754279780257.png";
@@ -583,9 +585,37 @@ export default function BookingWizard() {
                           key={`${mapCoordinates.lat}-${mapCoordinates.lng}-${mapDiameterKm}`}
                         />
                         
+                        {/* Zoom Controls */}
+                        <div className="absolute top-2 right-2 flex flex-col gap-1 z-30">
+                          <button
+                            onClick={() => {
+                              if (mapDiameterKm > 1) {
+                                setMapDiameterKm(prev => Math.max(1, prev - 2));
+                              }
+                            }}
+                            className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 rounded flex items-center justify-center text-gray-700 hover:text-gray-900 shadow-sm"
+                            title="Acercar"
+                            data-testid="button-zoom-in"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (mapDiameterKm < 20) {
+                                setMapDiameterKm(prev => Math.min(20, prev + 2));
+                              }
+                            }}
+                            className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 rounded flex items-center justify-center text-gray-700 hover:text-gray-900 shadow-sm"
+                            title="Alejar"
+                            data-testid="button-zoom-out"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                        </div>
+
                         {/* Map navigation instructions */}
                         <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded text-xs text-gray-600">
-                          Arrastra para mover • Rueda para zoom • Clic derecho para ubicar cliente
+                          Arrastra para mover • +/- para zoom • Clic derecho para ubicar cliente
                         </div>
                       </div>
                       
