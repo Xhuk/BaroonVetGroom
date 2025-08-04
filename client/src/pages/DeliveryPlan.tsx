@@ -32,7 +32,20 @@ export default function DeliveryPlan() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showRouteForm, setShowRouteForm] = useState(false);
+  // Generate next 7 days for date selection
+  const generateNext7Days = () => {
+    const days = [];
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      days.push(date.toISOString().split('T')[0]);
+    }
+    return days;
+  };
+
   const [selectedDate, setSelectedDate] = useState("2025-08-25"); // Date with pickup appointments
+  const next7Days = generateNext7Days();
 
   const { data: routes, isLoading } = useQuery<any[]>({
     queryKey: ["/api/delivery-routes", currentTenant?.id, selectedDate],
@@ -165,13 +178,28 @@ export default function DeliveryPlan() {
           </Button>
           <h1 className="text-2xl font-bold text-blue-800">Planificación de Entregas</h1>
         </div>
-        <div className="flex gap-3">
-          <Input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-40"
-          />
+        <div className="flex gap-3 items-center">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Fecha:</label>
+            <select
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+              data-testid="select-delivery-date"
+            >
+              <option value="2025-08-25">25 Ago 2025 (Con datos)</option>
+              {next7Days.map(date => {
+                const dateObj = new Date(date);
+                const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' });
+                const dateStr = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+                return (
+                  <option key={date} value={date}>
+                    {dayName}, {dateStr}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
           <Button 
             onClick={() => setShowRouteForm(true)}
             className="bg-blue-600 hover:bg-blue-700"
@@ -458,7 +486,15 @@ export default function DeliveryPlan() {
                     <Truck className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                     <p>No hay recolecciones programadas para {new Date(selectedDate).toLocaleDateString()}</p>
                     <p className="text-xs mt-2">Total citas: {appointments?.length || 0}</p>
-                    <p className="text-xs">Cambie la fecha para ver las recolecciones disponibles</p>
+                    <p className="text-xs">Pruebe con el 25 de Agosto 2025 o cambie la fecha</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={() => setSelectedDate("2025-08-25")}
+                    >
+                      Ver datos de ejemplo
+                    </Button>
                   </div>
                 )}
               </div>
