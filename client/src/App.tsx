@@ -38,13 +38,13 @@ import AdminExternalServices from "@/pages/AdminExternalServices";
 
 import WebhookIntegrations from "@/pages/WebhookIntegrations";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
-import { PageLoader } from "@/components/LoadingSpinner";
+import { FastPageLoader } from "@/components/FastLoadingSpinner";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <PageLoader text="Iniciando sesión..." />;
+    return <FastPageLoader text="Iniciando sesión..." />;
   }
 
   return (

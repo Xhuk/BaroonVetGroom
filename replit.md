@@ -5,6 +5,7 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics, provi
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+Performance preference: Fast loading over complex UI animations.
 
 # System Architecture
 
@@ -62,3 +63,8 @@ Preferred communication style: Simple, everyday language.
 
 ## Integrations
 - **Messaging**: n8n for WhatsApp API integration (for confirmations/notifications).
+
+## Performance Optimizations
+- **Query Caching**: TanStack Query with stale-time optimization (5-60 minutes based on data type)
+- **Loading States**: Fast, lightweight loading animations instead of complex UI
+- **API Optimization**: Reduced auto-refresh intervals from 30 seconds to 5+ minutes

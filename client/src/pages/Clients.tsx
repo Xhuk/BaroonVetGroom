@@ -27,16 +27,19 @@ export default function Clients() {
   const { data: clients, isLoading: clientsLoading } = useQuery<Client[]>({
     queryKey: ["/api/clients", currentTenant?.id],
     enabled: !!currentTenant?.id,
+    staleTime: 5 * 60 * 1000, // Consider client data fresh for 5 minutes
   });
 
   const { data: pets } = useQuery<Pet[]>({
     queryKey: ["/api/pets", currentTenant?.id],
     enabled: !!currentTenant?.id,
+    staleTime: 10 * 60 * 1000, // Consider pet data fresh for 10 minutes
   });
 
   const { data: appointments } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments", currentTenant?.id],
     enabled: !!currentTenant?.id,
+    staleTime: 5 * 60 * 1000, // Consider appointment data fresh for 5 minutes
   });
 
   const createClientMutation = useMutation({
