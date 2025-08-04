@@ -135,50 +135,59 @@ export default function BookingWizard() {
   // User lookup function
   const lookupUser = async (name: string, phone: string, email: string) => {
     try {
-      const response = await apiRequest(`/api/customers/lookup?name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&email=${encodeURIComponent(email)}`);
-      if (response) {
-        setFoundCustomer(response);
-        
-        // Auto-fill existing customer data
-        setCustomerData(prev => ({
-          ...prev,
-          address: response.address || prev.address,
-          fraccionamiento: response.fraccionamiento || prev.fraccionamiento,
-          postalCode: response.postalCode || prev.postalCode,
-          latitude: response.latitude || prev.latitude,
-          longitude: response.longitude || prev.longitude
-        }));
-        
-        // Handle pets
-        if (response.pets && response.pets.length > 0) {
-          setAvailablePets(response.pets);
-          
-          if (response.pets.length === 1) {
-            // Only one pet, auto-fill
-            const pet = response.pets[0];
-            setPetData(prev => ({
-              ...prev,
-              name: pet.name || prev.name,
-              species: pet.species || prev.species,
-              breed: pet.breed || prev.breed,
-              age: pet.age || prev.age,
-              weight: pet.weight || prev.weight,
-              medicalHistory: pet.medicalHistory || prev.medicalHistory
-            }));
-            setSelectedPetId(pet.id);
-          } else {
-            // Multiple pets, show selection
-            setShowPetSelection(true);
-          }
+      const response = await fetch(`/api/customers/lookup?name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&email=${encodeURIComponent(email)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
         }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data) {
+          setFoundCustomer(data);
         
-        toast({
-          title: "Cliente encontrado",
-          description: response.pets?.length > 1 
-            ? `Cliente existente con ${response.pets.length} mascotas. Selecciona una mascota o agrega una nueva.`
-            : "Se ha autocompletado la información del cliente existente",
-          variant: "default"
-        });
+          // Auto-fill existing customer data
+          setCustomerData(prev => ({
+            ...prev,
+            address: data.address || prev.address,
+            fraccionamiento: data.fraccionamiento || prev.fraccionamiento,
+            postalCode: data.postalCode || prev.postalCode,
+            latitude: data.latitude || prev.latitude,
+            longitude: data.longitude || prev.longitude
+          }));
+          
+          // Handle pets
+          if (data.pets && data.pets.length > 0) {
+            setAvailablePets(data.pets);
+            
+            if (data.pets.length === 1) {
+              // Only one pet, auto-fill
+              const pet = data.pets[0];
+              setPetData(prev => ({
+                ...prev,
+                name: pet.name || prev.name,
+                species: pet.species || prev.species,
+                breed: pet.breed || prev.breed,
+                age: pet.age || prev.age,
+                weight: pet.weight || prev.weight,
+                medicalHistory: pet.medicalHistory || prev.medicalHistory
+              }));
+              setSelectedPetId(pet.id);
+            } else {
+              // Multiple pets, show selection
+              setShowPetSelection(true);
+            }
+          }
+          
+          toast({
+            title: "Cliente encontrado",
+            description: data.pets?.length > 1 
+              ? `Cliente existente con ${data.pets.length} mascotas. Selecciona una mascota o agrega una nueva.`
+              : "Se ha autocompletado la información del cliente existente",
+            variant: "default"
+          });
+        }
       }
     } catch (error) {
       // User not found, continue with new customer flow
