@@ -984,3 +984,64 @@ export type InsertPendingInvoice = typeof pendingInvoices.$inferInsert;
 export type InvoiceLineItem = typeof invoiceLineItems.$inferSelect;
 export type InsertInvoiceLineItem = typeof invoiceLineItems.$inferInsert;
 
+// LateNode Webhook Integration Configuration
+export const webhookIntegrations = pgTable("webhook_integrations", {
+  id: varchar("id", { length: 50 }).primaryKey().$defaultFn(() => `whi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`),
+  companyId: varchar("company_id", { length: 50 }).references(() => companies.id),
+  name: varchar("name", { length: 100 }).notNull(), // e.g., "Payment Reminders", "Delivery Notifications"
+  description: text("description"),
+  webhookType: varchar("webhook_type", { length: 50 }).notNull(), // 'payment_reminder', 'delivery_notification', 'pickup_confirmation', 'general'
+  endpointUrl: varchar("endpoint_url", { length: 500 }).notNull(),
+  apiKey: varchar("api_key", { length: 200 }), // Encrypted API key
+  secretKey: varchar("secret_key", { length: 200 }), // Encrypted secret for webhook validation
+  isActive: boolean("is_active").default(true),
+  headers: jsonb("headers").$type<Record<string, string>>().default({}), // Additional headers
+  retryAttempts: integer("retry_attempts").default(3),
+  timeoutMs: integer("timeout_ms").default(30000),
+  lastUsed: timestamp("last_used"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const webhookIntegrationsRelations = relations(webhookIntegrations, ({ one }) => ({
+  company: one(companies, {
+    fields: [webhookIntegrations.companyId],
+    references: [companies.id],
+  }),
+}));
+
+// Webhook execution logs for monitoring
+export const webhookLogs = pgTable("webhook_logs", {
+  id: varchar("id", { length: 50 }).primaryKey().$defaultFn(() => `whl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`),
+  webhookIntegrationId: varchar("webhook_integration_id", { length: 50 }).references(() => webhookIntegrations.id),
+  tenantId: varchar("tenant_id", { length: 50 }).references(() => tenants.id),
+  triggerType: varchar("trigger_type", { length: 50 }).notNull(), // 'payment_reminder', 'delivery_update', etc.
+  triggerData: jsonb("trigger_data").$type<Record<string, any>>().default({}),
+  requestPayload: jsonb("request_payload").$type<Record<string, any>>().default({}),
+  responseStatus: integer("response_status"),
+  responseBody: text("response_body"),
+  errorMessage: text("error_message"),
+  executionTimeMs: integer("execution_time_ms"),
+  success: boolean("success").default(false),
+  retryCount: integer("retry_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const webhookLogsRelations = relations(webhookLogs, ({ one }) => ({
+  webhookIntegration: one(webhookIntegrations, {
+    fields: [webhookLogs.webhookIntegrationId],
+    references: [webhookIntegrations.id],
+  }),
+  tenant: one(tenants, {
+    fields: [webhookLogs.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
+// Type exports for webhook system
+export type WebhookIntegration = typeof webhookIntegrations.$inferSelect;
+export type InsertWebhookIntegration = typeof webhookIntegrations.$inferInsert;
+
+export type WebhookLog = typeof webhookLogs.$inferSelect;
+export type InsertWebhookLog = typeof webhookLogs.$inferInsert;
+

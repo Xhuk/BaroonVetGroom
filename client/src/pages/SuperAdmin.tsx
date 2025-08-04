@@ -14,7 +14,8 @@ import {
   Plus,
   Settings,
   Activity,
-  Heart
+  Heart,
+  Webhook
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -106,6 +107,13 @@ export default function SuperAdmin() {
                   <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-purple-50 hover:bg-purple-100 border-purple-300">
                     <Shield className="w-5 h-5 text-purple-600" />
                     <span className="text-sm font-medium text-purple-700">RBAC</span>
+                  </Button>
+                </Link>
+
+                <Link href="/superadmin/webhook-integrations" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-green-50 hover:bg-green-100 border-green-300">
+                    <Webhook className="w-5 h-5 text-green-600" />
+                    <span className="text-sm font-medium text-green-700">LateNode</span>
                   </Button>
                 </Link>
               </div>

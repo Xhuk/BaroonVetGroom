@@ -120,6 +120,12 @@ import {
   type InsertPendingInvoice,
   type InvoiceLineItem,
   type InsertInvoiceLineItem,
+  webhookIntegrations,
+  type WebhookIntegration,
+  type InsertWebhookIntegration,
+  webhookLogs,
+  type WebhookLog,
+  type InsertWebhookLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
@@ -1931,6 +1937,121 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(invoiceLineItems)
       .where(eq(invoiceLineItems.id, lineItemId));
+  }
+
+  // LateNode Webhook Integration Methods
+  async getWebhookIntegrations(companyId: string): Promise<WebhookIntegration[]> {
+    return await db
+      .select()
+      .from(webhookIntegrations)
+      .where(eq(webhookIntegrations.companyId, companyId))
+      .orderBy(webhookIntegrations.createdAt);
+  }
+
+  async getWebhookIntegrationsByType(companyId: string, webhookType: string): Promise<WebhookIntegration[]> {
+    return await db
+      .select()
+      .from(webhookIntegrations)
+      .where(
+        and(
+          eq(webhookIntegrations.companyId, companyId),
+          eq(webhookIntegrations.webhookType, webhookType),
+          eq(webhookIntegrations.isActive, true)
+        )
+      );
+  }
+
+  async getWebhookIntegration(integrationId: string): Promise<WebhookIntegration | undefined> {
+    const [integration] = await db
+      .select()
+      .from(webhookIntegrations)
+      .where(eq(webhookIntegrations.id, integrationId));
+    return integration;
+  }
+
+  async createWebhookIntegration(integration: InsertWebhookIntegration): Promise<WebhookIntegration> {
+    const [newIntegration] = await db
+      .insert(webhookIntegrations)
+      .values(integration)
+      .returning();
+    return newIntegration;
+  }
+
+  async updateWebhookIntegration(integrationId: string, integration: Partial<InsertWebhookIntegration>): Promise<WebhookIntegration> {
+    const [updatedIntegration] = await db
+      .update(webhookIntegrations)
+      .set({ ...integration, updatedAt: new Date() })
+      .where(eq(webhookIntegrations.id, integrationId))
+      .returning();
+    return updatedIntegration;
+  }
+
+  async deleteWebhookIntegration(integrationId: string): Promise<void> {
+    await db
+      .delete(webhookIntegrations)
+      .where(eq(webhookIntegrations.id, integrationId));
+  }
+
+  async updateWebhookLastUsed(integrationId: string): Promise<void> {
+    await db
+      .update(webhookIntegrations)
+      .set({ lastUsed: new Date() })
+      .where(eq(webhookIntegrations.id, integrationId));
+  }
+
+  // Webhook Logs Methods
+  async getWebhookLogs(integrationId: string, limit = 50): Promise<WebhookLog[]> {
+    return await db
+      .select()
+      .from(webhookLogs)
+      .where(eq(webhookLogs.webhookIntegrationId, integrationId))
+      .orderBy(desc(webhookLogs.createdAt))
+      .limit(limit);
+  }
+
+  async getWebhookLogsByTenant(tenantId: string, limit = 50): Promise<WebhookLog[]> {
+    return await db
+      .select()
+      .from(webhookLogs)
+      .where(eq(webhookLogs.tenantId, tenantId))
+      .orderBy(desc(webhookLogs.createdAt))
+      .limit(limit);
+  }
+
+  async createWebhookLog(log: InsertWebhookLog): Promise<WebhookLog> {
+    const [newLog] = await db
+      .insert(webhookLogs)
+      .values(log)
+      .returning();
+    return newLog;
+  }
+
+  async getWebhookStats(companyId: string, days = 7): Promise<{
+    totalExecutions: number;
+    successfulExecutions: number;
+    failedExecutions: number;
+    averageResponseTime: number;
+  }> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const stats = await db
+      .select({
+        totalExecutions: count(),
+        successfulExecutions: sql<number>`sum(case when success = true then 1 else 0 end)`,
+        failedExecutions: sql<number>`sum(case when success = false then 1 else 0 end)`,
+        averageResponseTime: sql<number>`avg(execution_time_ms)`
+      })
+      .from(webhookLogs)
+      .innerJoin(webhookIntegrations, eq(webhookLogs.webhookIntegrationId, webhookIntegrations.id))
+      .where(
+        and(
+          eq(webhookIntegrations.companyId, companyId),
+          gte(webhookLogs.createdAt, startDate)
+        )
+      );
+
+    return stats[0] || { totalExecutions: 0, successfulExecutions: 0, failedExecutions: 0, averageResponseTime: 0 };
   }
 }
 

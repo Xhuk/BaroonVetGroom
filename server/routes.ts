@@ -23,6 +23,20 @@ async function isSystemAdmin(req: any): Promise<boolean> {
   }
 }
 
+// Middleware to check super admin access
+const isSuperAdmin = async (req: any, res: any, next: any) => {
+  try {
+    const hasAccess = await isSystemAdmin(req);
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Super admin access required" });
+    }
+    next();
+  } catch (error) {
+    console.error('Error in super admin middleware:', error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -2603,6 +2617,166 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting invoice line item:", error);
       res.status(500).json({ message: "Failed to delete invoice line item" });
+    }
+  });
+
+  // LateNode Webhook Integration API Routes
+  app.get('/api/webhook-integrations/:companyId', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const integrations = await storage.getWebhookIntegrations(companyId);
+      res.json(integrations);
+    } catch (error) {
+      console.error("Error fetching webhook integrations:", error);
+      res.status(500).json({ message: "Failed to fetch webhook integrations" });
+    }
+  });
+
+  app.get('/api/webhook-integrations/:companyId/type/:webhookType', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId, webhookType } = req.params;
+      const integrations = await storage.getWebhookIntegrationsByType(companyId, webhookType);
+      res.json(integrations);
+    } catch (error) {
+      console.error("Error fetching webhook integrations by type:", error);
+      res.status(500).json({ message: "Failed to fetch webhook integrations" });
+    }
+  });
+
+  app.post('/api/webhook-integrations/:companyId', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const integrationData = { ...req.body, companyId };
+      const integration = await storage.createWebhookIntegration(integrationData);
+      res.json(integration);
+    } catch (error) {
+      console.error("Error creating webhook integration:", error);
+      res.status(500).json({ message: "Failed to create webhook integration" });
+    }
+  });
+
+  app.put('/api/webhook-integrations/:integrationId', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { integrationId } = req.params;
+      const integration = await storage.updateWebhookIntegration(integrationId, req.body);
+      res.json(integration);
+    } catch (error) {
+      console.error("Error updating webhook integration:", error);
+      res.status(500).json({ message: "Failed to update webhook integration" });
+    }
+  });
+
+  app.delete('/api/webhook-integrations/:integrationId', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { integrationId } = req.params;
+      await storage.deleteWebhookIntegration(integrationId);
+      res.json({ message: "Webhook integration deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting webhook integration:", error);
+      res.status(500).json({ message: "Failed to delete webhook integration" });
+    }
+  });
+
+  // Webhook Logs API
+  app.get('/api/webhook-logs/:integrationId', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { integrationId } = req.params;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const logs = await storage.getWebhookLogs(integrationId, limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching webhook logs:", error);
+      res.status(500).json({ message: "Failed to fetch webhook logs" });
+    }
+  });
+
+  app.get('/api/webhook-logs/tenant/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const logs = await storage.getWebhookLogsByTenant(tenantId, limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching webhook logs for tenant:", error);
+      res.status(500).json({ message: "Failed to fetch webhook logs" });
+    }
+  });
+
+  app.get('/api/webhook-stats/:companyId', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const days = parseInt(req.query.days as string) || 7;
+      const stats = await storage.getWebhookStats(companyId, days);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching webhook stats:", error);
+      res.status(500).json({ message: "Failed to fetch webhook stats" });
+    }
+  });
+
+  // Webhook Test Endpoint for Super Admin
+  app.post('/api/webhook-integrations/:integrationId/test', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { integrationId } = req.params;
+      const integration = await storage.getWebhookIntegration(integrationId);
+      
+      if (!integration) {
+        return res.status(404).json({ message: "Webhook integration not found" });
+      }
+
+      const testPayload = {
+        test: true,
+        timestamp: new Date().toISOString(),
+        data: req.body || { message: "Test webhook from VetGroom Super Admin" }
+      };
+
+      const startTime = Date.now();
+      const response = await fetch(integration.endpointUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(integration.headers || {}),
+          ...(integration.apiKey ? { 'Authorization': `Bearer ${integration.apiKey}` } : {})
+        },
+        body: JSON.stringify(testPayload),
+        signal: AbortSignal.timeout(integration.timeoutMs || 30000)
+      });
+
+      const executionTime = Date.now() - startTime;
+      const responseText = await response.text();
+
+      // Log the test execution
+      await storage.createWebhookLog({
+        webhookIntegrationId: integrationId,
+        tenantId: null, // Test logs don't belong to specific tenants
+        triggerType: 'test',
+        triggerData: testPayload,
+        requestPayload: testPayload,
+        responseStatus: response.status,
+        responseBody: responseText,
+        executionTimeMs: executionTime,
+        success: response.ok,
+        retryCount: 0
+      });
+
+      // Update last used timestamp
+      await storage.updateWebhookLastUsed(integrationId);
+
+      res.json({
+        success: response.ok,
+        status: response.status,
+        executionTime,
+        response: responseText,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error("Error testing webhook:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to test webhook",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
