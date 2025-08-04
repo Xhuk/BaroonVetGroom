@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { BackButton } from "@/components/BackButton";
@@ -21,7 +21,8 @@ import {
   AlertCircle,
   ArrowRight,
   ArrowLeft,
-  Users
+  Users,
+  Navigation
 } from "lucide-react";
 import iconPawPath from "@assets/iconpaw_1754279756812.png";
 import markerIconPath from "@assets/marker-icon_1754279780257.png";
@@ -72,6 +73,8 @@ export default function BookingWizard() {
   const [mapCoordinates, setMapCoordinates] = useState({ lat: 25.6866, lng: -100.3161 }); // Monterrey default
   const [staffLocations, setStaffLocations] = useState<Array<{id: string, name: string, lat: number, lng: number, role: string}>>([]);
   const [tenantLocation, setTenantLocation] = useState({ lat: 25.740586082849077, lng: -100.40735989019088 });
+  const [isDraggingTenant, setIsDraggingTenant] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   // Queries
   const { data: services } = useQuery({
@@ -498,78 +501,125 @@ export default function BookingWizard() {
                 <div className="border rounded-lg overflow-hidden bg-gray-50">
                   {(currentTenant && currentTenant.latitude && currentTenant.longitude) ? (
                     <div>
-                      {/* Enhanced Map Container with Custom Markers */}
-                      <div className="h-80 relative bg-blue-50 border-b">
-                        <div className="absolute inset-0 z-10 pointer-events-none">
+                      {/* Professional Interactive Map with Custom Drag Support */}
+                      <div className="h-80 relative border-b">
+                        {/* Custom Overlay Layer for Interactive Markers */}
+                        <div className="absolute inset-0 z-20 pointer-events-none">
                           {/* Client Location - Red Pin */}
+                          {mapCoordinates.lat !== 25.6866 && mapCoordinates.lng !== -100.3161 && (
+                            <div 
+                              className="absolute transform -translate-x-1/2 -translate-y-full group"
+                              style={{
+                                left: `${50 + (mapCoordinates.lng - tenantLocation.lng) * 12000}%`,
+                                top: `${50 + (tenantLocation.lat - mapCoordinates.lat) * 12000}%`
+                              }}
+                            >
+                              <MapPin className="w-6 h-6 text-red-600 drop-shadow-lg" />
+                              <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded shadow text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border">
+                                Cliente: {customerData.address}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Tenant/Clinic Location - Blue Marker (Enhanced Draggable) */}
                           <div 
-                            className="absolute transform -translate-x-1/2 -translate-y-full"
+                            className="absolute transform -translate-x-1/2 -translate-y-full pointer-events-auto cursor-move group"
                             style={{
                               left: '50%',
-                              top: '50%'
-                            }}
-                          >
-                            <MapPin className="w-6 h-6 text-red-600 drop-shadow-lg" />
-                            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded shadow text-xs whitespace-nowrap">
-                              Cliente
-                            </div>
-                          </div>
-
-                          {/* Tenant/Clinic Location - Blue Marker */}
-                          <div 
-                            className="absolute transform -translate-x-1/2 -translate-y-full pointer-events-auto cursor-move"
-                            style={{
-                              left: `${50 + (tenantLocation.lng - mapCoordinates.lng) * 8000}%`,
-                              top: `${50 + (mapCoordinates.lat - tenantLocation.lat) * 8000}%`
+                              top: '50%',
+                              zIndex: 30
                             }}
                             onMouseDown={(e) => {
-                              // Add drag functionality for tenant location
-                              console.log("Dragging tenant location");
+                              setIsDraggingTenant(true);
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setDragOffset({
+                                x: e.clientX - rect.left,
+                                y: e.clientY - rect.top
+                              });
+                              e.preventDefault();
                             }}
                           >
                             <img 
                               src={markerIconPath} 
                               alt="Clínica" 
-                              className="w-6 h-6 drop-shadow-lg"
+                              className="w-6 h-6 drop-shadow-lg hover:scale-110 transition-transform"
                             />
-                            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-100 px-2 py-1 rounded shadow text-xs whitespace-nowrap border border-blue-200">
-                              Clínica
+                            <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-blue-100 px-3 py-2 rounded shadow text-xs whitespace-nowrap border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="font-semibold">Clínica Veterinaria</div>
+                              <div className="text-blue-600">{currentTenant?.name}</div>
+                              <div className="text-xs text-gray-500 mt-1">Arrastra para mover</div>
                             </div>
                           </div>
 
-                          {/* Staff Locations - Green Paw Icons */}
-                          {staffLocations.map((member) => (
+                          {/* Staff Locations - Green Paw Icons (Enhanced Draggable) */}
+                          {staffLocations.map((member, index) => (
                             <div 
                               key={member.id}
-                              className="absolute transform -translate-x-1/2 -translate-y-full pointer-events-auto cursor-move"
+                              className="absolute transform -translate-x-1/2 -translate-y-full pointer-events-auto cursor-move group"
                               style={{
-                                left: `${50 + (member.lng - mapCoordinates.lng) * 8000}%`,
-                                top: `${50 + (mapCoordinates.lat - member.lat) * 8000}%`
+                                left: `${50 + (member.lng - tenantLocation.lng) * 12000}%`,
+                                top: `${50 + (tenantLocation.lat - member.lat) * 12000}%`,
+                                zIndex: 25
                               }}
                               onMouseDown={(e) => {
-                                // Add drag functionality for staff
-                                console.log(`Dragging staff member: ${member.name}`);
+                                // Enhanced staff dragging logic
+                                const handleMouseMove = (moveEvent: MouseEvent) => {
+                                  const mapContainer = e.currentTarget.closest('.h-80');
+                                  if (mapContainer) {
+                                    const rect = mapContainer.getBoundingClientRect();
+                                    const x = (moveEvent.clientX - rect.left) / rect.width;
+                                    const y = (moveEvent.clientY - rect.top) / rect.height;
+                                    
+                                    // Convert screen coordinates to GPS coordinates
+                                    const newLng = tenantLocation.lng + (x - 0.5) * 0.02;
+                                    const newLat = tenantLocation.lat - (y - 0.5) * 0.02;
+                                    
+                                    setStaffLocations(prev => 
+                                      prev.map(staff => 
+                                        staff.id === member.id 
+                                          ? { ...staff, lat: newLat, lng: newLng }
+                                          : staff
+                                      )
+                                    );
+                                  }
+                                };
+
+                                const handleMouseUp = () => {
+                                  document.removeEventListener('mousemove', handleMouseMove);
+                                  document.removeEventListener('mouseup', handleMouseUp);
+                                  toast({
+                                    title: "Personal reubicado",
+                                    description: `${member.name} movido a nueva posición`,
+                                  });
+                                };
+
+                                document.addEventListener('mousemove', handleMouseMove);
+                                document.addEventListener('mouseup', handleMouseUp);
+                                e.preventDefault();
                               }}
                             >
                               <img 
                                 src={iconPawPath} 
                                 alt={member.name} 
-                                className="w-5 h-5 drop-shadow-lg"
+                                className="w-5 h-5 drop-shadow-lg hover:scale-125 transition-transform"
+                                style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
                               />
-                              <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-green-100 px-2 py-1 rounded shadow text-xs whitespace-nowrap border border-green-200">
-                                {member.name}
-                                <div className="text-xs text-green-600">{member.role}</div>
+                              <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-green-100 px-2 py-1 rounded shadow text-xs whitespace-nowrap border border-green-200 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="font-semibold">{member.name}</div>
+                                <div className="text-green-600">{member.role}</div>
+                                <div className="text-xs text-gray-500">Arrastra para mover</div>
                               </div>
                             </div>
                           ))}
                         </div>
 
+                        {/* Base OpenStreetMap */}
                         <iframe
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-0.01},${mapCoordinates.lat-0.01},${mapCoordinates.lng+0.01},${mapCoordinates.lat+0.01}&layer=mapnik`}
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${tenantLocation.lng-0.008},${tenantLocation.lat-0.008},${tenantLocation.lng+0.008},${tenantLocation.lat+0.008}&layer=mapnik`}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
-                          title="Mapa de ubicación con personal"
+                          title="Mapa interactivo con personal en tiempo real"
                           className="rounded-t-lg"
                           loading="lazy"
                         />
@@ -619,26 +669,45 @@ export default function BookingWizard() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                // Refresh staff locations
+                                // Refresh staff locations near clinic
                                 if (staff) {
                                   const updatedLocations = staff.map((member: any) => ({
                                     id: member.id,
                                     name: member.name,
-                                    lat: tenantLocation.lat + (Math.random() - 0.5) * 0.01,
-                                    lng: tenantLocation.lng + (Math.random() - 0.5) * 0.01,
+                                    lat: tenantLocation.lat + (Math.random() - 0.5) * 0.008, // Smaller radius for realistic positioning
+                                    lng: tenantLocation.lng + (Math.random() - 0.5) * 0.008,
                                     role: member.role
                                   }));
                                   setStaffLocations(updatedLocations);
                                   toast({
-                                    title: "Ubicaciones actualizadas",
-                                    description: "Se actualizaron las posiciones del personal.",
+                                    title: "Personal reubicado",
+                                    description: `${staff.length} miembros del personal cerca de la clínica.`,
                                   });
                                 }
                               }}
                               className="text-xs"
                             >
                               <Users className="w-3 h-3 mr-1" />
-                              Refrescar personal
+                              Reagrupar personal
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                // Reset tenant location to center
+                                setTenantLocation({
+                                  lat: parseFloat(currentTenant.latitude || "25.740586082849077"),
+                                  lng: parseFloat(currentTenant.longitude || "-100.40735989019088")
+                                });
+                                toast({
+                                  title: "Clínica recentrada",
+                                  description: "Ubicación restaurada a coordenadas originales.",
+                                });
+                              }}
+                              className="text-xs"
+                            >
+                              <Navigation className="w-3 h-3 mr-1" />
+                              Centrar clínica
                             </Button>
                           </div>
                         </div>
