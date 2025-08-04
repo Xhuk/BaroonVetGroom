@@ -2780,6 +2780,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // External Services API Endpoints
+  
+  // Get all external service subscriptions for a company (Super Admin only)
+  app.get('/api/external-services/:companyId', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const subscriptions = await storage.getExternalServiceSubscriptions(companyId);
+      res.json(subscriptions);
+    } catch (error) {
+      console.error("Error fetching external service subscriptions:", error);
+      res.status(500).json({ message: "Failed to fetch external service subscriptions" });
+    }
+  });
+
+  // Create or update external service subscription (Super Admin only)
+  app.post('/api/external-services/:companyId/subscription', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const subscriptionData = { ...req.body, companyId };
+      const subscription = await storage.createExternalServiceSubscription(subscriptionData);
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error creating external service subscription:", error);
+      res.status(500).json({ message: "Failed to create external service subscription" });
+    }
+  });
+
+  // Update subscription credits (Super Admin only)
+  app.put('/api/external-services/:subscriptionId/credits', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { subscriptionId } = req.params;
+      const { creditsToAdd, blocksPurchased } = req.body;
+      
+      const subscription = await storage.addExternalServiceCredits(subscriptionId, creditsToAdd, blocksPurchased);
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error adding external service credits:", error);
+      res.status(500).json({ message: "Failed to add external service credits" });
+    }
+  });
+
+  // Get WhatsApp usage statistics for a company
+  app.get('/api/external-services/:companyId/whatsapp-usage', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const { startDate, endDate } = req.query;
+      
+      const usage = await storage.getWhatsAppUsageStats(companyId, startDate as string, endDate as string);
+      res.json(usage);
+    } catch (error) {
+      console.error("Error fetching WhatsApp usage:", error);
+      res.status(500).json({ message: "Failed to fetch WhatsApp usage statistics" });
+    }
+  });
+
+  // Record WhatsApp message usage
+  app.post('/api/external-services/:companyId/whatsapp-usage', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const { tenantId, messageType, messageCount, triggerType, businessHours } = req.body;
+      
+      const usage = await storage.recordWhatsAppUsage({
+        companyId,
+        tenantId,
+        messageType,
+        messageCount: messageCount || 1,
+        triggerType,
+        businessHours: businessHours !== false
+      });
+      
+      res.json(usage);
+    } catch (error) {
+      console.error("Error recording WhatsApp usage:", error);
+      res.status(500).json({ message: "Failed to record WhatsApp usage" });
+    }
+  });
+
+  // Get external service subscription status for a company (tenant access)
+  app.get('/api/external-services/status/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      
+      // Get WhatsApp subscription status
+      const whatsappSubscription = await storage.getExternalServiceSubscriptionByType(companyId, 'whatsapp');
+      
+      res.json({
+        whatsapp: {
+          enabled: whatsappSubscription?.subscriptionStatus === 'active',
+          creditsRemaining: whatsappSubscription?.creditsRemaining || 0,
+          lowCreditAlert: (whatsappSubscription?.creditsRemaining || 0) <= (whatsappSubscription?.lowCreditThreshold || 100)
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching external service status:", error);
+      res.status(500).json({ message: "Failed to fetch external service status" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

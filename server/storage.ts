@@ -311,6 +311,14 @@ export interface IStorage {
   createInvoiceLineItem(lineItem: InsertInvoiceLineItem): Promise<InvoiceLineItem>;
   updateInvoiceLineItem(lineItemId: string, lineItem: Partial<InsertInvoiceLineItem>): Promise<InvoiceLineItem>;
   deleteInvoiceLineItem(lineItemId: string): Promise<void>;
+
+  // External Services operations
+  getExternalServiceSubscriptions(companyId: string): Promise<any[]>;
+  createExternalServiceSubscription(subscription: any): Promise<any>;
+  addExternalServiceCredits(subscriptionId: string, creditsToAdd: number, blocksPurchased: number): Promise<any>;
+  getWhatsAppUsageStats(companyId: string, startDate?: string, endDate?: string): Promise<any>;
+  recordWhatsAppUsage(usage: any): Promise<any>;
+  getExternalServiceSubscriptionByType(companyId: string, serviceType: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2052,6 +2060,110 @@ export class DatabaseStorage implements IStorage {
       );
 
     return stats[0] || { totalExecutions: 0, successfulExecutions: 0, failedExecutions: 0, averageResponseTime: 0 };
+  }
+
+  // External Services Methods
+  async getExternalServiceSubscriptions(companyId: string): Promise<any[]> {
+    const subscriptions = await db.execute(sql`
+      SELECT * FROM external_service_subscriptions 
+      WHERE company_id = ${companyId}
+      ORDER BY created_at DESC
+    `);
+    return subscriptions.rows;
+  }
+
+  async createExternalServiceSubscription(subscription: any): Promise<any> {
+    const { companyId, serviceName, serviceType, creditsTotal, pricePerBlock, blockSize, settings } = subscription;
+    
+    const result = await db.execute(sql`
+      INSERT INTO external_service_subscriptions 
+      (company_id, service_name, service_type, subscription_status, credits_remaining, credits_total, 
+       price_per_block, block_size, settings, last_refill_date)
+      VALUES (${companyId}, ${serviceName}, ${serviceType}, 'active', ${creditsTotal}, ${creditsTotal}, 
+              ${pricePerBlock}, ${blockSize}, ${JSON.stringify(settings || {})}, NOW())
+      RETURNING *
+    `);
+    
+    return result.rows[0];
+  }
+
+  async addExternalServiceCredits(subscriptionId: string, creditsToAdd: number, blocksPurchased: number): Promise<any> {
+    const result = await db.execute(sql`
+      UPDATE external_service_subscriptions 
+      SET credits_remaining = credits_remaining + ${creditsToAdd},
+          credits_total = credits_total + ${creditsToAdd},
+          last_refill_date = NOW(),
+          updated_at = NOW()
+      WHERE id = ${subscriptionId}
+      RETURNING *
+    `);
+    
+    return result.rows[0];
+  }
+
+  async getWhatsAppUsageStats(companyId: string, startDate?: string, endDate?: string): Promise<any> {
+    let dateCondition = sql`usage_date >= NOW() - INTERVAL '30 days'`; // Default to last 30 days
+    if (startDate && endDate) {
+      dateCondition = sql`usage_date BETWEEN ${startDate} AND ${endDate}`;
+    } else if (startDate) {
+      dateCondition = sql`usage_date >= ${startDate}`;
+    }
+
+    const usage = await db.execute(sql`
+      SELECT 
+        SUM(message_count) as total_messages,
+        SUM(total_cost) as total_cost,
+        COUNT(DISTINCT usage_date) as active_days,
+        message_type,
+        business_hours
+      FROM whatsapp_message_usage 
+      WHERE company_id = ${companyId} AND ${dateCondition}
+      GROUP BY message_type, business_hours
+      ORDER BY total_messages DESC
+    `);
+
+    return usage.rows;
+  }
+
+  async recordWhatsAppUsage(usage: any): Promise<any> {
+    const { companyId, tenantId, messageType, messageCount, triggerType, businessHours } = usage;
+    const costPerMessage = 0.0299; // Based on LateNode pricing
+    const totalCost = messageCount * costPerMessage;
+
+    const result = await db.execute(sql`
+      INSERT INTO whatsapp_message_usage 
+      (company_id, tenant_id, message_type, message_count, trigger_type, 
+       cost_per_message, total_cost, business_hours)
+      VALUES (${companyId}, ${tenantId}, ${messageType}, ${messageCount}, ${triggerType},
+              ${costPerMessage}, ${totalCost}, ${businessHours})
+      RETURNING *
+    `);
+
+    // Deduct credits from subscription
+    if (businessHours) {
+      await db.execute(sql`
+        UPDATE external_service_subscriptions 
+        SET credits_remaining = credits_remaining - ${messageCount},
+            usage_this_period = usage_this_period + ${messageCount},
+            updated_at = NOW()
+        WHERE company_id = ${companyId} 
+        AND service_type = 'whatsapp' 
+        AND subscription_status = 'active'
+      `);
+    }
+
+    return result.rows[0];
+  }
+
+  async getExternalServiceSubscriptionByType(companyId: string, serviceType: string): Promise<any> {
+    const result = await db.execute(sql`
+      SELECT * FROM external_service_subscriptions 
+      WHERE company_id = ${companyId} AND service_type = ${serviceType}
+      ORDER BY created_at DESC
+      LIMIT 1
+    `);
+    
+    return result.rows[0];
   }
 }
 

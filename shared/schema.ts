@@ -53,6 +53,13 @@ export const companies = pgTable("companies", {
   followUpUrgentThreshold: integer("follow_up_urgent_threshold").default(20), // Fast heart beat when count >= this
   followUpHeartBeatEnabled: boolean("follow_up_heart_beat_enabled").default(true), // Enable/disable beating heart
   followUpShowCount: boolean("follow_up_show_count").default(true), // Show count badge
+  // WhatsApp External Service Settings
+  whatsappEnabled: boolean("whatsapp_enabled").default(false), // WhatsApp service enabled
+  whatsappMessageCredits: integer("whatsapp_message_credits").default(0), // Available message credits
+  whatsappPricePerBlock: decimal("whatsapp_price_per_block", { precision: 10, scale: 2 }).default("29.99"), // Price per 1000 messages
+  whatsappSubscriptionStatus: varchar("whatsapp_subscription_status").default("inactive"), // active, inactive, suspended
+  whatsappLastRefill: timestamp("whatsapp_last_refill"),
+  whatsappUsedMessages: integer("whatsapp_used_messages").default(0), // Messages used this period
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -1044,4 +1051,65 @@ export type InsertWebhookIntegration = typeof webhookIntegrations.$inferInsert;
 
 export type WebhookLog = typeof webhookLogs.$inferSelect;
 export type InsertWebhookLog = typeof webhookLogs.$inferInsert;
+
+// WhatsApp message usage tracking
+export const whatsappMessageUsage = pgTable("whatsapp_message_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  tenantId: varchar("tenant_id").references(() => tenants.id), // null for company-wide usage
+  messageType: varchar("message_type").notNull(), // 'outbound', 'inbound'
+  messageCount: integer("message_count").notNull().default(1),
+  triggerType: varchar("trigger_type"), // 'payment_reminder', 'appointment_confirmation', etc.
+  costPerMessage: decimal("cost_per_message", { precision: 10, scale: 4 }).default("0.0299"), // Based on LateNode costs
+  totalCost: decimal("total_cost", { precision: 10, scale: 2 }),
+  usageDate: date("usage_date").notNull().default(sql`CURRENT_DATE`),
+  businessHours: boolean("business_hours").default(true), // Affects pricing
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const whatsappMessageUsageRelations = relations(whatsappMessageUsage, ({ one }) => ({
+  company: one(companies, {
+    fields: [whatsappMessageUsage.companyId],
+    references: [companies.id],
+  }),
+  tenant: one(tenants, {
+    fields: [whatsappMessageUsage.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
+// External service subscriptions for companies
+export const externalServiceSubscriptions = pgTable("external_service_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  serviceName: varchar("service_name").notNull(), // 'whatsapp', 'email', 'sms'
+  serviceType: varchar("service_type").notNull(), // 'communication', 'analytics', 'integration'
+  subscriptionStatus: varchar("subscription_status").default("inactive"), // active, inactive, suspended
+  creditsRemaining: integer("credits_remaining").default(0),
+  creditsTotal: integer("credits_total").default(0),
+  pricePerBlock: decimal("price_per_block", { precision: 10, scale: 2 }).default("29.99"),
+  blockSize: integer("block_size").default(1000), // Messages per block
+  autoRefill: boolean("auto_refill").default(false),
+  lowCreditThreshold: integer("low_credit_threshold").default(100), // Warning threshold
+  lastRefillDate: timestamp("last_refill_date"),
+  nextBillingDate: timestamp("next_billing_date"),
+  usageThisPeriod: integer("usage_this_period").default(0),
+  settings: jsonb("settings"), // Service-specific configuration
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const externalServiceSubscriptionsRelations = relations(externalServiceSubscriptions, ({ one }) => ({
+  company: one(companies, {
+    fields: [externalServiceSubscriptions.companyId],
+    references: [companies.id],
+  }),
+}));
+
+// Type exports for external services
+export type WhatsappMessageUsage = typeof whatsappMessageUsage.$inferSelect;
+export type InsertWhatsappMessageUsage = typeof whatsappMessageUsage.$inferInsert;
+
+export type ExternalServiceSubscription = typeof externalServiceSubscriptions.$inferSelect;
+export type InsertExternalServiceSubscription = typeof externalServiceSubscriptions.$inferInsert;
 

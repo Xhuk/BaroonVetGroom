@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, MapPin, Users, Clock } from "lucide-react";
+import { Settings, MapPin, Users, Clock, MessageSquare, ExternalLink } from "lucide-react";
 
 export default function AdminSettings() {
   const { currentTenant } = useTenant();
@@ -37,6 +37,54 @@ export default function AdminSettings() {
           <Settings className="h-6 w-6" />
           <h1 className="text-2xl font-bold">Configuración de Administrador</h1>
         </div>
+      </div>
+
+      {/* Quick Access Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href = '/admin/external-services'}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <MessageSquare className="h-8 w-8 text-green-600" />
+                <div>
+                  <h3 className="font-semibold">External Services</h3>
+                  <p className="text-sm text-gray-600">WhatsApp & Communication</p>
+                </div>
+              </div>
+              <ExternalLink className="h-4 w-4 text-gray-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href = '/admin/business-hours'}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Clock className="h-8 w-8 text-blue-600" />
+                <div>
+                  <h3 className="font-semibold">Business Hours</h3>
+                  <p className="text-sm text-gray-600">Operating Schedule</p>
+                </div>
+              </div>
+              <ExternalLink className="h-4 w-4 text-gray-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href = '/admin/billing-config'}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Settings className="h-8 w-8 text-purple-600" />
+                <div>
+                  <h3 className="font-semibold">Billing Config</h3>
+                  <p className="text-sm text-gray-600">Payment & Invoicing</p>
+                </div>
+              </div>
+              <ExternalLink className="h-4 w-4 text-gray-400" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Map Configuration */}
