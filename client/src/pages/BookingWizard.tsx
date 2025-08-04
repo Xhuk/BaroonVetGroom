@@ -75,6 +75,8 @@ export default function BookingWizard() {
   const [mapCoordinates, setMapCoordinates] = useState({ lat: 25.6866, lng: -100.3161 }); // Monterrey default
   const [tenantLocation, setTenantLocation] = useState({ lat: 25.740586082849077, lng: -100.40735989019088 });
   const [mapDiameterKm, setMapDiameterKm] = useState(8); // Configurable from admin
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0, lat: 0, lng: 0 });
   
   // Load map settings from localStorage (admin configuration)
   useEffect(() => {
@@ -505,7 +507,8 @@ export default function BookingWizard() {
                         <div className="absolute inset-0 z-20 pointer-events-none">
                           {/* Interactive overlay for mouse events */}
                           <div 
-                            className="absolute inset-0 z-10 pointer-events-auto"
+                            className="absolute inset-0 z-10 pointer-events-auto cursor-grab active:cursor-grabbing"
+                            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
                             onContextMenu={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -569,7 +572,44 @@ export default function BookingWizard() {
                                 description: `Centrado en: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
                               });
                             }}
-                            onMouseDown={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => {
+                              if (e.button === 0) { // Left mouse button only
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setIsDragging(true);
+                                setDragStart({
+                                  x: e.clientX,
+                                  y: e.clientY,
+                                  lat: mapCoordinates.lat,
+                                  lng: mapCoordinates.lng
+                                });
+                              }
+                            }}
+                            onMouseMove={(e) => {
+                              if (isDragging) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const deltaX = e.clientX - dragStart.x;
+                                const deltaY = e.clientY - dragStart.y;
+                                
+                                // Convert pixel movement to coordinate movement
+                                const latPerPixel = (mapDiameterKm * 2 / 110.54) / rect.height;
+                                const lngPerPixel = (mapDiameterKm * 2 / 111.32) / rect.width;
+                                
+                                const newLat = dragStart.lat + (deltaY * latPerPixel);
+                                const newLng = dragStart.lng - (deltaX * lngPerPixel);
+                                
+                                setMapCoordinates({ lat: newLat, lng: newLng });
+                              }
+                            }}
+                            onMouseUp={() => {
+                              setIsDragging(false);
+                            }}
+                            onMouseLeave={() => {
+                              setIsDragging(false);
+                            }}
                           />
                           
                           {/* Clinic Location - Blue Marker (Bound to tenant GPS coordinates) */}
@@ -659,7 +699,7 @@ export default function BookingWizard() {
 
                         {/* Map navigation instructions */}
                         <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded text-xs text-gray-600">
-                          Rueda para zoom • Doble clic para centrar • Clic derecho para ubicar cliente
+                          Arrastra para mover • Rueda para zoom • Doble clic para centrar • Clic derecho para ubicar cliente
                         </div>
                       </div>
                       
