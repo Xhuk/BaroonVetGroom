@@ -74,7 +74,7 @@ export default function BookingWizard() {
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [reservedSlots, setReservedSlots] = useState<string[]>([]);
   const [mapCoordinates, setMapCoordinates] = useState({ lat: 25.6866, lng: -100.3161 }); // Monterrey default
-  const [tenantLocation, setTenantLocation] = useState({ lat: 25.740586082849077, lng: -100.40735989019088 });
+  const [tenantLocation, setTenantLocation] = useState({ lat: 25.74055709021775, lng: -100.407349161356 });
   const [mapDiameterKm, setMapDiameterKm] = useState(8); // Configurable from admin
   const [maxZoomRange, setMaxZoomRange] = useState(8); // Admin-configured zoom limit
   const [isDragging, setIsDragging] = useState(false);
@@ -561,9 +561,11 @@ export default function BookingWizard() {
                               const x = (e.clientX - rect.left) / rect.width;
                               const y = (e.clientY - rect.top) / rect.height;
                               
-                              // Convert screen coordinates to GPS coordinates for centering
-                              const lng = (mapCoordinates.lng - mapDiameterKm/111.32) + (x * (mapDiameterKm/111.32) * 2);
-                              const lat = (mapCoordinates.lat + mapDiameterKm/110.54) - (y * (mapDiameterKm/110.54) * 2);
+                              // Convert screen coordinates to GPS coordinates for centering with improved precision
+                              const latDegPerKm = 1 / 110.54;
+                              const lngDegPerKm = 1 / (111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180));
+                              const lng = (mapCoordinates.lng - mapDiameterKm * lngDegPerKm) + (x * (mapDiameterKm * lngDegPerKm) * 2);
+                              const lat = (mapCoordinates.lat + mapDiameterKm * latDegPerKm) - (y * (mapDiameterKm * latDegPerKm) * 2);
                               
                               // Center map on double-click location and zoom in
                               setMapCoordinates({ lat, lng });
@@ -598,9 +600,11 @@ export default function BookingWizard() {
                                 const deltaX = e.clientX - dragStart.x;
                                 const deltaY = e.clientY - dragStart.y;
                                 
-                                // Convert pixel movement to coordinate movement
-                                const latPerPixel = (mapDiameterKm * 2 / 110.54) / rect.height;
-                                const lngPerPixel = (mapDiameterKm * 2 / 111.32) / rect.width;
+                                // Convert pixel movement to coordinate movement with improved precision
+                                const latDegPerKm = 1 / 110.54;
+                                const lngDegPerKm = 1 / (111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180));
+                                const latPerPixel = (mapDiameterKm * 2 * latDegPerKm) / rect.height;
+                                const lngPerPixel = (mapDiameterKm * 2 * lngDegPerKm) / rect.width;
                                 
                                 const newLat = dragStart.lat + (deltaY * latPerPixel);
                                 const newLng = dragStart.lng - (deltaX * lngPerPixel);
@@ -621,9 +625,13 @@ export default function BookingWizard() {
                             const tenantLat = parseFloat(currentTenant.latitude);
                             const tenantLng = parseFloat(currentTenant.longitude);
                             
-                            // Calculate marker position with better precision
-                            const leftPercent = ((tenantLng - (mapCoordinates.lng - mapDiameterKm/111.32)) / ((mapDiameterKm/111.32) * 2)) * 100;
-                            const topPercent = ((mapCoordinates.lat + mapDiameterKm/110.54 - tenantLat) / ((mapDiameterKm/110.54) * 2)) * 100;
+                            // Calculate marker position with improved precision and coordinate conversion
+                            // Use more precise coordinate-to-kilometer conversion factors
+                            const latDegPerKm = 1 / 110.54; // More precise latitude degrees per km
+                            const lngDegPerKm = 1 / (111.32 * Math.cos(tenantLat * Math.PI / 180)); // Longitude adjusted for latitude
+                            
+                            const leftPercent = ((tenantLng - (mapCoordinates.lng - mapDiameterKm * lngDegPerKm)) / (mapDiameterKm * lngDegPerKm * 2)) * 100;
+                            const topPercent = ((mapCoordinates.lat + mapDiameterKm * latDegPerKm - tenantLat) / (mapDiameterKm * latDegPerKm * 2)) * 100;
                             
                             // Debug logging for marker positioning
                             console.log('Blue Marker Debug:', {
@@ -667,8 +675,8 @@ export default function BookingWizard() {
                             <div 
                               className="absolute transform -translate-x-1/2 -translate-y-full group z-40 pointer-events-none"
                               style={{
-                                left: `${((parseFloat(customerData.longitude) - (mapCoordinates.lng - mapDiameterKm/111.32)) / ((mapDiameterKm/111.32) * 2)) * 100}%`,
-                                top: `${((mapCoordinates.lat + mapDiameterKm/110.54 - parseFloat(customerData.latitude)) / ((mapDiameterKm/110.54) * 2)) * 100}%`
+                                left: `${((parseFloat(customerData.longitude) - (mapCoordinates.lng - mapDiameterKm * (1 / (111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180))))) / (mapDiameterKm * (1 / (111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180))) * 2)) * 100}%`,
+                                top: `${((mapCoordinates.lat + mapDiameterKm / 110.54 - parseFloat(customerData.latitude)) / ((mapDiameterKm / 110.54) * 2)) * 100}%`
                               }}
                             >
                               <MapPin className="w-8 h-8 text-red-600 drop-shadow-lg animate-bounce" />
@@ -686,7 +694,7 @@ export default function BookingWizard() {
 
                         {/* Base OpenStreetMap with interactive controls */}
                         <iframe
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-(mapDiameterKm/111.32)},${mapCoordinates.lat-(mapDiameterKm/110.54)},${mapCoordinates.lng+(mapDiameterKm/111.32)},${mapCoordinates.lat+(mapDiameterKm/110.54)}&layer=mapnik`}
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCoordinates.lng-(mapDiameterKm/(111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180)))},${mapCoordinates.lat-(mapDiameterKm/110.54)},${mapCoordinates.lng+(mapDiameterKm/(111.32 * Math.cos(mapCoordinates.lat * Math.PI / 180)))},${mapCoordinates.lat+(mapDiameterKm/110.54)}&layer=mapnik`}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
