@@ -73,8 +73,16 @@ export default function RoutePlanMap() {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [selectedVanCapacity, setSelectedVanCapacity] = useState<'small' | 'medium' | 'large'>('medium');
 
-  // Clinic location (Monterrey center)
-  const clinicLocation: [number, number] = [25.6866, -100.3161];
+  // Get tenant data for clinic location
+  const { data: tenantData } = useQuery({
+    queryKey: ["/api/tenants", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
+  
+  // Use tenant's actual GPS coordinates or fallback to Monterrey center
+  const clinicLocation: [number, number] = tenantData?.latitude && tenantData?.longitude 
+    ? [tenantData.latitude, tenantData.longitude]
+    : [25.6866, -100.3161];
 
   const { data: appointments } = useQuery<any[]>({
     queryKey: ["/api/appointments", currentTenant?.id],
