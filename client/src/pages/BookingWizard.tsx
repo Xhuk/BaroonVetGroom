@@ -84,7 +84,7 @@ export default function BookingWizard() {
   const [geocodeTimeout, setGeocodeTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Queries
-  const { data: services } = useQuery({
+  const { data: services } = useQuery<any[]>({
     queryKey: ["/api/services", currentTenant?.id],
     enabled: !!currentTenant?.id,
   });
@@ -176,7 +176,7 @@ export default function BookingWizard() {
           latitude: lat,
           longitude: lon
         }));
-        return newCoords;
+        return { lat: parseFloat(lat), lng: parseFloat(lon) };
       } else {
         // Use tenant default coordinates or fallback
         console.log("No geocoding results found, using default coordinates");
@@ -190,11 +190,7 @@ export default function BookingWizard() {
           latitude: defaultCoords.lat.toString(),
           longitude: defaultCoords.lng.toString()
         }));
-        toast({
-          title: "Usando ubicación por defecto",
-          description: "No se encontró la dirección exacta. Se usa la ubicación de la clínica.",
-          variant: "default",
-        });
+        // Silent fallback - no toast for cleaner UX
         return defaultCoords;
       }
     } catch (error) {
@@ -205,11 +201,7 @@ export default function BookingWizard() {
         lng: currentTenant?.longitude ? parseFloat(currentTenant.longitude) : -100.40735989019088
       };
       // Default coordinates handled by Leaflet
-      toast({
-        title: "Error de geocodificación",
-        description: "Error al buscar la ubicación. Se usa la ubicación por defecto.",
-        variant: "destructive",
-      });
+      // Silent fallback - no error toast for better UX
       return defaultCoords;
     }
   };
@@ -515,10 +507,7 @@ export default function BookingWizard() {
                     onChange={(e) => {
                       const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
                       setCustomerData(prev => ({ ...prev, fraccionamiento: formattedValue }));
-                      // Auto-geocode after both fields are filled with 1 second debounce
-                      if (customerData.address && formattedValue) {
-                        debouncedGeocode(customerData.address, formattedValue, customerData.postalCode);
-                      }
+                      // Note: Auto-geocoding removed - users will use right-click on map to place marker
                     }}
                     placeholder="Valle De Cumbres"
                     required
