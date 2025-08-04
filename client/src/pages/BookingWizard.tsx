@@ -91,6 +91,32 @@ export default function BookingWizard() {
 
   // Remove staff query - not needed for delivery planning
 
+  // Load existing appointment data if editing
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const appointmentId = urlParams.get('edit');
+    
+    if (appointmentId && currentTenant?.id) {
+      // Load appointment data and set customer location
+      const storedLocation = localStorage.getItem(`customerLocation_${currentTenant.id}`);
+      if (storedLocation) {
+        const locationData = JSON.parse(storedLocation);
+        setCustomerData(prev => ({
+          ...prev,
+          latitude: locationData.lat.toString(),
+          longitude: locationData.lng.toString(),
+          address: locationData.address,
+          fraccionamiento: locationData.fraccionamiento,
+          name: locationData.clientName
+        }));
+        setPetData(prev => ({
+          ...prev,
+          name: locationData.petName
+        }));
+      }
+    }
+  }, [currentTenant?.id]);
+
   // Update tenant location when currentTenant changes
   useEffect(() => {
     if (currentTenant?.latitude && currentTenant?.longitude) {
@@ -583,16 +609,7 @@ export default function BookingWizard() {
                             <p>Vista clínica | {customerData.address ? 'Cliente ubicado' : 'Sin cliente'}</p>
                           </div>
                           <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => debouncedGeocode(customerData.address, customerData.fraccionamiento, customerData.postalCode)}
-                              className="text-xs"
-                              disabled={!customerData.address || !customerData.fraccionamiento}
-                            >
-                              <MapPin className="w-3 h-3 mr-1" />
-                              Geocodificar
-                            </Button>
+
                             <Button
                               variant="outline"
                               size="sm"
@@ -636,16 +653,7 @@ export default function BookingWizard() {
                       <div className="text-center">
                         <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                         <p className="text-sm">Ingresa la dirección para ver la ubicación</p>
-                        {customerData.address && customerData.fraccionamiento && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => debouncedGeocode(customerData.address, customerData.fraccionamiento, customerData.postalCode)}
-                            className="mt-2"
-                          >
-                            Buscar ubicación
-                          </Button>
-                        )}
+
                       </div>
                     </div>
                   )}
@@ -926,7 +934,7 @@ export default function BookingWizard() {
                 onClick={nextStep}
                 disabled={
                   (currentStep === 1 && (!customerData.name || !customerData.phone)) ||
-                  (currentStep === 2 && (!customerData.address || !customerData.fraccionamiento)) ||
+                  (currentStep === 2 && (!customerData.address || !customerData.fraccionamiento || !customerData.latitude || !customerData.longitude)) ||
                   (currentStep === 3 && (!petData.name || !petData.species)) ||
                   (currentStep === 4 && (!selectedSlot || !bookingData.serviceId))
                 }
