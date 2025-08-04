@@ -79,7 +79,7 @@ export default function LeafletMap({
         </Marker>
       )}
       
-      {/* Customer Marker - Red with CSS Bounce Animation */}
+      {/* Customer Marker - Green Paw with CSS Bounce Animation */}
       {customerLocation && (
         <Marker
           position={[customerLocation.lat, customerLocation.lng]}
@@ -97,9 +97,9 @@ export default function LeafletMap({
         >
           <Popup>
             <div className="text-center">
-              <div className="font-semibold text-red-700">📍 Ubicación del Cliente</div>
-              <div className="text-red-600">{customerLocation.address || 'Ubicación manual'}</div>
-              <div className="text-red-600">{customerLocation.fraccionamiento || 'Clic derecho en mapa'}</div>
+              <div className="font-semibold text-green-700">🐾 Ubicación del Cliente</div>
+              <div className="text-green-600">{customerLocation.address || 'Ubicación manual'}</div>
+              <div className="text-green-600">{customerLocation.fraccionamiento || 'Clic derecho en mapa'}</div>
               <div className="text-xs text-gray-500">
                 GPS: {customerLocation.lat.toFixed(4)}, {customerLocation.lng.toFixed(4)}
               </div>

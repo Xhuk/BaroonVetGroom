@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import blueMarkerIcon from '@assets/marker-icon_1754283680600.png';
+import pawMarkerIcon from '@assets/iconpaw_1754286092477.png';
 
 // Fix for default markers in webpack - ensure proper cleanup
 if (typeof window !== 'undefined') {
@@ -22,13 +23,13 @@ export const customBlueIcon = new L.Icon({
   shadowAnchor: [13, 41]
 });
 
-// Custom red customer marker - larger and more eye-catching
+// Custom green paw customer marker - eye-catching and bouncing
 export const customRedIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-  iconSize: [35, 57], // Larger size
-  iconAnchor: [17, 57],
-  popupAnchor: [1, -45],
+  iconUrl: pawMarkerIcon,
+  iconSize: [40, 40], // Square paw icon
+  iconAnchor: [20, 20], // Center anchor for circular icon
+  popupAnchor: [0, -20],
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  shadowSize: [50, 50], // Larger shadow
-  shadowAnchor: [18, 50]
+  shadowSize: [50, 50],
+  shadowAnchor: [25, 25]
 });

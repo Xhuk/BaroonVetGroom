@@ -534,7 +534,7 @@ export default function BookingWizard() {
                         {/* Map Legend */}
                         <div className="flex justify-center gap-6 mb-3 text-xs">
                           <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-red-600" />
+                            <span className="text-green-600">🐾</span>
                             <span>Cliente</span>
                           </div>
                           <div className="flex items-center gap-1">
