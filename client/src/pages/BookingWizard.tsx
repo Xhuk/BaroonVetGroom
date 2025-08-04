@@ -100,7 +100,7 @@ export default function BookingWizard() {
     queryKey: ["/api/pet-breeds", currentTenant?.id],
     enabled: !!currentTenant?.id,
     staleTime: 30 * 60 * 1000, // Cache for 30 minutes
-    cacheTime: 60 * 60 * 1000, // Keep in memory for 1 hour
+    gcTime: 60 * 60 * 1000, // Keep in memory for 1 hour
   });
 
   // Remove staff query - not needed for delivery planning
@@ -282,14 +282,13 @@ export default function BookingWizard() {
     if (!bookingData.serviceId || !bookingData.requestedDate) return;
     
     try {
-      const response = await apiRequest('GET', 
-        `/api/appointments/check-availability/${currentTenant?.id}?date=${bookingData.requestedDate}&serviceId=${bookingData.serviceId}&time=${bookingData.requestedTime}`
-      ) as { available: boolean; alternativeSlots: string[] };
+      const response = await apiRequest('GET', `/api/appointments/check-availability/${currentTenant?.id}?date=${bookingData.requestedDate}&serviceId=${bookingData.serviceId}&time=${bookingData.requestedTime}`);
+      const data = await response.json() as { available: boolean; alternativeSlots: string[] };
       
-      if (response.available) {
+      if (data.available) {
         setAvailableSlots([bookingData.requestedTime]);
       } else {
-        setAvailableSlots(response.alternativeSlots || []);
+        setAvailableSlots(data.alternativeSlots || []);
         toast({
           title: "Horario no disponible",
           description: `Lo siento, no tenemos disponibilidad a las ${bookingData.requestedTime}. Te mostramos horarios alternativos.`,
@@ -357,17 +356,20 @@ export default function BookingWizard() {
       // First create/find client
       let clientResponse: Client;
       try {
-        clientResponse = await apiRequest('POST', `/api/clients/${currentTenant?.id}`, customerData) as Client;
+        const clientRes = await apiRequest('POST', `/api/clients/${currentTenant?.id}`, customerData);
+        clientResponse = await clientRes.json() as Client;
       } catch (error) {
         // If client exists, try to get by phone
-        clientResponse = await apiRequest('GET', `/api/clients/by-phone/${currentTenant?.id}/${customerData.phone}`) as Client;
+        const clientRes = await apiRequest('GET', `/api/clients/by-phone/${currentTenant?.id}/${customerData.phone}`);
+        clientResponse = await clientRes.json() as Client;
       }
       
       // Create pet
-      const petResponse = await apiRequest('POST', `/api/pets`, {
+      const petRes = await apiRequest('POST', `/api/pets`, {
         ...petData,
         clientId: clientResponse.id
-      }) as Pet;
+      });
+      const petResponse = await petRes.json() as Pet;
       
       // Create appointment
       const selectedService = (services || []).find((s: Service) => s.id === bookingData.serviceId);
@@ -769,7 +771,7 @@ export default function BookingWizard() {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="" disabled>
+                        <SelectItem value="placeholder" disabled>
                           Selecciona una especie primero
                         </SelectItem>
                       )}

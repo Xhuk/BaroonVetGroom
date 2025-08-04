@@ -100,38 +100,31 @@ export default function LeafletMap({
         </Marker>
       )}
       
-      {/* Customer Marker - Green Paw with stable positioning */}
-      {customerLocation && customerLocation.lat && customerLocation.lng && (
-        <Marker
-          key={`customer-${customerLocation.lat}-${customerLocation.lng}`}
-          position={[Number(customerLocation.lat), Number(customerLocation.lng)]}
-          icon={customRedIcon}
-          ref={customerMarkerRef}
-          eventHandlers={{
-            add: (e) => {
-              // Add CSS bounce animation when marker is added - exactly 2 bounces
-              const marker = e.target;
-              if (marker._icon) {
-                marker._icon.style.animation = 'bounce 1s ease-in-out 1';
-              }
-            }
-          }}
-        >
-          <Popup>
-            <div className="text-center">
-              <div className="font-semibold text-green-700">
-                🐾 {customerLocation.clientName && customerLocation.petName 
-                    ? `${customerLocation.clientName} - ${customerLocation.petName}` 
-                    : 'Cliente - Mascota'}
+      {/* Customer Marker - Green Paw with stable positioning using memoized position */}
+      {customerLocation && customerLocation.lat && customerLocation.lng && (() => {
+        const position: [number, number] = [Number(customerLocation.lat), Number(customerLocation.lng)];
+        return (
+          <Marker
+            position={position}
+            icon={customRedIcon}
+            ref={customerMarkerRef}
+          >
+            <Popup>
+              <div className="text-center">
+                <div className="font-semibold text-green-700">
+                  🐾 {customerLocation.clientName && customerLocation.petName 
+                      ? `${customerLocation.clientName} - ${customerLocation.petName}` 
+                      : 'Cliente - Mascota'}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {customerLocation.address || 'Ubicación seleccionada'}
+                  {customerLocation.fraccionamiento && `, ${customerLocation.fraccionamiento}`}
+                </div>
               </div>
-              <div className="text-xs text-gray-500">
-                {customerLocation.address || 'Ubicación seleccionada'}
-                {customerLocation.fraccionamiento && `, ${customerLocation.fraccionamiento}`}
-              </div>
-            </div>
-          </Popup>
-        </Marker>
-      )}
+            </Popup>
+          </Marker>
+        );
+      })()}
     </MapContainer>
   );
 }
