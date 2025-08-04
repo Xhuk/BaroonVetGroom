@@ -193,6 +193,11 @@ export interface IStorage {
   getUserAssignments(companyId: string): Promise<any[]>;
   assignSystemRole(userId: string, systemRoleId: string): Promise<any>;
   
+  // Team member management
+  getTeamMembers(): Promise<any[]>;
+  createOrGetUser(userData: { email: string; firstName?: string; lastName?: string }): Promise<User>;
+  removeSystemRole(userId: string, systemRoleId: string): Promise<void>;
+  
   // Additional operations for system admin
   getAllTenantsWithCompany(): Promise<any[]>;
   hasSystemRole(userId: string): Promise<boolean>;
@@ -1143,6 +1148,141 @@ export class DatabaseStorage implements IStorage {
       isActive: true,
     }).returning();
     return assignment;
+  }
+
+  // Team member management operations
+  async getTeamMembers(): Promise<any[]> {
+    // Get all users with their system roles and company assignments
+    const usersWithRoles = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        systemRoleId: userSystemRoles.systemRoleId,
+        systemRoleName: systemRoles.name,
+        systemRoleDisplayName: systemRoles.displayName,
+        systemRoleDescription: systemRoles.description,
+        isSystemRoleActive: userSystemRoles.isActive,
+      })
+      .from(users)
+      .leftJoin(userSystemRoles, and(
+        eq(users.id, userSystemRoles.userId),
+        eq(userSystemRoles.isActive, true)
+      ))
+      .leftJoin(systemRoles, eq(userSystemRoles.systemRoleId, systemRoles.id))
+      .orderBy(users.email);
+
+    // Get company assignments for all users
+    const companyAssignments = await db
+      .select({
+        userId: userCompanies.userId,
+        companyId: userCompanies.companyId,
+        companyName: companies.name,
+        roleName: roles.name,
+        isSupertenant: userCompanies.isSupertenant,
+        isActive: userCompanies.isActive,
+      })
+      .from(userCompanies)
+      .leftJoin(companies, eq(userCompanies.companyId, companies.id))
+      .leftJoin(roles, eq(userCompanies.roleId, roles.id))
+      .where(eq(userCompanies.isActive, true));
+
+    // Group users and their roles
+    const teamMembersMap = new Map();
+    
+    usersWithRoles.forEach(user => {
+      if (!teamMembersMap.has(user.id)) {
+        teamMembersMap.set(user.id, {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+          systemRoles: [],
+          companyRoles: [],
+        });
+      }
+
+      const member = teamMembersMap.get(user.id);
+      
+      // Add system role if it exists and not already added
+      if (user.systemRoleId && !member.systemRoles.some((r: any) => r.id === user.systemRoleId)) {
+        member.systemRoles.push({
+          id: user.systemRoleId,
+          name: user.systemRoleName,
+          displayName: user.systemRoleDisplayName,
+          description: user.systemRoleDescription,
+        });
+      }
+    });
+
+    // Add company assignments
+    companyAssignments.forEach(assignment => {
+      const member = teamMembersMap.get(assignment.userId);
+      if (member) {
+        member.companyRoles.push({
+          id: assignment.companyId,
+          companyId: assignment.companyId,
+          companyName: assignment.companyName,
+          roleName: assignment.roleName || 'Sin rol',
+          isSupertenant: assignment.isSupertenant,
+        });
+      }
+    });
+
+    return Array.from(teamMembersMap.values());
+  }
+
+  async createOrGetUser(userData: { email: string; firstName?: string; lastName?: string }): Promise<User> {
+    // Check if user already exists
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, userData.email))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      // Update user data if provided
+      if (userData.firstName || userData.lastName) {
+        const [updatedUser] = await db
+          .update(users)
+          .set({
+            firstName: userData.firstName || existingUser[0].firstName,
+            lastName: userData.lastName || existingUser[0].lastName,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, existingUser[0].id))
+          .returning();
+        return updatedUser;
+      }
+      return existingUser[0];
+    }
+
+    // Create new user
+    const [newUser] = await db.insert(users).values({
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+    }).returning();
+
+    return newUser;
+  }
+
+  async removeSystemRole(userId: string, systemRoleId: string): Promise<void> {
+    await db
+      .update(userSystemRoles)
+      .set({ 
+        isActive: false,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(userSystemRoles.userId, userId),
+          eq(userSystemRoles.systemRoleId, systemRoleId)
+        )
+      );
   }
 
   async getAllTenantsWithCompany(): Promise<any[]> {

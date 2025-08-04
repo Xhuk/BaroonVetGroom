@@ -21,6 +21,7 @@ import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CompanyTenantSelector } from "@/components/CompanyTenantSelector";
+import { TeamMemberManager } from "@/components/TeamMemberManager";
 import { 
   Shield, 
   Users, 
@@ -330,22 +331,31 @@ export default function SuperAdminRBAC() {
 
 
 
-          {selectedCompany && (
-            <Tabs defaultValue="roles" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="roles" className="flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  Roles de Acceso
-                </TabsTrigger>
-                <TabsTrigger value="system-roles" className="flex items-center gap-2">
-                  <Key className="w-4 h-4" />
-                  Roles de Sistema
-                </TabsTrigger>
-                <TabsTrigger value="assignments" className="flex items-center gap-2">
-                  <UserCheck className="w-4 h-4" />
-                  Asignaciones
-                </TabsTrigger>
-              </TabsList>
+          {/* Team Management Section - Always visible for system admins */}
+          <Tabs defaultValue="team" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="team" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Equipo VetGroom
+              </TabsTrigger>
+              <TabsTrigger value="roles" className="flex items-center gap-2" disabled={!selectedCompany}>
+                <Shield className="w-4 h-4" />
+                Roles de Acceso
+              </TabsTrigger>
+              <TabsTrigger value="system-roles" className="flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Roles de Sistema
+              </TabsTrigger>
+              <TabsTrigger value="assignments" className="flex items-center gap-2" disabled={!selectedCompany}>
+                <UserCheck className="w-4 h-4" />
+                Asignaciones
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Team Management Tab */}
+            <TabsContent value="team" className="space-y-6">
+              <TeamMemberManager />
+            </TabsContent>
 
               {/* Roles Management */}
               <TabsContent value="roles" className="space-y-6">
@@ -585,7 +595,6 @@ export default function SuperAdminRBAC() {
                 </Card>
               </TabsContent>
             </Tabs>
-          )}
 
           <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div className="flex items-start gap-3">

@@ -1645,6 +1645,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Team Member Management Endpoints
+  
+  // Get all team members with their system roles and company assignments
+  app.get('/api/superadmin/team-members', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!(await isSystemAdmin(req))) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const teamMembers = await storage.getTeamMembers();
+      res.json(teamMembers);
+    } catch (error) {
+      console.error("Error fetching team members:", error);
+      res.status(500).json({ message: "Failed to fetch team members" });
+    }
+  });
+
+  // Invite new team member
+  app.post('/api/superadmin/team-members/invite', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!(await isSystemAdmin(req))) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const { email, firstName, lastName, systemRoleId } = req.body;
+      
+      // Create or get user
+      const user = await storage.createOrGetUser({ 
+        email, 
+        firstName, 
+        lastName 
+      });
+      
+      // Assign system role
+      await storage.assignSystemRole(user.id, systemRoleId);
+      
+      res.json({ 
+        success: true, 
+        message: "Team member invited successfully",
+        userId: user.id 
+      });
+    } catch (error) {
+      console.error("Error inviting team member:", error);
+      res.status(500).json({ message: "Failed to invite team member" });
+    }
+  });
+
+  // Assign system role to team member
+  app.post('/api/superadmin/team-members/assign-system-role', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!(await isSystemAdmin(req))) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const { userId, systemRoleId } = req.body;
+      const assignment = await storage.assignSystemRole(userId, systemRoleId);
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error assigning system role:", error);
+      res.status(500).json({ message: "Failed to assign system role" });
+    }
+  });
+
+  // Remove system role from team member
+  app.delete('/api/superadmin/team-members/remove-system-role', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!(await isSystemAdmin(req))) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+      
+      const { userId, systemRoleId } = req.body;
+      await storage.removeSystemRole(userId, systemRoleId);
+      res.json({ success: true, message: "System role removed successfully" });
+    } catch (error) {
+      console.error("Error removing system role:", error);
+      res.status(500).json({ message: "Failed to remove system role" });
+    }
+  });
+
   // Object Storage Routes
   app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
     try {
