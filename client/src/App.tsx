@@ -60,6 +60,7 @@ function Router() {
         <>
           <Route path="/" component={Landing} />
           <Route path="/plans" component={SubscriptionLanding} />
+          <Route path="/appointments" component={Appointments} />
         </>
       ) : (
         <>
