@@ -304,8 +304,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
                         key={appointment.id}
                         className={cn(
                           "p-3 mb-2 rounded-lg shadow-sm border-l-4 cursor-pointer hover:shadow-md transition-shadow",
-                          getAppointmentStyle(appointment),
-                          isOngoing(appointment) && "ring-2 ring-red-500 ring-offset-2"
+                          getAppointmentStyle(appointment)
                         )}
                       >
                         <div className="flex items-center justify-between">
