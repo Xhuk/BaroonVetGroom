@@ -219,19 +219,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
                   "h-[80px]" // Bigger container height for all slots to end at same pixel
                 )}
               >
-                {/* Current time slot indicator - positioned in the middle */}
-                {isCurrentSlot && (
-                  <div className={cn(
-                    "absolute left-0 right-0 bg-red-100 border border-red-300 rounded-md transition-all duration-300",
-                    // Position in middle for normal slots
-                    !isFirstSlot && !isLastSlot && "top-1/2 transform -translate-y-1/2 h-[50px]",
-                    // Show only bottom half for first slot
-                    isFirstSlot && "top-1/2 h-[40px]",
-                    // Show only top half for last slot  
-                    isLastSlot && "bottom-1/2 h-[40px]"
-                  )}
-                />
-                )}
+
                 
                 {/* Time label */}
                 <div className="w-20 text-right pr-4 text-sm text-gray-500 font-medium z-10 relative">
