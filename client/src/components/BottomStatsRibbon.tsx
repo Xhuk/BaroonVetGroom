@@ -17,7 +17,11 @@ export function BottomStatsRibbon() {
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats", currentTenant?.id],
     enabled: !!currentTenant?.id,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 2 * 60 * 1000, // 2 minutes cache - reasonable for stats
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes instead of 30 seconds
   });
 
   if (isLoading || !stats) {

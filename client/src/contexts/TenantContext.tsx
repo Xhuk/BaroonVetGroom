@@ -30,21 +30,21 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [availableTenants, setAvailableTenants] = useState<Tenant[]>([]);
   const [isDebugMode, setIsDebugMode] = useState(false);
 
-  // Load access info and user tenants in parallel
+  // Load access info first, then user tenants (sequential to reduce concurrency)
   const { data: accessInfo } = useQuery<any>({
     queryKey: ['/api/auth/access-info'],
     enabled: isAuthenticated,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes - longer cache
+    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
 
   const { data: userTenants = [], isLoading: isLoadingTenants } = useQuery<UserTenant[]>({
     queryKey: ["/api/tenants/user"],
-    enabled: isAuthenticated,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    enabled: isAuthenticated && !!accessInfo, // Wait for access info first
+    staleTime: 10 * 60 * 1000, // 10 minutes - longer cache
+    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
@@ -53,9 +53,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
   const { data: tenant, isLoading: isLoadingCurrentTenant } = useQuery<Tenant>({
     queryKey: ["/api/tenants", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!currentTenant?.id && !isLoadingTenants, // Wait for tenants list first
+    staleTime: 15 * 60 * 1000, // 15 minutes - much longer cache
+    gcTime: 60 * 60 * 1000, // 1 hour
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });

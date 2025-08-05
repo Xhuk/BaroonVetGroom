@@ -48,11 +48,19 @@ export default function Inventory() {
   const { data: inventoryItems, isLoading } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory", currentTenant?.id],
     enabled: !!currentTenant?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 15 * 60 * 1000, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: transactions } = useQuery<InventoryTransaction[]>({
     queryKey: ["/api/inventory/transactions", currentTenant?.id],
     enabled: !!currentTenant?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 15 * 60 * 1000, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const createItemMutation = useMutation({

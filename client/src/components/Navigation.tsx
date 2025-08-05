@@ -30,7 +30,11 @@ export function Navigation({ className }: NavigationProps) {
   const { data: followUpData } = useQuery<{ count: number }>({
     queryKey: ["/api/medical-appointments/follow-up-count", currentTenant?.id],
     enabled: !!currentTenant?.id,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 3 * 60 * 1000, // 3 minutes cache
+    gcTime: 15 * 60 * 1000, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchInterval: 3 * 60 * 1000, // Refresh every 3 minutes instead of 30 seconds
   });
 
   // Get follow-up configuration

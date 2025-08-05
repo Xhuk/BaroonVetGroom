@@ -51,6 +51,10 @@ export default function DeliveryPlan() {
   const { data: routes, isLoading } = useQuery<any[]>({
     queryKey: ["/api/delivery-routes", currentTenant?.id, selectedDate],
     enabled: !!currentTenant?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutes cache
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: fraccionamientos } = useQuery<any[]>({
