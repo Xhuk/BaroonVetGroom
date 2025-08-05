@@ -481,6 +481,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sum + (parseFloat(apt.totalCost?.toString() || '0') || 0), 0
       );
 
+      // Calculate facturated/billed appointments (servicios servidos)
+      const serviciosServidos = todayAppointments.filter(apt => 
+        apt.status === 'confirmed' || apt.status === 'completed'
+      ).length;
+
       // Simple occupancy calculation
       const occupiedSlots = todayAppointments.length;
       const totalSlots = (activeRoomCount[0]?.count || 0) * 8; // 8 hours per day
@@ -488,6 +493,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const stats = {
         appointmentsToday: todayAppointments.length,
+        groomingToday: groomingAppointments,
+        medicalToday: medicalAppointments,
         groomingAppointments,
         medicalAppointments,
         vaccinationAppointments,
@@ -497,7 +504,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activeRooms: activeRoomCount[0]?.count || 0,
         totalServices: activeServiceCount[0]?.count || 0,
         teamMembers: activeStaffCount[0]?.count || 0,
-        roomsInUse: Math.min(todayAppointments.length, activeRoomCount[0]?.count || 0)
+        roomsInUse: Math.min(todayAppointments.length, activeRoomCount[0]?.count || 0),
+        serviciosServidos,
+        pendingPayments: 0, // This would need proper billing system integration
+        totalPets: 0, // This would need proper pets count from database
+        entriesDelivered: 0, // This would need delivery system integration
+        deliveriesToday: 0 // This would need delivery system integration
       };
       
       res.json(stats);
@@ -505,6 +517,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error calculating stats:", error);
       res.json({
         appointmentsToday: 0,
+        groomingToday: 0,
+        medicalToday: 0,
         groomingAppointments: 0,
         medicalAppointments: 0,
         vaccinationAppointments: 0,
@@ -514,7 +528,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activeRooms: 0,
         totalServices: 0,
         teamMembers: 0,
-        roomsInUse: 0
+        roomsInUse: 0,
+        serviciosServidos: 0,
+        pendingPayments: 0,
+        totalPets: 0,
+        entriesDelivered: 0,
+        deliveriesToday: 0
       });
     }
   });

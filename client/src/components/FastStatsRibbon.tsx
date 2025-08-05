@@ -5,8 +5,10 @@ import {
   Truck, 
   Calendar, 
   Users, 
-  DoorOpen 
+  DoorOpen,
+  Receipt
 } from "lucide-react";
+import { useAccessControl } from "@/hooks/useAccessControl";
 interface DashboardStats {
   appointmentsToday: number;
   groomingToday: number;
@@ -16,6 +18,7 @@ interface DashboardStats {
   totalPets: number;
   entriesDelivered: number;
   deliveriesToday?: number;
+  serviciosServidos: number;
 }
 
 interface FastStatsRibbonProps {
@@ -23,6 +26,8 @@ interface FastStatsRibbonProps {
 }
 
 export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
+  const accessControl = useAccessControl();
+  
   if (!stats) {
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-white/95 via-gray-50/95 to-white/95 dark:from-slate-900/95 dark:via-slate-800/95 dark:to-slate-900/95 backdrop-blur-xl border-t border-gray-200/80 dark:border-slate-700/50 z-20 shadow-2xl">
@@ -60,14 +65,15 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
   const day = currentDate.getDate();
   const month = monthNames[currentDate.getMonth()];
 
-  const statsConfig = [
+  const allStatsConfig = [
     { 
       value: stats.appointmentsToday, 
       label: "Citas Hoy", 
       icon: Calendar, 
       color: "from-blue-500 to-blue-600", 
       textColor: "text-blue-700 dark:text-blue-300",
-      bgColor: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50"
+      bgColor: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50",
+      permission: "canManageAppointments"
     },
     { 
       value: stats.groomingToday, 
@@ -75,7 +81,8 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
       icon: Scissors, 
       color: "from-purple-500 to-purple-600", 
       textColor: "text-purple-700 dark:text-purple-300",
-      bgColor: "bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50"
+      bgColor: "bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50",
+      permission: "canManageAppointments"
     },
     { 
       value: stats.medicalToday, 
@@ -83,7 +90,8 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
       icon: Stethoscope, 
       color: "from-emerald-500 to-emerald-600", 
       textColor: "text-emerald-700 dark:text-emerald-300",
-      bgColor: "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/50"
+      bgColor: "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/50",
+      permission: "canManageAppointments"
     },
     { 
       value: stats.pendingPayments, 
@@ -91,7 +99,8 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
       icon: DoorOpen, 
       color: "from-orange-500 to-orange-600", 
       textColor: "text-orange-700 dark:text-orange-300",
-      bgColor: "bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50"
+      bgColor: "bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50",
+      permission: "canViewReports"
     },
     { 
       value: stats.totalClients, 
@@ -99,15 +108,17 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
       icon: Users, 
       color: "from-indigo-500 to-indigo-600", 
       textColor: "text-indigo-700 dark:text-indigo-300",
-      bgColor: "bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/50 dark:to-indigo-900/50"
+      bgColor: "bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/50 dark:to-indigo-900/50",
+      permission: "canManageClients"
     },
     { 
-      value: stats.totalPets, 
-      label: "Mascotas", 
-      icon: Syringe, 
-      color: "from-pink-500 to-pink-600", 
-      textColor: "text-pink-700 dark:text-pink-300",
-      bgColor: "bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950/50 dark:to-pink-900/50"
+      value: stats.serviciosServidos || 0, 
+      label: "Servicios Servidos", 
+      icon: Receipt, 
+      color: "from-teal-500 to-teal-600", 
+      textColor: "text-teal-700 dark:text-teal-300",
+      bgColor: "bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-950/50 dark:to-teal-900/50",
+      permission: "canViewReports"
     },
     { 
       value: stats.deliveriesToday || 0, 
@@ -115,9 +126,20 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
       icon: Truck, 
       color: "from-amber-500 to-amber-600", 
       textColor: "text-amber-700 dark:text-amber-300",
-      bgColor: "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/50"
+      bgColor: "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/50",
+      permission: "canAccessDeliveryTracking"
     }
   ];
+
+  // Filter stats based on user permissions
+  const statsConfig = allStatsConfig.filter(stat => {
+    // Always show appointments today
+    if (stat.label === "Citas Hoy") return true;
+    
+    // Check specific permissions for other stats
+    const hasPermission = accessControl[stat.permission as keyof typeof accessControl] as boolean;
+    return hasPermission;
+  });
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-white/95 via-gray-50/95 to-white/95 dark:from-slate-900/95 dark:via-slate-800/95 dark:to-slate-900/95 backdrop-blur-xl border-t border-gray-200/80 dark:border-slate-700/50 z-20 shadow-2xl">
