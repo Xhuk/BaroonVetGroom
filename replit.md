@@ -32,8 +32,8 @@ A high-performance veterinary clinic management platform with ultra-optimized us
   - App itself is not scrollable, only cards have scroll functionality
   - Navigation width increased to w-72 (288px, +32px from original w-64)
   - Navigation always ends exactly 32px above where bottom ribbon starts using bottom: calc(32px + 96px)
-  - Calendar card starts 24px below header buttons and ends exactly where navigation ends
-  - Calendar height: calc(100vh - 220px - 96px - 32px) to account for header + buttons + spacing
+  - Calendar card uses identical positioning as navigation: bottom: calc(32px + 96px)
+  - Both navigation and calendar end at exactly the same level, 32px above bottom ribbon
 
 ### Performance Optimization & Radio Dial Time Indicator (August 2025) - COMPLETED
 - **Ultra-Lightweight Payloads**: Reduced API response from 146KB to ~5KB (95% reduction)
