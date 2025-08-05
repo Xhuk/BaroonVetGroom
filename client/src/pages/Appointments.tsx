@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, Clock, User, Phone, Edit, Trash2 } from "lucide-react";
@@ -56,6 +57,9 @@ export default function Appointments() {
   // INSTANT UI - Always render immediately
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      <div className="mb-4">
+        <BackButton href="/" text="Volver al Dashboard" />
+      </div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-blue-800">Gestión de Citas</h1>
         <Button className="bg-blue-600 hover:bg-blue-700">
