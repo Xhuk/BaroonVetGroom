@@ -13,11 +13,13 @@ import { CalendarTimeIndicator } from "@/components/CalendarTimeIndicator";
 interface AppointmentData {
   appointments: Appointment[];
   clients: Client[];
-  pets: Pet[];
-  rooms: Room[];
-  staff: Staff[];
-  services: Service[];
-  timestamp: number;
+  pets?: Pet[];
+  rooms?: Room[];
+  staff?: Staff[];
+  services?: Service[];
+  timestamp?: number;
+  date: string;
+  count: number;
 }
 
 // Pre-initialize skeleton for instant rendering
@@ -234,10 +236,10 @@ const Appointments = memo(function Appointments() {
             <CardContent className="p-12 text-center">
               <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No hay citas programadas</h3>
-              <p className="text-gray-500 mb-4">Comienza creando tu primera cita para una mascota.</p>
-              <Button>
+              <p className="text-gray-500 mb-4">No hay citas para {formatCST1Date(selectedDate)}.</p>
+              <Button className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="w-4 h-4 mr-2" />
-                Crear Primera Cita
+                Crear Nueva Cita
               </Button>
             </CardContent>
           </Card>
