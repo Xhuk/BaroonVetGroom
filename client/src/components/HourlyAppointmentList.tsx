@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, User, Phone, Calendar, MapPin, Scissors, Stethoscope, Syringe, Plus } from "lucide-react";
 import type { Appointment, Client, Pet, Room, Staff } from "@shared/schema";
@@ -120,23 +121,25 @@ export function HourlyAppointmentList() {
   }
 
   return (
-    <div className="bg-white shadow-lg h-[520px] flex flex-col rounded-lg">
-      <div className="p-4 border-b">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1 flex items-center">
-          <Calendar className="w-5 h-5 mr-2" />
-          Citas de Hoy - {new Date().toLocaleDateString('es-ES', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </h3>
-        <div className="text-sm text-gray-600">
-          {todayAppointments.length} citas programadas
-        </div>
-      </div>
-      <div className="p-4 flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto space-y-0">
+    <Card className="shadow-lg h-[520px] flex flex-col">
+        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold flex items-center">
+              <Calendar className="w-5 h-5 mr-2" />
+              Citas de Hoy - {new Date().toLocaleDateString('es-ES', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </h2>
+            <div className="text-sm bg-white/20 px-3 py-1 rounded-full">
+              {todayAppointments.length} citas programadas
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0 flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto">
             {businessHours.map(hour => {
               const hourAppointments = appointmentsByHour[hour] || [];
               const displayHour = parseInt(hour);
@@ -148,7 +151,7 @@ export function HourlyAppointmentList() {
               
               return (
                 <div key={hour} className={`border-b border-gray-100 last:border-b-0 ${isCurrentHour ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''}`}>
-                  <div className="flex items-start p-3">
+                  <div className="flex items-start p-4">
                     {/* Time Column */}
                     <div className="flex items-center w-20 flex-shrink-0">
                       <Clock className={`w-4 h-4 mr-2 ${isCurrentHour ? 'text-blue-600' : 'text-gray-500'}`} />
@@ -239,7 +242,7 @@ export function HourlyAppointmentList() {
               );
             })}
           </div>
-      </div>
-    </div>
+        </CardContent>
+      </Card>
   );
 }

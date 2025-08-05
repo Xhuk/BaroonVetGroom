@@ -2,7 +2,6 @@ import { cn } from "@/lib/utils";
 import { useAccessControl } from "@/hooks/useAccessControl";
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
-import { usePagePreCache } from "@/hooks/usePagePreCache";
 import { 
   BarChart3, 
   Calendar,
@@ -26,7 +25,6 @@ interface NavigationProps {
 export function Navigation({ className }: NavigationProps) {
   const { canAccessAdmin, canAccessSuperAdmin } = useAccessControl();
   const { currentTenant } = useTenant();
-  const { preCachePage } = usePagePreCache();
 
   // Get follow-up count for heart animation
   const { data: followUpData } = useQuery<{ count: number }>({
@@ -92,17 +90,16 @@ export function Navigation({ className }: NavigationProps) {
 
   return (
     <nav className={cn(
-      "fixed left-0 top-20 bottom-32 w-64 bg-white shadow-lg z-30 transform -translate-x-full lg:translate-x-0 transition-transform",
+      "fixed left-0 top-20 bottom-32 w-80 bg-white shadow-lg z-30 transform -translate-x-full lg:translate-x-0 transition-transform",
       className
     )}>
-      <div className="p-4">
+      <div className="p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Módulos</h3>
         <ul className="space-y-2">
           {navigationItems.map((item) => (
             <li key={item.href}>
               <a
                 href={item.href}
-                onMouseEnter={() => preCachePage(item.href)}
                 className="flex items-center space-x-3 px-3 py-2 rounded-lg font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
               >
                 {item.label === "Seguimientos" ? (
@@ -133,7 +130,6 @@ export function Navigation({ className }: NavigationProps) {
                 <a
                   key={item.href}
                   href={item.href}
-                  onMouseEnter={() => preCachePage(item.href)}
                   className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 hover:bg-gray-50 px-3 py-2 rounded-lg mb-2"
                 >
                   <item.icon className="w-5 h-5" />
