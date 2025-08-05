@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { webhookMonitor } from "./webhookMonitor";
 import { deliveryMonitor } from "./deliveryMonitor";
 import { scalableAppointmentService } from './scalableAppointmentService';
+import { reservationCleanup } from "./reservationCleanup";
 // Removed autoStatusService - now using database cron functions
 
 const app = express();
@@ -82,6 +83,10 @@ app.use((req, res, next) => {
     // Start delivery monitoring service
     deliveryMonitor.start();
     log('Delivery monitoring service started');
+
+    // Start reservation cleanup service
+    reservationCleanup.start();
+    log('Reservation cleanup service started');
 
     // Auto status updates now handled by database functions
     log('Database auto-status functions ready');

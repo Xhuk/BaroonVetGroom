@@ -567,6 +567,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Slot reservation endpoints for click-to-book
+  app.post('/api/slot-reservations', async (req, res) => {
+    try {
+      const { tenantId, scheduledDate, scheduledTime, serviceId } = req.body;
+      const sessionId = req.sessionID || req.headers['x-session-id'] as string;
+      
+      if (!tenantId || !scheduledDate || !scheduledTime || !sessionId) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Check if slot is already reserved or has appointment
+      const existingReservation = await db.select()
+        .from(slotReservations)
+        .where(and(
+          eq(slotReservations.tenantId, tenantId),
+          eq(slotReservations.scheduledDate, scheduledDate),
+          eq(slotReservations.scheduledTime, scheduledTime),
+          gt(slotReservations.expiresAt, sql`CURRENT_TIMESTAMP`)
+        ))
+        .limit(1);
+
+      const existingAppointment = await db.select()
+        .from(appointments)
+        .where(and(
+          eq(appointments.tenantId, tenantId),
+          eq(appointments.scheduledDate, scheduledDate),
+          eq(appointments.scheduledTime, scheduledTime)
+        ))
+        .limit(1);
+
+      if (existingReservation.length > 0) {
+        return res.status(409).json({ message: "Slot is already reserved" });
+      }
+
+      if (existingAppointment.length > 0) {
+        return res.status(409).json({ message: "Slot is already booked" });
+      }
+
+      // Create 15-minute reservation
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
+      
+      const [reservation] = await db.insert(slotReservations)
+        .values({
+          tenantId,
+          sessionId,
+          scheduledDate,
+          scheduledTime,
+          serviceId,
+          expiresAt,
+        })
+        .returning();
+
+      res.json({ 
+        reservation,
+        expiresIn: 15 * 60 // seconds
+      });
+    } catch (error) {
+      console.error("Error creating slot reservation:", error);
+      res.status(500).json({ message: "Failed to create reservation" });
+    }
+  });
+
+  // Release slot reservation
+  app.delete('/api/slot-reservations/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const sessionId = req.sessionID || req.headers['x-session-id'] as string;
+
+      await db.delete(slotReservations)
+        .where(and(
+          eq(slotReservations.id, id),
+          eq(slotReservations.sessionId, sessionId)
+        ));
+
+      res.json({ message: "Reservation released" });
+    } catch (error) {
+      console.error("Error releasing slot reservation:", error);
+      res.status(500).json({ message: "Failed to release reservation" });
+    }
+  });
+
+  // Clean up expired reservations (manual trigger)
+  app.post('/api/slot-reservations/cleanup', isSuperAdmin, async (req, res) => {
+    try {
+      const result = await db.execute(sql`SELECT cleanup_expired_reservations()`);
+      const deletedCount = result.rows[0] as any;
+      res.json({ 
+        message: "Cleanup completed",
+        deletedReservations: deletedCount?.cleanup_expired_reservations || 0
+      });
+    } catch (error) {
+      console.error("Error cleaning up reservations:", error);
+      res.status(500).json({ message: "Failed to cleanup reservations" });
+    }
+  });
+
+  // Get reserved slots for a tenant and date
+  app.get('/api/slot-reservations/:tenantId', async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { date } = req.query;
+
+      if (!date) {
+        return res.status(400).json({ message: "Date parameter required" });
+      }
+
+      const reservations = await db.select()
+        .from(slotReservations)
+        .where(and(
+          eq(slotReservations.tenantId, tenantId),
+          eq(slotReservations.scheduledDate, date as string),
+          gt(slotReservations.expiresAt, sql`CURRENT_TIMESTAMP`)
+        ));
+
+      res.json({ reservations });
+    } catch (error) {
+      console.error("Error fetching slot reservations:", error);
+      res.status(500).json({ message: "Failed to fetch reservations" });
+    }
+  });
+
   // Get pet age update configuration for a company
   app.get('/api/pets/age-config/:companyId', isAuthenticated, async (req, res) => {
     try {

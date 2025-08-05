@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { SlotBookingDialog } from "@/components/SlotBookingDialog";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
 import { getCurrentTimeInUserTimezone } from "@shared/userPreferences";
@@ -10,12 +13,15 @@ interface FastCalendarProps {
   className?: string;
   selectedDate?: string;
   onDateChange?: (date: string) => void;
+  tenantId?: string;
 }
 
-export function FastCalendar({ appointments, className, selectedDate, onDateChange }: FastCalendarProps) {
+export function FastCalendar({ appointments, className, selectedDate, onDateChange, tenantId }: FastCalendarProps) {
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone());
   const [isScrolling, setIsScrolling] = useState(false);
   const [displayDate, setDisplayDate] = useState(selectedDate || getTodayCST1());
+  const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -25,6 +31,27 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
       setDisplayDate(selectedDate);
     }
   }, [selectedDate]);
+
+  // Handle slot click for booking
+  const handleSlotClick = (time: string) => {
+    if (!tenantId) return;
+    
+    setSelectedSlot({
+      date: displayDate,
+      time: time
+    });
+    setShowBookingDialog(true);
+  };
+
+  // Handle booking completion
+  const handleBookingComplete = () => {
+    setShowBookingDialog(false);
+    setSelectedSlot(null);
+    // Refresh appointments data if needed
+    if (onDateChange) {
+      onDateChange(displayDate);
+    }
+  };
 
   // Update current time every minute using user's timezone
   useEffect(() => {
@@ -399,7 +426,13 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                       </div>
                     ))
                   ) : (
-                    <p className="text-gray-400 text-sm italic">Libre</p>
+                    <button
+                      onClick={() => handleSlotClick(slot)}
+                      className="text-gray-400 text-sm italic hover:text-blue-600 hover:bg-blue-50 p-2 rounded transition-colors w-full text-left"
+                      data-testid={`button-book-slot-${slot.replace(':', '-')}`}
+                    >
+                      Libre - Click para reservar
+                    </button>
                   )}
                 </div>
               </div>
@@ -408,6 +441,18 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
           </div>
         </div>
       </CardContent>
+
+      {/* Slot Booking Dialog */}
+      {selectedSlot && tenantId && (
+        <SlotBookingDialog
+          open={showBookingDialog}
+          onOpenChange={setShowBookingDialog}
+          tenantId={tenantId}
+          selectedDate={selectedSlot.date}
+          selectedTime={selectedSlot.time}
+          onBookingComplete={handleBookingComplete}
+        />
+      )}
     </Card>
   );
 }

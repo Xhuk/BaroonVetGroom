@@ -137,6 +137,7 @@ export default function Dashboard() {
             className="shadow-lg"
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
+            tenantId={currentTenant?.id}
           />
         ) : (
           <div className="bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed" style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>

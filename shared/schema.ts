@@ -382,6 +382,21 @@ export const tempSlotReservations = pgTable("temp_slot_reservations", {
 export type TempSlotReservation = typeof tempSlotReservations.$inferSelect;
 export type InsertTempSlotReservation = typeof tempSlotReservations.$inferInsert;
 
+// Slot reservations for click-to-book soft locking
+export const slotReservations = pgTable("slot_reservations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull(),
+  sessionId: varchar("session_id").notNull(),
+  scheduledDate: date("scheduled_date").notNull(),
+  scheduledTime: time("scheduled_time").notNull(),
+  serviceId: varchar("service_id"),
+  expiresAt: timestamp("expires_at").notNull(), // 15 minutes from creation
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type SlotReservation = typeof slotReservations.$inferSelect;
+export type InsertSlotReservation = typeof slotReservations.$inferInsert;
+
 // Webhook Error Logs for Super Admin Monitoring
 export const webhookErrorLogs = pgTable("webhook_error_logs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
