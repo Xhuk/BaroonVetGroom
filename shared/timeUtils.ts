@@ -12,11 +12,8 @@ const CST_MINUS_1_OFFSET = -6 * 60; // minutes from UTC
 export function getCurrentTimeCST1(): Date {
   const now = new Date();
   
-  // Get the local timezone offset from navigator
-  const localOffset = now.getTimezoneOffset(); // minutes behind UTC
-  
-  // Calculate CST-1 time (UTC-6)
-  const cstMinus1Time = new Date(now.getTime() + (localOffset + CST_MINUS_1_OFFSET) * 60000);
+  // Calculate CST-1 time (UTC-6) directly from UTC
+  const cstMinus1Time = new Date(now.getTime() + CST_MINUS_1_OFFSET * 60000);
   
   return cstMinus1Time;
 }
