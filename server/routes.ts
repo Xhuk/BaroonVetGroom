@@ -313,7 +313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: appointmentData.petName,
           species: appointmentData.petSpecies,
           breed: appointmentData.petBreed,
-          age: appointmentData.petAge,
+          registeredAge: appointmentData.petAge,
           weight: appointmentData.petWeight,
           medicalHistory: appointmentData.petMedicalHistory
         });
@@ -352,6 +352,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating appointment:", error);
       res.status(500).json({ message: "Failed to update appointment" });
+    }
+  });
+
+  // Reschedule appointment endpoint - dedicated for scheduling adjustments
+  app.put('/api/appointments/:appointmentId/reschedule', isAuthenticated, async (req: any, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const { scheduledDate, scheduledTime, reason } = req.body;
+      
+      // Update appointment with new schedule and add reschedule reason
+      const updatedData = {
+        scheduledDate,
+        scheduledTime,
+        status: 'rescheduled',
+        notes: `Reprogramada: ${reason || 'Sin motivo especificado'}`
+      };
+      
+      const appointment = await storage.updateAppointment(appointmentId, updatedData);
+      res.json({ 
+        appointment, 
+        message: 'Cita reprogramada exitosamente',
+        oldDate: req.body.oldDate,
+        newDate: scheduledDate 
+      });
+    } catch (error) {
+      console.error("Error rescheduling appointment:", error);
+      res.status(500).json({ message: "Error al reprogramar la cita" });
     }
   });
 

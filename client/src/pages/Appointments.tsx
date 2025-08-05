@@ -74,19 +74,20 @@ const Appointments = memo(function Appointments() {
         <BackButton href="/" text="Volver al Dashboard" />
       </div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-blue-800">Gestión de Citas</h1>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Cita
-        </Button>
+        <h1 className="text-2xl font-bold text-blue-800">Gestión de Citas - Programación y Reprogramación</h1>
+        <div className="flex gap-2">
+          <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+            <Edit className="w-4 h-4 mr-2" />
+            Reprogramar
+          </Button>
+          <Button className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Nueva Cita
+          </Button>
+        </div>
       </div>
 
-      {/* CALENDAR TIME INDICATOR */}
-      <CalendarTimeIndicator 
-        appointments={data?.appointments || []}
-        selectedDate={selectedDate}
-        onRefresh={refetch}
-      />
+
 
       {/* DAY NAVIGATION */}
       <div className="bg-white rounded-lg border shadow-sm p-4 mb-6">

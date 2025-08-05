@@ -109,11 +109,24 @@ export default function Clients() {
       name: formData.get("name"),
       species: formData.get("species"),
       breed: formData.get("breed"),
-      age: parseInt(formData.get("age") as string) || null,
+      registeredAge: parseInt(formData.get("registeredAge") as string) || null,
+      birthDate: formData.get("birthDate") || null,
       weight: parseFloat(formData.get("weight") as string) || null,
     };
 
     createPetMutation.mutate(data);
+  };
+
+  // Calculate current age from birth date
+  const calculateCurrentAge = (birthDate: string | null, registeredAge: number | null) => {
+    if (birthDate) {
+      const birth = new Date(birthDate);
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - birth.getTime());
+      const diffYears = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 365.25));
+      return diffYears;
+    }
+    return registeredAge || 0;
   };
 
   const getClientPets = (clientId: string) => {
@@ -137,7 +150,7 @@ export default function Clients() {
     <div className="p-6 max-w-7xl mx-auto">
       <BackButton className="mb-4" />
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-blue-800">Clientes y Mascotas</h1>
+        <h1 className="text-2xl font-bold text-blue-800">Gestión de Clientes y Mascotas - Actualización de Información</h1>
         <div className="flex items-center space-x-3">
           <DebugControls />
           <Button 
@@ -226,8 +239,13 @@ export default function Clients() {
               </div>
 
               <div>
-                <Label htmlFor="age">Edad (años)</Label>
-                <Input name="age" type="number" min="0" placeholder="Edad en años" />
+                <Label htmlFor="registeredAge">Edad Registrada (años)</Label>
+                <Input name="registeredAge" type="number" min="0" placeholder="Edad al momento del registro" />
+              </div>
+
+              <div>
+                <Label htmlFor="birthDate">Fecha de Nacimiento (para cálculo automático)</Label>
+                <Input name="birthDate" type="date" placeholder="Fecha de nacimiento" />
               </div>
 
               <div>
@@ -332,7 +350,10 @@ export default function Clients() {
                               </div>
                               
                               <div className="flex gap-4 text-sm text-gray-600">
-                                {pet.age && <span>Edad: {pet.age} años</span>}
+                                {pet.registeredAge && <span>Edad Registrada: {pet.registeredAge} años</span>}
+                                {pet.birthDate && (
+                                  <span>Edad Actual: {calculateCurrentAge(pet.birthDate, pet.registeredAge)} años</span>
+                                )}
                                 {pet.weight && <span>Peso: {pet.weight} kg</span>}
                               </div>
 

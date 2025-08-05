@@ -188,10 +188,12 @@ export const pets = pgTable("pets", {
   name: varchar("name").notNull(),
   species: varchar("species").notNull(),
   breed: varchar("breed"),
-  age: integer("age"),
+  registeredAge: integer("registered_age"), // Age at registration time
+  birthDate: date("birth_date"), // For automatic age calculation
   weight: decimal("weight", { precision: 5, scale: 2 }),
   medicalHistory: jsonb("medical_history"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Services Configuration

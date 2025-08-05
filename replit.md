@@ -4,6 +4,19 @@
 A high-performance veterinary clinic management platform with ultra-optimized user experience and operational efficiency.
 
 ## Recent Changes
+### Enhanced System Design & User Management (August 2025) - COMPLETED
+- **Removed Calendar Today Segment**: Eliminated the "calendario de hoy" from appointment management interface
+- **Appointment Rescheduling Focus**: Redesigned appointment management specifically for scheduling adjustments
+- **Enhanced Client Management**: Updated client system as header admin tool for contact information updates
+- **Advanced Pet Age Management**: 
+  - Added `registeredAge` field for age at registration time
+  - Added `birthDate` field for automatic age calculation
+  - System automatically calculates current age from birth date
+  - Both registered age and calculated age displayed for medical accuracy
+- **Database-Side Age Updates**: Pet age calculations managed automatically by the system
+- **Reschedule API Endpoint**: Added dedicated `/api/appointments/:id/reschedule` endpoint for appointment adjustments
+- **Super Admin Age Management**: Pet age updates managed by super admin in dedicated sections
+
 ### Performance Optimization & Radio Dial Time Indicator (August 2025) - COMPLETED
 - **Ultra-Lightweight Payloads**: Reduced API response from 146KB to ~5KB (95% reduction)
 - **Day-Specific Loading**: Load only today's appointments by default with date navigation
