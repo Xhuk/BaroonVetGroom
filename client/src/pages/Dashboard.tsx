@@ -4,8 +4,8 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 import { Navigation } from "@/components/Navigation";
+import { Calendar } from "@/components/Calendar";
 import { BottomStatsRibbon } from "@/components/BottomStatsRibbon";
-import { HourlyAppointmentList } from "@/components/HourlyAppointmentList";
 import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, History, Truck, Phone, CalendarIcon } from "lucide-react";
@@ -61,9 +61,9 @@ export default function Dashboard() {
       <Navigation />
       
       {/* Main Content */}
-      <main className="lg:ml-80 pb-40">
+      <main className="lg:ml-64 pb-40">
         {/* Action Buttons */}
-        <div className="mb-6 flex flex-wrap gap-4 px-6 pt-6">
+        <div className="mb-6 flex flex-wrap gap-4 px-6">
           <Link href="/booking">
             <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md">
               <Phone className="w-4 h-4 mr-2" />
@@ -84,10 +84,8 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Hourly Appointment List */}
-        <div className="px-6">
-          <HourlyAppointmentList />
-        </div>
+        {/* Calendar */}
+        <Calendar className="shadow-lg" />
       </main>
 
       {/* Bottom Statistics Ribbon */}

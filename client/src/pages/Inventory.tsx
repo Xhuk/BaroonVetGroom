@@ -50,13 +50,11 @@ export default function Inventory() {
   const { data: inventoryItems, isLoading } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory", currentTenant?.id],
     enabled: !!currentTenant?.id,
-    staleTime: 5 * 60 * 1000, // Consider inventory fresh for 5 minutes
   });
 
   const { data: transactions } = useQuery<InventoryTransaction[]>({
     queryKey: ["/api/inventory/transactions", currentTenant?.id],
     enabled: !!currentTenant?.id,
-    staleTime: 2 * 60 * 1000, // Consider transactions fresh for 2 minutes
   });
 
   const createItemMutation = useMutation({

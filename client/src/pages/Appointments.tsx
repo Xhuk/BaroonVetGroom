@@ -32,37 +32,31 @@ export default function Appointments() {
   const { data: appointments, isLoading: appointmentsLoading } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments", currentTenant?.id],
     enabled: !!currentTenant?.id && isAuthenticated,
-    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
   });
 
   const { data: clients } = useQuery<Client[]>({
     queryKey: ["/api/clients", currentTenant?.id],
     enabled: !!currentTenant?.id && isAuthenticated,
-    staleTime: 10 * 60 * 1000, // Consider client data fresh for 10 minutes
   });
 
   const { data: pets } = useQuery<Pet[]>({
     queryKey: ["/api/pets", currentTenant?.id],
     enabled: !!currentTenant?.id && isAuthenticated,
-    staleTime: 10 * 60 * 1000, // Consider pet data fresh for 10 minutes
   });
 
   const { data: rooms } = useQuery<Room[]>({
     queryKey: ["/api/rooms", currentTenant?.id],
     enabled: !!currentTenant?.id && isAuthenticated,
-    staleTime: 30 * 60 * 1000, // Rooms rarely change, 30 minutes cache
   });
 
   const { data: staff } = useQuery<Staff[]>({
     queryKey: ["/api/staff", currentTenant?.id],
     enabled: !!currentTenant?.id && isAuthenticated,
-    staleTime: 30 * 60 * 1000, // Staff rarely changes, 30 minutes cache
   });
 
   const { data: services } = useQuery<Service[]>({
     queryKey: ["/api/services", currentTenant?.id],
     enabled: !!currentTenant?.id && isAuthenticated,
-    staleTime: 60 * 60 * 1000, // Services rarely change, 1 hour cache
   });
 
   // Create appointment mutation

@@ -26,10 +26,18 @@ export function Calendar({ className }: CalendarProps) {
   const todayStr = today.toISOString().split('T')[0];
 
   const { data: appointments = [], isLoading } = useQuery<Appointment[]>({
-    queryKey: [`/api/appointments`, currentTenant?.id],
+    queryKey: [`/api/appointments/${currentTenant?.id}`, todayStr],
+    queryFn: async () => {
+      const response = await fetch(`/api/appointments/${currentTenant?.id}?startDate=${todayStr}&endDate=${todayStr}`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
     enabled: !!currentTenant?.id,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    refetchInterval: false, // Don't auto-refresh
+    refetchInterval: 30000,
   });
 
   // Generate 30-minute time slots for the entire day (like your reference)
