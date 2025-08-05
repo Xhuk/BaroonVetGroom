@@ -76,18 +76,13 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     });
   };
 
-  const getCurrentTimePosition = () => {
+  // Fixed marker doesn't need position calculation - it's always centered
+  const getCurrentTimeSlotInfo = () => {
     const now = getCurrentTimeInUserTimezone();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     
-    // Debug: Always show marker for testing during development
     console.log(`Current time: ${hours}:${minutes.toString().padStart(2, '0')}`);
-    
-    // Calculate position for actual current time
-    const totalMinutes = (hours - 6) * 60 + minutes; // Minutes since 6 AM
-    const slotHeight = 80; // Each 30-minute slot is now 80px tall
-    const position = (totalMinutes / 30) * slotHeight; // Position in pixels
     
     // Return null if outside visible hours (6 AM - 10 PM)
     if (hours < 6 || hours >= 22) {
@@ -95,8 +90,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
       return null;
     }
     
-    console.log(`Time marker position: ${position}px`);
-    return position;
+    return { hours, minutes };
   };
 
   const isTimeMarkerInOccupiedSlot = () => {
@@ -176,7 +170,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     };
   }, [currentTime, isScrolling]);
 
-  const currentTimePosition = getCurrentTimePosition();
+  const currentTimeInfo = getCurrentTimeSlotInfo();
   const isMarkerInOccupiedSlot = isTimeMarkerInOccupiedSlot();
 
   // Determine if an appointment is currently ongoing
@@ -213,12 +207,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
             })}
           </h2>
           <div className="flex gap-2">
-            <button
-              onClick={scrollToCurrentTime}
-              className="px-3 py-1 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition duration-300 text-sm font-medium"
-            >
-              🕐 Ahora
-            </button>
+
             <button
               onClick={() => window.history.forward()}
               className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition duration-300 text-sm"
@@ -231,41 +220,31 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
           
-          {/* Main time marker - grows to full slot width when over occupied slots */}
-          {currentTimePosition !== null && (
-            <div
-              className={cn(
-                "absolute z-30 bg-red-500 transition-all duration-500 ease-out",
-                // Dynamic sizing based on slot occupation
-                isMarkerInOccupiedSlot
-                  ? "left-0 right-0 rounded-md shadow-lg border-l-4 border-red-600" // Full slot width when over appointment
-                  : "left-0 w-1 rounded-r-full" // Thin line when over free slot
-              )}
-              style={{ 
-                top: `${currentTimePosition - (isMarkerInOccupiedSlot ? 25 : 0)}px`, // Center in slot when expanded
-                height: isMarkerInOccupiedSlot ? '50px' : '3px', // Match slot height when expanded
-                // Add glow effect when over occupied slot
-                ...(isMarkerInOccupiedSlot && {
-                  boxShadow: '0 0 15px rgba(239, 68, 68, 0.6), 0 0 30px rgba(239, 68, 68, 0.3)',
-                  background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.8) 0%, rgba(239, 68, 68, 0.6) 50%, rgba(239, 68, 68, 0.8) 100%)',
-                  animation: 'pulse 2s ease-in-out infinite'
-                })
-              }}
-            >
-              {/* Time indicator text when expanded */}
-              {isMarkerInOccupiedSlot && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm drop-shadow-lg">
-                    ⏰ AHORA - {getCurrentTimeInUserTimezone().toLocaleTimeString('es-ES', { 
-                      hour: '2-digit', 
-                      minute: '2-digit',
-                      hour12: true 
-                    })}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Fixed time marker in center of container - slots scroll to align with it */}
+          <div
+            className={cn(
+              "absolute left-0 right-0 z-30 pointer-events-none transition-all duration-300",
+              isMarkerInOccupiedSlot
+                ? "bg-red-500/80 h-[3px] shadow-lg" // Subtle marker when over appointment
+                : "bg-red-400/60 h-[2px]" // Even more subtle when over free slot
+            )}
+            style={{ 
+              top: '50%', // Always centered vertically in the container
+              transform: 'translateY(-50%)'
+            }}
+          >
+            {/* Small time indicator dot on the left */}
+            <div className="absolute left-2 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full shadow-sm"></div>
+            
+            {/* Current time text when over occupied slot */}
+            {isMarkerInOccupiedSlot && (
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                <span className="text-red-600 text-xs font-medium bg-white/90 px-2 py-1 rounded shadow-sm">
+                  AHORA
+                </span>
+              </div>
+            )}
+          </div>
           
           {/* Time slots container with auto-scroll */}
           <div 
