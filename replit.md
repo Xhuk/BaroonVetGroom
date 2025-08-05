@@ -4,6 +4,15 @@
 A high-performance veterinary clinic management platform with ultra-optimized user experience and operational efficiency.
 
 ## Recent Changes
+### Enhanced Booking System with Smart Creation & Real-Time Updates (August 2025) - COMPLETED ✅
+- **Azure Portal-Style Search Interfaces**: Type-ahead search for clients (name, email, phone) and pets (name, species, breed)
+- **Multi-Service Selection**: Tag-style interface for selecting multiple services with real-time price calculation
+- **Smart "Crear [name]" Buttons**: When typed names don't exist, users can create new clients/pets seamlessly
+- **Automatic Database Saving**: New clients and pets are created in database when appointment is saved
+- **Fixed Price Calculation**: Changed from string concatenation to proper numeric summation
+- **Real-Time Calendar Updates**: Fixed cache invalidation and added page refresh to show new appointments immediately
+- **Enhanced User Experience**: Direct appointment creation workflow eliminates slot reservation complexity
+
 ### Comprehensive Client & Pet Management System (August 2025) - COMPLETED ✅
 - **Full CRUD Operations**: Created complete clients and pets management page with inline editing capabilities
 - **Pet Lifecycle Management**: Added active/inactive status toggle for deceased pets with confirmation dialogs

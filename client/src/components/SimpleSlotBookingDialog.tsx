@@ -184,8 +184,10 @@ export function SimpleSlotBookingDialog({
         description: `${appointments.length} cita(s) programada(s) para ${selectedDate} a las ${selectedTime}. Total: $${totalPrice}`,
       });
       
-      // Invalidate cache and close dialog
-      queryClient.invalidateQueries({ queryKey: ["/api/appointments-fast"] });
+      // Invalidate cache and close dialog - match the Dashboard query pattern
+      queryClient.invalidateQueries({ queryKey: [`/api/appointments-fast/${tenantId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       onBookingComplete();
       
       // Reset form

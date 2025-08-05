@@ -47,10 +47,8 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const handleBookingComplete = () => {
     setShowBookingDialog(false);
     setSelectedSlot(null);
-    // Refresh appointments data if needed
-    if (onDateChange) {
-      onDateChange(displayDate);
-    }
+    // Force page refresh to show new appointment immediately
+    window.location.reload();
   };
 
   // Update current time every minute using user's timezone
