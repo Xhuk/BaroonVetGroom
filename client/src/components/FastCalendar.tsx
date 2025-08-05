@@ -149,8 +149,8 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
           })}
         </h2>
       </CardHeader>
-      <CardContent className="pb-32">
-        <div className="relative overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
+      <CardContent>
+        <div className="relative overflow-hidden" style={{ height: 'calc(100vh - 320px)' }}>
 
           
           {/* Time slots container with auto-scroll */}
