@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { and } from 'drizzle-orm';
-import { clients, rooms, services, staff } from '@shared/schema';
+import { clients, rooms, services, staff, slotReservations, appointments } from '@shared/schema';
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookMonitor } from "./webhookMonitor";
 import { advancedRouteOptimization, type OptimizedRoute, type RouteOptimizationOptions } from "./routeOptimizer";
@@ -10,6 +10,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
 import { pets, companies } from "@shared/schema";
+import { gt } from "drizzle-orm";
 // Removed autoStatusService import - now using database functions
 
 // Helper function to check system admin access
@@ -571,7 +572,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/slot-reservations', async (req, res) => {
     try {
       const { tenantId, scheduledDate, scheduledTime, serviceId } = req.body;
-      const sessionId = req.sessionID || req.headers['x-session-id'] as string;
+      const sessionId = req.sessionID || req.headers['x-session-id'] as string || `session-${Date.now()}`;
       
       if (!tenantId || !scheduledDate || !scheduledTime || !sessionId) {
         return res.status(400).json({ message: "Missing required fields" });

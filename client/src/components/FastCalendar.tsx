@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { SlotBookingDialog } from "@/components/SlotBookingDialog";
+import { SimpleSlotBookingDialog } from "./SimpleSlotBookingDialog";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
 import { getCurrentTimeInUserTimezone } from "@shared/userPreferences";
@@ -442,9 +442,9 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
         </div>
       </CardContent>
 
-      {/* Slot Booking Dialog */}
+      {/* Simple Slot Booking Dialog */}
       {selectedSlot && tenantId && (
-        <SlotBookingDialog
+        <SimpleSlotBookingDialog
           open={showBookingDialog}
           onOpenChange={setShowBookingDialog}
           tenantId={tenantId}
