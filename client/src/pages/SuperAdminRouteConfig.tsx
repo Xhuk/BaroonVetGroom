@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Settings, MapPin, DollarSign, Zap } from "lucide-react";
 import { useLocation } from "wouter";
+import { BackButton } from "@/components/BackButton";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -112,16 +113,14 @@ export default function SuperAdminRouteConfig() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Button
+          <BackButton 
+            href="/superadmin"
+            text="Volver a Super Admin"
             variant="ghost"
             size="sm"
-            onClick={() => setLocation("/superadmin")}
             className="text-gray-600 hover:text-gray-900"
-            data-testid="button-back-to-superadmin"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver a Super Admin
-          </Button>
+            testId="button-back-to-superadmin"
+          />
           <h1 className="text-2xl font-bold text-blue-800">Configuración de Optimización de Rutas</h1>
         </div>
       </div>

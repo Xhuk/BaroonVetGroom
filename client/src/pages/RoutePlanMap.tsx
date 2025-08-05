@@ -11,6 +11,7 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { DebugControls } from "@/components/DebugControls";
+import { BackButton } from "@/components/BackButton";
 
 // Create numbered customer icons for route order
 const createNumberedIcon = (number: number) => {
@@ -262,16 +263,14 @@ export default function RoutePlanMap() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Button
+          <BackButton 
+            href="/delivery-plan"
+            text="Volver a Planificación"
             variant="ghost"
             size="sm"
-            onClick={() => setLocation("/delivery-plan")}
             className="text-gray-600 hover:text-gray-900"
-            data-testid="button-back-to-delivery"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver a Planificación
-          </Button>
+            testId="button-back-to-delivery"
+          />
           <h1 className="text-2xl font-bold text-blue-800">Mapa de Rutas - {new Date(selectedDate).toLocaleDateString()}</h1>
         </div>
         

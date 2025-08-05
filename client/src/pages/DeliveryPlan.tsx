@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { DebugControls } from "@/components/DebugControls";
+import { BackButton } from "@/components/BackButton";
 import { 
   Plus, 
   Map, 
@@ -98,16 +99,14 @@ export default function DeliveryPlan() {
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Button
+            <BackButton 
+              href="/"
+              text="Volver al Dashboard"
               variant="ghost"
               size="sm"
-              onClick={() => setLocation("/")}
               className="text-gray-600 hover:text-gray-900"
-              data-testid="button-back-to-dashboard"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver al Dashboard
-            </Button>
+              testId="button-back-to-dashboard"
+            />
             <h1 className="text-2xl font-bold text-blue-800">Planificación de Entregas</h1>
           </div>
         </div>
@@ -171,16 +170,14 @@ export default function DeliveryPlan() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Button
+          <BackButton 
+            href="/"
+            text="Volver al Dashboard"
             variant="ghost"
             size="sm"
-            onClick={() => setLocation("/")}
             className="text-gray-600 hover:text-gray-900"
-            data-testid="button-back-to-dashboard"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver al Dashboard
-          </Button>
+            testId="button-back-to-dashboard"
+          />
           <h1 className="text-2xl font-bold text-blue-800">Planificación de Entregas</h1>
         </div>
         <div className="flex gap-3 items-center">

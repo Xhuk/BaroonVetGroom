@@ -981,15 +981,12 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
               </div>
 
               <div className="flex justify-between">
-                <Button
-                  type="button"
+                <BackButton 
+                  href="/appointments"
+                  text="Cancelar"
                   variant="outline"
-                  onClick={() => setLocation('/appointments')}
-                  data-testid="button-cancel"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Cancelar
-                </Button>
+                  testId="button-cancel"
+                />
                 <Button
                   type="button"
                   onClick={() => {

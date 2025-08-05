@@ -24,6 +24,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Link } from "wouter";
+import { BackButton } from "@/components/BackButton";
 
 interface DeliveryTracker {
   id: string;
@@ -152,12 +153,13 @@ export default function DeliveryTracking() {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center gap-4 mb-6">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" data-testid="button-back">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver al Dashboard
-            </Button>
-          </Link>
+          <BackButton 
+            href="/dashboard"
+            text="Volver al Dashboard"
+            variant="ghost"
+            size="sm"
+            testId="button-back"
+          />
         </div>
         
         <Card>
@@ -185,12 +187,13 @@ export default function DeliveryTracking() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" data-testid="button-back">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Dashboard
-            </Button>
-          </Link>
+          <BackButton 
+            href="/dashboard"
+            text="Dashboard"
+            variant="ghost"
+            size="sm"
+            testId="button-back"
+          />
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               Seguimiento de Entregas

@@ -5,9 +5,20 @@ import { useLocation } from "wouter";
 interface BackButtonProps {
   className?: string;
   href?: string;
+  text?: string;
+  variant?: "outline" | "ghost" | "default" | "destructive" | "secondary" | "link";
+  size?: "default" | "sm" | "lg" | "icon";
+  testId?: string;
 }
 
-export function BackButton({ className = "", href }: BackButtonProps) {
+export function BackButton({ 
+  className = "", 
+  href, 
+  text = "Volver", 
+  variant = "outline",
+  size = "default",
+  testId = "button-back"
+}: BackButtonProps) {
   const [, setLocation] = useLocation();
 
   const handleBack = () => {
@@ -20,12 +31,14 @@ export function BackButton({ className = "", href }: BackButtonProps) {
 
   return (
     <Button
-      variant="outline"
+      variant={variant}
+      size={size}
       onClick={handleBack}
       className={`flex items-center gap-2 ${className}`}
+      data-testid={testId}
     >
       <ArrowLeft className="w-4 h-4" />
-      Regresar
+      {text}
     </Button>
   );
 }
