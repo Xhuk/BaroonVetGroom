@@ -223,28 +223,44 @@ export default function Inventory() {
           <DebugControls />
           <Button 
             variant="outline"
-            onClick={async () => {
-              try {
-                await apiRequest(`/api/seed/inventory-data`, {
-                  method: "POST",
-                  body: JSON.stringify({ tenantId: currentTenant?.id }),
-                });
-                toast({
-                  title: "Inventario poblado",
-                  description: "Se han agregado productos, medicamentos, vacunas y accesorios veterinarios.",
-                });
-                queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-              } catch (error) {
-                toast({
-                  title: "Error",
-                  description: "No se pudo poblar el inventario",
-                  variant: "destructive",
-                });
-              }
+            onClick={() => {
+              const csvContent = `Categoria,Nombre,Descripcion,Precio Proveedor (MXN),Precio Venta (MXN),SKU,Stock,Unidad,Proveedor
+Vacuna,Vacuna antirrábica,Protección anual contra la rabia,120,250,VAC-001,50,Frasco,Vetpharma
+Vacuna,"Vacuna múltiple (moquillo, parvovirus)",Protege contra múltiples enfermedades,180,350,VAC-002,30,Frasco,PetLabs
+Accesorio,Collar de piel ajustable,Para perros medianos,90,180,ACC-001,75,Pieza,Mascota Feliz
+Grooming,Shampoo para perros hipoalergénico,Ideal para piel sensible,80,150,GRM-001,40,Botella,Dermapet
+Grooming,Cortaúñas profesional,"Acero inoxidable, mango antideslizante",40,90,GRM-002,60,Pieza,PetTools
+Grooming,Cepillo de cerdas suaves,Para perros de pelo largo,35,70,GRM-003,100,Pieza,PetTools
+Médico,Jabón medicado,Para tratamiento de hongos y bacterias,60,110,MED-001,35,Barra,Vetpharma
+Médico,Collar isabelino,Talla ajustable para perros y gatos,30,65,MED-002,45,Pieza,VetComfort
+Grooming,Toalla absorbente grande,"Secado rápido, reutilizable",25,55,GRM-004,80,Pieza,CleanPet
+Accesorio,Perfume para mascotas,"Aroma duradero, sin alcohol",50,95,ACC-002,90,Frasco,AromaPet
+Alimento,Croquetas premium para perros (10kg),Con proteínas y omegas,450,850,ALM-001,25,Saco,NutriPet
+Alimento,Alimento húmedo para gatos (lata),"Sabor atún, sin conservadores",18,35,ALM-002,150,Lata,CatDelight
+Medicamento,Antibiótico para perros (Amoxicilina),"250mg, tratamiento de infecciones",60,120,MED-003,40,Caja,Vetpharma
+Medicamento,Desparasitante oral,"Uso mensual, amplio espectro",35,75,MED-004,100,Tableta,PetLabs
+Juguete,Pelota con sonido para perro,"Material resistente, color azul",20,50,JUG-001,80,Pieza,DogFun
+Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJoy`;
+              
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+              const link = document.createElement('a');
+              const url = URL.createObjectURL(blob);
+              link.setAttribute('href', url);
+              link.setAttribute('download', 'inventario_veterinario_ejemplo.csv');
+              link.style.visibility = 'hidden';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              toast({
+                title: "CSV descargado",
+                description: "Archivo de ejemplo descargado exitosamente. Puedes usar este formato para importar tus productos.",
+              });
             }}
-            data-testid="button-seed-inventory"
+            data-testid="button-download-csv"
           >
-            📦 Poblar Inventario
+            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            Descargar CSV Ejemplo
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -267,8 +283,8 @@ export default function Inventory() {
                 onClick={() => setShowMassImport(true)}
                 data-testid="menu-item-mass-import"
               >
-                <FileSpreadsheet className="w-4 h-4 mr-2" />
-                Importación Masiva
+                <Zap className="w-4 h-4 mr-2" />
+                Importación con IA
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -737,7 +753,7 @@ export default function Inventory() {
               Importación Masiva con IA
             </DialogTitle>
             <DialogDescription>
-              Describe tus productos de forma natural y la IA los procesará automáticamente.
+              Describe tus productos de forma natural y la IA los procesará automáticamente. O descarga el CSV de ejemplo para formato estructurado.
             </DialogDescription>
           </DialogHeader>
           
@@ -768,45 +784,90 @@ export default function Inventory() {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex justify-between">
             <Button 
-              variant="outline" 
-              onClick={() => setShowMassImport(false)}
-              disabled={massImportMutation.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button 
+              variant="outline"
               onClick={() => {
-                if (!importText.trim()) {
-                  toast({
-                    title: "Error",
-                    description: "Por favor describe los productos a importar.",
-                    variant: "destructive",
-                  });
-                  return;
-                }
+                const csvContent = `Categoria,Nombre,Descripcion,Precio Proveedor (MXN),Precio Venta (MXN),SKU,Stock,Unidad,Proveedor
+Vacuna,Vacuna antirrábica,Protección anual contra la rabia,120,250,VAC-001,50,Frasco,Vetpharma
+Vacuna,"Vacuna múltiple (moquillo, parvovirus)",Protege contra múltiples enfermedades,180,350,VAC-002,30,Frasco,PetLabs
+Accesorio,Collar de piel ajustable,Para perros medianos,90,180,ACC-001,75,Pieza,Mascota Feliz
+Grooming,Shampoo para perros hipoalergénico,Ideal para piel sensible,80,150,GRM-001,40,Botella,Dermapet
+Grooming,Cortaúñas profesional,"Acero inoxidable, mango antideslizante",40,90,GRM-002,60,Pieza,PetTools
+Grooming,Cepillo de cerdas suaves,Para perros de pelo largo,35,70,GRM-003,100,Pieza,PetTools
+Médico,Jabón medicado,Para tratamiento de hongos y bacterias,60,110,MED-001,35,Barra,Vetpharma
+Médico,Collar isabelino,Talla ajustable para perros y gatos,30,65,MED-002,45,Pieza,VetComfort
+Grooming,Toalla absorbente grande,"Secado rápido, reutilizable",25,55,GRM-004,80,Pieza,CleanPet
+Accesorio,Perfume para mascotas,"Aroma duradero, sin alcohol",50,95,ACC-002,90,Frasco,AromaPet
+Alimento,Croquetas premium para perros (10kg),Con proteínas y omegas,450,850,ALM-001,25,Saco,NutriPet
+Alimento,Alimento húmedo para gatos (lata),"Sabor atún, sin conservadores",18,35,ALM-002,150,Lata,CatDelight
+Medicamento,Antibiótico para perros (Amoxicilina),"250mg, tratamiento de infecciones",60,120,MED-003,40,Caja,Vetpharma
+Medicamento,Desparasitante oral,"Uso mensual, amplio espectro",35,75,MED-004,100,Tableta,PetLabs
+Juguete,Pelota con sonido para perro,"Material resistente, color azul",20,50,JUG-001,80,Pieza,DogFun
+Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJoy`;
                 
-                massImportMutation.mutate({ 
-                  text: importText, 
-                  tenantId: currentTenant?.id || '' 
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'inventario_veterinario_ejemplo.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                toast({
+                  title: "CSV descargado",
+                  description: "Usa este formato para importar productos por CSV.",
                 });
               }}
-              disabled={massImportMutation.isPending || !importText.trim()}
-              data-testid="button-process-import"
+              disabled={massImportMutation.isPending}
+              data-testid="button-download-sample-csv"
             >
-              {massImportMutation.isPending ? (
-                <>
-                  <Zap className="w-4 h-4 mr-2 animate-spin" />
-                  Procesando con IA...
-                </>
-              ) : (
-                <>
-                  <Zap className="w-4 h-4 mr-2" />
-                  Procesar con IA
-                </>
-              )}
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Descargar CSV
             </Button>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowMassImport(false)}
+                disabled={massImportMutation.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (!importText.trim()) {
+                    toast({
+                      title: "Error",
+                      description: "Por favor describe los productos a importar.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
+                  massImportMutation.mutate({ 
+                    text: importText, 
+                    tenantId: currentTenant?.id || '' 
+                  });
+                }}
+                disabled={massImportMutation.isPending || !importText.trim()}
+                data-testid="button-process-import"
+              >
+                {massImportMutation.isPending ? (
+                  <>
+                    <Zap className="w-4 h-4 mr-2 animate-spin" />
+                    Procesando con IA...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Procesar con IA
+                  </>
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
