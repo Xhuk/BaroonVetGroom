@@ -76,31 +76,29 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     // Debug: Always show marker for testing during development
     console.log(`Current time: ${hours}:${minutes.toString().padStart(2, '0')}`);
     
-    if (hours < 6 || hours >= 22) {
-      console.log('Time outside visible hours, but showing anyway for testing');
-      // For testing: still show marker even outside hours
-    }
+    // For testing: Show marker at visible position (like 2:30 PM slot)
+    const testHour = 14; // 2:30 PM
+    const testMinute = 30;
     
-    // Calculate position within visible slots
-    const totalMinutes = (hours - 6) * 60 + minutes; // Minutes since 6 AM
+    // Calculate position for test time instead of actual time
+    const totalMinutes = (testHour - 6) * 60 + testMinute; // Minutes since 6 AM
     const slotHeight = 80; // Each 30-minute slot is now 80px tall
     const position = (totalMinutes / 30) * slotHeight; // Position in pixels
     
-    console.log(`Time marker position: ${position}px`);
+    console.log(`Test marker position (2:30 PM): ${position}px`);
     return position;
   };
 
   const isTimeMarkerInOccupiedSlot = () => {
-    const now = getCurrentTimeInUserTimezone();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+    // For testing: Check 2:30 PM slot instead of current time
+    const testHour = 14; // 2:30 PM  
+    const testMinute = 30;
     
-    // Find the current 30-minute time slot
-    const slotStartMinute = Math.floor(currentMinute / 30) * 30;
-    const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(slotStartMinute).padStart(2, '0')}`;
+    const slotStartMinute = Math.floor(testMinute / 30) * 30;
+    const testTimeStr = `${String(testHour).padStart(2, '0')}:${String(slotStartMinute).padStart(2, '0')}`;
     
-    const slotAppointments = getAppointmentsForSlot(currentTimeStr);
-    console.log(`Checking slot ${currentTimeStr}: ${slotAppointments.length} appointments found`);
+    const slotAppointments = getAppointmentsForSlot(testTimeStr);
+    console.log(`Checking test slot ${testTimeStr}: ${slotAppointments.length} appointments found`);
     
     return slotAppointments.length > 0;
   };
