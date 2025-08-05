@@ -26,6 +26,13 @@ const Appointments = memo(function Appointments() {
   // ULTRA-OPTIMIZED: Use TanStack Query for robust data fetching
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/appointments-data/vetgroom1', selectedDate],
+    queryFn: async () => {
+      const response = await fetch(`/api/appointments-data/vetgroom1?date=${selectedDate}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
     staleTime: 5 * 60 * 1000, // 5 minute cache per day
     refetchOnWindowFocus: false,
     retry: 2,
