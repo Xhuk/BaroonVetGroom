@@ -26,6 +26,7 @@ A high-performance veterinary clinic management platform with ultra-optimized us
   - Repositioned red current-time indicators to center of containers
   - Edge slots show partial indicators (top half for last slot, bottom half for first slot)
   - All slots now end at same pixel height for uniform appearance
+  - Extended calendar card content to reach bottom where navigation ends for full-screen utilization
 
 ### Performance Optimization & Radio Dial Time Indicator (August 2025) - COMPLETED
 - **Ultra-Lightweight Payloads**: Reduced API response from 146KB to ~5KB (95% reduction)
