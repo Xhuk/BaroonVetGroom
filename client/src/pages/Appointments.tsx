@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { useFastLoad, useFastFetch } from "@/hooks/useFastLoad";
@@ -29,35 +29,40 @@ export default function Appointments() {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
-  // Ultra-fast loading with progressive data fetching
+  // Optimized data fetching - only fetch what's needed when needed
+  const shouldFetchData = !!currentTenant?.id && isAuthenticated && !isInstant;
+
   const { data: appointments, isLoading: appointmentsLoading } = useFastFetch<Appointment[]>(
     `/api/appointments/${currentTenant?.id}`,
-    !!currentTenant?.id && isAuthenticated && !isInstant
+    shouldFetchData
   );
+
+  // Only fetch support data when creating/editing appointments
+  const shouldFetchSupportData = shouldFetchData && (showCreateForm || !!editingAppointment);
 
   const { data: clients } = useFastFetch<Client[]>(
     `/api/clients/${currentTenant?.id}`,
-    !!currentTenant?.id && isAuthenticated && !isInstant
+    shouldFetchSupportData
   );
 
   const { data: pets } = useFastFetch<Pet[]>(
     `/api/pets/${currentTenant?.id}`,
-    !!currentTenant?.id && isAuthenticated && !isInstant
+    shouldFetchSupportData
   );
 
   const { data: rooms } = useFastFetch<Room[]>(
     `/api/rooms/${currentTenant?.id}`,
-    !!currentTenant?.id && isAuthenticated && !isInstant
+    shouldFetchSupportData
   );
 
   const { data: staff } = useFastFetch<Staff[]>(
     `/api/staff/${currentTenant?.id}`,
-    !!currentTenant?.id && isAuthenticated && !isInstant
+    shouldFetchSupportData
   );
 
   const { data: services } = useFastFetch<Service[]>(
     `/api/services/${currentTenant?.id}`,
-    !!currentTenant?.id && isAuthenticated && !isInstant
+    shouldFetchSupportData
   );
 
   // Create appointment mutation
@@ -70,8 +75,8 @@ export default function Appointments() {
         title: "Cita creada",
         description: "La cita se ha programado exitosamente.",
       });
-      // Trigger manual refresh with fast loading
-      window.location.reload();
+      // Invalidate cache for optimized refresh
+      queryClient.invalidateQueries({ queryKey: ["/api/appointments", currentTenant?.id] });
       setShowCreateForm(false);
     },
     onError: (error: any) => {
@@ -266,18 +271,25 @@ export default function Appointments() {
     setEditingAppointment(appointment);
   };
 
-  const getStatusColor = (status: string) => {
+  // Memoized helper functions to prevent re-renders
+  const getStatusColor = useCallback((status: string) => {
     switch (status) {
       case "completed": return "bg-green-100 text-green-800 border-green-200";
       case "in_progress": return "bg-blue-100 text-blue-800 border-blue-200";
       case "cancelled": return "bg-red-100 text-red-800 border-red-200";
       default: return "bg-yellow-100 text-yellow-800 border-yellow-200";
     }
-  };
+  }, []);
 
-  const getLogisticsIcon = (logistics: string) => {
+  const getLogisticsIcon = useCallback((logistics: string) => {
     return logistics === "pickup" ? <MapPin className="w-4 h-4" /> : <User className="w-4 h-4" />;
-  };
+  }, []);
+
+  // Memoized filtered appointments for better performance
+  const filteredAppointments = useMemo(() => {
+    if (!appointments) return [];
+    return appointments.filter(apt => apt.status !== 'cancelled');
+  }, [appointments]);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

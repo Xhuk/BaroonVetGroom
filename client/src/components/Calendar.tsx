@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { useDelayedQuery } from "@/hooks/useInstantLoad";
@@ -37,8 +37,8 @@ export function Calendar({ className }: CalendarProps) {
     // No automatic refresh for speed
   });
 
-  // Generate 30-minute time slots for the entire day (like your reference)
-  const generateTimeSlots = () => {
+  // Memoized time slots generation for better performance
+  const timeSlots = useMemo(() => {
     const slots = [];
     for (let h = 6; h < 22; h++) { // 6 AM to 10 PM for veterinary clinic
       for (let m = 0; m < 60; m += 30) {
@@ -48,58 +48,54 @@ export function Calendar({ className }: CalendarProps) {
       }
     }
     return slots;
-  };
+  }, []);
 
-  const timeSlots = generateTimeSlots();
-
-  const getAppointmentStyle = (appointment: Appointment) => {
+  const getAppointmentStyle = useCallback((appointment: Appointment) => {
     const typeStyles = {
       grooming: "bg-green-200 text-green-800 border border-green-300",
       medical: "bg-blue-200 text-blue-800 border border-blue-300", 
       vaccination: "bg-purple-200 text-purple-800 border border-purple-300",
     };
     return typeStyles[appointment.type as keyof typeof typeStyles] || "bg-gray-200 text-gray-800 border border-gray-300";
-  };
+  }, []);
 
-  const getAppointmentsForSlot = (timeSlot: string) => {
-    return appointments.filter((appointment: Appointment) => {
-      // Check if appointment has the expected date fields
-      const appointmentDate = appointment.scheduledDate || appointment.date;
-      const appointmentTime = appointment.scheduledTime || appointment.startTime;
+  // Memoized appointment filtering for better performance
+  const appointmentsBySlot = useMemo(() => {
+    const slotMap = new Map<string, Appointment[]>();
+    
+    if (!appointments || appointments.length === 0) return slotMap;
+    
+    const todayDate = new Date(today.toDateString());
+    
+    appointments.forEach((appointment: Appointment) => {
+      const appointmentDate = appointment.scheduledDate;
+      const appointmentTime = appointment.scheduledTime;
       
-      if (!appointmentDate || !appointmentTime) {
-        console.log("Missing date/time for appointment:", appointment.id, { appointmentDate, appointmentTime });
-        return false;
-      }
+      if (!appointmentDate || !appointmentTime) return;
       
       const appDate = new Date(appointmentDate);
-      const todayDate = new Date(today.toDateString()); // Normalize to start of day
-      
-      // More robust date comparison - check if same date
       const isSameDate = appDate.toDateString() === todayDate.toDateString();
       
-      // Extract time in HH:MM format and normalize
-      const normalizedAppointmentTime = appointmentTime.substring(0, 5);
-      const timeMatch = normalizedAppointmentTime === timeSlot;
+      if (!isSameDate) return;
       
-      // Debug logging
-      if (isSameDate) {
-        console.log("Found appointment for today:", {
-          id: appointment.id,
-          date: appointmentDate,
-          time: appointmentTime,
-          timeSlot,
-          timeMatch
-        });
+      const normalizedTime = appointmentTime.substring(0, 5);
+      
+      if (!slotMap.has(normalizedTime)) {
+        slotMap.set(normalizedTime, []);
       }
-      
-      return isSameDate && timeMatch;
+      slotMap.get(normalizedTime)!.push(appointment);
     });
-  };
+    
+    return slotMap;
+  }, [appointments, today]);
+
+  const getAppointmentsForSlot = useCallback((timeSlot: string) => {
+    return appointmentsBySlot.get(timeSlot) || [];
+  }, [appointmentsBySlot]);
 
   // Check if appointment is currently ongoing
   const isOngoing = (appointment: Appointment) => {
-    const appointmentTime = appointment.scheduledTime || appointment.startTime;
+    const appointmentTime = appointment.scheduledTime;
     if (!appointment || !appointmentTime) return false;
     
     const appStart = new Date(`${today.toLocaleDateString('en-CA')}T${appointmentTime}`);
