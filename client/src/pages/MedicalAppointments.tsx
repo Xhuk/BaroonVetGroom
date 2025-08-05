@@ -83,30 +83,37 @@ export default function MedicalAppointments() {
   const { toast } = useToast();
 
   // Ultra-fast data loading
-  const { data: medicalAppointments = [], isLoading } = useFastFetch<MedicalAppointment[]>(
+  const { data: medicalAppointmentsData, isLoading } = useFastFetch<MedicalAppointment[]>(
     `/api/medical-appointments/${currentTenant?.id}`,
     !!currentTenant?.id && !isInstant
   );
 
-  const { data: pets = [] } = useFastFetch<Pet[]>(
+  const { data: petsData } = useFastFetch<Pet[]>(
     `/api/pets/${currentTenant?.id}`,
     !!currentTenant?.id && !isInstant
   );
 
-  const { data: clients = [] } = useFastFetch<Client[]>(
+  const { data: clientsData } = useFastFetch<Client[]>(
     `/api/clients/${currentTenant?.id}`,
     !!currentTenant?.id && !isInstant
   );
 
-  const { data: veterinarians = [] } = useFastFetch<Staff[]>(
+  const { data: veterinariansData } = useFastFetch<Staff[]>(
     `/api/staff/${currentTenant?.id}/veterinarian`,
     !!currentTenant?.id && !isInstant
   );
 
-  const { data: rooms = [] } = useFastFetch<Room[]>(
+  const { data: roomsData } = useFastFetch<Room[]>(
     `/api/rooms/${currentTenant?.id}`,
     !!currentTenant?.id && !isInstant
   );
+
+  // Ensure we have safe arrays to work with
+  const medicalAppointments = medicalAppointmentsData || [];
+  const pets = petsData || [];
+  const clients = clientsData || [];
+  const veterinarians = veterinariansData || [];
+  const rooms = roomsData || [];
 
   const form = useForm<MedicalAppointmentFormData>({
     resolver: zodResolver(medicalAppointmentSchema),
@@ -242,18 +249,19 @@ export default function MedicalAppointments() {
 
   const openDiagnosisForm = (appointment: MedicalAppointment) => {
     setSelectedAppointment(appointment);
+    const vitals = appointment.vitals || {};
     diagnosisForm.reset({
       diagnosis: appointment.diagnosis || "",
       treatment: appointment.treatment || "",
       treatmentPlan: appointment.treatmentPlan || "",
-      medicines: appointment.medicines || [],
+      medicines: Array.isArray(appointment.medicines) ? appointment.medicines : [],
       followUpInstructions: appointment.followUpInstructions || "",
       notes: appointment.notes || "",
       vitals: {
-        temperature: appointment.vitals?.temperature || "",
-        weight: appointment.vitals?.weight || "",
-        heartRate: appointment.vitals?.heartRate || "",
-        respiratoryRate: appointment.vitals?.respiratoryRate || "",
+        temperature: (vitals as any)?.temperature || "",
+        weight: (vitals as any)?.weight || "",
+        heartRate: (vitals as any)?.heartRate || "",
+        respiratoryRate: (vitals as any)?.respiratoryRate || "",
       },
       followUpRequired: appointment.followUpRequired || false,
       followUpDate: appointment.followUpDate ? format(new Date(appointment.followUpDate), "yyyy-MM-dd") : "",
@@ -598,8 +606,8 @@ export default function MedicalAppointments() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge className={cn("flex items-center space-x-1", getStatusColor(appointment.status))}>
-                        {getStatusIcon(appointment.status)}
+                      <Badge className={cn("flex items-center space-x-1", getStatusColor(appointment.status || "scheduled"))}>
+                        {getStatusIcon(appointment.status || "scheduled")}
                         <span>
                           {appointment.status === "scheduled" && "Programada"}
                           {appointment.status === "in_progress" && "En Progreso"}
@@ -843,8 +851,9 @@ export default function MedicalAppointments() {
                       maxNumberOfFiles={10}
                       maxFileSize={10485760}
                       onGetUploadParameters={async () => {
-                        const response = await apiRequest("/api/objects/upload", { method: "POST" });
-                        return { method: "PUT" as const, url: response.uploadURL };
+                        const response = await apiRequest("/api/objects/upload", "POST");
+                        const data = await response.json();
+                        return { method: "PUT" as const, url: data.uploadURL };
                       }}
                       onComplete={(result) => {
                         console.log("Files uploaded:", result);
