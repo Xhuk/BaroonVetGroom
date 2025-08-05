@@ -173,24 +173,39 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
           
-          {/* DEBUG: Current time marker - made more visible for testing */}
+          {/* Main time marker - grows to full slot width when over occupied slots */}
           {currentTimePosition !== null && (
             <div
-              className="absolute left-0 z-50 bg-red-600 border-2 border-red-800"
+              className={cn(
+                "absolute z-30 bg-red-500 transition-all duration-500 ease-out",
+                // Dynamic sizing based on slot occupation
+                isMarkerInOccupiedSlot
+                  ? "left-0 right-0 rounded-md shadow-lg border-l-4 border-red-600" // Full slot width when over appointment
+                  : "left-0 w-1 rounded-r-full" // Thin line when over free slot
+              )}
               style={{ 
-                top: `${currentTimePosition}px`,
-                width: isMarkerInOccupiedSlot ? '8px' : '4px', // Much wider for visibility
-                height: isMarkerInOccupiedSlot ? '60px' : '20px', // Much taller for visibility
-                boxShadow: '0 0 15px rgba(239, 68, 68, 0.8)'
+                top: `${currentTimePosition - (isMarkerInOccupiedSlot ? 25 : 0)}px`, // Center in slot when expanded
+                height: isMarkerInOccupiedSlot ? '50px' : '3px', // Match slot height when expanded
+                // Add glow effect when over occupied slot
+                ...(isMarkerInOccupiedSlot && {
+                  boxShadow: '0 0 15px rgba(239, 68, 68, 0.6), 0 0 30px rgba(239, 68, 68, 0.3)',
+                  background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.8) 0%, rgba(239, 68, 68, 0.6) 50%, rgba(239, 68, 68, 0.8) 100%)',
+                  animation: 'pulse 2s ease-in-out infinite'
+                })
               }}
             >
-              {/* Debug info */}
-              <div 
-                className="absolute left-8 top-0 bg-red-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-60"
-                style={{ fontSize: '10px' }}
-              >
-                POS: {Math.round(currentTimePosition)}px | SLOT: {isMarkerInOccupiedSlot ? 'OCCUPIED' : 'FREE'}
-              </div>
+              {/* Time indicator text when expanded */}
+              {isMarkerInOccupiedSlot && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm drop-shadow-lg">
+                    ⏰ AHORA - {getCurrentTimeInUserTimezone().toLocaleTimeString('es-ES', { 
+                      hour: '2-digit', 
+                      minute: '2-digit',
+                      hour12: true 
+                    })}
+                  </span>
+                </div>
+              )}
             </div>
           )}
           
