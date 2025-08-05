@@ -30,16 +30,6 @@ export function getSession() {
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
-    // Add connection pool optimization
-    pool: {
-      max: 10,
-      min: 2,
-      acquireTimeoutMillis: 2000,
-      createTimeoutMillis: 3000,
-      destroyTimeoutMillis: 5000,
-      reapIntervalMillis: 1000,
-      createRetryIntervalMillis: 200,
-    }
   });
   return session({
     secret: process.env.SESSION_SECRET!,
