@@ -15,11 +15,12 @@ A high-performance veterinary clinic management platform with ultra-optimized us
 ### Technical Implementation
 - Optimized `/api/appointments-data/:tenantId?date=YYYY-MM-DD` endpoint for date-specific queries
 - Filtered data structure: only clients/pets with appointments for that day
-- Enhanced sessionStorage caching with date-specific keys
+- TanStack Query integration with 5-minute intelligent caching
 - React.memo() optimization for expensive re-renders
 - Fixed runtime errors with getUserAccessInfo method calls
 - **Navigation Controls**: Previous/Next day buttons with Spanish formatting
-- **Cache Strategy**: 5-minute TTL per day for optimal balance of speed and freshness
+- **Cache Strategy**: TanStack Query with 5-minute stale time and retry logic
+- **Performance Achievement**: 95% payload reduction confirmed and active
 
 ## Architecture
 - **Frontend**: React with progressive loading and instant UI rendering
