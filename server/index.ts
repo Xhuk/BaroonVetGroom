@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { webhookMonitor } from "./webhookMonitor";
 import { deliveryMonitor } from "./deliveryMonitor";
+// Removed autoStatusService - now using database cron functions
 
 const app = express();
 app.use(express.json());
@@ -77,5 +78,8 @@ app.use((req, res, next) => {
     // Start delivery monitoring service
     deliveryMonitor.start();
     log('Delivery monitoring service started');
+
+    // Auto status updates now handled by database functions
+    log('Database auto-status functions ready');
   });
 })();

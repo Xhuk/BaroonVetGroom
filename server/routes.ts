@@ -1,15 +1,16 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { sql, and } from 'drizzle-orm';
+import { and } from 'drizzle-orm';
 import { clients, rooms, services, staff } from '@shared/schema';
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookMonitor } from "./webhookMonitor";
 import { advancedRouteOptimization, type OptimizedRoute, type RouteOptimizationOptions } from "./routeOptimizer";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
-import { pets } from "@shared/schema";
+import { eq, sql } from "drizzle-orm";
+import { pets, companies } from "@shared/schema";
+// Removed autoStatusService import - now using database functions
 
 // Helper function to check system admin access
 async function isSystemAdmin(req: any): Promise<boolean> {
@@ -946,6 +947,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating follow-up config:", error);
       res.status(500).json({ message: "Failed to update follow-up configuration" });
+    }
+  });
+
+  // Auto Status Update Service Configuration (Super Admin only)
+  app.get('/api/company/auto-status-config/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const config = await storage.getCompanyAutoStatusConfig(companyId);
+      res.json(config);
+    } catch (error) {
+      console.error("Error getting auto status config:", error);
+      res.status(500).json({ message: "Failed to get auto status configuration" });
+    }
+  });
+
+  app.put('/api/company/auto-status-config/:companyId', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user has super admin access
+      const accessLevel = await getUserAccessLevel(req);
+      if (accessLevel !== 'system_admin') {
+        return res.status(403).json({ message: "Super admin access required" });
+      }
+
+      const { companyId } = req.params;
+      const { 
+        autoStatusUpdateEnabled, 
+        autoStatusUpdateInterval 
+      } = req.body;
+
+      const updatedConfig = await storage.updateCompanyAutoStatusConfig(companyId, {
+        autoStatusUpdateEnabled,
+        autoStatusUpdateInterval
+      });
+
+      res.json(updatedConfig);
+    } catch (error) {
+      console.error("Error updating auto status config:", error);
+      res.status(500).json({ message: "Failed to update auto status configuration" });
+    }
+  });
+
+  // Auto Status Database Cron Job Control (Super Admin only)
+  app.post('/api/superadmin/auto-status-service/trigger', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const results = await db.execute(sql`SELECT * FROM trigger_auto_status_update()`);
+      res.json({ 
+        message: "Auto status update triggered successfully", 
+        results: results.rows 
+      });
+    } catch (error) {
+      console.error("Error triggering auto status update:", error);
+      res.status(500).json({ message: "Failed to trigger auto status update" });
+    }
+  });
+
+  app.get('/api/superadmin/auto-status-service/status', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      // Check which companies have auto status enabled and their last run times
+      const enabledCompanies = await db.select({
+        id: companies.id,
+        name: companies.name,
+        autoStatusUpdateEnabled: companies.autoStatusUpdateEnabled,
+        autoStatusUpdateInterval: companies.autoStatusUpdateInterval,
+        autoStatusUpdateLastRun: companies.autoStatusUpdateLastRun
+      }).from(companies)
+      .where(eq(companies.autoStatusUpdateEnabled, true));
+      
+      res.json({ 
+        message: "Database cron job status", 
+        type: "database_function",
+        enabledCompanies: enabledCompanies.length,
+        companies: enabledCompanies
+      });
+    } catch (error) {
+      console.error("Error getting auto status service status:", error);
+      res.status(500).json({ message: "Failed to get service status" });
     }
   });
 

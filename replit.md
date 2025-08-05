@@ -4,6 +4,15 @@
 A high-performance veterinary clinic management platform with ultra-optimized user experience and operational efficiency.
 
 ## Recent Changes
+### Database Cron Job Implementation for Auto Status Updates (August 2025) - COMPLETED
+- **Migrated from API Background Service to Database Functions**: Replaced Node.js background service with PostgreSQL functions for better reliability
+- **Created Database Functions**: `auto_update_appointment_status()` and `trigger_auto_status_update()` for automated status management
+- **Company-Level Configuration**: Added `auto_status_update_enabled`, `auto_status_update_interval`, and `auto_status_update_last_run` fields to companies table
+- **Super Admin Management Panel**: Created `SuperAdminAutoStatusPanel` component for configuring and monitoring auto status functionality
+- **Database-Native Scheduling**: Status updates run as PostgreSQL functions with configurable intervals per company
+- **Manual Trigger Capability**: Super admins can manually trigger status updates via API that calls database functions
+- **Automatic Status Transitions**: Appointments automatically change from 'scheduled' to 'in_progress' when current time is within 2 minutes of appointment start
+
 ### Enhanced System Design & User Management (August 2025) - COMPLETED
 - **Removed Calendar Today Segment**: Eliminated the "calendario de hoy" from appointment management interface
 - **Appointment Rescheduling Focus**: Redesigned appointment management specifically for scheduling adjustments

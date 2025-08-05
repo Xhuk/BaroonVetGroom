@@ -1903,6 +1903,35 @@ export class DatabaseStorage implements IStorage {
     return company;
   }
 
+  async getCompanyAutoStatusConfig(companyId: string): Promise<any> {
+    const [company] = await db
+      .select({
+        autoStatusUpdateEnabled: companies.autoStatusUpdateEnabled,
+        autoStatusUpdateInterval: companies.autoStatusUpdateInterval,
+        autoStatusUpdateLastRun: companies.autoStatusUpdateLastRun
+      })
+      .from(companies)
+      .where(eq(companies.id, companyId));
+    return company;
+  }
+
+  async updateCompanyAutoStatusConfig(companyId: string, config: any): Promise<any> {
+    const [company] = await db
+      .update(companies)
+      .set({
+        autoStatusUpdateEnabled: config.autoStatusUpdateEnabled,
+        autoStatusUpdateInterval: config.autoStatusUpdateInterval,
+        updatedAt: new Date()
+      })
+      .where(eq(companies.id, companyId))
+      .returning({
+        autoStatusUpdateEnabled: companies.autoStatusUpdateEnabled,
+        autoStatusUpdateInterval: companies.autoStatusUpdateInterval,
+        autoStatusUpdateLastRun: companies.autoStatusUpdateLastRun
+      });
+    return company;
+  }
+
   async updateCompanyFollowUpConfig(companyId: string, config: any): Promise<any> {
     const [updatedCompany] = await db
       .update(companies)

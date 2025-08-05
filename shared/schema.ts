@@ -60,6 +60,10 @@ export const companies = pgTable("companies", {
   whatsappSubscriptionStatus: varchar("whatsapp_subscription_status").default("inactive"), // active, inactive, suspended
   whatsappLastRefill: timestamp("whatsapp_last_refill"),
   whatsappUsedMessages: integer("whatsapp_used_messages").default(0), // Messages used this period
+  // Auto Status Update Service Settings
+  autoStatusUpdateEnabled: boolean("auto_status_update_enabled").default(false), // Enable/disable auto status updates
+  autoStatusUpdateInterval: integer("auto_status_update_interval").default(5), // Check interval in minutes
+  autoStatusUpdateLastRun: timestamp("auto_status_update_last_run"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
