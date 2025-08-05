@@ -110,19 +110,28 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
 
   const isTimeMarkerInOccupiedSlot = () => {
     const now = getCurrentTimeInUserTimezone();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
     
-    // Find the current 30-minute time slot
-    const slotStartMinute = Math.floor(currentMinute / 30) * 30;
-    const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(slotStartMinute).padStart(2, '0')}`;
+    // Check all appointments to see if current time falls within an in-progress appointment
+    const currentlyActiveAppointments = appointments.filter(appointment => {
+      if (appointment.status !== 'in_progress') return false;
+      
+      // Check if current time is within this appointment's scheduled time
+      const appointmentTime = appointment.scheduledTime;
+      if (!appointmentTime) return false;
+      
+      const [appointmentHour, appointmentMinute] = appointmentTime.split(':').map(Number);
+      const appointmentStart = new Date(now);
+      appointmentStart.setHours(appointmentHour, appointmentMinute, 0, 0);
+      
+      const duration = appointment.duration || 30; // Use appointment duration or default 30 minutes
+      const appointmentEnd = new Date(appointmentStart.getTime() + duration * 60 * 1000);
+      
+      return now >= appointmentStart && now < appointmentEnd;
+    });
     
-    const slotAppointments = getAppointmentsForSlot(currentTimeStr);
-    // Only show red marker for appointments with "in_progress" status
-    const inProgressAppointments = slotAppointments.filter(appointment => appointment.status === 'in_progress');
-    console.log(`Checking slot ${currentTimeStr}: ${inProgressAppointments.length} in-progress appointments found`);
+    console.log(`Current time ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}: ${currentlyActiveAppointments.length} currently active appointments found`);
     
-    return inProgressAppointments.length > 0;
+    return currentlyActiveAppointments.length > 0;
   };
 
   // Auto-scroll to current time after 30 seconds of inactivity
