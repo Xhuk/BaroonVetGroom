@@ -23,9 +23,9 @@ const INSTANT_SKELETON = <InstantAppointmentsSkeleton />;
 const Appointments = memo(function Appointments() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // ULTRA-OPTIMIZED: Use TanStack Query for robust data fetching
+  // SINGLE API CALL: Prevent multiple redundant requests
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['/api/appointments-data/vetgroom1', selectedDate],
+    queryKey: ['appointments-data', selectedDate],
     queryFn: async () => {
       const response = await fetch(`/api/appointments-data/vetgroom1?date=${selectedDate}`);
       if (!response.ok) {
@@ -33,10 +33,12 @@ const Appointments = memo(function Appointments() {
       }
       return response.json();
     },
-    staleTime: 5 * 60 * 1000, // 5 minute cache per day
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: 2,
-    retryDelay: 1000
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false,
+    enabled: !!selectedDate
   });
 
   const navigateDay = (direction: 'prev' | 'next') => {
