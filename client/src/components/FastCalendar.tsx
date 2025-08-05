@@ -136,8 +136,8 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     
     if (hours < 6 || hours >= 22) return;
     
-    // Find current time slot and scroll to it
-    const currentSlotIndex = timeSlots.findIndex(slot => {
+    // Find current time slot in visible slots and scroll to it
+    const currentSlotIndex = visibleTimeSlots.findIndex(slot => {
       const slotHour = parseInt(slot.split(':')[0]);
       const slotMinute = parseInt(slot.split(':')[1]);
       return hours === slotHour && now.getMinutes() >= slotMinute && now.getMinutes() < slotMinute + 30;
@@ -152,17 +152,29 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
         top: Math.max(0, scrollPosition),
         behavior: 'smooth'
       });
+      
+      console.log(`Auto-scrolled to current time slot at index ${currentSlotIndex}, position ${scrollPosition}px`);
     }
   };
 
-  // Initial scroll to current time
+  // Initial scroll to current time and periodic updates
   useEffect(() => {
     const timer = setTimeout(() => {
       scrollToCurrentTime();
     }, 500); // Small delay to ensure DOM is ready
     
-    return () => clearTimeout(timer);
-  }, [currentTime]);
+    // Also scroll to current time every minute to keep marker visible
+    const intervalTimer = setInterval(() => {
+      if (!isScrolling) {
+        scrollToCurrentTime();
+      }
+    }, 60000); // Every minute
+    
+    return () => {
+      clearTimeout(timer);
+      clearInterval(intervalTimer);
+    };
+  }, [currentTime, isScrolling]);
 
   const currentTimePosition = getCurrentTimePosition();
   const isMarkerInOccupiedSlot = isTimeMarkerInOccupiedSlot();
@@ -200,12 +212,20 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
               day: 'numeric' 
             })}
           </h2>
-          <button
-            onClick={() => window.history.forward()}
-            className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition duration-300 text-sm"
-          >
-            Día Siguiente →
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={scrollToCurrentTime}
+              className="px-3 py-1 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition duration-300 text-sm font-medium"
+            >
+              🕐 Ahora
+            </button>
+            <button
+              onClick={() => window.history.forward()}
+              className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition duration-300 text-sm"
+            >
+              Día Siguiente →
+            </button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-6">
