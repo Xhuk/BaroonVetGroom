@@ -111,68 +111,41 @@ export function SimpleSlotBookingDialog({
   // Calculate total price
   const totalPrice = selectedServices.reduce((sum, service) => sum + Number(service.price || 0), 0);
 
-  // Create new client mutation
-  const createClientMutation = useMutation({
-    mutationFn: async (name: string) => {
-      return await apiRequest("/api/clients", "POST", {
-        tenantId,
-        name: name.trim(),
-        email: "",
-        phone: "",
-      });
-    },
-  });
-
-  // Create new pet mutation
-  const createPetMutation = useMutation({
-    mutationFn: async (name: string) => {
-      if (!selectedClient) throw new Error("Client required");
-      return await apiRequest("/api/pets", "POST", {
-        clientId: selectedClient.id,
-        name: name.trim(),
-        species: "Unknown",
-        breed: "",
-        registeredAge: 0,
-      });
-    },
-  });
-
-  // Create appointment directly
+  // Create appointment with smart client/pet creation (using existing booking pattern)
   const createAppointmentMutation = useMutation({
     mutationFn: async () => {
-      let finalClient = selectedClient;
-      let finalPet = selectedPet;
-
-      // Create new client if needed
-      if (!finalClient && clientSearch.trim()) {
-        finalClient = await createClientMutation.mutateAsync(clientSearch);
-      }
-
-      // Create new pet if needed
-      if (!finalPet && petSearch.trim() && finalClient) {
-        setSelectedClient(finalClient); // Ensure client is set for pet creation
-        finalPet = await createPetMutation.mutateAsync(petSearch);
-      }
-
-      if (!finalClient || !finalPet) {
-        throw new Error("Client and pet are required");
-      }
-
-      // Create appointments for each selected service
+      // Use the same pattern as the booking system - single endpoint that handles everything
       const appointments = [];
       
       for (const service of selectedServices) {
-        const appointment = await apiRequest("/api/appointments", "POST", {
+        const appointmentData = {
           tenantId,
-          clientId: finalClient.id,
-          petId: finalPet.id,
+          // Client info (existing or new) - match the server's expected field names
+          customerName: selectedClient?.name || clientSearch.trim(),
+          customerEmail: selectedClient?.email || "",
+          customerPhone: selectedClient?.phone || "",
+          customerAddress: "",
+          customerFraccionamiento: "",
+          customerPostalCode: "",
+          customerLatitude: 0,
+          customerLongitude: 0,
+          // Pet info (existing or new)
+          petName: selectedPet?.name || petSearch.trim(),
+          petSpecies: selectedPet?.species || "Unknown",
+          petBreed: selectedPet?.breed || "",
+          petAge: selectedPet?.registeredAge || 0,
+          petWeight: 0,
+          petMedicalHistory: "",
+          // Service and appointment info
           serviceId: service.id,
-          scheduledDate: selectedDate,
-          scheduledTime: selectedTime,
+          requestedDate: selectedDate,
+          requestedTime: selectedTime,
           status: "scheduled",
-          type: service.type || "general",
+          logistics: "",
           notes: `Servicios: ${selectedServices.map(s => s.name).join(", ")}. Total: $${totalPrice}`,
-        });
+        };
+
+        const appointment = await apiRequest(`/api/appointments/${tenantId}`, "POST", appointmentData);
         appointments.push(appointment);
       }
       
@@ -184,9 +157,11 @@ export function SimpleSlotBookingDialog({
         description: `${appointments.length} cita(s) programada(s) para ${selectedDate} a las ${selectedTime}. Total: $${totalPrice}`,
       });
       
-      // Invalidate cache and close dialog - match the Dashboard query pattern
+      // Invalidate all appointment related caches
       queryClient.invalidateQueries({ queryKey: [`/api/appointments-fast/${tenantId}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clients", tenantId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pets"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       onBookingComplete();
       
