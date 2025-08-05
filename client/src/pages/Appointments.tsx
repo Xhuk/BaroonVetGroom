@@ -41,23 +41,25 @@ const Appointments = memo(function Appointments() {
         }
       }
 
-      const response = await fetch(`/api/appointments-data/vetgroom1?date=${date}`, {
-        headers: { 'Cache-Control': 'max-age=300' }
-      });
+      const response = await fetch(`/api/appointments-data/vetgroom1?date=${date}`);
       
       if (response.ok) {
         const result = await response.json();
         setData(result);
+        setError(null); // Clear any previous errors
         // Cache by date
         sessionStorage.setItem(cacheKey, JSON.stringify({
           data: result,
           timestamp: Date.now()
         }));
       } else {
-        setError('Failed to load appointments');
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        setError(`Failed to load appointments: ${response.status}`);
       }
     } catch (err) {
-      setError('Network error');
+      console.error('Network Error:', err);
+      setError(`Network error: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -160,11 +162,14 @@ const Appointments = memo(function Appointments() {
             <InstantAppointmentsSkeleton />
           ) : error ? (
           <Card>
-            <CardContent className="p-6 text-center">
-              <p className="text-red-600">{error}</p>
+            <CardContent className="p-12 text-center">
+              <p className="text-red-600 mb-4">{error}</p>
               <Button 
-                onClick={() => window.location.reload()} 
-                className="mt-4"
+                onClick={() => {
+                  setError(null);
+                  fetchAppointments(selectedDate);
+                }}
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 Reintentar
               </Button>
