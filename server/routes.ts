@@ -43,9 +43,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // In-memory cache for user data (valid for 5 minutes)
+  // Enhanced in-memory cache for user data (valid for 15 minutes)
   const userCache = new Map<string, { data: any, timestamp: number }>();
-  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  const CACHE_TTL = 15 * 60 * 1000; // 15 minutes - longer cache
+  
+  // Cache for tenant data to reduce auth overhead
+  const tenantCache = new Map<string, { data: any, timestamp: number }>();
+  const TENANT_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -215,11 +219,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // OPTIMIZED: Get all appointment page data in one request
+  // OPTIMIZED: Get all appointment page data in one request with aggressive caching
   app.get('/api/appointments-data/:tenantId', isAuthenticated, async (req: any, res) => {
     try {
       const { tenantId } = req.params;
       const { date } = req.query;
+      const cacheKey = `appointments-data-${tenantId}-${date || 'all'}`;
+      
+      // Check cache first for ultra-fast response
+      const cached = tenantCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < TENANT_CACHE_TTL) {
+        // Add cache headers for browser caching
+        res.set('Cache-Control', 'public, max-age=300'); // 5 minutes browser cache
+        return res.json(cached.data);
+      }
 
       // Fetch all data in parallel for maximum performance
       const [appointments, clients, pets, rooms, staff, services] = await Promise.all([
@@ -231,8 +244,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getServices(tenantId)
       ]);
 
-      // Return combined response
-      res.json({
+      // Build response
+      const responseData = {
         appointments,
         clients,
         pets,
@@ -240,7 +253,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         staff,
         services,
         timestamp: Date.now()
-      });
+      };
+
+      // Cache the result
+      tenantCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
+      
+      // Add cache headers for browser caching
+      res.set('Cache-Control', 'public, max-age=300'); // 5 minutes browser cache
+      res.json(responseData);
     } catch (error) {
       console.error("Error fetching appointment data:", error);
       res.status(500).json({ message: "Failed to fetch appointment data" });
