@@ -26,18 +26,12 @@ export function Calendar({ className }: CalendarProps) {
   const todayStr = today.toISOString().split('T')[0];
 
   const { data: appointments = [], isLoading } = useQuery<Appointment[]>({
-    queryKey: [`/api/appointments/${currentTenant?.id}`, todayStr],
-    queryFn: async () => {
-      const response = await fetch(`/api/appointments/${currentTenant?.id}?startDate=${todayStr}&endDate=${todayStr}`, {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        throw new Error(`${response.status}: ${response.statusText}`);
-      }
-      return response.json();
-    },
+    queryKey: ["/api/appointments", currentTenant?.id],
     enabled: !!currentTenant?.id,
-    refetchInterval: 30000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
   });
 
   // Generate 30-minute time slots for the entire day (like your reference)
@@ -66,21 +60,45 @@ export function Calendar({ className }: CalendarProps) {
 
   const getAppointmentsForSlot = (timeSlot: string) => {
     return appointments.filter((appointment: Appointment) => {
-      const appointmentDate = new Date(appointment.date);
-      const appointmentTime = appointment.startTime;
+      // Check if appointment has the expected date fields
+      const appointmentDate = appointment.scheduledDate || appointment.date;
+      const appointmentTime = appointment.scheduledTime || appointment.startTime;
       
-      return (
-        appointmentDate.toDateString() === today.toDateString() &&
-        appointmentTime && appointmentTime.substring(0, 5) === timeSlot
-      );
+      if (!appointmentDate || !appointmentTime) {
+        console.log("Missing date/time for appointment:", appointment.id, { appointmentDate, appointmentTime });
+        return false;
+      }
+      
+      const appDate = new Date(appointmentDate);
+      const todayDate = new Date(today.toDateString()); // Normalize to start of day
+      
+      // More robust date comparison - check if same date
+      const isSameDate = appDate.toDateString() === todayDate.toDateString();
+      
+      // Extract time in HH:MM format
+      const timeMatch = appointmentTime.substring(0, 5) === timeSlot;
+      
+      // Debug logging
+      if (isSameDate) {
+        console.log("Found appointment for today:", {
+          id: appointment.id,
+          date: appointmentDate,
+          time: appointmentTime,
+          timeSlot,
+          timeMatch
+        });
+      }
+      
+      return isSameDate && timeMatch;
     });
   };
 
-  // Check if appointment is currently ongoing (like your reference)
+  // Check if appointment is currently ongoing
   const isOngoing = (appointment: Appointment) => {
-    if (!appointment || !appointment.startTime) return false;
+    const appointmentTime = appointment.scheduledTime || appointment.startTime;
+    if (!appointment || !appointmentTime) return false;
     
-    const appStart = new Date(`${today.toLocaleDateString('en-CA')}T${appointment.startTime}`);
+    const appStart = new Date(`${today.toLocaleDateString('en-CA')}T${appointmentTime}`);
     const duration = 60; // Default 60 minutes duration
     const appEnd = new Date(appStart.getTime() + duration * 60 * 1000);
     const now = new Date();
@@ -141,6 +159,9 @@ export function Calendar({ className }: CalendarProps) {
           </h2>
           <div className="flex items-center space-x-4">
             <span className="text-sm font-medium">Vista Diaria</span>
+            <span className="text-xs bg-blue-200 dark:bg-blue-800 px-2 py-1 rounded">
+              {appointments.length} citas cargadas
+            </span>
           </div>
         </div>
       </div>
