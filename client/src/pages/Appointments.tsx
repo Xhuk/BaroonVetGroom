@@ -27,7 +27,12 @@ const Appointments = memo(function Appointments() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['appointments-data', selectedDate],
     queryFn: async () => {
-      const response = await fetch(`/api/appointments-data/vetgroom1?date=${selectedDate}`);
+      const response = await fetch(`/api/appointments-data/vetgroom1?date=${selectedDate}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
