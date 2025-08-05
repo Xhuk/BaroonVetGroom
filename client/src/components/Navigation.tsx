@@ -96,9 +96,9 @@ export function Navigation({ className }: NavigationProps) {
       "fixed left-0 top-20 bottom-32 w-64 bg-white shadow-lg z-30 transform -translate-x-full lg:translate-x-0 transition-transform",
       className
     )}>
-      <div className="p-4">
+      <div className="p-4 h-full overflow-y-auto">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Módulos</h3>
-        <ul className="space-y-2">
+        <ul className="space-y-2 h-full">
           {navigationItems.map((item) => (
             <li key={item.href}>
               <a
