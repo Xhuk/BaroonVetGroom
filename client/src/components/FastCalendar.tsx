@@ -173,27 +173,25 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
           
-          {/* Current time marker - subtle red line on left that grows when over occupied slots */}
+          {/* DEBUG: Current time marker - made more visible for testing */}
           {currentTimePosition !== null && (
             <div
-              className={cn(
-                "absolute left-0 z-30 bg-red-500 transition-all duration-500 ease-out",
-                // Dynamic sizing based on slot occupation
-                isMarkerInOccupiedSlot
-                  ? "w-1 shadow-lg" // Thin line when over appointment, grows to slot width
-                  : "w-0.5" // Very thin line when over free slot
-              )}
+              className="absolute left-0 z-50 bg-red-600 border-2 border-red-800"
               style={{ 
-                top: `${currentTimePosition - (isMarkerInOccupiedSlot ? 1 : 0)}px`, // Add 1px padding top when expanded
-                height: isMarkerInOccupiedSlot ? '52px' : '2px', // Match green slot height + 2px (1 top + 1 bottom)
-                // Subtle glow effect when over occupied slot
-                ...(isMarkerInOccupiedSlot && {
-                  boxShadow: '0 0 8px rgba(239, 68, 68, 0.6), 2px 0 12px rgba(239, 68, 68, 0.3)',
-                  animation: 'pulse 2s ease-in-out infinite'
-                })
+                top: `${currentTimePosition}px`,
+                width: isMarkerInOccupiedSlot ? '8px' : '4px', // Much wider for visibility
+                height: isMarkerInOccupiedSlot ? '60px' : '20px', // Much taller for visibility
+                boxShadow: '0 0 15px rgba(239, 68, 68, 0.8)'
               }}
-            />
-              
+            >
+              {/* Debug info */}
+              <div 
+                className="absolute left-8 top-0 bg-red-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-60"
+                style={{ fontSize: '10px' }}
+              >
+                POS: {Math.round(currentTimePosition)}px | SLOT: {isMarkerInOccupiedSlot ? 'OCCUPIED' : 'FREE'}
+              </div>
+            </div>
           )}
           
           {/* Time slots container with auto-scroll */}
