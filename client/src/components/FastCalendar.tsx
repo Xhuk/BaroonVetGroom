@@ -85,6 +85,19 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     return position;
   };
 
+  const isTimeMarkerInOccupiedSlot = () => {
+    const now = getCurrentTimeInUserTimezone();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Find the current 30-minute time slot
+    const slotStartMinute = Math.floor(currentMinute / 30) * 30;
+    const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(slotStartMinute).padStart(2, '0')}`;
+    
+    const slotAppointments = getAppointmentsForSlot(currentTimeStr);
+    return slotAppointments.length > 0;
+  };
+
   // Auto-scroll to current time after 30 seconds of inactivity
   const handleScroll = () => {
     setIsScrolling(true);
@@ -136,6 +149,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
   }, [currentTime]);
 
   const currentTimePosition = getCurrentTimePosition();
+  const isMarkerInOccupiedSlot = isTimeMarkerInOccupiedSlot();
 
   return (
     <Card className={cn("fixed flex flex-col", className)} style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
@@ -151,6 +165,53 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
+          
+          {/* Current time marker - red line that grows when over occupied slots */}
+          {currentTimePosition !== null && (
+            <>
+              {/* Main time marker line */}
+              <div
+                className={cn(
+                  "absolute z-30 transition-all duration-700 ease-in-out transform",
+                  // Dynamic width and styling based on slot occupation
+                  isMarkerInOccupiedSlot
+                    ? "left-4 right-4 bg-red-500 h-2 rounded-full shadow-xl" // Grows to match slot width when over appointment
+                    : "left-0 w-3 bg-red-400 h-0.5 rounded-r-full" // Thin line when over free slot
+                )}
+                style={{ 
+                  top: `${currentTimePosition}px`,
+                  // Add glow effect when over occupied slot
+                  ...(isMarkerInOccupiedSlot && {
+                    boxShadow: '0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(239, 68, 68, 0.3)'
+                  })
+                }}
+              />
+              
+              {/* Animated border ring for occupied slots */}
+              {isMarkerInOccupiedSlot && (
+                <div 
+                  className="absolute left-4 right-4 z-20 rounded-full border-2 border-red-300 opacity-60"
+                  style={{
+                    top: `${currentTimePosition - 2}px`,
+                    height: '8px',
+                    animation: 'spin-border 4s linear infinite'
+                  }}
+                />
+              )}
+              
+              {/* Pulse effect for occupied slots */}
+              {isMarkerInOccupiedSlot && (
+                <div 
+                  className="absolute left-4 right-4 z-10 bg-red-200 rounded-full opacity-30"
+                  style={{
+                    top: `${currentTimePosition - 4}px`,
+                    height: '12px',
+                    animation: 'pulse-border 2s ease-in-out infinite'
+                  }}
+                />
+              )}
+            </>
+          )}
           
           {/* Time slots container with auto-scroll */}
           <div 
