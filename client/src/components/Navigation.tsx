@@ -96,9 +96,9 @@ export function Navigation({ className }: NavigationProps) {
       "fixed left-0 top-20 w-72 bg-white shadow-lg z-30 transform -translate-x-full lg:translate-x-0 transition-transform",
       className
     )} style={{ bottom: 'calc(32px + 96px)' }}>
-      <div className="p-4 h-full">
+      <div className="p-4 h-full flex flex-col">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Módulos</h3>
-        <ul className="space-y-2">
+        <ul className="space-y-2 flex-1">
           {navigationItems.map((item) => (
             <li key={item.href}>
               <a
