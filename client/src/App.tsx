@@ -38,34 +38,22 @@ import AdminExternalServices from "@/pages/AdminExternalServices";
 
 import WebhookIntegrations from "@/pages/WebhookIntegrations";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
+import { InstantNavigation } from "@/components/InstantNavigation";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Only show loading for initial authentication, not on route changes
-  if (isLoading && !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
+  // NEVER show loading spinner on route changes - always render instantly
+  // Only show auth loading on initial app load when no route is detected
 
   return (
     <Switch>
-      {!isAuthenticated ? (
+      {/* INSTANT ROUTING - All routes available immediately, no auth blocking */}
+      <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
+      <Route path="/plans" component={SubscriptionLanding} />
+      <Route path="/appointments" component={Appointments} />
+      {isAuthenticated && (
         <>
-          <Route path="/" component={Landing} />
-          <Route path="/plans" component={SubscriptionLanding} />
-          <Route path="/appointments" component={Appointments} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Dashboard} />
-          <Route path="/appointments" component={Appointments} />
           <Route path="/booking" component={BookingWizard} />
           <Route path="/clients" component={Clients} />
           <Route path="/medical-records" component={MedicalRecords} />
@@ -76,7 +64,6 @@ function Router() {
           <Route path="/inventory" component={Inventory} />
           <Route path="/delivery-plan" component={DeliveryPlan} />
           <Route path="/route-map" component={RoutePlanMap} />
-
           <Route path="/billing" component={Billing} />
           <Route path="/admin" component={Admin} />
           <Route path="/admin/settings" component={AdminSettings} />
@@ -86,7 +73,6 @@ function Router() {
           <Route path="/admin/follow-up-config" component={AdminFollowUpConfig} />
           <Route path="/admin/van-config" component={AdminVanConfig} />
           <Route path="/admin/external-services" component={AdminExternalServices} />
-
           <Route path="/superadmin" component={SuperAdmin} />
           <Route path="/superadmin/monitoring" component={SuperAdminMonitoring} />
           <Route path="/superadmin/route-config" component={SuperAdminRouteConfig} />
@@ -104,6 +90,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ThemeProvider>
+          <InstantNavigation />
           <TenantProvider>
             <RoleImpersonationProvider>
               <Toaster />
