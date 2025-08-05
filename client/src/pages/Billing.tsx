@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
+import { useFastLoad, useFastFetch } from "@/hooks/useFastLoad";
 import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,29 +33,30 @@ import type { Payment, Appointment, Client, Pet } from "@shared/schema";
 export default function Billing() {
   const { currentTenant } = useTenant();
   const { toast } = useToast();
+  const { isInstant } = useFastLoad();
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [paymentFilter, setPaymentFilter] = useState("all");
 
-  const { data: payments, isLoading } = useQuery<Payment[]>({
-    queryKey: ["/api/payments", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
+  const { data: payments, isLoading } = useFastFetch<Payment[]>(
+    `/api/payments/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
 
-  const { data: appointments } = useQuery<Appointment[]>({
-    queryKey: ["/api/appointments", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
+  const { data: appointments } = useFastFetch<Appointment[]>(
+    `/api/appointments/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
 
-  const { data: clients } = useQuery<Client[]>({
-    queryKey: ["/api/clients", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
+  const { data: clients } = useFastFetch<Client[]>(
+    `/api/clients/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
 
-  const { data: pets } = useQuery<Pet[]>({
-    queryKey: ["/api/pets", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
+  const { data: pets } = useFastFetch<Pet[]>(
+    `/api/pets/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
 
   const createPaymentMutation = useMutation({
     mutationFn: async (data: any) => {

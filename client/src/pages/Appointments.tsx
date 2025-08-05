@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
+import { useFastLoad, useFastFetch } from "@/hooks/useFastLoad";
 import { BackButton } from "@/components/BackButton";
 import { DebugControls } from "@/components/DebugControls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,42 +22,43 @@ export default function Appointments() {
   const { currentTenant } = useTenant();
   const { isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const { isInstant } = useFastLoad();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
-  // All hooks must be called before any early returns
-  const { data: appointments, isLoading: appointmentsLoading } = useQuery<Appointment[]>({
-    queryKey: ["/api/appointments", currentTenant?.id],
-    enabled: !!currentTenant?.id && isAuthenticated,
-  });
+  // Ultra-fast loading with progressive data fetching
+  const { data: appointments, isLoading: appointmentsLoading } = useFastFetch<Appointment[]>(
+    `/api/appointments/${currentTenant?.id}`,
+    !!currentTenant?.id && isAuthenticated && !isInstant
+  );
 
-  const { data: clients } = useQuery<Client[]>({
-    queryKey: ["/api/clients", currentTenant?.id],
-    enabled: !!currentTenant?.id && isAuthenticated,
-  });
+  const { data: clients } = useFastFetch<Client[]>(
+    `/api/clients/${currentTenant?.id}`,
+    !!currentTenant?.id && isAuthenticated && !isInstant
+  );
 
-  const { data: pets } = useQuery<Pet[]>({
-    queryKey: ["/api/pets", currentTenant?.id],
-    enabled: !!currentTenant?.id && isAuthenticated,
-  });
+  const { data: pets } = useFastFetch<Pet[]>(
+    `/api/pets/${currentTenant?.id}`,
+    !!currentTenant?.id && isAuthenticated && !isInstant
+  );
 
-  const { data: rooms } = useQuery<Room[]>({
-    queryKey: ["/api/rooms", currentTenant?.id],
-    enabled: !!currentTenant?.id && isAuthenticated,
-  });
+  const { data: rooms } = useFastFetch<Room[]>(
+    `/api/rooms/${currentTenant?.id}`,
+    !!currentTenant?.id && isAuthenticated && !isInstant
+  );
 
-  const { data: staff } = useQuery<Staff[]>({
-    queryKey: ["/api/staff", currentTenant?.id],
-    enabled: !!currentTenant?.id && isAuthenticated,
-  });
+  const { data: staff } = useFastFetch<Staff[]>(
+    `/api/staff/${currentTenant?.id}`,
+    !!currentTenant?.id && isAuthenticated && !isInstant
+  );
 
-  const { data: services } = useQuery<Service[]>({
-    queryKey: ["/api/services", currentTenant?.id],
-    enabled: !!currentTenant?.id && isAuthenticated,
-  });
+  const { data: services } = useFastFetch<Service[]>(
+    `/api/services/${currentTenant?.id}`,
+    !!currentTenant?.id && isAuthenticated && !isInstant
+  );
 
   // Create appointment mutation
   const createAppointmentMutation = useMutation({
@@ -68,7 +70,8 @@ export default function Appointments() {
         title: "Cita creada",
         description: "La cita se ha programado exitosamente.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/appointments", currentTenant?.id] });
+      // Trigger manual refresh with fast loading
+      window.location.reload();
       setShowCreateForm(false);
     },
     onError: (error: any) => {

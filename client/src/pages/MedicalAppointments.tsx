@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useFastLoad, useFastFetch } from "@/hooks/useFastLoad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,7 @@ type MedicalAppointmentFormData = z.infer<typeof medicalAppointmentSchema>;
 
 export default function MedicalAppointments() {
   const { currentTenant } = useTenant();
+  const { isInstant } = useFastLoad();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPet, setSelectedPet] = useState<string>("");
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -80,31 +82,31 @@ export default function MedicalAppointments() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Data queries
-  const { data: medicalAppointments = [], isLoading } = useQuery<MedicalAppointment[]>({
-    queryKey: ["/api/medical-appointments", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
+  // Ultra-fast data loading
+  const { data: medicalAppointments = [], isLoading } = useFastFetch<MedicalAppointment[]>(
+    `/api/medical-appointments/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
 
-  const { data: pets = [] } = useQuery<Pet[]>({
-    queryKey: ["/api/pets", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
+  const { data: pets = [] } = useFastFetch<Pet[]>(
+    `/api/pets/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
 
-  const { data: clients = [] } = useQuery<Client[]>({
-    queryKey: ["/api/clients", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
+  const { data: clients = [] } = useFastFetch<Client[]>(
+    `/api/clients/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
 
-  const { data: veterinarians = [] } = useQuery<Staff[]>({
-    queryKey: ["/api/staff", currentTenant?.id, "veterinarian"],
-    enabled: !!currentTenant?.id,
-  });
+  const { data: veterinarians = [] } = useFastFetch<Staff[]>(
+    `/api/staff/${currentTenant?.id}/veterinarian`,
+    !!currentTenant?.id && !isInstant
+  );
 
-  const { data: rooms = [] } = useQuery<Room[]>({
-    queryKey: ["/api/rooms", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
+  const { data: rooms = [] } = useFastFetch<Room[]>(
+    `/api/rooms/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
 
   const form = useForm<MedicalAppointmentFormData>({
     resolver: zodResolver(medicalAppointmentSchema),

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
+import { useFastLoad, useFastFetch } from "@/hooks/useFastLoad";
 import { BackButton } from "@/components/BackButton";
 import { DebugControls } from "@/components/DebugControls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,25 +19,26 @@ import type { Client, Pet, Appointment, PetMedia } from "@shared/schema";
 export default function Clients() {
   const { currentTenant } = useTenant();
   const { toast } = useToast();
+  const { isInstant } = useFastLoad();
   const [showClientForm, setShowClientForm] = useState(false);
   const [showPetForm, setShowPetForm] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
 
-  const { data: clients, isLoading: clientsLoading } = useQuery<Client[]>({
-    queryKey: ["/api/clients", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
+  const { data: clients, isLoading: clientsLoading } = useFastFetch<Client[]>(
+    `/api/clients/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
 
-  const { data: pets } = useQuery<Pet[]>({
-    queryKey: ["/api/pets", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
+  const { data: pets } = useFastFetch<Pet[]>(
+    `/api/pets/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
 
-  const { data: appointments } = useQuery<Appointment[]>({
-    queryKey: ["/api/appointments", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
+  const { data: appointments } = useFastFetch<Appointment[]>(
+    `/api/appointments/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
 
   const createClientMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -50,7 +52,8 @@ export default function Clients() {
         title: "Cliente creado",
         description: "El cliente se ha registrado exitosamente.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      // Trigger manual refresh with fast loading
+      window.location.reload();
       setShowClientForm(false);
     },
     onError: (error: any) => {
