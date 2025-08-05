@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, Suspense, memo } from "react";
+import { useState, Suspense, memo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { BackButton } from "@/components/BackButton";
 import { InstantAppointmentsSkeleton } from "@/components/InstantSkeletonUI";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,54 +21,21 @@ interface AppointmentData {
 const INSTANT_SKELETON = <InstantAppointmentsSkeleton />;
 
 const Appointments = memo(function Appointments() {
-  const [data, setData] = useState<AppointmentData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // ULTRA-FAST DAY-SPECIFIC LOADING
-  const fetchAppointments = async (date: string) => {
-    setIsLoading(true);
-    try {
-      // Check cache for this specific date
-      const cacheKey = `appointments-${date}`;
-      const cachedData = sessionStorage.getItem(cacheKey);
-      if (cachedData) {
-        const parsed = JSON.parse(cachedData);
-        if (Date.now() - parsed.timestamp < 300000) { // 5 minute cache per day
-          setData(parsed.data);
-          setIsLoading(false);
-          return;
-        }
+  // ULTRA-OPTIMIZED: Use TanStack Query for robust data fetching
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['/api/appointments-data/vetgroom1', selectedDate],
+    queryFn: async () => {
+      const response = await fetch(`/api/appointments-data/vetgroom1?date=${selectedDate}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-
-      const response = await fetch(`/api/appointments-data/vetgroom1?date=${date}`);
-      
-      if (response.ok) {
-        const result = await response.json();
-        setData(result);
-        setError(null); // Clear any previous errors
-        // Cache by date
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-          data: result,
-          timestamp: Date.now()
-        }));
-      } else {
-        const errorText = await response.text();
-        console.error('API Error:', response.status, errorText);
-        setError(`Failed to load appointments: ${response.status}`);
-      }
-    } catch (err) {
-      console.error('Network Error:', err);
-      setError(`Network error: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAppointments(selectedDate);
-  }, [selectedDate]);
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minute cache per day
+    refetchOnWindowFocus: false
+  });
 
   const navigateDay = (direction: 'prev' | 'next') => {
     const currentDate = new Date(selectedDate);
@@ -163,12 +131,9 @@ const Appointments = memo(function Appointments() {
           ) : error ? (
           <Card>
             <CardContent className="p-12 text-center">
-              <p className="text-red-600 mb-4">{error}</p>
+              <p className="text-red-600 mb-4">Failed to load appointments. Please try again.</p>
               <Button 
-                onClick={() => {
-                  setError(null);
-                  fetchAppointments(selectedDate);
-                }}
+                onClick={() => refetch()}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Reintentar
