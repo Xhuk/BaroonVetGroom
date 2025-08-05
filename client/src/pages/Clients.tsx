@@ -89,20 +89,7 @@ export default function Clients() {
     },
   });
 
-  if (clientsLoading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-blue-800">Clientes y Mascotas</h1>
-        </div>
-        <div className="grid gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 animate-pulse rounded-lg"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  // Always show UI immediately - no conditional rendering that causes white screens
 
   const handleCreateClient = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

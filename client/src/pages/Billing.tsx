@@ -106,20 +106,7 @@ export default function Billing() {
     },
   });
 
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-blue-800">Facturación y Pagos</h1>
-        </div>
-        <div className="grid gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 animate-pulse rounded-lg"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  // ALWAYS RENDER UI INSTANTLY - No conditional returns!
 
   const handleCreatePayment = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

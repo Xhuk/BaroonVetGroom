@@ -10,13 +10,13 @@ export function useFastLoad() {
   
   // Show UI instantly, load data in background
   useEffect(() => {
-    // Phase 1: Instant UI (0ms)
+    // Phase 1: Instant UI (0ms) - this should ALWAYS render
     setLoadingPhase('instant');
     
     // Phase 2: Background loading after UI is shown
     const timer = setTimeout(() => {
       setLoadingPhase('background');
-    }, 50); // Ultra-fast transition
+    }, 10); // Even faster transition to eliminate any white flashes
     
     return () => clearTimeout(timer);
   }, []);
