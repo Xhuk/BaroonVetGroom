@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense, memo } from "react";
 import { BackButton } from "@/components/BackButton";
 import { InstantAppointmentsSkeleton } from "@/components/InstantSkeletonUI";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,33 +16,58 @@ interface AppointmentData {
   timestamp: number;
 }
 
-export default function Appointments() {
+// Pre-initialize skeleton for instant rendering
+const INSTANT_SKELETON = <InstantAppointmentsSkeleton />;
+
+const Appointments = memo(function Appointments() {
   const [data, setData] = useState<AppointmentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // INSTANT FETCH - No auth, no waiting
+  // OPTIMIZED FETCH - Cache-first approach
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchData = async () => {
       try {
+        // Check if we have cached data first
+        const cachedData = sessionStorage.getItem('appointments-cache');
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          if (Date.now() - parsed.timestamp < 60000) { // 1 minute cache
+            if (isMounted) {
+              setData(parsed.data);
+              setIsLoading(false);
+            }
+            return;
+          }
+        }
+
         const response = await fetch('/api/appointments-data/vetgroom1', {
-          headers: { 'Cache-Control': 'no-cache' }
+          headers: { 'Cache-Control': 'max-age=60' }
         });
         
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const result = await response.json();
           setData(result);
-        } else {
+          // Cache the result
+          sessionStorage.setItem('appointments-cache', JSON.stringify({
+            data: result,
+            timestamp: Date.now()
+          }));
+        } else if (isMounted) {
           setError('Failed to load appointments');
         }
       } catch (err) {
-        setError('Network error');
+        if (isMounted) setError('Network error');
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchData();
+    
+    return () => { isMounted = false; };
   }, []);
 
   const getStatusColor = (status: string) => {
@@ -69,7 +94,7 @@ export default function Appointments() {
         </Button>
       </div>
 
-      <Suspense fallback={<InstantAppointmentsSkeleton />}>
+      <Suspense fallback={INSTANT_SKELETON}>
         <div className="grid gap-4">
           {isLoading ? (
             // Instant skeleton - shows immediately
@@ -182,4 +207,6 @@ export default function Appointments() {
       </Suspense>
     </div>
   );
-}
+});
+
+export default Appointments;
