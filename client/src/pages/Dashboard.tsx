@@ -44,20 +44,35 @@ export default function Dashboard() {
     return null; // Will redirect via useEffect
   }
 
-  // Show layout even if tenant is loading, with placeholder content
-  if (!currentTenant && !tenantLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            No hay tenant asignado
-          </h2>
-          <p className="text-gray-600">
-            Contacta al administrador para obtener acceso a un tenant.
-          </p>
+  // Show layout with loading state while tenant loads, or no tenant message if loading is done
+  if (!currentTenant) {
+    if (tenantLoading) {
+      // Show layout with loading state
+      return (
+        <div className="min-h-screen bg-gray-50 font-sans">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Cargando tenant...</p>
+            </div>
+          </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      // No tenant assigned and not loading
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              No hay tenant asignado
+            </h2>
+            <p className="text-gray-600">
+              Contacta al administrador para obtener acceso a un tenant.
+            </p>
+          </div>
+        </div>
+      );
+    }
   }
 
   return (

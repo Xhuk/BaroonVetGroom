@@ -131,30 +131,49 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     }
     
     // Priority 3: Handle regular tenant assignments (including debug users with normal assignments)
-    if (userTenants.length > 0 && !currentTenant && !debugMode && availableTenants.length === 0) {
-      // Fetch full tenant data for all user tenants
-      Promise.all(
-        userTenants.map(ut => 
-          fetch(`/api/tenants/${ut.tenantId}`)
-            .then(res => res.json())
-            .catch(console.error)
-        )
-      ).then(tenantDataArray => {
-        const validTenants = tenantDataArray.filter(Boolean);
-        // Remove duplicates based on tenant ID
-        const uniqueTenants = validTenants.filter((tenant, index, self) => 
-          index === self.findIndex(t => t.id === tenant.id)
-        );
-        setAvailableTenants(uniqueTenants);
-        
-        if (uniqueTenants.length === 1) {
-          // Auto-select if only one tenant
-          setCurrentTenant(uniqueTenants[0]);
-        } else if (uniqueTenants.length > 1) {
-          // Show selection dialog for multiple tenants
+    if (userTenants.length > 0 && !currentTenant && !debugMode) {
+      // Auto-select first tenant immediately for single tenant case
+      if (userTenants.length === 1 && availableTenants.length === 0) {
+        const userTenant = userTenants[0];
+        // Create optimistic tenant object from user tenant data
+        const optimisticTenant = {
+          id: userTenant.tenantId,
+          name: userTenant.tenantName || userTenant.tenantId,
+          subdomain: userTenant.tenantId,
+          companyId: userTenant.companyId || 'unknown',
+          address: '',
+          phone: '',
+          email: '',
+          latitude: null,
+          longitude: null,
+          postalCode: null,
+          openTime: '09:00:00',
+          closeTime: '18:00:00',
+          timeSlotDuration: 30,
+          reservationTimeout: 5,
+          deliveryTrackingEnabled: false,
+          settings: { language: 'es', timezone: 'America/Mexico_City' },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        setCurrentTenant(optimisticTenant);
+      } else if (userTenants.length > 1 && availableTenants.length === 0) {
+        // For multiple tenants, fetch full data
+        Promise.all(
+          userTenants.map(ut => 
+            fetch(`/api/tenants/${ut.tenantId}`)
+              .then(res => res.json())
+              .catch(() => null)
+          )
+        ).then(tenantDataArray => {
+          const validTenants = tenantDataArray.filter(Boolean);
+          const uniqueTenants = validTenants.filter((tenant, index, self) => 
+            index === self.findIndex(t => t.id === tenant.id)
+          );
+          setAvailableTenants(uniqueTenants);
           setShowTenantSelector(true);
-        }
-      });
+        }).catch(console.error);
+      }
     }
   }, [isAuthenticated, userTenants, currentTenant, isDebugUser, availableTenants.length, showDebugTenantSelector]);
 
