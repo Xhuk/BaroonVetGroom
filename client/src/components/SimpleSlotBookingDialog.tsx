@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Clock, User, Heart } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar, Clock, User, Heart, Search, X, Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
 import type { Client, Pet, Service } from "@shared/schema";
 
 interface SimpleSlotBookingDialogProps {
@@ -25,9 +29,15 @@ export function SimpleSlotBookingDialog({
   selectedTime,
   onBookingComplete,
 }: SimpleSlotBookingDialogProps) {
-  const [selectedClientId, setSelectedClientId] = useState("");
-  const [selectedPetId, setSelectedPetId] = useState("");
-  const [selectedServiceId, setSelectedServiceId] = useState("");
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+  const [selectedServices, setSelectedServices] = useState<Service[]>([]);
+  const [clientSearch, setClientSearch] = useState("");
+  const [petSearch, setPetSearch] = useState("");
+  const [serviceSearch, setServiceSearch] = useState("");
+  const [showClientPopover, setShowClientPopover] = useState(false);
+  const [showPetPopover, setShowPetPopover] = useState(false);
+  const [showServicePopover, setShowServicePopover] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -44,13 +54,13 @@ export function SimpleSlotBookingDialog({
 
   // Fetch pets for selected client
   const { data: pets = [] } = useQuery<Pet[]>({
-    queryKey: ["/api/pets", selectedClientId],
+    queryKey: ["/api/pets", selectedClient?.id],
     queryFn: async () => {
-      const response = await fetch(`/api/pets/client/${selectedClientId}`);
+      const response = await fetch(`/api/pets/client/${selectedClient?.id}`);
       if (!response.ok) throw new Error("Failed to fetch pets");
       return response.json();
     },
-    enabled: !!selectedClientId,
+    enabled: !!selectedClient?.id,
   });
 
   // Fetch services
@@ -64,24 +74,68 @@ export function SimpleSlotBookingDialog({
     enabled: open,
   });
 
+  // Filter clients by search
+  const filteredClients = useMemo(() => {
+    if (!clientSearch) return clients;
+    return clients.filter(client => 
+      client.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
+      client.email?.toLowerCase().includes(clientSearch.toLowerCase()) ||
+      client.phone?.includes(clientSearch)
+    );
+  }, [clients, clientSearch]);
+
+  // Filter pets by search
+  const filteredPets = useMemo(() => {
+    if (!petSearch) return pets;
+    return pets.filter(pet => 
+      pet.name.toLowerCase().includes(petSearch.toLowerCase()) ||
+      pet.species?.toLowerCase().includes(petSearch.toLowerCase()) ||
+      pet.breed?.toLowerCase().includes(petSearch.toLowerCase())
+    );
+  }, [pets, petSearch]);
+
+  // Filter services by search (exclude already selected)
+  const filteredServices = useMemo(() => {
+    const selectedServiceIds = selectedServices.map(s => s.id);
+    const available = services.filter(service => !selectedServiceIds.includes(service.id));
+    
+    if (!serviceSearch) return available;
+    return available.filter(service => 
+      service.name.toLowerCase().includes(serviceSearch.toLowerCase()) ||
+      service.type?.toLowerCase().includes(serviceSearch.toLowerCase())
+    );
+  }, [services, serviceSearch, selectedServices]);
+
+  // Calculate total price
+  const totalPrice = selectedServices.reduce((sum, service) => sum + (service.price || 0), 0);
+
   // Create appointment directly
   const createAppointmentMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/appointments", "POST", {
-        tenantId,
-        clientId: selectedClientId,
-        petId: selectedPetId,
-        serviceId: selectedServiceId,
-        scheduledDate: selectedDate,
-        scheduledTime: selectedTime,
-        status: "scheduled",
-        type: services.find(s => s.id === selectedServiceId)?.type || "general",
-      });
+      // Create appointments for each selected service
+      const appointments = [];
+      
+      for (const service of selectedServices) {
+        const appointment = await apiRequest("/api/appointments", "POST", {
+          tenantId,
+          clientId: selectedClient?.id,
+          petId: selectedPet?.id,
+          serviceId: service.id,
+          scheduledDate: selectedDate,
+          scheduledTime: selectedTime,
+          status: "scheduled",
+          type: service.type || "general",
+          notes: `Servicios: ${selectedServices.map(s => s.name).join(", ")}. Total: $${totalPrice}`,
+        });
+        appointments.push(appointment);
+      }
+      
+      return appointments;
     },
-    onSuccess: () => {
+    onSuccess: (appointments) => {
       toast({
-        title: "¡Cita Creada!",
-        description: `Cita programada para ${selectedDate} a las ${selectedTime}`,
+        title: "¡Cita(s) Creada(s)!",
+        description: `${appointments.length} cita(s) programada(s) para ${selectedDate} a las ${selectedTime}. Total: $${totalPrice}`,
       });
       
       // Invalidate cache and close dialog
@@ -89,9 +143,7 @@ export function SimpleSlotBookingDialog({
       onBookingComplete();
       
       // Reset form
-      setSelectedClientId("");
-      setSelectedPetId("");
-      setSelectedServiceId("");
+      resetForm();
     },
     onError: (error: any) => {
       toast({
@@ -102,11 +154,23 @@ export function SimpleSlotBookingDialog({
     },
   });
 
+  const resetForm = () => {
+    setSelectedClient(null);
+    setSelectedPet(null);
+    setSelectedServices([]);
+    setClientSearch("");
+    setPetSearch("");
+    setServiceSearch("");
+    setShowClientPopover(false);
+    setShowPetPopover(false);
+    setShowServicePopover(false);
+  };
+
   const handleSubmit = () => {
-    if (!selectedClientId || !selectedPetId || !selectedServiceId) {
+    if (!selectedClient || !selectedPet || selectedServices.length === 0) {
       toast({
         title: "Campos requeridos",
-        description: "Por favor selecciona cliente, mascota y servicio",
+        description: "Por favor selecciona cliente, mascota y al menos un servicio",
         variant: "destructive",
       });
       return;
@@ -116,10 +180,18 @@ export function SimpleSlotBookingDialog({
   };
 
   const handleClose = () => {
-    setSelectedClientId("");
-    setSelectedPetId("");
-    setSelectedServiceId("");
+    resetForm();
     onOpenChange(false);
+  };
+
+  const addService = (service: Service) => {
+    setSelectedServices(prev => [...prev, service]);
+    setServiceSearch("");
+    setShowServicePopover(false);
+  };
+
+  const removeService = (serviceId: string) => {
+    setSelectedServices(prev => prev.filter(s => s.id !== serviceId));
   };
 
   return (
@@ -142,66 +214,193 @@ export function SimpleSlotBookingDialog({
             <span className="font-medium">{selectedDate} - {selectedTime}</span>
           </div>
 
-          {/* Client Selection */}
+          {/* Client Search */}
           <div className="space-y-2">
             <label className="text-sm font-medium flex items-center gap-2">
               <User className="h-4 w-4" />
               Cliente
             </label>
-            <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar cliente..." />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={showClientPopover} onOpenChange={setShowClientPopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={showClientPopover}
+                  className="w-full justify-between"
+                >
+                  {selectedClient ? selectedClient.name : "Buscar cliente..."}
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput 
+                    placeholder="Buscar por nombre, email o teléfono..." 
+                    value={clientSearch}
+                    onValueChange={setClientSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty>No se encontraron clientes.</CommandEmpty>
+                    <CommandGroup>
+                      {filteredClients.map((client) => (
+                        <CommandItem
+                          key={client.id}
+                          value={client.id}
+                          onSelect={() => {
+                            setSelectedClient(client);
+                            setSelectedPet(null); // Reset pet when client changes
+                            setShowClientPopover(false);
+                            setClientSearch("");
+                          }}
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium">{client.name}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {client.email} • {client.phone}
+                            </span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
-          {/* Pet Selection */}
+          {/* Pet Search */}
           <div className="space-y-2">
             <label className="text-sm font-medium flex items-center gap-2">
               <Heart className="h-4 w-4" />
               Mascota
             </label>
-            <Select 
-              value={selectedPetId} 
-              onValueChange={setSelectedPetId}
-              disabled={!selectedClientId}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar mascota..." />
-              </SelectTrigger>
-              <SelectContent>
-                {pets.map((pet) => (
-                  <SelectItem key={pet.id} value={pet.id}>
-                    {pet.name} ({pet.species})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={showPetPopover} onOpenChange={setShowPetPopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={showPetPopover}
+                  className="w-full justify-between"
+                  disabled={!selectedClient}
+                >
+                  {selectedPet ? `${selectedPet.name} (${selectedPet.species})` : "Buscar mascota..."}
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput 
+                    placeholder="Buscar por nombre, especie o raza..." 
+                    value={petSearch}
+                    onValueChange={setPetSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty>No se encontraron mascotas.</CommandEmpty>
+                    <CommandGroup>
+                      {filteredPets.map((pet) => (
+                        <CommandItem
+                          key={pet.id}
+                          value={pet.id}
+                          onSelect={() => {
+                            setSelectedPet(pet);
+                            setShowPetPopover(false);
+                            setPetSearch("");
+                          }}
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium">{pet.name}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {pet.species} • {pet.breed} • {pet.registeredAge || 'N/A'} años
+                            </span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
-          {/* Service Selection */}
+          {/* Services Multi-Select with Tags */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Servicio</label>
-            <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar servicio..." />
-              </SelectTrigger>
-              <SelectContent>
-                {services.map((service) => (
-                  <SelectItem key={service.id} value={service.id}>
+            <label className="text-sm font-medium">Servicios</label>
+            
+            {/* Selected Services Tags */}
+            {selectedServices.length > 0 && (
+              <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-gray-50">
+                {selectedServices.map((service) => (
+                  <Badge key={service.id} variant="secondary" className="flex items-center gap-1">
                     {service.name} - ${service.price}
-                  </SelectItem>
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => removeService(service.id)}
+                    />
+                  </Badge>
                 ))}
-              </SelectContent>
-            </Select>
+              </div>
+            )}
+            
+            {/* Add Service Popover */}
+            <Popover open={showServicePopover} onOpenChange={setShowServicePopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={showServicePopover}
+                  className="w-full justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Agregar servicio...
+                  </span>
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput 
+                    placeholder="Buscar servicios..." 
+                    value={serviceSearch}
+                    onValueChange={setServiceSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty>No se encontraron servicios.</CommandEmpty>
+                    <CommandGroup>
+                      {filteredServices.map((service) => (
+                        <CommandItem
+                          key={service.id}
+                          value={service.id}
+                          onSelect={() => addService(service)}
+                        >
+                          <div className="flex flex-col w-full">
+                            <div className="flex justify-between items-center">
+                              <span className="font-medium">{service.name}</span>
+                              <span className="text-sm font-medium text-green-600">${service.price}</span>
+                            </div>
+                            <span className="text-sm text-muted-foreground">{service.type}</span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
+
+          {/* Price Summary */}
+          {selectedServices.length > 0 && (
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Total Servicios:</span>
+                <span className="text-lg font-bold text-blue-600">${totalPrice}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {selectedServices.length} servicio(s) seleccionado(s)
+              </p>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-2 pt-4">
