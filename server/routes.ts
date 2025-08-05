@@ -215,6 +215,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // OPTIMIZED: Get all appointment page data in one request
+  app.get('/api/appointments-data/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { date } = req.query;
+
+      // Fetch all data in parallel for maximum performance
+      const [appointments, clients, pets, rooms, staff, services] = await Promise.all([
+        storage.getAppointments(tenantId, date as string),
+        storage.getClients(tenantId),
+        storage.getPets(tenantId),
+        storage.getRooms(tenantId),
+        storage.getStaff(tenantId),
+        storage.getServices(tenantId)
+      ]);
+
+      // Return combined response
+      res.json({
+        appointments,
+        clients,
+        pets,
+        rooms,
+        staff,
+        services,
+        timestamp: Date.now()
+      });
+    } catch (error) {
+      console.error("Error fetching appointment data:", error);
+      res.status(500).json({ message: "Failed to fetch appointment data" });
+    }
+  });
+
   // Create appointment
   app.post('/api/appointments/:tenantId', isAuthenticated, async (req: any, res) => {
     try {

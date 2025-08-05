@@ -29,41 +29,26 @@ export default function Appointments() {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
-  // Optimized data fetching - only fetch what's needed when needed
+  // OPTIMIZED: Single API call for all appointment data
   const shouldFetchData = !!currentTenant?.id && isAuthenticated && !isInstant;
 
-  const { data: appointments, isLoading: appointmentsLoading } = useFastFetch<Appointment[]>(
-    `/api/appointments/${currentTenant?.id}`,
-    shouldFetchData
-  );
+  const { data: appointmentData, isLoading: appointmentsLoading } = useFastFetch<{
+    appointments: Appointment[];
+    clients: Client[];
+    pets: Pet[];
+    rooms: Room[];
+    staff: Staff[];
+    services: Service[];
+    timestamp: number;
+  }>(`/api/appointments-data/${currentTenant?.id}`, shouldFetchData);
 
-  // Only fetch support data when creating/editing appointments
-  const shouldFetchSupportData = shouldFetchData && (showCreateForm || !!editingAppointment);
-
-  const { data: clients } = useFastFetch<Client[]>(
-    `/api/clients/${currentTenant?.id}`,
-    shouldFetchSupportData
-  );
-
-  const { data: pets } = useFastFetch<Pet[]>(
-    `/api/pets/${currentTenant?.id}`,
-    shouldFetchSupportData
-  );
-
-  const { data: rooms } = useFastFetch<Room[]>(
-    `/api/rooms/${currentTenant?.id}`,
-    shouldFetchSupportData
-  );
-
-  const { data: staff } = useFastFetch<Staff[]>(
-    `/api/staff/${currentTenant?.id}`,
-    shouldFetchSupportData
-  );
-
-  const { data: services } = useFastFetch<Service[]>(
-    `/api/services/${currentTenant?.id}`,
-    shouldFetchSupportData
-  );
+  // Extract data from combined response
+  const appointments = appointmentData?.appointments;
+  const clients = appointmentData?.clients;
+  const pets = appointmentData?.pets;
+  const rooms = appointmentData?.rooms;
+  const staff = appointmentData?.staff;
+  const services = appointmentData?.services;
 
   // Create appointment mutation
   const createAppointmentMutation = useMutation({
