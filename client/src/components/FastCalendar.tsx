@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { SimpleSlotBookingDialog } from "./SimpleSlotBookingDialog";
+// Removed SimpleSlotBookingDialog - using existing booking page instead
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
 import { getCurrentTimeInUserTimezone } from "@shared/userPreferences";
@@ -20,8 +20,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone());
   const [isScrolling, setIsScrolling] = useState(false);
   const [displayDate, setDisplayDate] = useState(selectedDate || getTodayCST1());
-  const [showBookingDialog, setShowBookingDialog] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null);
+  // Removed booking dialog state - using navigation instead
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -32,26 +31,16 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     }
   }, [selectedDate]);
 
-  // Handle slot click for booking
+  // Handle slot click for booking - redirect to booking page
   const handleSlotClick = (time: string) => {
     if (!tenantId) return;
     
-    setSelectedSlot({
-      date: displayDate,
-      time: time
-    });
-    setShowBookingDialog(true);
+    // Navigate to booking wizard with pre-selected date and time
+    const bookingUrl = `/booking-wizard?date=${displayDate}&time=${time}`;
+    window.location.href = bookingUrl;
   };
 
-  // Handle booking completion
-  const handleBookingComplete = () => {
-    setShowBookingDialog(false);
-    setSelectedSlot(null);
-    // Trigger parent refresh to update appointment data
-    if (onDateChange) {
-      onDateChange(displayDate);
-    }
-  };
+  // Booking completion handled by booking page navigation
 
   // Update current time every minute using user's timezone
   useEffect(() => {
@@ -442,17 +431,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
         </div>
       </CardContent>
 
-      {/* Simple Slot Booking Dialog */}
-      {selectedSlot && tenantId && (
-        <SimpleSlotBookingDialog
-          open={showBookingDialog}
-          onOpenChange={setShowBookingDialog}
-          tenantId={tenantId}
-          selectedDate={selectedSlot.date}
-          selectedTime={selectedSlot.time}
-          onBookingComplete={handleBookingComplete}
-        />
-      )}
+      {/* Booking handled by navigation to booking page */}
     </Card>
   );
 }

@@ -12,6 +12,8 @@ A high-performance veterinary clinic management platform with ultra-optimized us
 - **Fixed Price Calculation**: Changed from string concatenation to proper numeric summation
 - **Real-Time Calendar Updates**: Fixed cache invalidation and added page refresh to show new appointments immediately
 - **Enhanced User Experience**: Direct appointment creation workflow eliminates slot reservation complexity
+- **Integrated Booking Navigation**: Clicking calendar slots now opens the proven BookingWizard with pre-selected date/time
+- **Removed Complex Dialog**: Eliminated problematic SimpleSlotBookingDialog in favor of existing proven booking system
 
 ### Comprehensive Client & Pet Management System (August 2025) - COMPLETED ✅
 - **Full CRUD Operations**: Created complete clients and pets management page with inline editing capabilities

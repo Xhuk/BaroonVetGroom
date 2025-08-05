@@ -78,6 +78,11 @@ export default function BookingWizard() {
   const { toast } = useToast();
   const mapRef = useRef<any>(null);
   
+  // Get URL parameters for pre-selected date and time
+  const urlParams = new URLSearchParams(window.location.search);
+  const preSelectedDate = urlParams.get('date');
+  const preSelectedTime = urlParams.get('time');
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [customerData, setCustomerData] = useState<CustomerData>({
     name: "",
@@ -101,8 +106,8 @@ export default function BookingWizard() {
   
   const [bookingData, setBookingData] = useState<BookingData>({
     serviceId: "",
-    requestedDate: "",
-    requestedTime: "",
+    requestedDate: preSelectedDate || "",
+    requestedTime: preSelectedTime || "",
     logistics: "pickup",
     notes: ""
   });

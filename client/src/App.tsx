@@ -55,6 +55,7 @@ function Router() {
       {isAuthenticated && (
         <>
           <Route path="/booking" component={BookingWizard} />
+          <Route path="/booking-wizard" component={BookingWizard} />
           <Route path="/clients" component={Clients} />
           <Route path="/medical-records" component={MedicalRecords} />
           <Route path="/medical-appointments" component={MedicalAppointments} />
