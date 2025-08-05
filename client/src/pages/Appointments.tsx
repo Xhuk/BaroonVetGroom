@@ -57,7 +57,7 @@ export default function Appointments() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-blue-800">Gestión de Citas - Ultra Fast</h1>
+        <h1 className="text-2xl font-bold text-blue-800">Gestión de Citas</h1>
         <Button className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" />
           Nueva Cita
@@ -188,16 +188,7 @@ export default function Appointments() {
         )}
       </div>
 
-      <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="font-semibold text-blue-800 mb-2">⚡ Ultra-Fast Loading Demo</h3>
-        <div className="text-sm text-blue-700 space-y-1">
-          <p>✓ No authentication delays</p>
-          <p>✓ Instant skeleton UI (0ms)</p>
-          <p>✓ Single optimized API call</p>
-          <p>✓ Server-side caching</p>
-          <p>✓ 46% faster than before</p>
-        </div>
-      </div>
+
     </div>
   );
 }
