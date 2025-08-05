@@ -28,18 +28,26 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
 
   // Generate 30-minute time slots for the entire day
   const generateTimeSlots = () => {
-    const slots = [];
-    for (let h = 6; h < 22; h++) { // 6 AM to 10 PM for veterinary clinic
+    // Generate full day time slots (24 hours) for comprehensive coverage
+    const allSlots = [];
+    for (let h = 0; h < 24; h++) {
       for (let m = 0; m < 60; m += 30) {
         const hour = String(h).padStart(2, '0');
         const minute = String(m).padStart(2, '0');
-        slots.push(`${hour}:${minute}`);
+        allSlots.push(`${hour}:${minute}`);
       }
     }
-    return slots;
+    
+    // Filter to clinic hours for display (6 AM to 10 PM)
+    const visibleSlots = allSlots.filter(slot => {
+      const hour = parseInt(slot.split(':')[0]);
+      return hour >= 6 && hour < 22;
+    });
+    
+    return { allSlots, visibleSlots };
   };
 
-  const timeSlots = generateTimeSlots();
+  const { allSlots: timeSlots, visibleSlots: visibleTimeSlots } = generateTimeSlots();
 
   const getAppointmentStyle = (appointment: Appointment) => {
     const typeStyles = {
@@ -76,29 +84,32 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     // Debug: Always show marker for testing during development
     console.log(`Current time: ${hours}:${minutes.toString().padStart(2, '0')}`);
     
-    // For testing: Show marker at visible position (like 2:30 PM slot)
-    const testHour = 14; // 2:30 PM
-    const testMinute = 30;
-    
-    // Calculate position for test time instead of actual time
-    const totalMinutes = (testHour - 6) * 60 + testMinute; // Minutes since 6 AM
+    // Calculate position for actual current time
+    const totalMinutes = (hours - 6) * 60 + minutes; // Minutes since 6 AM
     const slotHeight = 80; // Each 30-minute slot is now 80px tall
     const position = (totalMinutes / 30) * slotHeight; // Position in pixels
     
-    console.log(`Test marker position (2:30 PM): ${position}px`);
+    // Return null if outside visible hours (6 AM - 10 PM)
+    if (hours < 6 || hours >= 22) {
+      console.log('Current time outside visible hours');
+      return null;
+    }
+    
+    console.log(`Time marker position: ${position}px`);
     return position;
   };
 
   const isTimeMarkerInOccupiedSlot = () => {
-    // For testing: Check 2:30 PM slot instead of current time
-    const testHour = 14; // 2:30 PM  
-    const testMinute = 30;
+    const now = getCurrentTimeInUserTimezone();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
     
-    const slotStartMinute = Math.floor(testMinute / 30) * 30;
-    const testTimeStr = `${String(testHour).padStart(2, '0')}:${String(slotStartMinute).padStart(2, '0')}`;
+    // Find the current 30-minute time slot
+    const slotStartMinute = Math.floor(currentMinute / 30) * 30;
+    const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(slotStartMinute).padStart(2, '0')}`;
     
-    const slotAppointments = getAppointmentsForSlot(testTimeStr);
-    console.log(`Checking test slot ${testTimeStr}: ${slotAppointments.length} appointments found`);
+    const slotAppointments = getAppointmentsForSlot(currentTimeStr);
+    console.log(`Checking slot ${currentTimeStr}: ${slotAppointments.length} appointments found`);
     
     return slotAppointments.length > 0;
   };
@@ -156,17 +167,46 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
   const currentTimePosition = getCurrentTimePosition();
   const isMarkerInOccupiedSlot = isTimeMarkerInOccupiedSlot();
 
+  // Determine if an appointment is currently ongoing
+  const isOngoing = (appointment: Appointment) => {
+    const now = getCurrentTimeInUserTimezone();
+    const appointmentTime = appointment.appointmentTime; // Fixed property name
+    if (!appointmentTime) return false;
+    
+    // Create date objects for comparison
+    const todayStr = now.toISOString().split('T')[0];
+    const appStart = new Date(`${todayStr}T${appointmentTime}`);
+    const duration = 60; // Default 60 minutes duration
+    const appEnd = new Date(appStart.getTime() + duration * 60 * 1000);
+    
+    return now >= appStart && now < appEnd;
+  };
+
   return (
     <Card className={cn("fixed flex flex-col", className)} style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
       <CardHeader className="flex-shrink-0">
-        <h2 className="text-xl font-semibold text-gray-800">
-          Calendario de Hoy - {currentTime.toLocaleDateString('es-ES', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </h2>
+        <div className="flex justify-between items-center mb-2">
+          <button
+            onClick={() => window.history.back()}
+            className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition duration-300 text-sm"
+          >
+            ← Día Anterior
+          </button>
+          <h2 className="text-xl font-semibold text-gray-800 flex-1 text-center mx-2">
+            Calendario de Hoy - {currentTime.toLocaleDateString('es-ES', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </h2>
+          <button
+            onClick={() => window.history.forward()}
+            className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition duration-300 text-sm"
+          >
+            Día Siguiente →
+          </button>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
@@ -215,14 +255,14 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
             style={{ maxHeight: 'calc(100vh - 200px)' }}
           >
           
-          {timeSlots.map((slot, index) => {
+          {visibleTimeSlots.map((slot, index) => {
             const slotAppointments = getAppointmentsForSlot(slot);
             const isCurrentSlot = currentTime.getHours() === parseInt(slot.split(':')[0]) &&
                                   currentTime.getMinutes() >= parseInt(slot.split(':')[1]) &&
                                   currentTime.getMinutes() < parseInt(slot.split(':')[1]) + 30;
             
             const isFirstSlot = index === 0;
-            const isLastSlot = index === timeSlots.length - 1;
+            const isLastSlot = index === visibleTimeSlots.length - 1;
 
             return (
               <div 
@@ -251,7 +291,8 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
                         key={appointment.id}
                         className={cn(
                           "p-3 mb-2 rounded-lg shadow-sm border-l-4 cursor-pointer hover:shadow-md transition-shadow",
-                          getAppointmentStyle(appointment)
+                          getAppointmentStyle(appointment),
+                          isOngoing(appointment) && "ring-2 ring-red-500 ring-offset-2"
                         )}
                       >
                         <div className="flex items-center justify-between">
@@ -265,6 +306,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
                               </p>
                               <p className="text-xs text-gray-600">
                                 Mascota #{appointment.petId}
+                                {isOngoing(appointment) && <span className="ml-2 text-red-600 font-bold">🔴 EN CURSO</span>}
                               </p>
                             </div>
                           </div>
