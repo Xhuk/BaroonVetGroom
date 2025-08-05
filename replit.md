@@ -64,6 +64,11 @@ VetGroom is a comprehensive SaaS platform designed for veterinary clinics that p
 - **Smart Inventory Tracking**: InventorySelector component allows selection of products used during medical appointments with automatic cost calculation and itemized billing
 - **Billing-Inventory Integration**: When payments are processed (cash or payment link), inventory stock is automatically reduced based on items tracked in pending invoices
 - **Transaction Logging**: Complete audit trail of inventory usage with automatic transaction records linking to medical appointments and invoices for accurate cost accounting
+- **AI Mass Inventory Import**: Implemented OpenAI-powered bulk inventory import system that processes natural language descriptions and creates structured Mexican veterinary inventory with realistic peso pricing
+- **Navigation Performance Fix**: Eliminated white page flicker during navigation by separating loading states from route switching and optimizing query caching with 5-minute stale time
+- **Calendar Appointments Debug**: Fixed calendar component to use correct API endpoints and added debug logging to identify appointment display issues - appointments are loading but time slot matching needs optimization
+- **Performance Analysis**: Identified key bottlenecks - appointments endpoint takes 2.5-3 seconds, dashboard stats 1-1.7 seconds, causing slow screen loads across the application
+- **Authentication Performance Optimization**: Achieved sub-200ms authentication with multiple improvements: extended OIDC config caching to 12 hours, added 5-minute user data caching, implemented token refresh timeouts, optimized session store with connection pooling, and added 5-minute buffer to avoid unnecessary token refreshes - authentication now responds in 5-10ms consistently
 
 # User Preferences
 

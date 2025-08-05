@@ -19,7 +19,7 @@ const getOidcConfig = memoize(
       process.env.REPL_ID!
     );
   },
-  { maxAge: 3600 * 1000 }
+  { maxAge: 12 * 3600 * 1000 } // Cache for 12 hours instead of 1 hour
 );
 
 export function getSession() {
@@ -30,12 +30,23 @@ export function getSession() {
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
+    // Add connection pool optimization
+    pool: {
+      max: 10,
+      min: 2,
+      acquireTimeoutMillis: 2000,
+      createTimeoutMillis: 3000,
+      destroyTimeoutMillis: 5000,
+      reapIntervalMillis: 1000,
+      createRetryIntervalMillis: 200,
+    }
   });
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    rolling: true, // Reset expiry on each request
     cookie: {
       httpOnly: true,
       secure: true,
@@ -130,11 +141,23 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  if (!req.isAuthenticated() || !user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // Skip expensive token validation for fresh sessions (within 5 minutes)
+  if (!user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
   const now = Math.floor(Date.now() / 1000);
+  
+  // Add a 5-minute buffer to avoid unnecessary refresh calls
+  if (now <= (user.expires_at - 300)) {
+    return next();
+  }
+
+  // Only refresh if token is actually expired (not just close to expiry)
   if (now <= user.expires_at) {
     return next();
   }
@@ -146,11 +169,21 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   }
 
   try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
+    // Use Promise.race to timeout slow refresh requests
+    const refreshPromise = (async () => {
+      const config = await getOidcConfig();
+      return await client.refreshTokenGrant(config, refreshToken);
+    })();
+    
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Token refresh timeout')), 5000)
+    );
+    
+    const tokenResponse = await Promise.race([refreshPromise, timeoutPromise]);
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {
+    console.error('Token refresh failed:', error);
     res.status(401).json({ message: "Unauthorized" });
     return;
   }

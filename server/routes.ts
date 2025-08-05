@@ -41,11 +41,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // In-memory cache for user data (valid for 5 minutes)
+  const userCache = new Map<string, { data: any, timestamp: number }>();
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Check cache first
+      const cached = userCache.get(userId);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return res.json(cached.data);
+      }
+      
       const user = await storage.getUser(userId);
+      
+      // Cache the result
+      userCache.set(userId, { data: user, timestamp: Date.now() });
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -1525,16 +1540,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/access-info', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
+      const cacheKey = `access_${userId}`;
+      
+      // Check cache first
+      const cached = userCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return res.json(cached.data);
+      }
+      
       const accessLevel = await getUserAccessLevel(req);
       const roles = await storage.getUserSystemRoles(userId);
       
-      res.json({
+      const accessInfo = {
         accessLevel,
         roles,
         canAccessSuperAdmin: accessLevel === 'system_admin',
         canAccessAdmin: ['system_admin', 'super_tenant'].includes(accessLevel),
         canDebugTenants: await hasDebugAccess(req)
-      });
+      };
+      
+      // Cache the result
+      userCache.set(cacheKey, { data: accessInfo, timestamp: Date.now() });
+      
+      res.json(accessInfo);
     } catch (error) {
       console.error("Error fetching access info:", error);
       res.status(500).json({ message: "Failed to fetch access info" });

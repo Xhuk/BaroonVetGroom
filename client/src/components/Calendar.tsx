@@ -75,8 +75,9 @@ export function Calendar({ className }: CalendarProps) {
       // More robust date comparison - check if same date
       const isSameDate = appDate.toDateString() === todayDate.toDateString();
       
-      // Extract time in HH:MM format
-      const timeMatch = appointmentTime.substring(0, 5) === timeSlot;
+      // Extract time in HH:MM format and normalize
+      const normalizedAppointmentTime = appointmentTime.substring(0, 5);
+      const timeMatch = normalizedAppointmentTime === timeSlot;
       
       // Debug logging
       if (isSameDate) {
