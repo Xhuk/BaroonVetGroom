@@ -1,21 +1,48 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
+import { useFastLoad, useFastFetch } from "@/hooks/useFastLoad";
 import { Header } from "@/components/Header";
 import { Navigation } from "@/components/Navigation";
-import { Calendar } from "@/components/Calendar";
-import { BottomStatsRibbon } from "@/components/BottomStatsRibbon";
+import { FastCalendar } from "@/components/FastCalendar";
+import { FastStatsRibbon } from "@/components/FastStatsRibbon";
 import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, History, Truck, Phone, CalendarIcon } from "lucide-react";
 import { Link } from "wouter";
-import { Suspense } from "react";
+import type { Appointment, DashboardStats } from "@shared/schema";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const { currentTenant, isLoading: tenantLoading } = useTenant();
+  const { isInstant, startBackgroundLoad, completeLoad } = useFastLoad();
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  
+  // Fast fetch data after UI is shown
+  const { data: appointments } = useFastFetch<Appointment[]>(
+    `/api/appointments/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
+  
+  const { data: stats } = useFastFetch<DashboardStats>(
+    `/api/dashboard/stats/${currentTenant?.id}`,
+    !!currentTenant?.id && !isInstant
+  );
+
+  // Progressive enhancement: show calendar and stats after UI loads
+  useEffect(() => {
+    if (!isInstant && currentTenant) {
+      const timer1 = setTimeout(() => setShowCalendar(true), 100);
+      const timer2 = setTimeout(() => setShowStats(true), 300);
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    }
+  }, [isInstant, currentTenant]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -105,18 +132,20 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Calendar - Load with progressive enhancement */}
-        <Suspense fallback={
+        {/* Fast Calendar - Direct implementation */}
+        {showCalendar ? (
+          <FastCalendar appointments={appointments || []} className="shadow-lg" />
+        ) : (
           <div className="mx-6 h-96 bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center">
             <div className="text-gray-500">Cargando calendario...</div>
           </div>
-        }>
-          <Calendar className="shadow-lg" />
-        </Suspense>
+        )}
       </main>
 
-      {/* Bottom Statistics Ribbon - Load with delay */}
-      <Suspense fallback={
+      {/* Fast Stats Ribbon - Direct implementation */}
+      {showStats ? (
+        <FastStatsRibbon stats={stats} />
+      ) : (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 backdrop-blur-md border-t border-slate-600/50 z-20 shadow-2xl">
           <div className="px-8 py-4">
             <div className="flex items-center justify-between">
@@ -129,9 +158,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      }>
-        <BottomStatsRibbon />
-      </Suspense>
+      )}
     </div>
   );
 }
