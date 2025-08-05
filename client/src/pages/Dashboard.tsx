@@ -124,10 +124,10 @@ export default function Dashboard() {
               Gestionar Citas
             </Button>
           </Link>
-          <Link href="/delivery">
-            <Button className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 shadow-md">
-              <Truck className="w-4 h-4 mr-2" />
-              Plan de Entregas
+          <Link href="/inventory">
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 shadow-md">
+              <History className="w-4 h-4 mr-2" />
+              Inventario
             </Button>
           </Link>
         </div>

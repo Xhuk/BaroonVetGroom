@@ -8,6 +8,7 @@ import { Plus, Calendar, Clock, User, Phone, Edit, Trash2, ChevronLeft, ChevronR
 import type { Appointment, Client, Pet, Room, Staff, Service } from "@shared/schema";
 import { apiRequest } from '@/lib/queryClient';
 import { getTodayCST1, addDaysCST1, formatCST1Date } from "@shared/timeUtils";
+import { CalendarTimeIndicator } from "@/components/CalendarTimeIndicator";
 
 interface AppointmentData {
   appointments: Appointment[];
@@ -78,7 +79,14 @@ const Appointments = memo(function Appointments() {
         </Button>
       </div>
 
-      {/* ULTRA-FAST DAY NAVIGATION */}
+      {/* CALENDAR TIME INDICATOR */}
+      <CalendarTimeIndicator 
+        appointments={data?.appointments || []}
+        selectedDate={selectedDate}
+        onRefresh={refetch}
+      />
+
+      {/* DAY NAVIGATION */}
       <div className="bg-white rounded-lg border shadow-sm p-4 mb-6">
         <div className="flex items-center justify-between">
           <Button 
