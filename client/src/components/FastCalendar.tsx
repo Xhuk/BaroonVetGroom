@@ -118,11 +118,9 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(slotStartMinute).padStart(2, '0')}`;
     
     const slotAppointments = getAppointmentsForSlot(currentTimeStr);
-    // Only show red marker for appointments that are currently ongoing (in progress)
-    const ongoingAppointments = slotAppointments.filter(appointment => isOngoing(appointment));
-    console.log(`Checking slot ${currentTimeStr}: ${ongoingAppointments.length} in-progress appointments found`);
+    console.log(`Checking slot ${currentTimeStr}: ${slotAppointments.length} appointments found`);
     
-    return ongoingAppointments.length > 0;
+    return slotAppointments.length > 0;
   };
 
   // Auto-scroll to current time after 30 seconds of inactivity
