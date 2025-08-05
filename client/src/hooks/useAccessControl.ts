@@ -199,6 +199,10 @@ export function useAccessControl() {
   const { data: accessInfo, isLoading } = useQuery<AccessInfo>({
     queryKey: ['/api/auth/access-info'],
     retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes - reduce refetching
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Prevent refetch on focus change
+    refetchOnMount: false, // Don't refetch on remount if data exists
   });
 
   // Load impersonated role from sessionStorage

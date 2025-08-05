@@ -42,9 +42,21 @@ import SubscriptionLanding from "@/pages/SubscriptionLanding";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Show loading spinner instead of switching routes during authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
+      {!isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
           <Route path="/plans" component={SubscriptionLanding} />
