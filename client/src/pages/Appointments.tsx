@@ -3,7 +3,7 @@ import { BackButton } from "@/components/BackButton";
 import { InstantAppointmentsSkeleton } from "@/components/InstantSkeletonUI";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Clock, User, Phone, Edit, Trash2 } from "lucide-react";
+import { Plus, Calendar, Clock, User, Phone, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Appointment, Client, Pet, Room, Staff, Service } from "@shared/schema";
 
 interface AppointmentData {
@@ -23,52 +23,59 @@ const Appointments = memo(function Appointments() {
   const [data, setData] = useState<AppointmentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // OPTIMIZED FETCH - Cache-first approach
-  useEffect(() => {
-    let isMounted = true;
-    
-    const fetchData = async () => {
-      try {
-        // Check if we have cached data first
-        const cachedData = sessionStorage.getItem('appointments-cache');
-        if (cachedData) {
-          const parsed = JSON.parse(cachedData);
-          if (Date.now() - parsed.timestamp < 60000) { // 1 minute cache
-            if (isMounted) {
-              setData(parsed.data);
-              setIsLoading(false);
-            }
-            return;
-          }
+  // ULTRA-FAST DAY-SPECIFIC LOADING
+  const fetchAppointments = async (date: string) => {
+    setIsLoading(true);
+    try {
+      // Check cache for this specific date
+      const cacheKey = `appointments-${date}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        if (Date.now() - parsed.timestamp < 300000) { // 5 minute cache per day
+          setData(parsed.data);
+          setIsLoading(false);
+          return;
         }
-
-        const response = await fetch('/api/appointments-data/vetgroom1', {
-          headers: { 'Cache-Control': 'max-age=60' }
-        });
-        
-        if (response.ok && isMounted) {
-          const result = await response.json();
-          setData(result);
-          // Cache the result
-          sessionStorage.setItem('appointments-cache', JSON.stringify({
-            data: result,
-            timestamp: Date.now()
-          }));
-        } else if (isMounted) {
-          setError('Failed to load appointments');
-        }
-      } catch (err) {
-        if (isMounted) setError('Network error');
-      } finally {
-        if (isMounted) setIsLoading(false);
       }
-    };
 
-    fetchData();
-    
-    return () => { isMounted = false; };
-  }, []);
+      const response = await fetch(`/api/appointments-data/vetgroom1?date=${date}`, {
+        headers: { 'Cache-Control': 'max-age=300' }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setData(result);
+        // Cache by date
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          data: result,
+          timestamp: Date.now()
+        }));
+      } else {
+        setError('Failed to load appointments');
+      }
+    } catch (err) {
+      setError('Network error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAppointments(selectedDate);
+  }, [selectedDate]);
+
+  const navigateDay = (direction: 'prev' | 'next') => {
+    const currentDate = new Date(selectedDate);
+    currentDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
+    setSelectedDate(currentDate.toISOString().split('T')[0]);
+  };
+
+  const goToToday = () => {
+    setSelectedDate(new Date().toISOString().split('T')[0]);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -92,6 +99,58 @@ const Appointments = memo(function Appointments() {
           <Plus className="w-4 h-4 mr-2" />
           Nueva Cita
         </Button>
+      </div>
+
+      {/* ULTRA-FAST DAY NAVIGATION */}
+      <div className="bg-white rounded-lg border shadow-sm p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigateDay('prev')}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Anterior
+          </Button>
+          
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <div className="text-lg font-semibold text-gray-900">
+                {new Date(selectedDate).toLocaleDateString('es-ES', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </div>
+              <div className="text-sm text-gray-500">
+                {data?.appointments?.length || 0} citas programadas
+              </div>
+            </div>
+            
+            {selectedDate !== new Date().toISOString().split('T')[0] && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={goToToday}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                Hoy
+              </Button>
+            )}
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigateDay('next')}
+            className="flex items-center gap-2"
+          >
+            Siguiente
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       <Suspense fallback={INSTANT_SKELETON}>
