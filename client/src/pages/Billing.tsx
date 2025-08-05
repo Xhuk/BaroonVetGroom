@@ -28,7 +28,7 @@ import {
   Calendar
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Payment, Appointment, Client, Pet } from "@shared/schema";
+import type { BillingInvoice, Appointment, Client, Pet } from "@shared/schema";
 
 export default function Billing() {
   const { currentTenant } = useTenant();
@@ -38,8 +38,8 @@ export default function Billing() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [paymentFilter, setPaymentFilter] = useState("all");
 
-  const { data: payments, isLoading } = useFastFetch<Payment[]>(
-    `/api/payments/${currentTenant?.id}`,
+  const { data: billingInvoices, isLoading } = useFastFetch<BillingInvoice[]>(
+    `/api/billing/${currentTenant?.id}`,
     !!currentTenant?.id && !isInstant
   );
 
@@ -60,17 +60,14 @@ export default function Billing() {
 
   const createPaymentMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest(`/api/payments`, {
-        method: "POST",
-        body: JSON.stringify({ ...data, tenantId: currentTenant?.id }),
-      });
+      return apiRequest(`/api/billing`, "POST", { ...data, tenantId: currentTenant?.id });
     },
     onSuccess: () => {
       toast({
         title: "Pago registrado",
         description: "El pago se ha registrado exitosamente.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing"] });
       queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
       setShowPaymentForm(false);
       setSelectedAppointment(null);
@@ -86,10 +83,7 @@ export default function Billing() {
 
   const sendPaymentLinkMutation = useMutation({
     mutationFn: async (appointmentId: string) => {
-      return apiRequest(`/api/payments/send-link`, {
-        method: "POST",
-        body: JSON.stringify({ appointmentId }),
-      });
+      return apiRequest(`/api/billing/send-link`, "POST", { appointmentId });
     },
     onSuccess: () => {
       toast({
@@ -158,17 +152,17 @@ export default function Billing() {
     apt.status === "completed" && apt.paymentStatus === "pending"
   ) || [];
 
-  const totalRevenue = payments?.filter(p => p.status === "completed")
-    .reduce((sum, payment) => sum + parseFloat(payment.amount.toString()), 0) || 0;
+  const totalRevenue = billingInvoices?.filter(p => p.status === "paid")
+    .reduce((sum, invoice) => sum + parseFloat(invoice.totalAmount.toString()), 0) || 0;
 
-  const pendingPayments = payments?.filter(p => p.status === "pending") || [];
-  const todayPayments = payments?.filter(p => 
-    new Date(p.createdAt).toDateString() === new Date().toDateString()
+  const pendingPayments = billingInvoices?.filter(p => p.status === "pending") || [];
+  const todayPayments = billingInvoices?.filter(p => 
+    p.createdAt && new Date(p.createdAt).toDateString() === new Date().toDateString()
   ) || [];
 
-  const filteredPayments = payments?.filter(payment => {
+  const filteredPayments = billingInvoices?.filter(invoice => {
     if (paymentFilter === "all") return true;
-    return payment.status === paymentFilter;
+    return invoice.status === paymentFilter;
   }) || [];
 
   return (
@@ -370,28 +364,28 @@ export default function Billing() {
 
         <TabsContent value="payments">
           <div className="space-y-4">
-            {filteredPayments.map((payment) => {
-              const appointment = appointments?.find(a => a.id === payment.appointmentId);
-              const client = clients?.find(c => c.id === appointment?.clientId);
+            {filteredPayments.map((invoice) => {
+              const appointment = appointments?.find(a => a.id === invoice.appointmentId);
+              const client = clients?.find(c => c.id === invoice.clientId);
               const pet = pets?.find(p => p.id === appointment?.petId);
 
               return (
-                <Card key={payment.id}>
+                <Card key={invoice.id}>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="font-semibold text-lg">
-                            ${parseFloat(payment.amount.toString()).toLocaleString()} {payment.currency}
+                            ${parseFloat(invoice.totalAmount.toString()).toLocaleString()}
                           </h3>
-                          <Badge className={getPaymentStatusColor(payment.status)}>
+                          <Badge className={getPaymentStatusColor(invoice.status)}>
                             <div className="flex items-center gap-1">
-                              {getPaymentStatusIcon(payment.status)}
+                              {getPaymentStatusIcon(invoice.status)}
                               <span>
-                                {payment.status === "completed" && "Completado"}
-                                {payment.status === "pending" && "Pendiente"}
-                                {payment.status === "failed" && "Fallido"}
-                                {payment.status === "refunded" && "Reembolsado"}
+                                {invoice.status === "paid" && "Pagado"}
+                                {invoice.status === "pending" && "Pendiente"}
+                                {invoice.status === "overdue" && "Vencido"}
+                                {invoice.status === "cancelled" && "Cancelado"}
                               </span>
                             </div>
                           </Badge>
@@ -404,16 +398,9 @@ export default function Billing() {
                             <span className="font-medium">Mascota:</span> {pet?.name}
                           </div>
                           <div>
-                            <span className="font-medium">Fecha:</span> {new Date(payment.createdAt).toLocaleDateString()}
+                            <span className="font-medium">Fecha:</span> {new Date(invoice.invoiceDate).toLocaleDateString()}
                             <br />
-                            <span className="font-medium">Método:</span> 
-                            <span className="flex items-center gap-1 mt-1">
-                              {getMethodIcon(payment.method)}
-                              {payment.method === "cash" && "Efectivo"}
-                              {payment.method === "card" && "Tarjeta"}
-                              {payment.method === "transfer" && "Transferencia"}
-                              {payment.method === "stripe" && "Stripe"}
-                            </span>
+                            <span className="font-medium">Factura:</span> {invoice.invoiceNumber}
                           </div>
                           <div>
                             <span className="font-medium">Cita:</span> {appointment?.scheduledDate}
@@ -422,9 +409,9 @@ export default function Billing() {
                           </div>
                         </div>
 
-                        {payment.notes && (
+                        {invoice.notes && (
                           <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                            <p className="text-sm text-gray-700">{payment.notes}</p>
+                            <p className="text-sm text-gray-700">{invoice.notes}</p>
                           </div>
                         )}
                       </div>
@@ -434,7 +421,7 @@ export default function Billing() {
                           <Receipt className="w-4 h-4 mr-2" />
                           Factura
                         </Button>
-                        {payment.status === "pending" && (
+                        {invoice.status === "pending" && (
                           <Button variant="outline" size="sm">
                             <Phone className="w-4 h-4 mr-2" />
                             Recordar
@@ -569,9 +556,9 @@ export default function Billing() {
                     <h4 className="font-medium text-green-800 mb-2">Ingresos del Mes</h4>
                     <p className="text-2xl font-bold text-green-700">${totalRevenue.toLocaleString()}</p>
                     <p className="text-sm text-green-600">
-                      {payments?.filter(p => 
-                        p.status === "completed" && 
-                        new Date(p.createdAt).getMonth() === new Date().getMonth()
+                      {billingInvoices?.filter(p => 
+                        p.status === "paid" && 
+                        p.createdAt && new Date(p.createdAt).getMonth() === new Date().getMonth()
                       ).length || 0} transacciones
                     </p>
                   </div>
@@ -579,7 +566,7 @@ export default function Billing() {
                   <div className="p-4 bg-yellow-50 rounded-lg">
                     <h4 className="font-medium text-yellow-800 mb-2">Pendientes</h4>
                     <p className="text-2xl font-bold text-yellow-700">
-                      ${unpaidAppointments.reduce((sum, apt) => sum + (apt.totalCost || 0), 0).toLocaleString()}
+                      ${unpaidAppointments.reduce((sum, apt) => sum + parseFloat(apt.totalCost?.toString() || "0"), 0).toLocaleString()}
                     </p>
                     <p className="text-sm text-yellow-600">{unpaidAppointments.length} citas</p>
                   </div>
@@ -587,9 +574,9 @@ export default function Billing() {
                   <div className="p-4 bg-blue-50 rounded-lg">
                     <h4 className="font-medium text-blue-800 mb-2">Promedio por Cita</h4>
                     <p className="text-2xl font-bold text-blue-700">
-                      ${payments?.length ? Math.round(totalRevenue / payments.length) : 0}
+                      ${billingInvoices?.length ? Math.round(totalRevenue / billingInvoices.length) : 0}
                     </p>
-                    <p className="text-sm text-blue-600">Basado en {payments?.length || 0} pagos</p>
+                    <p className="text-sm text-blue-600">Basado en {billingInvoices?.length || 0} facturas</p>
                   </div>
                 </div>
 

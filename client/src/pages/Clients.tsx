@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, User, Phone, Mail, MapPin, Heart, Camera, QrCode, History } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Client, Pet, Appointment, PetMedia } from "@shared/schema";
+import type { Client, Pet, Appointment } from "@shared/schema";
 
 export default function Clients() {
   const { currentTenant } = useTenant();
@@ -42,10 +42,7 @@ export default function Clients() {
 
   const createClientMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest(`/api/clients`, {
-        method: "POST",
-        body: JSON.stringify({ ...data, tenantId: currentTenant?.id }),
-      });
+      return apiRequest(`/api/clients`, "POST", { ...data, tenantId: currentTenant?.id });
     },
     onSuccess: () => {
       toast({
@@ -67,10 +64,7 @@ export default function Clients() {
 
   const createPetMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest(`/api/pets`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest(`/api/pets`, "POST", data);
     },
     onSuccess: () => {
       toast({
