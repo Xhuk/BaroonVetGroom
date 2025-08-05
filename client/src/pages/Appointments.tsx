@@ -26,7 +26,7 @@ const Appointments = memo(function Appointments() {
 
   // SINGLE API CALL: Use default query function for proper routing
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['/api/appointments-data/vetgroom1', `date=${selectedDate}`],
+    queryKey: [`/api/appointments-data/vetgroom1?date=${selectedDate}`],
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
