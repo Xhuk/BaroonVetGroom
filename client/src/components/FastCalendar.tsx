@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocation } from "wouter";
 // Removed SimpleSlotBookingDialog - using existing booking page instead
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
@@ -17,6 +18,7 @@ interface FastCalendarProps {
 }
 
 export function FastCalendar({ appointments, className, selectedDate, onDateChange, tenantId }: FastCalendarProps) {
+  const [, setLocation] = useLocation();
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone());
   const [isScrolling, setIsScrolling] = useState(false);
   const [displayDate, setDisplayDate] = useState(selectedDate || getTodayCST1());
@@ -31,13 +33,13 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     }
   }, [selectedDate]);
 
-  // Handle slot click for booking - redirect to booking page
+  // Handle slot click for booking - use wouter for instant navigation
   const handleSlotClick = (time: string) => {
     if (!tenantId) return;
     
-    // Navigate to booking wizard with pre-selected date and time
+    // Use wouter's setLocation for instant SPA navigation (no page reload)
     const bookingUrl = `/booking-wizard?date=${displayDate}&time=${time}`;
-    window.location.href = bookingUrl;
+    setLocation(bookingUrl);
   };
 
   // Booking completion handled by booking page navigation
