@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
-import { getCurrentTimeCST1, getTodayCST1 } from "@shared/timeUtils";
+import { getCurrentTimeInUserTimezone } from "@shared/userPreferences";
 
 interface FastCalendarProps {
   appointments: Appointment[];
@@ -10,18 +10,18 @@ interface FastCalendarProps {
 }
 
 export function FastCalendar({ appointments, className }: FastCalendarProps) {
-  const [currentTime, setCurrentTime] = useState(getCurrentTimeCST1());
+  const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone());
 
-  // Update current time every minute using CST-1 timezone
+  // Update current time every minute using user's timezone
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(getCurrentTimeCST1());
+      setCurrentTime(getCurrentTimeInUserTimezone());
     }, 60000);
     return () => clearInterval(timer);
   }, []);
 
-  // Get current day in CST-1 timezone
-  const todayStr = getTodayCST1();
+  // Get current day in user's timezone
+  const todayStr = currentTime.toISOString().split('T')[0];
 
   // Generate 30-minute time slots for the entire day
   const generateTimeSlots = () => {
@@ -66,15 +66,19 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
   };
 
   const getCurrentTimePosition = () => {
-    const now = getCurrentTimeCST1();
+    const now = getCurrentTimeInUserTimezone();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     
-    if (hours < 6 || hours >= 22) return null; // Outside visible hours
+    if (hours < 6 || hours >= 22) {
+      return null; // Outside visible hours
+    }
     
     const totalMinutes = (hours - 6) * 60 + minutes; // Minutes since 6 AM
     const totalVisibleMinutes = 16 * 60; // 6 AM to 10 PM = 16 hours
-    return (totalMinutes / totalVisibleMinutes) * 100;
+    const position = (totalMinutes / totalVisibleMinutes) * 100;
+    
+    return position;
   };
 
   const currentTimePosition = getCurrentTimePosition();
