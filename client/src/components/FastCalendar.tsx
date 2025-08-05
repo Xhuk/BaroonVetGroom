@@ -278,32 +278,50 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
           
-          {/* Time marker container - only visible when slot is occupied */}
-          {isMarkerInOccupiedSlot && (
+          {/* Current time indicator - always visible when in visible hours */}
+          {currentTimeInfo && displayDate === getTodayCST1() && (
             <div
-              className="absolute z-10 pointer-events-none transition-all duration-700 ease-in-out bg-red-500/15 left-0 right-0"
+              className={cn(
+                "absolute z-10 pointer-events-none transition-all duration-700 ease-in-out left-0 right-0",
+                isMarkerInOccupiedSlot ? "bg-red-500/15" : "bg-red-500/8"
+              )}
               style={{ 
                 top: '50%',
                 transform: 'translateY(-50%)',
-                height: '60px', // Match appointment container height
-                borderRadius: '6px', // Match appointment container border radius
-                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.08) 50%, rgba(239, 68, 68, 0.12) 100%)',
-                boxShadow: 'inset 0 0 20px rgba(239, 68, 68, 0.1), 0 0 10px rgba(239, 68, 68, 0.05)',
-                animation: 'time-container-glow 3s ease-in-out infinite',
+                height: isMarkerInOccupiedSlot ? '60px' : '40px',
+                borderRadius: '6px',
+                background: isMarkerInOccupiedSlot 
+                  ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.08) 50%, rgba(239, 68, 68, 0.12) 100%)'
+                  : 'linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, rgba(239, 68, 68, 0.04) 50%, rgba(239, 68, 68, 0.06) 100%)',
+                boxShadow: isMarkerInOccupiedSlot 
+                  ? 'inset 0 0 20px rgba(239, 68, 68, 0.1), 0 0 10px rgba(239, 68, 68, 0.05)'
+                  : 'inset 0 0 10px rgba(239, 68, 68, 0.05), 0 0 5px rgba(239, 68, 68, 0.03)',
+                animation: isMarkerInOccupiedSlot ? 'time-container-glow 3s ease-in-out infinite' : 'none',
               }}
             >
-              {/* Time indicator line - full width when occupied */}
+              {/* Time indicator line - always visible */}
               <div
-                className="absolute top-1/2 transform -translate-y-1/2 left-0 right-0 h-[2px] bg-red-500/60 transition-all duration-700 ease-in-out"
+                className={cn(
+                  "absolute top-1/2 transform -translate-y-1/2 left-0 right-0 transition-all duration-700 ease-in-out",
+                  isMarkerInOccupiedSlot ? "h-[2px] bg-red-500/60" : "h-[1px] bg-red-500/50"
+                )}
                 style={{
                   borderRadius: '1px',
-                  boxShadow: '0 0 4px rgba(239, 68, 68, 0.3)'
+                  boxShadow: isMarkerInOccupiedSlot 
+                    ? '0 0 4px rgba(239, 68, 68, 0.3)'
+                    : '0 0 2px rgba(239, 68, 68, 0.2)'
                 }}
               />
               
               {/* Current time indicators */}
-              <div className="absolute top-1/2 left-2 transform -translate-y-1/2 w-2 h-2 bg-red-600 rounded-full shadow-sm transition-all duration-700 ease-in-out"></div>
-              <div className="absolute top-1/2 right-2 transform -translate-y-1/2 w-2 h-2 bg-red-600 rounded-full animate-pulse shadow-sm"></div>
+              <div className={cn(
+                "absolute top-1/2 left-2 transform -translate-y-1/2 bg-red-600 rounded-full shadow-sm transition-all duration-700 ease-in-out",
+                isMarkerInOccupiedSlot ? "w-2 h-2" : "w-1.5 h-1.5"
+              )}></div>
+              <div className={cn(
+                "absolute top-1/2 right-2 transform -translate-y-1/2 bg-red-600 rounded-full shadow-sm",
+                isMarkerInOccupiedSlot ? "w-2 h-2 animate-pulse" : "w-1.5 h-1.5"
+              )}></div>
             </div>
           )}
           
