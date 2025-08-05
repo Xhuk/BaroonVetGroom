@@ -131,7 +131,7 @@ export default function Dashboard() {
         {showCalendar ? (
           <FastCalendar appointments={appointments || []} className="shadow-lg" />
         ) : (
-          <div className="mx-6 bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed top-20" style={{ bottom: 'calc(32px + 96px)', right: '24px', left: '312px' }}>
+          <div className="mx-6 bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed top-20" style={{ bottom: 'calc(15px + 96px)', right: '24px', left: '312px' }}>
             <div className="text-gray-500">Cargando calendario...</div>
           </div>
         )}
