@@ -30,8 +30,8 @@ A high-performance veterinary clinic management platform with ultra-optimized us
   - Applied same height extension logic to navigation component for consistent full-height layout
 - **Non-Scrollable App Layout**: 
   - App itself is not scrollable, only cards have scroll functionality
-  - Navigation positioned 32px above bottom ribbon (which is ~96px height)
-  - Calendar card container height calculated as calc(100vh - 80px - 96px - 32px) to end exactly 32px before bottom ribbon
+  - Navigation positioned 32px above bottom ribbon using bottom: calc(32px + 96px)
+  - Calendar card container uses same fixed positioning as navigation with identical bottom spacing
 
 ### Performance Optimization & Radio Dial Time Indicator (August 2025) - COMPLETED
 - **Ultra-Lightweight Payloads**: Reduced API response from 146KB to ~5KB (95% reduction)
