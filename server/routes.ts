@@ -911,8 +911,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/company/follow-up-config/:companyId', isAuthenticated, async (req: any, res) => {
     try {
       // Check if user has super admin access
-      const userAccess = await storage.getUserAccessInfo(req.user.id);
-      if (userAccess?.accessLevel !== 'system_admin') {
+      const accessLevel = await getUserAccessLevel(req);
+      if (accessLevel !== 'system_admin') {
         return res.status(403).json({ message: "Super admin access required" });
       }
 
