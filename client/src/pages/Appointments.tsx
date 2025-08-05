@@ -16,7 +16,6 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, Calendar, Clock, MapPin, User, Phone, Edit, Trash2, RotateCcw } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Appointment, Client, Pet, Room, Staff, Service } from "@shared/schema";
-import { ComponentLoader } from "@/components/LoadingSpinner";
 
 export default function Appointments() {
   const { currentTenant } = useTenant();
@@ -198,7 +197,11 @@ export default function Appointments() {
 
   // Show loading while checking authentication
   if (isLoading) {
-    return <ComponentLoader text="Verificando autenticación..." />;
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
   }
 
   // Don't render if not authenticated
@@ -208,7 +211,18 @@ export default function Appointments() {
 
   // Check loading state after all hooks are declared
   if (appointmentsLoading) {
-    return <ComponentLoader text="Cargando citas..." />;
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-blue-800">Citas</h1>
+        </div>
+        <div className="grid gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-32 bg-gray-200 animate-pulse rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
 

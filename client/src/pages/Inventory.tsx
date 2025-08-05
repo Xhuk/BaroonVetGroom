@@ -28,12 +28,10 @@ import {
   FileText,
   ChevronDown,
   FileSpreadsheet,
-  Download,
-  Upload
+  Zap
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { InventoryItem, InventoryTransaction } from "@shared/schema";
-import { ComponentLoader } from "@/components/LoadingSpinner";
 
 export default function Inventory() {
   const { currentTenant } = useTenant();
@@ -44,7 +42,7 @@ export default function Inventory() {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [importText, setImportText] = useState("");
   const [isProcessingImport, setIsProcessingImport] = useState(false);
 
   const { data: inventoryItems, isLoading } = useQuery<InventoryItem[]>({
@@ -108,8 +106,8 @@ export default function Inventory() {
   });
 
   const massImportMutation = useMutation({
-    mutationFn: async (data: { csvData: string; tenantId: string }) => {
-      const response = await apiRequest('/api/inventory/csv-import', {
+    mutationFn: async (data: { text: string; tenantId: string }) => {
+      const response = await apiRequest('/api/inventory/mass-import', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -122,12 +120,12 @@ export default function Inventory() {
         description: `Se han importado ${data.imported} productos correctamente.`,
       });
       setShowMassImport(false);
-      setCsvFile(null);
+      setImportText("");
     },
     onError: (error: any) => {
       toast({
         title: "Error en importación",
-        description: error.message || "No se pudo procesar la importación CSV.",
+        description: error.message || "No se pudo procesar la importación masiva.",
         variant: "destructive",
       });
     },
@@ -216,10 +214,6 @@ export default function Inventory() {
   const lowStockItems = inventoryItems?.filter(item => item.currentStock <= item.minStockLevel) || [];
   const totalInventoryValue = inventoryItems?.reduce((sum, item) => sum + (item.currentStock * (item.unitPrice || 0)), 0) || 0;
 
-  if (isLoading) {
-    return <ComponentLoader text="Cargando inventario..." />;
-  }
-
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <BackButton className="mb-4" />
@@ -229,35 +223,28 @@ export default function Inventory() {
           <DebugControls />
           <Button 
             variant="outline"
-            onClick={() => {
-              // Generate sample CSV content
-              const sampleCsv = `Categoria,Nombre,Descripcion,Precio Proveedor (MXN),Precio Venta (MXN),SKU,Stock,Unidad,Proveedor
-Vacuna,Vacuna antirrábica,Protección anual contra la rabia,120,250,VAC-001,50,Frasco,Vetpharma
-Vacuna,"Vacuna múltiple (moquillo, parvovirus)",Protege contra múltiples enfermedades,180,350,VAC-002,30,Frasco,PetLabs
-Accesorio,Collar de piel ajustable,Para perros medianos,90,180,ACC-001,75,Pieza,Mascota Feliz
-Grooming,Shampoo para perros hipoalergénico,Ideal para piel sensible,80,150,GRM-001,40,Botella,Dermapet
-Grooming,Cortaúñas profesional,"Acero inoxidable, mango antideslizante",40,90,GRM-002,60,Pieza,PetTools
-Médico,Jabón medicado,Para tratamiento de hongos y bacterias,60,110,MED-001,35,Barra,Vetpharma
-Médico,Collar isabelino,Talla ajustable para perros y gatos,30,65,MED-002,45,Pieza,VetComfort
-Medicamento,Antibiótico para perros (Amoxicilina),"250mg, tratamiento de infecciones",60,120,MED-003,40,Caja,Vetpharma
-Medicamento,Desparasitante oral,"Uso mensual, amplio espectro",35,75,MED-004,100,Tableta,PetLabs
-Alimento,Croquetas premium para perros (10kg),Con proteínas y omegas,450,850,ALM-001,25,Saco,NutriPet
-Alimento,Alimento húmedo para gatos (lata),"Sabor atún, sin conservadores",18,35,ALM-002,150,Lata,CatDelight`;
-              
-              const blob = new Blob([sampleCsv], { type: 'text/csv' });
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'plantilla_inventario.csv';
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
+            onClick={async () => {
+              try {
+                await apiRequest(`/api/seed/inventory-data`, {
+                  method: "POST",
+                  body: JSON.stringify({ tenantId: currentTenant?.id }),
+                });
+                toast({
+                  title: "Inventario poblado",
+                  description: "Se han agregado productos, medicamentos, vacunas y accesorios veterinarios.",
+                });
+                queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+              } catch (error) {
+                toast({
+                  title: "Error",
+                  description: "No se pudo poblar el inventario",
+                  variant: "destructive",
+                });
+              }
             }}
-            data-testid="button-download-sample"
+            data-testid="button-seed-inventory"
           >
-            <Download className="w-4 h-4 mr-2" />
-            Descargar Plantilla CSV
+            📦 Poblar Inventario
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -280,8 +267,8 @@ Alimento,Alimento húmedo para gatos (lata),"Sabor atún, sin conservadores",18,
                 onClick={() => setShowMassImport(true)}
                 data-testid="menu-item-mass-import"
               >
-                <Upload className="w-4 h-4 mr-2" />
-                Importar CSV
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                Importación Masiva
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -741,16 +728,16 @@ Alimento,Alimento húmedo para gatos (lata),"Sabor atún, sin conservadores",18,
         </TabsContent>
       </Tabs>
 
-      {/* CSV Import Dialog */}
+      {/* Mass Import Dialog */}
       <Dialog open={showMassImport} onOpenChange={setShowMassImport}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-blue-600" />
-              Importación Masiva CSV
+              <Zap className="w-5 h-5 text-blue-600" />
+              Importación Masiva con IA
             </DialogTitle>
             <DialogDescription>
-              Sube un archivo CSV con tu inventario usando la plantilla proporcionada.
+              Describe tus productos de forma natural y la IA los procesará automáticamente.
             </DialogDescription>
           </DialogHeader>
           
@@ -764,80 +751,59 @@ Alimento,Alimento húmedo para gatos (lata),"Sabor atún, sin conservadores",18,
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="csv-upload">Archivo CSV de Inventario</Label>
-              <Input
-                id="csv-upload"
-                type="file"
-                accept=".csv"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  setCsvFile(file || null);
-                }}
-                className="cursor-pointer"
-                data-testid="input-csv-file"
+              <Label htmlFor="import-text">Describe tus productos de inventario</Label>
+              <Textarea
+                id="import-text"
+                placeholder="Ejemplo: Necesito medicamentos como amoxicilina 500mg, meloxicam, dexametasona. También vacunas antirrábicas, séxtuple canina. Suministros como jeringas, gasas, alcohol. Precios en pesos mexicanos..."
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                rows={6}
+                className="resize-none"
+                data-testid="textarea-import-text"
               />
               <p className="text-sm text-gray-500 mt-2">
-                Usa la plantilla CSV con las columnas: Categoria, Nombre, Descripcion, Precio Proveedor (MXN), 
-                Precio Venta (MXN), SKU, Stock, Unidad, Proveedor.
+                Describe medicamentos, vacunas, suministros, accesorios o cualquier producto veterinario. 
+                La IA interpretará la información y creará el inventario automáticamente.
               </p>
-              {csvFile && (
-                <div className="mt-2 p-2 bg-blue-50 rounded-md">
-                  <p className="text-sm text-blue-800">
-                    📁 Archivo seleccionado: {csvFile.name} ({(csvFile.size / 1024).toFixed(1)} KB)
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={() => {
-                setShowMassImport(false);
-                setCsvFile(null);
-              }}
+              onClick={() => setShowMassImport(false)}
               disabled={massImportMutation.isPending}
             >
               Cancelar
             </Button>
             <Button 
-              onClick={async () => {
-                if (!csvFile) {
+              onClick={() => {
+                if (!importText.trim()) {
                   toast({
                     title: "Error",
-                    description: "Por favor selecciona un archivo CSV.",
+                    description: "Por favor describe los productos a importar.",
                     variant: "destructive",
                   });
                   return;
                 }
                 
-                try {
-                  const csvText = await csvFile.text();
-                  massImportMutation.mutate({ 
-                    csvData: csvText, 
-                    tenantId: currentTenant?.id || '' 
-                  });
-                } catch (error) {
-                  toast({
-                    title: "Error",
-                    description: "No se pudo leer el archivo CSV.",
-                    variant: "destructive",
-                  });
-                }
+                massImportMutation.mutate({ 
+                  text: importText, 
+                  tenantId: currentTenant?.id || '' 
+                });
               }}
-              disabled={massImportMutation.isPending || !csvFile}
-              data-testid="button-process-csv"
+              disabled={massImportMutation.isPending || !importText.trim()}
+              data-testid="button-process-import"
             >
               {massImportMutation.isPending ? (
                 <>
-                  <Upload className="w-4 h-4 mr-2 animate-spin" />
-                  Importando CSV...
+                  <Zap className="w-4 h-4 mr-2 animate-spin" />
+                  Procesando con IA...
                 </>
               ) : (
                 <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Importar CSV
+                  <Zap className="w-4 h-4 mr-2" />
+                  Procesar con IA
                 </>
               )}
             </Button>

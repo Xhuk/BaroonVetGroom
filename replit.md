@@ -1,6 +1,69 @@
 # Overview
 
-VetGroom is a comprehensive SaaS platform designed for veterinary clinics, providing multi-tenant functionality for managing operations including appointments, grooming, medical visits, inventory, and delivery logistics. The platform features a modern web interface, a robust backend, and PostgreSQL database integration. Its vision is to streamline veterinary practice management, enhance customer service, and enable efficient delivery operations, offering significant market potential in the pet care industry.
+VetGroom is a comprehensive SaaS platform designed for veterinary clinics that provides multi-tenant functionality for managing veterinary operations including appointments, grooming services, medical visits, inventory, and delivery logistics. The application features a modern web interface built with React and TypeScript, backed by a Node.js/Express server with PostgreSQL database integration.
+
+## Recent Changes (August 2025)
+- **Smart Breed Caching**: Implemented intelligent pet breed filtering with browser memory caching to reduce database calls
+- **Enhanced Map Markers**: Fixed customer location markers to appear precisely at right-click position without repositioning
+- **Dynamic Pet Forms**: Breed dropdown now automatically filters based on selected species with comprehensive database integration
+- **Performance Optimization**: Added 30-minute cache headers for pet breed data with fallback options
+- **Multi-Pet Customer Support**: Added intelligent customer lookup that handles multiple pets per customer with selection interface
+- **Customer Auto-Fill**: System now auto-fills customer information when name, phone, and email match existing records
+- **Service Selection Enhancement**: Fixed service loading and display in booking wizard with proper error handling
+- **CSS Import Order**: Resolved Leaflet map rendering by correcting CSS import precedence over Tailwind
+- **Enhanced Booking Workflow**: Added appointment time selection to step 1 with date/time validation
+- **Slot Reservation System**: Implemented temporary slot reservation with UUID tracking and auto-cleanup
+- **Missing Services Endpoint**: Added `/api/services/:tenantId` endpoint to fix empty service selection
+- **Business Hours Configuration**: Added tenant-specific business hours with admin configuration page
+- **Smart Time Selection**: Time slots now respect tenant's open/close hours and time slot duration
+- **Configurable Reservations**: Slot reservation timeout is now tenant-configurable through admin interface
+- **Smart Availability Checking**: Auto-validates appointment slots and advances to confirmation when free
+- **Alternative Slot Suggestions**: System proposes 3 alternative times when requested slot is unavailable
+- **WhatsApp Integration**: Appointment confirmations sent via n8n webhook to WhatsApp API
+- **Auto-Step Progression**: Available time slots automatically advance booking wizard to confirmation step
+- **Comprehensive Webhook Monitoring**: Full error logging, automatic retry with exponential backoff, and super admin dashboard
+- **Maintenance Mode Handling**: Graceful degradation when n8n webhook is unavailable with user-friendly Spanish messages
+- **Smart Error Deduplication**: Prevents spam logging of identical webhook failures within 5-minute windows
+- **Delivery Planning Data**: Generated comprehensive seed data for Monterrey Zona Cumbres with 50 clients, 100+ pets, and 120 pickup/delivery appointments across 15 fraccionamientos
+- **Comprehensive Delivery Tracking System**: Multi-driver real-time monitoring with delay detection and emergency alert management
+- **Smart Weight Statistics**: Implemented accurate pet weight calculations with inventory cage tare weights for precise load planning
+- **WhatsApp Emergency Notifications**: Integrated n8n webhook alerts for critical delays and emergency situations with multi-stakeholder notifications
+- **Delivery Monitoring Service**: Automated background service checking delivery status every 5 minutes with configurable alert thresholds
+- **Driver Check-in System**: Real-time location tracking with missed check-in detection and automatic escalation protocols
+- **Scalable Monitoring Architecture**: Batch processing with concurrency limits for high-volume tenant environments (1000+ tenants)
+- **Cost-Efficient Design**: Optimized for minimal server resource usage with smart batching and delay management
+- **BETA Feature Control**: Super admin can enable/disable delivery tracking per company and tenant with usage analytics
+- **Route Optimization Caching**: Saves optimized routes to avoid recalculation unless new delivery points are added
+- **Smart Route Management**: Automatically detects when route needs recalculation based on appointment changes
+- **Comprehensive RBAC System**: Full role-based access control with system roles, company roles, and page-level permissions
+- **Debug Tenant Selection**: VetGroom developers can access any tenant through debug mode with secure session management
+- **System Admin Dashboard**: Super admin interface for role management, user assignments, and debug access control
+- **Multi-Level Access Control**: Hierarchical system from VetGroom sysadmin → supertenant → tenant users with debug capabilities
+- **RBAC Page Integration**: RBAC management now exclusively accessible through SuperAdmin dashboard, not standalone navigation
+- **Database Schema Fixes**: Added missing domain and settings columns to companies table for proper schema alignment
+- **Endpoint Route Ordering**: Fixed API route precedence to prevent tenant-specific middleware from blocking system admin endpoints
+- **Comprehensive Error System**: Implemented automatic debug info copying with red error popups that instantly copy full debug context to clipboard
+- **Enhanced Error Toast**: All error messages now automatically copy complete debugging information including stack traces, user context, and browser details
+- **Role Impersonation System**: Complete implementation of "View As" dropdown for debug mode with seamless role switching without authentication changes
+- **Debug User Authentication Fix**: Resolved tenant context logic to properly handle users with both debug privileges and regular tenant assignments
+- **Enhanced Tenant Context**: Fixed priority-based tenant selection logic that correctly handles debug users, regular assignments, and debug mode activation
+- **Streamlined Debug Controls**: Simplified debug interface to single "Debug" button that opens tenant selector, removing quick VG1/Central buttons for cleaner UX
+- **Global Debug Access**: Added DebugControls component to all major page headers (Dashboard, Appointments, Clients, Inventory, DeliveryPlan, RoutePlanMap)
+- **Enhanced Role Impersonation**: Integrated role-based permissions directly into useAccessControl hook for real-time permission changes when switching roles
+- **Module Permission Refresh**: All components now automatically respect impersonated role permissions, refreshing functionality when "View As" role is selected
+- **Advanced Business Logic Integration**: Implemented automatic invoice generation for medical appointments and delivery scheduling for grooming services
+- **Company Billing Configuration**: Added comprehensive admin interface for configuring per-company billing and delivery automation rules
+- **Intelligent Automation**: Medical appointments now auto-generate invoices with supplies/services costs, grooming sessions auto-schedule deliveries when configured
+- **WhatsApp Integration Modification**: Replaced automatic WhatsApp message sending with user-friendly modal displaying copyable appointment confirmations and payment links for manual WhatsApp sending
+- **Manual WhatsApp Workflow**: Created WhatsAppCopyModal component with one-click copying, formatted messages, and direct WhatsApp web integration while maintaining webhook monitoring infrastructure
+- **Read-Only Debugger Permissions**: Implemented strict access controls where debugger role can only view data, logs, and export information but cannot modify payments, configurations, or any business data
+- **LateNode Webhook Integration System**: Complete Super Admin interface for configuring automated notifications (payment reminders, delivery notifications, pickup confirmations, appointment reminders) with testing capabilities and comprehensive logging
+- **Webhook Configuration Management**: Database tables and API endpoints for managing LateNode webhook integrations with authentication, retry logic, and performance monitoring
+- **Module Cleanup**: Removed duplicated Facturacion module - pending invoices functionality is properly integrated into the main Billing page to avoid redundancy
+- **Automatic Inventory Deduction**: Integrated inventory management with billing system - medical appointments and grooming services now automatically reduce inventory stock when supplies, medications, or accessories are used
+- **Smart Inventory Tracking**: InventorySelector component allows selection of products used during medical appointments with automatic cost calculation and itemized billing
+- **Billing-Inventory Integration**: When payments are processed (cash or payment link), inventory stock is automatically reduced based on items tracked in pending invoices
+- **Transaction Logging**: Complete audit trail of inventory usage with automatic transaction records linking to medical appointments and invoices for accurate cost accounting
 
 # User Preferences
 
@@ -9,56 +72,67 @@ Preferred communication style: Simple, everyday language.
 # System Architecture
 
 ## Frontend Architecture
-- **Technology Stack**: React with TypeScript, Vite for fast builds, Wouter for routing.
-- **UI/UX**: shadcn/ui component library built on Radix UI, styled with Tailwind CSS using a custom veterinary theme.
-- **State Management**: TanStack Query for server state; React Context for tenant management.
-- **Form Handling**: React Hook Form with Zod validation.
-- **Debug System**: Session-based tenant selection interface for developers and system administrators.
+- **React with TypeScript**: Modern SPA using functional components and hooks
+- **Vite**: Fast build tool and development server with HMR support
+- **Routing**: Wouter for client-side routing with role-based page access
+- **UI Framework**: shadcn/ui component library built on Radix UI primitives
+- **Styling**: Tailwind CSS with custom veterinary theme colors and CSS variables
+- **State Management**: TanStack Query for server state and React Context for tenant management
+- **Form Handling**: React Hook Form with Zod validation schemas
+- **Debug System**: Tenant selection interface for VetGroom developers with session-based switching
 
 ## Backend Architecture
-- **Technology Stack**: Express.js with TypeScript for RESTful APIs.
-- **Authentication**: Replit OAuth integration with Passport.js for session management.
-- **Multi-tenancy**: Hierarchical structure: Companies → Tenants → Users, ensuring data isolation.
-- **Database Layer**: Drizzle ORM with Neon serverless PostgreSQL.
+- **Express.js**: RESTful API server with middleware for logging and error handling
+- **TypeScript**: End-to-end type safety with shared schema definitions
+- **Authentication**: Replit OAuth integration with Passport.js and session management
+- **Multi-tenancy**: Hierarchical structure with Companies → Tenants → Users
+- **Database Layer**: Drizzle ORM with connection pooling via Neon serverless PostgreSQL
 
 ## Database Design
-- **Session Storage**: PostgreSQL-backed.
-- **Multi-tenant Schema**: Companies contain tenants, users can belong to multiple tenants.
-- **Core Entities**: Rooms, Staff, Clients, Pets, Appointments, with robust relationships.
-- **Business Logic Support**: Grooming, medical visits, delivery route management.
-- **Data Validation**: Zod schemas shared between client and server.
-- **Enhanced Map Zoom**: Precise mapping capabilities for detailed planning.
+- **Session Storage**: PostgreSQL-backed session store for authentication persistence
+- **Multi-tenant Schema**: Companies contain multiple tenants, users can belong to multiple tenants
+- **Core Entities**: Rooms, Staff, Clients, Pets, Appointments with proper foreign key relationships
+- **Seeded Data**: Pre-populated with common veterinary services (consultations, vaccinations, grooming, surgeries)
+- **Business Logic**: Support for grooming appointments, medical visits, and delivery route management
+- **Data Validation**: Zod schemas shared between client and server for consistent validation
+- **Enhanced Map Zoom**: Ultra-precise zoom with 0.5km minimum level and 3x extended range for detailed planning
 
 ## Authentication & Authorization
-- **OAuth Provider**: Replit OIDC for secure authentication.
-- **Session Management**: PostgreSQL-backed sessions.
-- **Multi-tenant Access Control**: Users can switch between authorized tenants.
-- **Route Protection**: Server-side middleware and client-side guards.
-- **RBAC System**: Comprehensive role-based access control (system, company, page permissions).
-- **Debug Access**: Secure, read-only tenant selection for developers.
+- **OAuth Provider**: Replit OIDC integration for secure authentication
+- **Session Management**: PostgreSQL-backed sessions with configurable TTL
+- **Multi-tenant Access Control**: Users can switch between authorized tenants
+- **Route Protection**: Server-side middleware and client-side guards for protected resources
+- **RBAC System**: Complete role-based access control with system roles, company roles, and page permissions
+- **Debug Access**: Secure tenant selection system for VetGroom developers and system administrators with read-only debugger permissions
 
 ## Multi-tenancy Implementation
-- **Tenant Context**: React Context for current tenant state.
-- **Data Isolation**: All operations scoped by tenant ID.
-- **User-Tenant Relationships**: Many-to-many with role-based access.
+- **Tenant Context**: React context provider for current tenant state management
+- **Data Isolation**: All business operations scoped by tenant ID
+- **Subdomain Support**: Tenant identification through subdomain routing
+- **User-Tenant Relationships**: Many-to-many relationships with role-based access
 
 # External Dependencies
 
 ## Core Infrastructure
-- **Database**: Neon PostgreSQL serverless.
-- **Authentication**: Replit OAuth/OIDC.
-- **Build System**: Vite (client), ESBuild (server).
+- **Database**: Neon PostgreSQL serverless with connection pooling
+- **Authentication**: Replit OAuth/OIDC service integration
+- **Build System**: Vite with React plugin and runtime error overlay
+- **Type System**: TypeScript with strict configuration and path mapping
 
 ## UI and Styling
-- **Component Library**: Radix UI, shadcn/ui.
-- **Design System**: Tailwind CSS.
-- **Icons**: Lucide React.
+- **Component Library**: Radix UI primitives for accessible components
+- **Design System**: shadcn/ui component collection with Tailwind CSS
+- **Styling Framework**: Tailwind CSS with PostCSS and Autoprefixer
+- **Icons**: Lucide React icon library
 
 ## Development Tools
-- **ORM**: Drizzle.
-- **Validation**: Zod.
-- **HTTP Client**: Native fetch with TanStack Query.
-- **Session Storage**: connect-pg-simple.
+- **ORM**: Drizzle with PostgreSQL dialect and migration support
+- **Validation**: Zod for runtime type checking and schema validation
+- **HTTP Client**: Native fetch with TanStack Query for caching and synchronization
+- **Session Storage**: connect-pg-simple for PostgreSQL session management
 
-## Integrations
-- **Messaging**: n8n for WhatsApp API integration (for confirmations/notifications).
+## Production Considerations
+- **Build Pipeline**: ESBuild for server bundling, Vite for client optimization
+- **Environment**: Replit deployment with cartographer plugin for development
+- **Database Migrations**: Drizzle Kit for schema management and deployment
+- **Error Handling**: Comprehensive error boundaries and logging middleware
