@@ -229,6 +229,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ULTRA-OPTIMIZED: Lightweight appointment data - only essential fields for instant loading
   app.get('/api/appointments-data/:tenantId', async (req: any, res) => {
+    console.log(`[DEBUG] Appointments-data request: ${req.url} with query:`, req.query);
+    
     // Add CORS headers to ensure browser requests work
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET');
