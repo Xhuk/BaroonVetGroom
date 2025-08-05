@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, Clock, User, Phone, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Appointment, Client, Pet, Room, Staff, Service } from "@shared/schema";
+import { apiRequest } from '@/lib/queryClient';
 
 interface AppointmentData {
   appointments: Appointment[];
@@ -23,21 +24,9 @@ const INSTANT_SKELETON = <InstantAppointmentsSkeleton />;
 const Appointments = memo(function Appointments() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // SINGLE API CALL: Prevent multiple redundant requests
+  // SINGLE API CALL: Use default query function for proper routing
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['appointments-data', selectedDate],
-    queryFn: async () => {
-      const response = await fetch(`/api/appointments-data/vetgroom1?date=${selectedDate}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      return response.json();
-    },
+    queryKey: ['/api/appointments-data/vetgroom1', `date=${selectedDate}`],
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
