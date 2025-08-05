@@ -29,8 +29,8 @@ export default function Appointments() {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
-  // OPTIMIZED: Single API call for all appointment data
-  const shouldFetchData = !!currentTenant?.id && isAuthenticated && !isInstant;
+  // INSTANT UI: Show skeleton immediately, load data in background
+  const shouldFetchData = !!currentTenant?.id && isAuthenticated;
 
   const { data: appointmentData, isLoading: appointmentsLoading } = useFastFetch<{
     appointments: Appointment[];
@@ -61,7 +61,7 @@ export default function Appointments() {
         description: "La cita se ha programado exitosamente.",
       });
       // Invalidate cache for optimized refresh
-      queryClient.invalidateQueries({ queryKey: ["/api/appointments", currentTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/appointments-data/${currentTenant?.id}`] });
       setShowCreateForm(false);
     },
     onError: (error: any) => {
@@ -275,6 +275,34 @@ export default function Appointments() {
     if (!appointments) return [];
     return appointments.filter(apt => apt.status !== 'cancelled');
   }, [appointments]);
+
+  // INSTANT UI: Always show interface immediately, no white page
+  if (isLoading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <BackButton className="mb-4" />
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-blue-800">Gestión de Citas</h1>
+          <div className="flex items-center space-x-3">
+            <DebugControls />
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Nueva Cita
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {/* Instant skeleton while loading */}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 animate-pulse">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
