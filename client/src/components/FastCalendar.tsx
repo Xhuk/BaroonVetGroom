@@ -138,7 +138,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
   const currentTimePosition = getCurrentTimePosition();
 
   return (
-    <Card className={cn("mx-6 fixed top-20", className)} style={{ bottom: 'calc(15px + 96px)', right: '24px', left: '312px' }}>
+    <Card className={cn("mx-6 fixed top-20", className)} style={{ bottom: 'calc(10px + 96px)', right: '24px', left: '312px' }}>
       <CardHeader>
         <h2 className="text-xl font-semibold text-gray-800">
           Calendario de Hoy - {currentTime.toLocaleDateString('es-ES', { 
