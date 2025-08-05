@@ -75,7 +75,6 @@ export function Navigation({ className }: NavigationProps) {
 
   const navigationItems = [
     { icon: BarChart3, label: "Tablero", href: "/" },
-    { icon: Calendar, label: "Citas", href: "/appointments" },
     { icon: Users, label: "Clientes", href: "/clients" },
     { icon: Stethoscope, label: "Medical", href: "/medical-appointments" },
     { icon: Scissors, label: "Estética", href: "/grooming-services" },
