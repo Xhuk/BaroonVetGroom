@@ -227,48 +227,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // OPTIMIZED: Get all appointment page data in one request with aggressive caching (NO AUTH for speed)
+  // ULTRA-OPTIMIZED: Lightweight appointment data - only essential fields for instant loading
   app.get('/api/appointments-data/:tenantId', async (req: any, res) => {
     try {
       const { tenantId } = req.params;
       const { date } = req.query;
-      const cacheKey = `appointments-data-${tenantId}-${date || 'all'}`;
+      
+      // Default to today's appointments only for speed
+      const targetDate = date || new Date().toISOString().split('T')[0];
+      const cacheKey = `appointments-light-${tenantId}-${targetDate}`;
       
       // Check cache first for ultra-fast response
       const cached = tenantCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < TENANT_CACHE_TTL) {
-        // Add cache headers for browser caching
-        res.set('Cache-Control', 'public, max-age=300'); // 5 minutes browser cache
+        res.set('Cache-Control', 'public, max-age=300');
+        res.set('Content-Encoding', 'gzip');
         return res.json(cached.data);
       }
 
-      // Fetch all data in parallel for maximum performance
-      const [appointments, clients, pets, rooms, staff, services] = await Promise.all([
-        storage.getAppointments(tenantId, date as string),
+      // Fetch only essential data - appointments with minimal related data
+      const [appointments, clients, pets] = await Promise.all([
+        storage.getAppointments(tenantId, targetDate),
         storage.getClients(tenantId),
-        storage.getPets(tenantId),
-        storage.getRooms(tenantId),
-        storage.getStaff(tenantId),
-        storage.getServices(tenantId)
+        storage.getPets(tenantId)
       ]);
 
-      // Build response
+      // Build ultra-lightweight response with only essential fields
+      const optimizedAppointments = appointments.map(apt => ({
+        id: apt.id,
+        clientId: apt.clientId,
+        petId: apt.petId,
+        scheduledDate: apt.scheduledDate,
+        scheduledTime: apt.scheduledTime,
+        status: apt.status,
+        type: apt.type,
+        notes: apt.notes
+      }));
+
+      // Only include clients and pets that have appointments
+      const usedClientIds = new Set(appointments.map(apt => apt.clientId));
+      const usedPetIds = new Set(appointments.map(apt => apt.petId));
+      
+      const lightweightClients = clients
+        .filter(client => usedClientIds.has(client.id))
+        .map(client => ({
+          id: client.id,
+          name: client.name,
+          phone: client.phone,
+          email: client.email
+        }));
+
+      const lightweightPets = pets
+        .filter(pet => usedPetIds.has(pet.id))
+        .map(pet => ({
+          id: pet.id,
+          name: pet.name,
+          species: pet.species,
+          breed: pet.breed
+        }));
+
       const responseData = {
-        appointments,
-        clients,
-        pets,
-        rooms,
-        staff,
-        services,
-        timestamp: Date.now()
+        appointments: optimizedAppointments,
+        clients: lightweightClients,
+        pets: lightweightPets,
+        timestamp: Date.now(),
+        date: targetDate
       };
 
       // Cache the result
       tenantCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
       
-      // Add cache headers for browser caching
-      res.set('Cache-Control', 'public, max-age=300'); // 5 minutes browser cache
+      // Aggressive caching headers for instant subsequent loads
+      res.set('Cache-Control', 'public, max-age=300');
+      res.set('Content-Encoding', 'gzip');
       res.json(responseData);
+      
     } catch (error) {
       console.error("Error fetching appointment data:", error);
       res.status(500).json({ message: "Failed to fetch appointment data" });
