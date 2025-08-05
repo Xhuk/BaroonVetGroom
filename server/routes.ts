@@ -550,6 +550,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Pet age management endpoints
+  app.post('/api/pets/update-ages', isSuperAdmin, async (req, res) => {
+    try {
+      // Trigger manual pet age update using database function
+      const result = await db.execute(sql`SELECT * FROM trigger_auto_pet_age_update()`);
+      const resultData = result.rows[0] as any;
+      res.json({ 
+        message: "Pet ages updated successfully",
+        updatedPets: resultData?.updated_pets || 0,
+        executionTime: resultData?.execution_time
+      });
+    } catch (error) {
+      console.error("Error updating pet ages:", error);
+      res.status(500).json({ message: "Failed to update pet ages" });
+    }
+  });
+
+  // Get pet age update configuration for a company
+  app.get('/api/pets/age-config/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const config = await db.select({
+        petAgeUpdateEnabled: companies.petAgeUpdateEnabled,
+        petAgeUpdateInterval: companies.petAgeUpdateInterval,
+        petAgeUpdateLastRun: companies.petAgeUpdateLastRun
+      })
+      .from(companies)
+      .where(eq(companies.id, companyId))
+      .limit(1);
+      
+      res.json(config[0] || {
+        petAgeUpdateEnabled: true,
+        petAgeUpdateInterval: 1440,
+        petAgeUpdateLastRun: null
+      });
+    } catch (error) {
+      console.error("Error fetching pet age config:", error);
+      res.status(500).json({ message: "Failed to fetch pet age configuration" });
+    }
+  });
+
   // Dashboard stats route - Based on real database data
   app.get('/api/dashboard/stats/:tenantId', isAuthenticated, async (req: any, res) => {
     try {

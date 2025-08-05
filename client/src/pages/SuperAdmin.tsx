@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NewCompanyDialog } from "@/components/NewCompanyDialog";
+import { SuperAdminPetAgePanel } from "@/components/SuperAdminPetAgePanel";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { 
   Building, 
@@ -16,7 +17,8 @@ import {
   Settings,
   Activity,
   Heart,
-  Webhook
+  Webhook,
+  Clock
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -378,6 +380,11 @@ export default function SuperAdmin() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Pet Age Management Panel */}
+          <div className="mt-8">
+            <SuperAdminPetAgePanel />
           </div>
         </div>
       </main>
