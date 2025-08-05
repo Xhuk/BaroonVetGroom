@@ -508,45 +508,77 @@ export class DatabaseStorage implements IStorage {
 
   // Appointment operations
   async getAppointments(tenantId: string, date?: string): Promise<any[]> {
-    // First get basic appointments
+    // Use proper JOIN queries instead of N+1 pattern
     let appointmentsQuery = db
-      .select()
+      .select({
+        // Appointment fields
+        id: appointments.id,
+        tenantId: appointments.tenantId,
+        clientId: appointments.clientId,
+        petId: appointments.petId,
+        staffId: appointments.staffId,
+        roomId: appointments.roomId,
+        serviceId: appointments.serviceId,
+        scheduledDate: appointments.scheduledDate,
+        scheduledTime: appointments.scheduledTime,
+        duration: appointments.duration,
+        status: appointments.status,
+        type: appointments.type,
+        notes: appointments.notes,
+        totalCost: appointments.totalCost,
+        createdAt: appointments.createdAt,
+        updatedAt: appointments.updatedAt,
+        // Client fields
+        clientName: clients.name,
+        clientPhone: clients.phone,
+        clientEmail: clients.email,
+        // Pet fields
+        petName: pets.name,
+        petSpecies: pets.species,
+        petBreed: pets.breed,
+      })
       .from(appointments)
+      .leftJoin(clients, eq(appointments.clientId, clients.id))
+      .leftJoin(pets, eq(appointments.petId, pets.id))
       .where(eq(appointments.tenantId, tenantId));
 
     if (date) {
-      appointmentsQuery = db
-        .select()
-        .from(appointments)
-        .where(and(eq(appointments.tenantId, tenantId), eq(appointments.scheduledDate, date)));
+      appointmentsQuery = appointmentsQuery.where(eq(appointments.scheduledDate, date));
     }
 
-    const appointmentResults = await appointmentsQuery;
+    const results = await appointmentsQuery;
 
-    // Manually join client and pet data
-    const enrichedAppointments = await Promise.all(
-      appointmentResults.map(async (appointment) => {
-        // Get client data
-        const [client] = await db
-          .select()
-          .from(clients)
-          .where(eq(clients.id, appointment.clientId));
-
-        // Get pet data
-        const [pet] = await db
-          .select()
-          .from(pets)
-          .where(eq(pets.id, appointment.petId));
-
-        return {
-          ...appointment,
-          client: client || null,
-          pet: pet || null,
-        };
-      })
-    );
-
-    return enrichedAppointments;
+    // Transform to match expected format
+    return results.map(row => ({
+      id: row.id,
+      tenantId: row.tenantId,
+      clientId: row.clientId,
+      petId: row.petId,
+      staffId: row.staffId,
+      roomId: row.roomId,
+      serviceId: row.serviceId,
+      scheduledDate: row.scheduledDate,
+      scheduledTime: row.scheduledTime,
+      duration: row.duration,
+      status: row.status,
+      type: row.type,
+      notes: row.notes,
+      totalCost: row.totalCost,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      client: row.clientName ? {
+        id: row.clientId,
+        name: row.clientName,
+        phone: row.clientPhone,
+        email: row.clientEmail,
+      } : null,
+      pet: row.petName ? {
+        id: row.petId,
+        name: row.petName,
+        species: row.petSpecies,
+        breed: row.petBreed,
+      } : null,
+    }));
   }
 
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {

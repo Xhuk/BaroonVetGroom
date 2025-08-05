@@ -1,6 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { sql, and } from 'drizzle-orm';
+import { clients, rooms, services, staff } from '@shared/schema';
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookMonitor } from "./webhookMonitor";
 import { advancedRouteOptimization, type OptimizedRoute, type RouteOptimizationOptions } from "./routeOptimizer";
@@ -367,49 +369,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { tenantId } = req.params;
       const today = new Date().toISOString().split('T')[0];
       
-      // Get real data from database
-      const [appointments, clients, rooms, services, staff] = await Promise.all([
+      // Use efficient count queries instead of fetching full datasets
+      const [
+        todayAppointments,
+        clientCount,
+        activeRoomCount,
+        activeServiceCount,
+        activeStaffCount
+      ] = await Promise.all([
+        // Only get today's appointments (much smaller dataset)
         storage.getAppointments(tenantId, today),
-        storage.getClients(tenantId),
-        storage.getRooms(tenantId),
-        storage.getServices(tenantId),
-        storage.getStaff(tenantId)
+        // Use count queries instead of full data
+        db.select({ count: sql<number>`count(*)` }).from(clients).where(eq(clients.tenantId, tenantId)),
+        db.select({ count: sql<number>`count(*)` }).from(rooms).where(and(eq(rooms.tenantId, tenantId), eq(rooms.isActive, true))),
+        db.select({ count: sql<number>`count(*)` }).from(services).where(and(eq(services.tenantId, tenantId), eq(services.isActive, true))),
+        db.select({ count: sql<number>`count(*)` }).from(staff).where(and(eq(staff.tenantId, tenantId), eq(staff.isActive, true)))
       ]);
 
-      // Calculate statistics based on real data
-      const groomingAppointments = appointments.filter(apt => apt.type === 'grooming').length;
-      const medicalAppointments = appointments.filter(apt => apt.type === 'medical').length;
-      const vaccinationAppointments = appointments.filter(apt => apt.type === 'vaccination').length;
+      // Calculate statistics efficiently
+      const groomingAppointments = todayAppointments.filter(apt => apt.type === 'grooming').length;
+      const medicalAppointments = todayAppointments.filter(apt => apt.type === 'medical').length;
+      const vaccinationAppointments = todayAppointments.filter(apt => apt.type === 'vaccination').length;
       
       // Calculate today's revenue from appointments
-      const todayRevenue = appointments.reduce((sum, apt) => 
+      const todayRevenue = todayAppointments.reduce((sum, apt) => 
         sum + (parseFloat(apt.totalCost?.toString() || '0') || 0), 0
       );
 
-      // Calculate occupancy rate
-      const activeRooms = rooms.filter(room => room.isActive);
-      const occupiedSlots = appointments.length;
-      const totalSlots = activeRooms.reduce((sum, room) => sum + (room.capacity || 1), 0) * 8; // 8 hours per day
+      // Simple occupancy calculation
+      const occupiedSlots = todayAppointments.length;
+      const totalSlots = (activeRoomCount[0]?.count || 0) * 8; // 8 hours per day
       const occupancyRate = totalSlots > 0 ? Math.round((occupiedSlots / totalSlots) * 100) : 0;
 
       const stats = {
-        appointmentsToday: appointments.length,
+        appointmentsToday: todayAppointments.length,
         groomingAppointments,
         medicalAppointments,
         vaccinationAppointments,
-        totalClients: clients.length,
+        totalClients: clientCount[0]?.count || 0,
         totalRevenue: todayRevenue,
         occupancyRate,
-        activeRooms: activeRooms.length,
-        totalServices: services.filter(s => s.isActive).length,
-        teamMembers: staff.filter(s => s.isActive).length,
-        roomsInUse: Math.min(appointments.length, activeRooms.length)
+        activeRooms: activeRoomCount[0]?.count || 0,
+        totalServices: activeServiceCount[0]?.count || 0,
+        teamMembers: activeStaffCount[0]?.count || 0,
+        roomsInUse: Math.min(todayAppointments.length, activeRoomCount[0]?.count || 0)
       };
       
       res.json(stats);
     } catch (error) {
       console.error("Error calculating stats:", error);
-      // Return basic structure with zeros if there's an error
       res.json({
         appointmentsToday: 0,
         groomingAppointments: 0,
