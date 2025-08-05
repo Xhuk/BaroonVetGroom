@@ -30,7 +30,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [availableTenants, setAvailableTenants] = useState<Tenant[]>([]);
   const [isDebugMode, setIsDebugMode] = useState(false);
 
-  // Check if user has debug access through access control
+  // Load access info and user tenants in parallel
   const { data: accessInfo } = useQuery<any>({
     queryKey: ['/api/auth/access-info'],
     enabled: isAuthenticated,
@@ -39,7 +39,6 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
-  const isDebugUser = accessInfo?.canDebugTenants || user?.email?.includes('vetgroom') || false;
 
   const { data: userTenants = [], isLoading: isLoadingTenants } = useQuery<UserTenant[]>({
     queryKey: ["/api/tenants/user"],
@@ -49,6 +48,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+
+  const isDebugUser = accessInfo?.canDebugTenants || user?.email?.includes('vetgroom') || false;
 
   const { data: tenant, isLoading: isLoadingCurrentTenant } = useQuery<Tenant>({
     queryKey: ["/api/tenants", currentTenant?.id],

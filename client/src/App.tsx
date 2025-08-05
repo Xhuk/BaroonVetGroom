@@ -42,8 +42,8 @@ import SubscriptionLanding from "@/pages/SubscriptionLanding";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show loading spinner instead of switching routes during authentication
-  if (isLoading) {
+  // Only show loading for initial authentication, not on route changes
+  if (isLoading && !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

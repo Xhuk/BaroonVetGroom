@@ -31,7 +31,8 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  if (isLoading || tenantLoading) {
+  // Render layout immediately instead of waiting for loading
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -43,7 +44,8 @@ export default function Dashboard() {
     return null; // Will redirect via useEffect
   }
 
-  if (!currentTenant) {
+  // Show layout even if tenant is loading, with placeholder content
+  if (!currentTenant && !tenantLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
