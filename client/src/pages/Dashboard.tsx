@@ -127,14 +127,16 @@ export default function Dashboard() {
 
         </div>
 
-        {/* Fast Calendar - Direct implementation */}
-        {showCalendar ? (
-          <FastCalendar appointments={appointments || []} className="shadow-lg" />
-        ) : (
-          <div className="mx-6 bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed top-20" style={{ bottom: 'calc(32px + 96px)', right: '24px' }}>
-            <div className="text-gray-500">Cargando calendario...</div>
-          </div>
-        )}
+        {/* Fast Calendar - starts 24px below buttons, ends 32px above ribbon */}
+        <div className="mt-6">
+          {showCalendar ? (
+            <FastCalendar appointments={appointments || []} className="shadow-lg" />
+          ) : (
+            <div className="mx-6 bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center" style={{ height: 'calc(100vh - 80px - 96px - 32px)' }}>
+              <div className="text-gray-500">Cargando calendario...</div>
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Fast Stats Ribbon - Direct implementation */}
