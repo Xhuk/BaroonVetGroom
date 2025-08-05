@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { webhookMonitor } from "./webhookMonitor";
 import { deliveryMonitor } from "./deliveryMonitor";
+import { scalableAppointmentService } from './scalableAppointmentService';
 // Removed autoStatusService - now using database cron functions
 
 const app = express();
@@ -50,6 +51,9 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Initialize WebSocket service for scalable appointment updates
+  scalableAppointmentService.initializeWebSocketServer(server);
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
@@ -81,5 +85,9 @@ app.use((req, res, next) => {
 
     // Auto status updates now handled by database functions
     log('Database auto-status functions ready');
+    
+    // Log WebSocket service stats
+    const wsStats = scalableAppointmentService.getConnectionStats();
+    log(`WebSocket service ready - ${wsStats.totalConnections} connections across ${wsStats.totalTenants} tenants`);
   });
 })();

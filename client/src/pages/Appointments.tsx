@@ -9,6 +9,8 @@ import type { Appointment, Client, Pet, Room, Staff, Service } from "@shared/sch
 import { apiRequest } from '@/lib/queryClient';
 import { getTodayCST1, addDaysCST1, formatCST1Date } from "@shared/timeUtils";
 import { CalendarTimeIndicator } from "@/components/CalendarTimeIndicator";
+import { useWebSocketAppointments } from "@/hooks/useWebSocketAppointments";
+import { ScalabilityDemo } from "@/components/ScalabilityDemo";
 
 interface AppointmentData {
   appointments: Appointment[];
@@ -29,8 +31,17 @@ const Appointments = memo(function Appointments() {
   // Use CST-1 timezone for reliable date calculations
   const [selectedDate, setSelectedDate] = useState(getTodayCST1());
 
-  // FAST ENDPOINT: Rebuilt for reliable performance
-  const { data, isLoading, error, refetch } = useQuery({
+  // Use WebSocket for real-time appointment updates instead of polling
+  const { 
+    appointments: wsAppointments, 
+    isLoading: wsLoading, 
+    error: wsError, 
+    isConnected,
+    refresh 
+  } = useWebSocketAppointments('vetgroom1', 'user123', selectedDate);
+
+  // Fallback to REST API if WebSocket fails
+  const { data: fallbackData, isLoading: restLoading, error: restError } = useQuery({
     queryKey: ['appointments-fast', selectedDate],
     queryFn: async () => {
       const url = `/api/appointments-fast/vetgroom1?date=${selectedDate}`;
@@ -40,13 +51,16 @@ const Appointments = memo(function Appointments() {
       }
       return response.json();
     },
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: false,
-    enabled: !!selectedDate
+    enabled: !isConnected && !!selectedDate, // Only use REST as fallback
+    staleTime: 30000,
+    retry: false
   });
+
+  // Use WebSocket data primarily, fallback to REST if needed
+  const appointments = isConnected ? wsAppointments : (fallbackData?.appointments || []);
+  const isLoading = isConnected ? wsLoading : restLoading;
+  const error = wsError || restError;
+  const data = isConnected ? { appointments: wsAppointments, clients: [], pets: [], rooms: [], staff: [], services: [] } : fallbackData;
 
   const navigateDay = (direction: 'prev' | 'next') => {
     const days = direction === 'next' ? 1 : -1;
@@ -74,7 +88,16 @@ const Appointments = memo(function Appointments() {
         <BackButton href="/" text="Volver al Dashboard" />
       </div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-blue-800">Gestión de Citas - Programación y Reprogramación</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-blue-800">Gestión de Citas - Programación y Reprogramación</h1>
+          <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+            isConnected 
+              ? 'bg-green-100 text-green-800 border border-green-200' 
+              : 'bg-red-100 text-red-800 border border-red-200'
+          }`}>
+            {isConnected ? '🟢 Real-time' : '🔴 Fallback'}
+          </div>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
             <Edit className="w-4 h-4 mr-2" />
@@ -138,6 +161,8 @@ const Appointments = memo(function Appointments() {
 
       <Suspense fallback={INSTANT_SKELETON}>
         <div className="grid gap-4">
+          {/* Scalability demonstration */}
+          <ScalabilityDemo />
           {isLoading ? (
             // Instant skeleton - shows immediately
             <InstantAppointmentsSkeleton />
@@ -146,7 +171,7 @@ const Appointments = memo(function Appointments() {
             <CardContent className="p-12 text-center">
               <p className="text-red-600 mb-4">Failed to load appointments. Please try again.</p>
               <Button 
-                onClick={() => refetch()}
+                onClick={() => refresh()}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Reintentar
