@@ -1049,6 +1049,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Load test simulation endpoint
+  app.post('/api/admin/simulate-load', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { totalUsers = 4000, totalTenants = 3000 } = req.body;
+      const { loadTestSimulator } = await import('./loadTestSimulator');
+      
+      const metrics = loadTestSimulator.simulateLoad(totalUsers, totalTenants);
+      const tenantStats = loadTestSimulator.getDetailedTenantStats();
+      const serverCapacity = loadTestSimulator.estimateServerCapacity();
+      
+      res.json({
+        success: true,
+        simulation: {
+          requested: { totalUsers, totalTenants },
+          metrics,
+          topTenants: tenantStats.slice(0, 10), // Top 10 tenants by connection count
+          serverCapacity,
+          scalabilityAnalysis: {
+            canHandle: totalUsers <= serverCapacity.maxConnections,
+            memoryUsagePercent: Math.round((metrics.memoryUsageMB / (serverCapacity.maxConnections * 8 / 1024)) * 100),
+            recommendedUpgrade: totalUsers > serverCapacity.maxConnections ? "Consider upgrading to higher memory instance" : "Current capacity sufficient"
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error running load simulation:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   app.put('/api/admin/business-hours/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;

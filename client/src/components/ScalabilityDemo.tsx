@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 interface WebSocketStats {
   totalConnections: number;
@@ -13,6 +14,7 @@ interface WebSocketStats {
 
 export function ScalabilityDemo() {
   const [showDemo, setShowDemo] = useState(false);
+  const [simulationResults, setSimulationResults] = useState<any>(null);
 
   const { data: wsStats, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ['websocket-stats'],
@@ -27,6 +29,18 @@ export function ScalabilityDemo() {
     refetchInterval: 5000 // Refresh every 5 seconds when active
   });
 
+  const loadTestMutation = useMutation({
+    mutationFn: async (params: { totalUsers: number; totalTenants: number }) => {
+      return apiRequest('/api/admin/simulate-load', {
+        method: 'POST',
+        body: JSON.stringify(params)
+      });
+    },
+    onSuccess: (data) => {
+      setSimulationResults(data);
+    }
+  });
+
   if (!showDemo) {
     return (
       <Card className="border-green-200 bg-green-50">
@@ -36,14 +50,25 @@ export function ScalabilityDemo() {
               <h3 className="font-medium text-green-800">🚀 Scalability Achievement</h3>
               <p className="text-sm text-green-600">System optimized for 2000+ tenants with WebSocket connections</p>
             </div>
-            <Button 
-              onClick={() => setShowDemo(true)}
-              variant="outline"
-              size="sm"
-              className="border-green-600 text-green-600 hover:bg-green-100"
-            >
-              View Stats
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => loadTestMutation.mutate({ totalUsers: 4000, totalTenants: 3000 })}
+                variant="outline"
+                size="sm"
+                className="border-blue-600 text-blue-600 hover:bg-blue-100"
+                disabled={loadTestMutation.isPending}
+              >
+                {loadTestMutation.isPending ? 'Testing...' : 'Test 4K Users'}
+              </Button>
+              <Button 
+                onClick={() => setShowDemo(true)}
+                variant="outline"
+                size="sm"
+                className="border-green-600 text-green-600 hover:bg-green-100"
+              >
+                View Stats
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -110,6 +135,47 @@ export function ScalabilityDemo() {
                       <span className="text-green-700 font-medium">{connections as number} connections</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Load Test Results */}
+            {simulationResults && (
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 mt-4">
+                <h4 className="font-medium text-blue-800 mb-3">Load Test Results: {simulationResults.simulation.requested.totalUsers} Users / {simulationResults.simulation.requested.totalTenants} Tenants</h4>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-white rounded p-3 border border-blue-200">
+                    <div className="text-lg font-bold text-blue-700">{simulationResults.simulation.metrics.totalConnections}</div>
+                    <div className="text-xs text-blue-600">Simulated Connections</div>
+                  </div>
+                  <div className="bg-white rounded p-3 border border-blue-200">
+                    <div className="text-lg font-bold text-blue-700">{simulationResults.simulation.metrics.memoryUsageMB}MB</div>
+                    <div className="text-xs text-blue-600">Memory Usage</div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded p-3 border border-blue-200 mb-3">
+                  <div className="text-sm font-medium text-blue-800 mb-2">Performance Comparison</div>
+                  <div className="text-xs text-blue-600 mb-1">
+                    API Polling: {simulationResults.simulation.metrics.estimatedPollingLoad.toLocaleString()} requests/minute
+                  </div>
+                  <div className="text-xs text-blue-600 mb-1">
+                    WebSocket: {simulationResults.simulation.metrics.actualWebSocketLoad.toLocaleString()} messages/minute
+                  </div>
+                  <div className="text-sm font-bold text-blue-700">
+                    {simulationResults.simulation.metrics.performanceGain}% reduction in server load
+                  </div>
+                </div>
+
+                <div className="bg-white rounded p-3 border border-blue-200">
+                  <div className="text-sm font-medium text-blue-800 mb-2">System Capacity</div>
+                  <div className={`text-xs font-medium ${simulationResults.simulation.scalabilityAnalysis.canHandle ? 'text-green-600' : 'text-red-600'}`}>
+                    {simulationResults.simulation.scalabilityAnalysis.canHandle ? '✅ System can handle this load' : '❌ Exceeds current capacity'}
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    Max Capacity: {simulationResults.simulation.serverCapacity.maxConnections.toLocaleString()} connections
+                  </div>
                 </div>
               </div>
             )}
