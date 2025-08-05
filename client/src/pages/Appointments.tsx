@@ -24,12 +24,12 @@ const INSTANT_SKELETON = <InstantAppointmentsSkeleton />;
 const Appointments = memo(function Appointments() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // SINGLE API CALL: Direct fetch with proper URL construction
+  // FAST ENDPOINT: Rebuilt for reliable performance
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['appointments-optimized', selectedDate],
+    queryKey: ['appointments-fast', selectedDate],
     queryFn: async () => {
-      const url = `/api/appointments-data/vetgroom1?date=${selectedDate}`;
-      const response = await fetch(url, { credentials: 'include' });
+      const url = `/api/appointments-fast/vetgroom1?date=${selectedDate}`;
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`${response.status}: ${response.statusText}`);
       }

@@ -228,13 +228,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ULTRA-OPTIMIZED: Lightweight appointment data - only essential fields for instant loading
+  // FAST APPOINTMENTS: Rebuilt endpoint for reliable performance
+  app.get('/api/appointments-fast/:tenantId', async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { date } = req.query;
+      const targetDate = date || new Date().toISOString().split('T')[0];
+      
+      console.log(`Fast appointments: ${tenantId} on ${targetDate}`);
+      
+      const appointments = await storage.getAppointments(tenantId, targetDate);
+      const clients = await storage.getClients(tenantId);
+      
+      const appointmentClientIds = new Set(appointments.map(apt => apt.clientId));
+      const relevantClients = clients.filter(client => appointmentClientIds.has(client.id));
+      
+      res.json({
+        appointments: appointments.map(apt => ({
+          id: apt.id,
+          clientId: apt.clientId,
+          petId: apt.petId,
+          scheduledDate: apt.scheduledDate,
+          scheduledTime: apt.scheduledTime,
+          status: apt.status,
+          type: apt.type,
+          notes: apt.notes
+        })),
+        clients: relevantClients.map(client => ({
+          id: client.id,
+          name: client.name,
+          phone: client.phone,
+          email: client.email
+        })),
+        date: targetDate,
+        count: appointments.length
+      });
+      
+    } catch (error) {
+      console.error("Fast appointments error:", error);
+      res.status(500).json({ error: "Failed to load appointments" });
+    }
+  });
+
+  // LEGACY: Keep old endpoint working
   app.get('/api/appointments-data/:tenantId', async (req: any, res) => {
-    console.log(`[DEBUG] Appointments-data request: ${req.url} with query:`, req.query);
-    
-    // Add CORS headers to ensure browser requests work
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
     
     try {
       const { tenantId } = req.params;
