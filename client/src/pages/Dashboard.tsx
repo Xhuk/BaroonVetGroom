@@ -26,7 +26,7 @@ export default function Dashboard() {
   });
   
   // Fast fetch data after UI is shown - now date-specific
-  const { data: appointments } = useFastFetch<Appointment[]>(
+  const { data: appointmentData } = useFastFetch<{appointments: Appointment[]}>(
     `/api/appointments-fast/${currentTenant?.id}?date=${selectedDate}`,
     !!currentTenant?.id && !isInstant
   );
@@ -133,7 +133,7 @@ export default function Dashboard() {
         {/* Fast Calendar - positioned to end at same level as navigation */}
         {showCalendar ? (
           <FastCalendar 
-            appointments={appointments?.appointments || []} 
+            appointments={appointmentData?.appointments || []} 
             className="shadow-lg"
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}

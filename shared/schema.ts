@@ -195,6 +195,7 @@ export const pets = pgTable("pets", {
   registeredAge: integer("registered_age"), // Age at registration time
   birthDate: date("birth_date"), // For automatic age calculation
   weight: decimal("weight", { precision: 5, scale: 2 }),
+  isActive: boolean("is_active").default(true), // For active/inactive status (deceased pets)
   medicalHistory: jsonb("medical_history"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

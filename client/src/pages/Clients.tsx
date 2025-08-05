@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, User, Phone, Mail, MapPin, Heart, Camera, QrCode, History } from "lucide-react";
+import { Plus, User, Phone, Mail, MapPin, Heart, Camera, QrCode, History, Power, Edit, Save, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client, Pet, Appointment } from "@shared/schema";
 
@@ -24,6 +24,8 @@ export default function Clients() {
   const [showPetForm, setShowPetForm] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+  const [editingClient, setEditingClient] = useState<string | null>(null);
+  const [editingPet, setEditingPet] = useState<string | null>(null);
 
   const { data: clients, isLoading: clientsLoading } = useFastFetch<Client[]>(
     `/api/clients/${currentTenant?.id}`,
@@ -83,6 +85,70 @@ export default function Clients() {
     },
   });
 
+  const updateClientMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return apiRequest(`/api/clients/${id}`, "PATCH", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Cliente actualizado",
+        description: "La información del cliente se ha actualizado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      setEditingClient(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el cliente",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updatePetMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return apiRequest(`/api/pets/${id}`, "PATCH", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Mascota actualizada",
+        description: "La información de la mascota se ha actualizado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/pets"] });
+      setEditingPet(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar la mascota",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const togglePetStatusMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      return apiRequest(`/api/pets/${id}`, "PATCH", { isActive });
+    },
+    onSuccess: (_, { isActive }) => {
+      toast({
+        title: isActive ? "Mascota activada" : "Mascota desactivada", 
+        description: isActive 
+          ? "La mascota ha sido marcada como activa." 
+          : "La mascota ha sido marcada como inactiva.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/pets"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cambiar el estado de la mascota",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Always show UI immediately - no conditional rendering that causes white screens
 
   const handleCreateClient = (e: React.FormEvent<HTMLFormElement>) => {
@@ -115,6 +181,45 @@ export default function Clients() {
     };
 
     createPetMutation.mutate(data);
+  };
+
+  const handleUpdateClient = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const data = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      phone: formData.get("phone"),
+      address: formData.get("address"),
+      fraccionamiento: formData.get("fraccionamiento"),
+    };
+
+    if (editingClient) {
+      updateClientMutation.mutate({ id: editingClient, data });
+    }
+  };
+
+  const handleUpdatePet = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const data = {
+      name: formData.get("name"),
+      species: formData.get("species"),
+      breed: formData.get("breed"),
+      registeredAge: parseInt(formData.get("registeredAge") as string) || null,
+      birthDate: formData.get("birthDate") || null,
+      weight: parseFloat(formData.get("weight") as string) || null,
+    };
+
+    if (editingPet) {
+      updatePetMutation.mutate({ id: editingPet, data });
+    }
+  };
+
+  const togglePetStatus = (petId: string, currentStatus: boolean = true) => {
+    togglePetStatusMutation.mutate({ id: petId, isActive: !currentStatus });
   };
 
   // Calculate current age from birth date
@@ -283,45 +388,103 @@ export default function Clients() {
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <User className="w-5 h-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      <span>{client.phone}</span>
-                    </div>
-                    {client.email && (
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        <span>{client.email}</span>
+                  {editingClient === client.id ? (
+                    <form onSubmit={handleUpdateClient} className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="name" className="text-sm">Nombre Completo</Label>
+                          <Input name="name" defaultValue={client.name} required className="h-8" />
+                        </div>
+                        <div>
+                          <Label htmlFor="phone" className="text-sm">Teléfono</Label>
+                          <Input name="phone" defaultValue={client.phone || ''} required className="h-8" />
+                        </div>
+                        <div>
+                          <Label htmlFor="email" className="text-sm">Email</Label>
+                          <Input name="email" type="email" defaultValue={client.email || ''} className="h-8" />
+                        </div>
+                        <div>
+                          <Label htmlFor="fraccionamiento" className="text-sm">Fraccionamiento</Label>
+                          <Input name="fraccionamiento" defaultValue={client.fraccionamiento || ''} className="h-8" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label htmlFor="address" className="text-sm">Dirección</Label>
+                          <Textarea name="address" defaultValue={client.address || ''} className="min-h-[60px]" />
+                        </div>
                       </div>
-                    )}
-                    {client.fraccionamiento && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        <span>{client.fraccionamiento}</span>
+                      <div className="flex gap-2">
+                        <Button type="submit" size="sm" disabled={updateClientMutation.isPending}>
+                          <Save className="w-4 h-4 mr-2" />
+                          {updateClientMutation.isPending ? "Guardando..." : "Guardar"}
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setEditingClient(null)}
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Cancelar
+                        </Button>
                       </div>
-                    )}
-                  </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-3 mb-2">
+                        <User className="w-5 h-5 text-blue-600" />
+                        <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-4 h-4" />
+                          <span>{client.phone}</span>
+                        </div>
+                        {client.email && (
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4" />
+                            <span>{client.email}</span>
+                          </div>
+                        )}
+                        {client.fraccionamiento && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            <span>{client.fraccionamiento}</span>
+                          </div>
+                        )}
+                      </div>
 
-                  {client.address && (
-                    <p className="text-sm text-gray-600 mt-2">{client.address}</p>
+                      {client.address && (
+                        <p className="text-sm text-gray-600 mt-2">{client.address}</p>
+                      )}
+                    </>
                   )}
                 </div>
 
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSelectedClient(client);
-                    setShowPetForm(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Agregar Mascota
-                </Button>
+                <div className="flex flex-col gap-2">
+                  {editingClient !== client.id && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setEditingClient(client.id)}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Editar Cliente
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setSelectedClient(client);
+                          setShowPetForm(true);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Agregar Mascota
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Pets Section */}
@@ -339,23 +502,89 @@ export default function Clients() {
                 ) : (
                   <div className="grid gap-4">
                     {getClientPets(client.id).map((pet) => (
-                      <Card key={pet.id} className="bg-gray-50">
+                      <Card key={pet.id} className={`${(pet as any).isActive === false ? 'bg-red-50 border-red-200' : 'bg-gray-50'}`}>
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
-                                <h5 className="font-medium text-gray-900">{pet.name}</h5>
-                                <Badge variant="secondary">{pet.species}</Badge>
-                                {pet.breed && <Badge variant="outline">{pet.breed}</Badge>}
+                                {editingPet === pet.id ? (
+                                  <form onSubmit={handleUpdatePet} className="flex items-center gap-2 flex-1">
+                                    <Input 
+                                      name="name" 
+                                      defaultValue={pet.name} 
+                                      className="h-8 w-32"
+                                      required 
+                                    />
+                                    <Input 
+                                      name="species" 
+                                      defaultValue={pet.species} 
+                                      className="h-8 w-24"
+                                      required 
+                                    />
+                                    <Input 
+                                      name="breed" 
+                                      defaultValue={pet.breed || ''} 
+                                      className="h-8 w-24"
+                                      placeholder="Raza" 
+                                    />
+                                    <Input 
+                                      name="registeredAge" 
+                                      type="number"
+                                      defaultValue={pet.registeredAge || ''} 
+                                      className="h-8 w-16"
+                                      placeholder="Edad" 
+                                    />
+                                    <Input 
+                                      name="birthDate" 
+                                      type="date"
+                                      defaultValue={pet.birthDate || ''} 
+                                      className="h-8 w-32"
+                                    />
+                                    <Input 
+                                      name="weight" 
+                                      type="number"
+                                      step="0.1"
+                                      defaultValue={pet.weight || ''} 
+                                      className="h-8 w-20"
+                                      placeholder="Peso" 
+                                    />
+                                    <Button type="submit" size="sm" className="h-8">
+                                      <Save className="w-3 h-3" />
+                                    </Button>
+                                    <Button 
+                                      type="button" 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-8"
+                                      onClick={() => setEditingPet(null)}
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </Button>
+                                  </form>
+                                ) : (
+                                  <>
+                                    <h5 className="font-medium text-gray-900">{pet.name}</h5>
+                                    <Badge variant="secondary">{pet.species}</Badge>
+                                    {pet.breed && <Badge variant="outline">{pet.breed}</Badge>}
+                                    {(pet as any).isActive === false && (
+                                      <Badge variant="destructive" className="text-xs">Inactiva</Badge>
+                                    )}
+                                  </>
+                                )}
                               </div>
                               
-                              <div className="flex gap-4 text-sm text-gray-600">
-                                {pet.registeredAge && <span>Edad Registrada: {pet.registeredAge} años</span>}
-                                {pet.birthDate && (
-                                  <span>Edad Actual: {calculateCurrentAge(pet.birthDate, pet.registeredAge)} años</span>
-                                )}
-                                {pet.weight && <span>Peso: {pet.weight} kg</span>}
-                              </div>
+                              {editingPet !== pet.id && (
+                                <div className="flex gap-4 text-sm text-gray-600">
+                                  {pet.registeredAge && <span>Edad Registrada: {pet.registeredAge} años</span>}
+                                  {pet.birthDate && (
+                                    <span>Edad Actual: {calculateCurrentAge(pet.birthDate, pet.registeredAge)} años</span>
+                                  )}
+                                  {!pet.birthDate && pet.registeredAge && (
+                                    <span className="text-orange-600">Huésped (sin fecha de nacimiento)</span>
+                                  )}
+                                  {pet.weight && <span>Peso: {pet.weight} kg</span>}
+                                </div>
+                              )}
 
                               <div className="mt-3">
                                 <Tabs defaultValue="history" className="w-full">
@@ -407,18 +636,39 @@ export default function Clients() {
                             </div>
 
                             <div className="flex flex-col gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => generateQRCode(pet.id)}
-                              >
-                                <QrCode className="w-4 h-4 mr-2" />
-                                QR
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <History className="w-4 h-4 mr-2" />
-                                Ver Todo
-                              </Button>
+                              {editingPet !== pet.id && (
+                                <>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => setEditingPet(pet.id)}
+                                  >
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Editar
+                                  </Button>
+                                  <Button 
+                                    variant={(pet as any).isActive === false ? "default" : "destructive"}
+                                    size="sm"
+                                    onClick={() => togglePetStatus(pet.id, (pet as any).isActive)}
+                                    disabled={togglePetStatusMutation.isPending}
+                                  >
+                                    <Power className="w-4 h-4 mr-2" />
+                                    {(pet as any).isActive === false ? "Activar" : "Desactivar"}
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => generateQRCode(pet.id)}
+                                  >
+                                    <QrCode className="w-4 h-4 mr-2" />
+                                    QR
+                                  </Button>
+                                  <Button variant="outline" size="sm">
+                                    <History className="w-4 h-4 mr-2" />
+                                    Ver Todo
+                                  </Button>
+                                </>
+                              )}
                             </div>
                           </div>
                         </CardContent>

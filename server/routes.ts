@@ -449,6 +449,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update client information
+  app.patch('/api/clients/:clientId', isAuthenticated, async (req, res) => {
+    try {
+      const { clientId } = req.params;
+      const updates = req.body;
+      const updatedClient = await storage.updateClient(clientId, updates);
+      res.json(updatedClient);
+    } catch (error) {
+      console.error("Error updating client:", error);
+      res.status(500).json({ message: "Failed to update client" });
+    }
+  });
+
+  // Update pet information
+  app.patch('/api/pets/:petId', isAuthenticated, async (req, res) => {
+    try {
+      const { petId } = req.params;
+      const updates = req.body;
+      const updatedPet = await storage.updatePet(petId, updates);
+      res.json(updatedPet);
+    } catch (error) {
+      console.error("Error updating pet:", error);
+      res.status(500).json({ message: "Failed to update pet" });
+    }
+  });
+
+  // Create new client
+  app.post('/api/clients', isAuthenticated, async (req, res) => {
+    try {
+      const clientData = req.body;
+      const newClient = await storage.createClient(clientData);
+      res.json(newClient);
+    } catch (error) {
+      console.error("Error creating client:", error);
+      res.status(500).json({ message: "Failed to create client" });
+    }
+  });
+
+  // Create new pet
+  app.post('/api/pets', isAuthenticated, async (req, res) => {
+    try {
+      const petData = req.body;
+      const newPet = await storage.createPet(petData);
+      res.json(newPet);
+    } catch (error) {
+      console.error("Error creating pet:", error);
+      res.status(500).json({ message: "Failed to create pet" });
+    }
+  });
+
+  // Get all clients for a tenant
+  app.get('/api/clients/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const clients = await storage.getClients(tenantId);
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      res.status(500).json({ message: "Failed to fetch clients" });
+    }
+  });
+
+  // Get all pets for a tenant
+  app.get('/api/pets/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      // Get all pets for this tenant by joining with clients
+      const tenantPets = await db.select({
+        id: pets.id,
+        name: pets.name,
+        species: pets.species,
+        breed: pets.breed,
+        registeredAge: pets.registeredAge,
+        birthDate: pets.birthDate,
+        weight: pets.weight,
+        isActive: pets.isActive,
+        clientId: pets.clientId
+      })
+      .from(pets)
+      .leftJoin(clients, eq(pets.clientId, clients.id))
+      .where(eq(clients.tenantId, tenantId));
+      
+      res.json(tenantPets);
+    } catch (error) {
+      console.error("Error fetching pets:", error);
+      res.status(500).json({ message: "Failed to fetch pets" });
+    }
+  });
+
+  // Get pets for a specific client
+  app.get('/api/pets/client/:clientId', isAuthenticated, async (req, res) => {
+    try {
+      const { clientId } = req.params;
+      const pets = await storage.getPets(clientId);
+      res.json(pets);
+    } catch (error) {
+      console.error("Error fetching pets for client:", error);
+      res.status(500).json({ message: "Failed to fetch pets for client" });
+    }
+  });
+
   // Dashboard stats route - Based on real database data
   app.get('/api/dashboard/stats/:tenantId', isAuthenticated, async (req: any, res) => {
     try {

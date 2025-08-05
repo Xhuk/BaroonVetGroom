@@ -167,6 +167,8 @@ export interface IStorage {
   // Client operations
   getClients(tenantId: string): Promise<Client[]>;
   createClient(client: InsertClient): Promise<Client>;
+  updateClient(clientId: string, updates: Partial<InsertClient>): Promise<Client>;
+  updatePet(petId: string, updates: Partial<InsertPet>): Promise<Pet>;
   findCustomerByInfo(name: string, phone: string, email: string): Promise<any>;
   
   // Pet operations
@@ -504,6 +506,24 @@ export class DatabaseStorage implements IStorage {
   async createPet(pet: InsertPet): Promise<Pet> {
     const [newPet] = await db.insert(pets).values(pet).returning();
     return newPet;
+  }
+
+  async updateClient(clientId: string, updates: Partial<InsertClient>): Promise<Client> {
+    const [updatedClient] = await db
+      .update(clients)
+      .set(updates)
+      .where(eq(clients.id, clientId))
+      .returning();
+    return updatedClient;
+  }
+
+  async updatePet(petId: string, updates: Partial<InsertPet>): Promise<Pet> {
+    const [updatedPet] = await db
+      .update(pets)
+      .set(updates)
+      .where(eq(pets.id, petId))
+      .returning();
+    return updatedPet;
   }
 
   // Appointment operations
