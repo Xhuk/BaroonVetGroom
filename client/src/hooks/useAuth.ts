@@ -5,12 +5,37 @@ export function useAuth() {
   const { data: user, isLoading, error } = useQuery<User>({
     queryKey: ["/api/auth/user"],
     retry: false,
-    staleTime: 30 * 60 * 1000, // 30 minutes - aggressive caching
-    gcTime: 120 * 60 * 1000, // 2 hours - keep in cache longer
-    refetchOnWindowFocus: false, // Prevent refetch on focus change
-    refetchOnMount: false, // Don't refetch on remount if data exists
-    refetchOnReconnect: false, // Don't refetch on network reconnect
-    networkMode: 'offlineFirst', // Use cache when possible
+    staleTime: 60 * 60 * 1000, // 1 hour - ultra aggressive caching
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours - keep in cache much longer
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
+    networkMode: 'offlineFirst',
+    // Add custom query function for ultra-fast auth
+    queryFn: async () => {
+      // Check localStorage first for instant response
+      const cachedUser = localStorage.getItem('auth_user_cache');
+      const cacheTime = localStorage.getItem('auth_cache_time');
+      
+      if (cachedUser && cacheTime) {
+        const ageMinutes = (Date.now() - parseInt(cacheTime)) / (1000 * 60);
+        if (ageMinutes < 30) { // Use cache if less than 30 minutes old
+          return JSON.parse(cachedUser);
+        }
+      }
+      
+      // Fallback to network request
+      const response = await fetch('/api/auth/user', { credentials: 'include' });
+      if (response.ok) {
+        const userData = await response.json();
+        // Cache the result
+        localStorage.setItem('auth_user_cache', JSON.stringify(userData));
+        localStorage.setItem('auth_cache_time', Date.now().toString());
+        return userData;
+      }
+      throw new Error(`${response.status}: ${response.statusText}`);
+    }
   });
 
   return {

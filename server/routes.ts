@@ -51,10 +51,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const tenantCache = new Map<string, { data: any, timestamp: number }>();
   const TENANT_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-  // Auth routes
+  // Auth routes with ultra-aggressive caching
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Set ultra-aggressive cache headers for instant subsequent loads
+      res.set({
+        'Cache-Control': 'private, max-age=1800, s-maxage=1800', // 30 minutes browser cache
+        'ETag': `"user-${userId}-${Math.floor(Date.now() / 60000)}"`, // Change every minute
+        'Vary': 'Cookie, Authorization',
+        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
+      });
       
       // Check cache first
       const cached = userCache.get(userId);
