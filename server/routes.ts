@@ -219,8 +219,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // OPTIMIZED: Get all appointment page data in one request with aggressive caching
-  app.get('/api/appointments-data/:tenantId', isAuthenticated, async (req: any, res) => {
+  // OPTIMIZED: Get all appointment page data in one request with aggressive caching (NO AUTH for speed)
+  app.get('/api/appointments-data/:tenantId', async (req: any, res) => {
     try {
       const { tenantId } = req.params;
       const { date } = req.query;

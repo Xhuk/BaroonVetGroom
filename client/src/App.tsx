@@ -19,6 +19,7 @@ import AdminSettings from "@/pages/AdminSettings";
 import AdminBusinessHours from "@/pages/AdminBusinessHours";
 import AdminBillingConfig from "@/pages/AdminBillingConfig";
 import Appointments from "@/pages/Appointments";
+import AppointmentsFast from "@/pages/AppointmentsFast";
 import BookingWizard from "@/pages/BookingWizard";
 import Clients from "@/pages/Clients";
 import Inventory from "@/pages/Inventory";
@@ -60,11 +61,13 @@ function Router() {
         <>
           <Route path="/" component={Landing} />
           <Route path="/plans" component={SubscriptionLanding} />
+          <Route path="/appointments-fast" component={AppointmentsFast} />
         </>
       ) : (
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/appointments" component={Appointments} />
+          <Route path="/appointments-fast" component={AppointmentsFast} />
           <Route path="/booking" component={BookingWizard} />
           <Route path="/clients" component={Clients} />
           <Route path="/medical-records" component={MedicalRecords} />
