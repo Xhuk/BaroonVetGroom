@@ -100,7 +100,10 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(slotStartMinute).padStart(2, '0')}`;
     
     const slotAppointments = getAppointmentsForSlot(currentTimeStr);
-    return slotAppointments.length > 0;
+    console.log(`Checking slot ${currentTimeStr}: ${slotAppointments.length} appointments found`);
+    
+    // For testing: force true to always show expanded marker
+    return true; // This will always show the expanded red marker for testing
   };
 
   // Auto-scroll to current time after 30 seconds of inactivity
@@ -171,6 +174,22 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
           
+          {/* TESTING: Fixed visible red marker at top */}
+          <div 
+            className="absolute left-0 right-0 top-10 bg-red-600 z-50 rounded-lg border-4 border-red-800 shadow-2xl"
+            style={{ height: '80px' }}
+          >
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-white font-bold text-lg drop-shadow-lg">
+                🔴 TEST MARKER - CURRENT TIME: {getCurrentTimeInUserTimezone().toLocaleTimeString('es-ES', { 
+                  hour: '2-digit', 
+                  minute: '2-digit',
+                  hour12: true 
+                })}
+              </span>
+            </div>
+          </div>
+
           {/* Current time marker - red line that grows when over occupied slots */}
           {/* Always show marker for testing - remove currentTimePosition !== null check */}
           {true && (
@@ -186,8 +205,8 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
                 )}
                 style={{ 
                   top: `${currentTimePosition - (isMarkerInOccupiedSlot ? 35 : 0)}px`, // Center in slot when expanded
-                  height: isMarkerInOccupiedSlot ? '70px' : '5px', // Much taller for appointments, 5px for free slots
-                  width: isMarkerInOccupiedSlot ? 'auto' : '5px', // 5px width for testing when free
+                  height: isMarkerInOccupiedSlot ? '70px' : '10px', // Much taller for appointments, 10px for free slots
+                  width: isMarkerInOccupiedSlot ? 'auto' : '10px', // 10px width for testing when free
                   // Add glow effect when over occupied slot
                   ...(isMarkerInOccupiedSlot && {
                     boxShadow: '0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(239, 68, 68, 0.3)',
