@@ -30,6 +30,7 @@ A high-performance veterinary clinic management platform with ultra-optimized us
   - Applied same height extension logic to navigation component for consistent full-height layout
 - **Non-Scrollable App Layout**: 
   - App itself is not scrollable, only cards have scroll functionality
+  - Navigation width increased to w-72 (288px, +32px from original w-64)
   - Navigation positioned 32px above bottom ribbon using bottom: calc(32px + 96px)
   - Calendar card starts 24px below header buttons and ends exactly where navigation ends
   - Calendar height: calc(100vh - 220px - 96px - 32px) to account for header + buttons + spacing

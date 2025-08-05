@@ -93,7 +93,7 @@ export function Navigation({ className }: NavigationProps) {
 
   return (
     <nav className={cn(
-      "fixed left-0 top-20 w-64 bg-white shadow-lg z-30 transform -translate-x-full lg:translate-x-0 transition-transform",
+      "fixed left-0 top-20 w-72 bg-white shadow-lg z-30 transform -translate-x-full lg:translate-x-0 transition-transform",
       className
     )} style={{ bottom: 'calc(32px + 96px)' }}>
       <div className="p-4 h-full">
