@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
+import { getCurrentTimeCST1, getTodayCST1 } from "@shared/timeUtils";
 
 interface FastCalendarProps {
   appointments: Appointment[];
@@ -9,19 +10,18 @@ interface FastCalendarProps {
 }
 
 export function FastCalendar({ appointments, className }: FastCalendarProps) {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(getCurrentTimeCST1());
 
-  // Update current time every minute
+  // Update current time every minute using CST-1 timezone
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date());
+      setCurrentTime(getCurrentTimeCST1());
     }, 60000);
     return () => clearInterval(timer);
   }, []);
 
-  // Get current day only
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  // Get current day in CST-1 timezone
+  const todayStr = getTodayCST1();
 
   // Generate 30-minute time slots for the entire day
   const generateTimeSlots = () => {
@@ -66,7 +66,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
   };
 
   const getCurrentTimePosition = () => {
-    const now = new Date();
+    const now = getCurrentTimeCST1();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     
@@ -83,7 +83,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     <Card className={cn("mx-6", className)}>
       <CardHeader>
         <h2 className="text-xl font-semibold text-gray-800">
-          Calendario de Hoy - {today.toLocaleDateString('es-ES', { 
+          Calendario de Hoy - {currentTime.toLocaleDateString('es-ES', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 
