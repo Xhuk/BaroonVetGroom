@@ -73,8 +73,12 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     const hours = now.getHours();
     const minutes = now.getMinutes();
     
+    // Debug: Always show marker for testing during development
+    console.log(`Current time: ${hours}:${minutes.toString().padStart(2, '0')}`);
+    
     if (hours < 6 || hours >= 22) {
-      return null; // Outside visible hours
+      console.log('Time outside visible hours, but showing anyway for testing');
+      // For testing: still show marker even outside hours
     }
     
     // Calculate position within visible slots
@@ -82,6 +86,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     const slotHeight = 80; // Each 30-minute slot is now 80px tall
     const position = (totalMinutes / 30) * slotHeight; // Position in pixels
     
+    console.log(`Time marker position: ${position}px`);
     return position;
   };
 
@@ -167,7 +172,8 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
         <div className="relative h-full overflow-hidden">
           
           {/* Current time marker - red line that grows when over occupied slots */}
-          {currentTimePosition !== null && (
+          {/* Always show marker for testing - remove currentTimePosition !== null check */}
+          {true && (
             <>
               {/* Main time marker line */}
               <div
