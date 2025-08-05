@@ -179,27 +179,42 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
               <div
                 className={cn(
                   "absolute z-30 transition-all duration-700 ease-in-out transform",
-                  // Dynamic width and styling based on slot occupation
+                  // Dynamic sizing based on slot occupation
                   isMarkerInOccupiedSlot
-                    ? "left-4 right-4 bg-red-500 h-2 rounded-full shadow-xl" // Grows to match slot width when over appointment
+                    ? "left-24 right-4 bg-red-500 rounded-lg shadow-xl border-l-4 border-red-600" // Full slot size when over appointment
                     : "left-0 w-3 bg-red-400 h-0.5 rounded-r-full" // Thin line when over free slot
                 )}
                 style={{ 
-                  top: `${currentTimePosition}px`,
+                  top: `${currentTimePosition - (isMarkerInOccupiedSlot ? 25 : 0)}px`, // Center in slot when expanded
+                  height: isMarkerInOccupiedSlot ? '50px' : '2px', // Match appointment slot height
                   // Add glow effect when over occupied slot
                   ...(isMarkerInOccupiedSlot && {
-                    boxShadow: '0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(239, 68, 68, 0.3)'
+                    boxShadow: '0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(239, 68, 68, 0.3)',
+                    background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.9) 0%, rgba(239, 68, 68, 0.7) 50%, rgba(239, 68, 68, 0.9) 100%)'
                   })
                 }}
-              />
+              >
+                {/* Time indicator text when expanded */}
+                {isMarkerInOccupiedSlot && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm drop-shadow-lg">
+                      ⏰ AHORA - {getCurrentTimeInUserTimezone().toLocaleTimeString('es-ES', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
               
               {/* Animated border ring for occupied slots */}
               {isMarkerInOccupiedSlot && (
                 <div 
-                  className="absolute left-4 right-4 z-20 rounded-full border-2 border-red-300 opacity-60"
+                  className="absolute left-24 right-4 z-20 rounded-lg border-2 border-red-300 opacity-60"
                   style={{
-                    top: `${currentTimePosition - 2}px`,
-                    height: '8px',
+                    top: `${currentTimePosition - 27}px`,
+                    height: '54px',
                     animation: 'spin-border 4s linear infinite'
                   }}
                 />
@@ -208,10 +223,10 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
               {/* Pulse effect for occupied slots */}
               {isMarkerInOccupiedSlot && (
                 <div 
-                  className="absolute left-4 right-4 z-10 bg-red-200 rounded-full opacity-30"
+                  className="absolute left-24 right-4 z-10 bg-red-200 rounded-lg opacity-20"
                   style={{
-                    top: `${currentTimePosition - 4}px`,
-                    height: '12px',
+                    top: `${currentTimePosition - 30}px`,
+                    height: '60px',
                     animation: 'pulse-border 2s ease-in-out infinite'
                   }}
                 />
