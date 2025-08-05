@@ -2548,10 +2548,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updatedItem = await storage.updateBillingQueueItem(id, updates);
       
+      // TODO: Re-enable when inventory tables are implemented
       // Process inventory deduction when payment is completed
-      if (status === "paid_cash" || status === "paid_link") {
-        await storage.processInventoryForPayment(id);
-      }
+      // if (status === "paid_cash" || status === "paid_link") {
+      //   await storage.processInventoryForPayment(id);
+      // }
       
       res.json(updatedItem);
     } catch (error) {
