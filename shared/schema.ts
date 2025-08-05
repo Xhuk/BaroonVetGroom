@@ -995,6 +995,51 @@ export type InsertPendingInvoice = typeof pendingInvoices.$inferInsert;
 export type InvoiceLineItem = typeof invoiceLineItems.$inferSelect;
 export type InsertInvoiceLineItem = typeof invoiceLineItems.$inferInsert;
 
+// Inventory Management System
+export const inventoryItems = pgTable("inventory_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  category: varchar("category").notNull(), // medicine, supply, equipment, food
+  sku: varchar("sku").unique(),
+  barcode: varchar("barcode"),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }),
+  currentStock: integer("current_stock").default(0),
+  minStockLevel: integer("min_stock_level").default(0),
+  maxStockLevel: integer("max_stock_level"),
+  unit: varchar("unit").default("piece"), // piece, bottle, box, kg, liter
+  supplier: varchar("supplier"),
+  expirationDate: date("expiration_date"),
+  batchNumber: varchar("batch_number"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const inventoryTransactions = pgTable("inventory_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  itemId: varchar("item_id").notNull().references(() => inventoryItems.id),
+  transactionType: varchar("transaction_type").notNull(), // in, out, adjustment
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }),
+  totalCost: decimal("total_cost", { precision: 10, scale: 2 }),
+  reason: varchar("reason").notNull(), // purchase, sale, usage, adjustment, return, donation
+  referenceId: varchar("reference_id"), // appointment_id, invoice_id, etc.
+  referenceType: varchar("reference_type"), // appointment, invoice, manual
+  notes: text("notes"),
+  staffId: varchar("staff_id").references(() => staff.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Type exports for inventory
+export type InventoryItem = typeof inventoryItems.$inferSelect;
+export type InsertInventoryItem = typeof inventoryItems.$inferInsert;
+export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;
+export type InsertInventoryTransaction = typeof inventoryTransactions.$inferInsert;
+
 // LateNode Webhook Integration Configuration
 export const webhookIntegrations = pgTable("webhook_integrations", {
   id: varchar("id", { length: 50 }).primaryKey().$defaultFn(() => `whi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`),
