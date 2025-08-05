@@ -7,7 +7,15 @@ import {
   Users, 
   DoorOpen 
 } from "lucide-react";
-import type { DashboardStats } from "@shared/schema";
+interface DashboardStats {
+  appointmentsToday: number;
+  groomingToday: number;
+  medicalToday: number;
+  pendingPayments: number;
+  totalClients: number;
+  totalPets: number;
+  entriesDelivered: number;
+}
 
 interface FastStatsRibbonProps {
   stats?: DashboardStats | null;
