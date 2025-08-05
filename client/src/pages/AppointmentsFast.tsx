@@ -14,7 +14,7 @@ interface AppointmentData {
   timestamp: number;
 }
 
-export default function AppointmentsFast() {
+export default function Appointments() {
   const [data, setData] = useState<AppointmentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
