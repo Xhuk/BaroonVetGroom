@@ -93,12 +93,12 @@ export function Navigation({ className }: NavigationProps) {
 
   return (
     <nav className={cn(
-      "fixed left-0 top-20 bottom-32 w-64 bg-white shadow-lg z-30 transform -translate-x-full lg:translate-x-0 transition-transform",
+      "fixed left-0 top-20 w-64 bg-white shadow-lg z-30 transform -translate-x-full lg:translate-x-0 transition-transform",
       className
-    )}>
-      <div className="p-4 h-full overflow-y-auto">
+    )} style={{ bottom: 'calc(32px + 96px)' }}>
+      <div className="p-4 h-full">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Módulos</h3>
-        <ul className="space-y-2 h-full">
+        <ul className="space-y-2">
           {navigationItems.map((item) => (
             <li key={item.href}>
               <a
