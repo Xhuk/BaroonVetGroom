@@ -16,7 +16,10 @@ A high-performance veterinary clinic management platform with ultra-optimized us
 - **Database-Side Age Updates**: Pet age calculations managed automatically by the system
 - **Reschedule API Endpoint**: Added dedicated `/api/appointments/:id/reschedule` endpoint for appointment adjustments
 - **Super Admin Age Management**: Pet age updates managed by super admin in dedicated sections
-- **UI Cleanup & Header Enhancement**: Removed inventory button from navigation and timezone settings button from header
+- **UI Cleanup & Header Enhancement**: 
+  - Removed inventory button from navigation sidebar
+  - Restored timezone settings cog icon to main header (left of "Cerrar Sesión")
+  - Removed "Inventario" and "Zona Horaria" buttons from Dashboard action buttons
 - **Streamlined Navigation**: Removed "Citas" module from navigation (accessible via "Gestionar Citas" button) and focused on core veterinary modules
 
 ### Performance Optimization & Radio Dial Time Indicator (August 2025) - COMPLETED

@@ -2,9 +2,15 @@ import { Button } from "@/components/ui/button";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Calendar, Phone, Mail, LogOut, Moon, Sun } from "lucide-react";
+import { Calendar, Phone, Mail, LogOut, Moon, Sun, Settings } from "lucide-react";
 import { VetGroomLogo } from "./VetGroomLogo";
 import { DebugControls } from "./DebugControls";
+import { TimezoneSettings } from "./TimezoneSettings";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export function Header() {
   const { user } = useAuth();
@@ -85,6 +91,21 @@ export function Header() {
             >
               {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-8 h-8 rounded-full p-0"
+                  data-testid="button-timezone-settings"
+                >
+                  <Settings className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="end">
+                <TimezoneSettings />
+              </PopoverContent>
+            </Popover>
             <Button
               onClick={handleLogout}
               variant="destructive"

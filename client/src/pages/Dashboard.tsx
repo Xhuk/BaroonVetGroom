@@ -7,13 +7,11 @@ import { Header } from "@/components/Header";
 import { Navigation } from "@/components/Navigation";
 import { FastCalendar } from "@/components/FastCalendar";
 import { FastStatsRibbon } from "@/components/FastStatsRibbon";
-import { TimezoneSettings } from "@/components/TimezoneSettings";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Plus, History, Truck, Phone, CalendarIcon, Settings } from "lucide-react";
+import { Plus, Truck, Phone, CalendarIcon } from "lucide-react";
 import { Link } from "wouter";
-import type { Appointment, DashboardStats } from "@shared/schema";
+import type { Appointment } from "@shared/schema";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -22,7 +20,6 @@ export default function Dashboard() {
   const { isInstant, startBackgroundLoad, completeLoad } = useFastLoad();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showStats, setShowStats] = useState(false);
-  const [refreshCalendar, setRefreshCalendar] = useState(0);
   
   // Fast fetch data after UI is shown
   const { data: appointments } = useFastFetch<Appointment[]>(
@@ -30,7 +27,7 @@ export default function Dashboard() {
     !!currentTenant?.id && !isInstant
   );
   
-  const { data: stats } = useFastFetch<DashboardStats>(
+  const { data: stats } = useFastFetch<any>(
     `/api/dashboard/stats/${currentTenant?.id}`,
     !!currentTenant?.id && !isInstant
   );
@@ -127,32 +124,12 @@ export default function Dashboard() {
               Gestionar Citas
             </Button>
           </Link>
-          <Link href="/inventory">
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 shadow-md">
-              <History className="w-4 h-4 mr-2" />
-              Inventario
-            </Button>
-          </Link>
-          
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="px-6 py-3 shadow-md">
-                <Settings className="w-4 h-4 mr-2" />
-                Zona Horaria
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Configuración de Zona Horaria</DialogTitle>
-              </DialogHeader>
-              <TimezoneSettings onTimezoneChange={() => setRefreshCalendar(prev => prev + 1)} />
-            </DialogContent>
-          </Dialog>
+
         </div>
 
         {/* Fast Calendar - Direct implementation */}
         {showCalendar ? (
-          <FastCalendar key={refreshCalendar} appointments={appointments || []} className="shadow-lg" />
+          <FastCalendar appointments={appointments || []} className="shadow-lg" />
         ) : (
           <div className="mx-6 h-96 bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center">
             <div className="text-gray-500">Cargando calendario...</div>
