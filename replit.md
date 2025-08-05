@@ -21,6 +21,11 @@ A high-performance veterinary clinic management platform with ultra-optimized us
   - Restored timezone settings cog icon to main header (left of "Cerrar Sesión")
   - Removed "Inventario" and "Zona Horaria" buttons from Dashboard action buttons
 - **Streamlined Navigation**: Removed "Citas" module from navigation (accessible via "Gestionar Citas" button) and focused on core veterinary modules
+- **Enhanced Daily Calendar Design**:
+  - Increased slot container height to 80px for better visual consistency
+  - Repositioned red current-time indicators to center of containers
+  - Edge slots show partial indicators (top half for last slot, bottom half for first slot)
+  - All slots now end at same pixel height for uniform appearance
 
 ### Performance Optimization & Radio Dial Time Indicator (August 2025) - COMPLETED
 - **Ultra-Lightweight Payloads**: Reduced API response from 146KB to ~5KB (95% reduction)

@@ -79,7 +79,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     
     // Calculate position within visible slots
     const totalMinutes = (hours - 6) * 60 + minutes; // Minutes since 6 AM
-    const slotHeight = 60; // Each 30-minute slot is 60px tall
+    const slotHeight = 80; // Each 30-minute slot is now 80px tall
     const position = (totalMinutes / 30) * slotHeight; // Position in pixels
     
     return position;
@@ -115,7 +115,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     });
     
     if (currentSlotIndex !== -1) {
-      const slotHeight = 60; // Each slot is 60px
+      const slotHeight = 80; // Each slot is now 80px
       const containerHeight = scrollContainerRef.current.clientHeight;
       const scrollPosition = (currentSlotIndex * slotHeight) - (containerHeight / 2) + (slotHeight / 2);
       
@@ -160,33 +160,47 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
             onScroll={handleScroll}
           >
           
-          {timeSlots.map(slot => {
+          {timeSlots.map((slot, index) => {
             const slotAppointments = getAppointmentsForSlot(slot);
             const isCurrentSlot = currentTime.getHours() === parseInt(slot.split(':')[0]) &&
                                   currentTime.getMinutes() >= parseInt(slot.split(':')[1]) &&
                                   currentTime.getMinutes() < parseInt(slot.split(':')[1]) + 30;
+            
+            const isFirstSlot = index === 0;
+            const isLastSlot = index === timeSlots.length - 1;
 
             return (
               <div 
                 key={slot} 
                 className={cn(
-                  "flex items-start py-3 border-b border-gray-100 last:border-b-0 transition-all duration-300 relative",
-                  isCurrentSlot && "bg-red-50 border-red-200 shadow-sm",
-                  "min-h-[60px]" // Fixed height for consistent positioning
+                  "flex items-center border-b border-gray-100 last:border-b-0 relative",
+                  "h-[80px]" // Bigger container height for all slots to end at same pixel
                 )}
               >
-                {/* Dent indicator for current time slot */}
+                {/* Current time slot indicator - positioned in the middle */}
                 {isCurrentSlot && (
-                  <div className="absolute -left-3 top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-8 border-b-8 border-r-8 border-transparent border-r-red-500"></div>
-                )}
-                <div className="w-20 text-right pr-4 text-sm text-gray-500 font-medium">
+                  <div className={cn(
+                    "absolute left-0 right-0 bg-red-100 border border-red-300 rounded-md transition-all duration-300",
+                    // Position in middle for normal slots
+                    !isFirstSlot && !isLastSlot && "top-1/2 transform -translate-y-1/2 h-[50px]",
+                    // Show only bottom half for first slot
+                    isFirstSlot && "top-1/2 h-[40px]",
+                    // Show only top half for last slot  
+                    isLastSlot && "bottom-1/2 h-[40px]"
+                  )}
+                />)}
+                
+                {/* Time label */}
+                <div className="w-20 text-right pr-4 text-sm text-gray-500 font-medium z-10 relative">
                   {new Date(`2000-01-01T${slot}`).toLocaleTimeString('es-ES', { 
                     hour: '2-digit', 
                     minute: '2-digit', 
                     hour12: true 
                   })}
                 </div>
-                <div className="flex-1 pl-4">
+                
+                {/* Appointment content */}
+                <div className="flex-1 pl-4 z-10 relative">
                   {slotAppointments.length > 0 ? (
                     slotAppointments.map(appointment => (
                       <div
