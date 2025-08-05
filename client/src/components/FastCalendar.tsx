@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
@@ -11,6 +11,9 @@ interface FastCalendarProps {
 
 export function FastCalendar({ appointments, className }: FastCalendarProps) {
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone());
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Update current time every minute using user's timezone
   useEffect(() => {
@@ -82,20 +85,57 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     return position;
   };
 
-  const getContainerOffset = () => {
-    const now = getCurrentTimeInUserTimezone();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
+  // Auto-scroll to current time after 30 seconds of inactivity
+  const handleScroll = () => {
+    setIsScrolling(true);
     
-    if (hours < 6 || hours >= 22) return 0;
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
     
-    // Move container every 15 minutes to keep indicator centered
-    const quarterHour = Math.floor(minutes / 15) * 15; // 0, 15, 30, 45
-    return quarterHour * 0.5; // Slight movement offset
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsScrolling(false);
+      scrollToCurrentTime();
+    }, 30000); // 30 seconds
   };
 
+  const scrollToCurrentTime = () => {
+    if (!scrollContainerRef.current) return;
+    
+    const now = getCurrentTimeInUserTimezone();
+    const hours = now.getHours();
+    
+    if (hours < 6 || hours >= 22) return;
+    
+    // Find current time slot and scroll to it
+    const currentSlotIndex = timeSlots.findIndex(slot => {
+      const slotHour = parseInt(slot.split(':')[0]);
+      const slotMinute = parseInt(slot.split(':')[1]);
+      return hours === slotHour && now.getMinutes() >= slotMinute && now.getMinutes() < slotMinute + 30;
+    });
+    
+    if (currentSlotIndex !== -1) {
+      const slotHeight = 60; // Each slot is 60px
+      const containerHeight = scrollContainerRef.current.clientHeight;
+      const scrollPosition = (currentSlotIndex * slotHeight) - (containerHeight / 2) + (slotHeight / 2);
+      
+      scrollContainerRef.current.scrollTo({
+        top: Math.max(0, scrollPosition),
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Initial scroll to current time
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollToCurrentTime();
+    }, 500); // Small delay to ensure DOM is ready
+    
+    return () => clearTimeout(timer);
+  }, [currentTime]);
+
   const currentTimePosition = getCurrentTimePosition();
-  const containerOffset = getContainerOffset();
 
   return (
     <Card className={cn("mx-6", className)}>
@@ -111,52 +151,13 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
       </CardHeader>
       <CardContent>
         <div className="relative max-h-96 overflow-hidden">
-          {/* Floating Radio Dial Time Indicator */}
-          {currentTimePosition !== null && (
-            <div className="absolute inset-0 pointer-events-none z-30">
-              <div className="relative w-full h-full">
-                {/* Radio dial background */}
-                <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-black/80 rounded-full border-4 border-red-500 shadow-2xl">
-                  {/* Inner dial */}
-                  <div className="absolute inset-2 bg-gray-900 rounded-full">
-                    {/* Time display */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-red-400 text-lg font-mono font-bold">
-                          {currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                        <div className="text-gray-400 text-xs font-mono">
-                          EN VIVO
-                        </div>
-                      </div>
-                    </div>
-                    {/* Needle pointing down */}
-                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-0.5 h-6 bg-red-500 rounded-full shadow-lg"></div>
-                  </div>
-                </div>
-                
-                {/* Precise time line extending to slots */}
-                <div 
-                  className="absolute left-0 right-0 h-1 bg-red-500/60 shadow-lg z-20"
-                  style={{ 
-                    top: `${(currentTimePosition / (timeSlots.length * 60)) * 100}%`,
-                    boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)'
-                  }}
-                >
-                  <div className="absolute -left-1 -top-1 w-3 h-3 bg-red-500 rounded-full shadow-lg"></div>
-                  <div className="absolute -right-1 -top-1 w-3 h-3 bg-red-500 rounded-full shadow-lg"></div>
-                </div>
-              </div>
-            </div>
-          )}
+
           
-          {/* Time slots container with dynamic offset */}
+          {/* Time slots container with auto-scroll */}
           <div 
-            className="transition-transform duration-500 ease-in-out overflow-y-auto max-h-80"
-            style={{ 
-              transform: `translateY(${containerOffset}px)`,
-              paddingTop: currentTimePosition !== null ? '40px' : '0'
-            }}
+            ref={scrollContainerRef}
+            className="overflow-y-auto max-h-80 scroll-smooth"
+            onScroll={handleScroll}
           >
           
           {timeSlots.map(slot => {
@@ -169,11 +170,15 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
               <div 
                 key={slot} 
                 className={cn(
-                  "flex items-start py-3 border-b border-gray-100 last:border-b-0 transition-all duration-300",
+                  "flex items-start py-3 border-b border-gray-100 last:border-b-0 transition-all duration-300 relative",
                   isCurrentSlot && "bg-red-50 border-red-200 shadow-sm",
                   "min-h-[60px]" // Fixed height for consistent positioning
                 )}
               >
+                {/* Dent indicator for current time slot */}
+                {isCurrentSlot && (
+                  <div className="absolute -left-3 top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-8 border-b-8 border-r-8 border-transparent border-r-red-500"></div>
+                )}
                 <div className="w-20 text-right pr-4 text-sm text-gray-500 font-medium">
                   {new Date(`2000-01-01T${slot}`).toLocaleTimeString('es-ES', { 
                     hour: '2-digit', 
