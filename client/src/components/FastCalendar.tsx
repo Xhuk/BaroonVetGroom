@@ -223,27 +223,29 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
           {/* Fixed time marker in center of container - slots scroll to align with it */}
           <div
             className={cn(
-              "absolute left-0 right-0 z-30 pointer-events-none transition-all duration-300",
+              "absolute left-0 right-0 z-30 pointer-events-none transition-all duration-500",
               isMarkerInOccupiedSlot
-                ? "bg-red-500/80 h-[3px] shadow-lg" // Subtle marker when over appointment
-                : "bg-red-400/60 h-[2px]" // Even more subtle when over free slot
+                ? "bg-red-500/70 h-[60px]" // Taller marker when over appointment
+                : "bg-red-400/50 h-[40px]" // Taller marker for free slots too
             )}
             style={{ 
               top: '50%', // Always centered vertically in the container
-              transform: 'translateY(-50%)'
+              transform: 'translateY(-50%)',
+              borderRadius: '2px',
+              // Add subtle glow effect similar to chat interface with custom animation
+              ...(isMarkerInOccupiedSlot && {
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.7) 0%, rgba(239, 68, 68, 0.5) 50%, rgba(239, 68, 68, 0.7) 100%)',
+                animation: 'border-glow 2s ease-in-out infinite',
+              })
             }}
           >
             {/* Small time indicator dot on the left */}
-            <div className="absolute left-2 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full shadow-sm"></div>
-            
-            {/* Current time text when over occupied slot */}
-            {isMarkerInOccupiedSlot && (
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                <span className="text-red-600 text-xs font-medium bg-white/90 px-2 py-1 rounded shadow-sm">
-                  AHORA
-                </span>
-              </div>
-            )}
+            <div className={cn(
+              "absolute left-2 top-1/2 transform -translate-y-1/2 rounded-full shadow-sm transition-all duration-500",
+              isMarkerInOccupiedSlot 
+                ? "w-3 h-3 bg-red-600 animate-pulse" 
+                : "w-2 h-2 bg-red-500"
+            )}></div>
           </div>
           
           {/* Time slots container with auto-scroll */}
