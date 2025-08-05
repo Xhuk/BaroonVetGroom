@@ -5,13 +5,15 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom animation for time marker border glow effect */
+/* Custom animation for time marker border glow effect with subtle grow */
 @keyframes border-glow {
   0%, 100% {
     box-shadow: 0 0 8px rgba(239, 68, 68, 0.3), inset 0 0 8px rgba(255, 255, 255, 0.1);
+    transform: translateY(-50%) scaleY(1);
   }
   50% {
     box-shadow: 0 0 16px rgba(239, 68, 68, 0.5), inset 0 0 12px rgba(255, 255, 255, 0.2);
+    transform: translateY(-50%) scaleY(1.02);
   }
 }
 

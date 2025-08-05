@@ -220,32 +220,38 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
           
-          {/* Fixed time marker in center of container - slots scroll to align with it */}
+          {/* Fixed time marker in center of container - dynamically sizes to match appointment containers */}
           <div
             className={cn(
-              "absolute left-0 right-0 z-30 pointer-events-none transition-all duration-500",
+              "absolute left-0 right-0 z-30 pointer-events-none transition-all duration-700 ease-in-out",
               isMarkerInOccupiedSlot
-                ? "bg-red-500/70 h-[60px]" // Taller marker when over appointment
-                : "bg-red-400/50 h-[40px]" // Taller marker for free slots too
+                ? "bg-red-500/70 h-[70px] scale-105" // Larger marker matching appointment container size with subtle scale
+                : "bg-red-400/50 h-[20px] scale-95" // Smaller marker for free slots
             )}
             style={{ 
               top: '50%', // Always centered vertically in the container
               transform: 'translateY(-50%)',
-              borderRadius: '2px',
-              // Add subtle glow effect similar to chat interface with custom animation
+              borderRadius: '3px',
+              // Add subtle glow effect and grow animation when occupied
               ...(isMarkerInOccupiedSlot && {
-                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.7) 0%, rgba(239, 68, 68, 0.5) 50%, rgba(239, 68, 68, 0.7) 100%)',
-                animation: 'border-glow 2s ease-in-out infinite',
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.75) 0%, rgba(239, 68, 68, 0.55) 50%, rgba(239, 68, 68, 0.75) 100%)',
+                animation: 'border-glow 2.5s ease-in-out infinite',
+                boxShadow: '0 2px 8px rgba(239, 68, 68, 0.25)',
               })
             }}
           >
-            {/* Small time indicator dot on the left */}
+            {/* Dynamic time indicator dot that grows with marker */}
             <div className={cn(
-              "absolute left-2 top-1/2 transform -translate-y-1/2 rounded-full shadow-sm transition-all duration-500",
+              "absolute left-3 top-1/2 transform -translate-y-1/2 rounded-full shadow-md transition-all duration-700 ease-in-out",
               isMarkerInOccupiedSlot 
-                ? "w-3 h-3 bg-red-600 animate-pulse" 
-                : "w-2 h-2 bg-red-500"
+                ? "w-4 h-4 bg-red-600 scale-110" // Larger dot when occupied
+                : "w-2 h-2 bg-red-500 scale-90" // Smaller dot for free slots
             )}></div>
+            
+            {/* Subtle expansion indicator on the right when occupied */}
+            {isMarkerInOccupiedSlot && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-red-600/60 rounded-full animate-pulse"></div>
+            )}
           </div>
           
           {/* Time slots container with auto-scroll */}
