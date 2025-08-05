@@ -4,13 +4,16 @@
 A high-performance veterinary clinic management platform with ultra-optimized user experience and operational efficiency.
 
 ## Recent Changes
-### Performance Optimization (August 2025) - COMPLETED
+### Performance Optimization & Radio Dial Time Indicator (August 2025) - COMPLETED
 - **Ultra-Lightweight Payloads**: Reduced API response from 146KB to ~5KB (95% reduction)
 - **Day-Specific Loading**: Load only today's appointments by default with date navigation
 - **Elimination of White Pages**: Instant navigation between all pages with skeleton UI
 - **Optimized Data Structure**: Only essential appointment, client, and pet fields
 - **Smart Caching System**: 5-minute cache per day with sessionStorage
 - **Instant Day Navigation**: Previous/Next buttons with zero loading delays
+- **Floating Radio Dial Time Indicator**: Vintage-style time indicator floating over calendar
+- **Dynamic Container Alignment**: Slots container moves every 15 minutes for precise alignment
+- **Multi-Timezone Support**: 5 timezone options with daylight saving support, Mexico CST-1 default
 
 ### Technical Implementation
 - Optimized `/api/appointments-data/:tenantId?date=YYYY-MM-DD` endpoint for date-specific queries
