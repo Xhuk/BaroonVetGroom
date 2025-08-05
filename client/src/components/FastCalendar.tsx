@@ -93,6 +93,21 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     return { hours, minutes };
   };
 
+  // Determine if an appointment is currently ongoing
+  const isOngoing = (appointment: Appointment) => {
+    const now = getCurrentTimeInUserTimezone();
+    const appointmentTime = appointment.scheduledTime; // Using correct property name from schema
+    if (!appointmentTime) return false;
+    
+    // Create date objects for comparison
+    const todayStr = now.toISOString().split('T')[0];
+    const appStart = new Date(`${todayStr}T${appointmentTime}`);
+    const duration = appointment.duration || 60; // Use appointment duration or default 60 minutes
+    const appEnd = new Date(appStart.getTime() + duration * 60 * 1000);
+    
+    return now >= appStart && now < appEnd;
+  };
+
   const isTimeMarkerInOccupiedSlot = () => {
     const now = getCurrentTimeInUserTimezone();
     const currentHour = now.getHours();
@@ -103,9 +118,11 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(slotStartMinute).padStart(2, '0')}`;
     
     const slotAppointments = getAppointmentsForSlot(currentTimeStr);
-    console.log(`Checking slot ${currentTimeStr}: ${slotAppointments.length} appointments found`);
+    // Only show red marker for appointments that are currently ongoing (in progress)
+    const ongoingAppointments = slotAppointments.filter(appointment => isOngoing(appointment));
+    console.log(`Checking slot ${currentTimeStr}: ${ongoingAppointments.length} in-progress appointments found`);
     
-    return slotAppointments.length > 0;
+    return ongoingAppointments.length > 0;
   };
 
   // Auto-scroll to current time after 30 seconds of inactivity
@@ -173,21 +190,6 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
   const currentTimeInfo = getCurrentTimeSlotInfo();
   const isMarkerInOccupiedSlot = isTimeMarkerInOccupiedSlot();
 
-  // Determine if an appointment is currently ongoing
-  const isOngoing = (appointment: Appointment) => {
-    const now = getCurrentTimeInUserTimezone();
-    const appointmentTime = appointment.scheduledTime; // Using correct property name from schema
-    if (!appointmentTime) return false;
-    
-    // Create date objects for comparison
-    const todayStr = now.toISOString().split('T')[0];
-    const appStart = new Date(`${todayStr}T${appointmentTime}`);
-    const duration = appointment.duration || 60; // Use appointment duration or default 60 minutes
-    const appEnd = new Date(appStart.getTime() + duration * 60 * 1000);
-    
-    return now >= appStart && now < appEnd;
-  };
-
   return (
     <Card className={cn("fixed flex flex-col", className)} style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
       <CardHeader className="flex-shrink-0">
@@ -227,8 +229,8 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
               style={{ 
                 top: '50%',
                 transform: 'translateY(-50%)',
-                height: '70px',
-                borderRadius: '2px',
+                height: '60px', // Match appointment container height
+                borderRadius: '6px', // Match appointment container border radius
                 background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.08) 50%, rgba(239, 68, 68, 0.12) 100%)',
                 boxShadow: 'inset 0 0 20px rgba(239, 68, 68, 0.1), 0 0 10px rgba(239, 68, 68, 0.05)',
                 animation: 'time-container-glow 3s ease-in-out infinite',
