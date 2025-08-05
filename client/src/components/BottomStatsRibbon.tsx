@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
+import { useDelayedQuery } from "@/hooks/useInstantLoad";
 import type { DashboardStats } from "@shared/schema";
 import { 
   Scissors, 
@@ -13,15 +14,16 @@ import {
 
 export function BottomStatsRibbon() {
   const { currentTenant } = useTenant();
+  const enableDelayedQuery = useDelayedQuery(800); // Delay stats for 800ms
 
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-    staleTime: 2 * 60 * 1000, // 2 minutes cache - reasonable for stats
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!currentTenant?.id && enableDelayedQuery, // Progressive loading
+    staleTime: 5 * 60 * 1000, // 5 minutes cache for better performance
+    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes instead of 30 seconds
+    // No automatic refresh - manual only for speed
   });
 
   if (isLoading || !stats) {

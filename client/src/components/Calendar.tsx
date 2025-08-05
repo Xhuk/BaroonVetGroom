@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
+import { useDelayedQuery } from "@/hooks/useInstantLoad";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
@@ -12,6 +13,7 @@ interface CalendarProps {
 export function Calendar({ className }: CalendarProps) {
   const { currentTenant } = useTenant();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const enableDelayedQuery = useDelayedQuery(400); // Delay calendar for 400ms
 
   // Update current time every minute
   useEffect(() => {
@@ -27,11 +29,12 @@ export function Calendar({ className }: CalendarProps) {
 
   const { data: appointments = [], isLoading } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!currentTenant?.id && enableDelayedQuery, // Progressive loading
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
-    refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
+    refetchOnMount: false,
+    // No automatic refresh for speed
   });
 
   // Generate 30-minute time slots for the entire day (like your reference)

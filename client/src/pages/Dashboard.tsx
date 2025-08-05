@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, History, Truck, Phone, CalendarIcon } from "lucide-react";
 import { Link } from "wouter";
+import { Suspense } from "react";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -82,7 +83,7 @@ export default function Dashboard() {
       
       {/* Main Content */}
       <main className="lg:ml-64 pb-40">
-        {/* Action Buttons */}
+        {/* Action Buttons - Load immediately */}
         <div className="mb-6 flex flex-wrap gap-4 px-6">
           <Link href="/booking">
             <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md">
@@ -104,12 +105,33 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Calendar */}
-        <Calendar className="shadow-lg" />
+        {/* Calendar - Load with progressive enhancement */}
+        <Suspense fallback={
+          <div className="mx-6 h-96 bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center">
+            <div className="text-gray-500">Cargando calendario...</div>
+          </div>
+        }>
+          <Calendar className="shadow-lg" />
+        </Suspense>
       </main>
 
-      {/* Bottom Statistics Ribbon */}
-      <BottomStatsRibbon />
+      {/* Bottom Statistics Ribbon - Load with delay */}
+      <Suspense fallback={
+        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 backdrop-blur-md border-t border-slate-600/50 z-20 shadow-2xl">
+          <div className="px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="h-6 bg-slate-600/50 animate-pulse rounded-lg w-32"></div>
+              <div className="flex items-center space-x-12">
+                {Array.from({ length: 7 }).map((_, index) => (
+                  <div key={index} className="h-5 bg-slate-600/50 animate-pulse rounded-lg w-20"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      }>
+        <BottomStatsRibbon />
+      </Suspense>
     </div>
   );
 }
