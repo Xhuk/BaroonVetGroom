@@ -28,6 +28,8 @@ A high-performance veterinary clinic management platform with ultra-optimized us
   - All slots now end at same pixel height for uniform appearance
   - Extended calendar card content to reach bottom where navigation ends for full-screen utilization
   - Applied same height extension logic to navigation component for consistent full-height layout
+  - Dashboard buttons positioned horizontally at top: 95px, aligned with card container width
+  - Calendar card starts at 140px from top for balanced spacing with buttons above
 - **Non-Scrollable App Layout**: 
   - App itself is not scrollable, only cards have scroll functionality
   - Navigation width increased to w-72 (288px, +32px from original w-64)

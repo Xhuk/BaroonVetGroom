@@ -110,8 +110,8 @@ export default function Dashboard() {
       
       {/* Main Content */}
       <main className="lg:ml-72 pb-40">
-        {/* Action Buttons - Load immediately */}
-        <div className="mb-6 flex flex-wrap gap-4 px-6">
+        {/* Action Buttons - Positioned to align with card container */}
+        <div className="fixed flex gap-4" style={{ top: '95px', left: '312px', right: '24px' }}>
           <Link href="/booking">
             <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md">
               <Phone className="w-4 h-4 mr-2" />
@@ -124,14 +124,13 @@ export default function Dashboard() {
               Gestionar Citas
             </Button>
           </Link>
-
         </div>
 
         {/* Fast Calendar - positioned to end at same level as navigation */}
         {showCalendar ? (
           <FastCalendar appointments={appointments || []} className="shadow-lg" />
         ) : (
-          <div className="mx-6 bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed" style={{ top: 'calc(80px + 48px + 5px)', bottom: 'calc(10px + 96px)', right: '24px', left: '312px' }}>
+          <div className="mx-6 bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed" style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '312px' }}>
             <div className="text-gray-500">Cargando calendario...</div>
           </div>
         )}
