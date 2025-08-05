@@ -130,6 +130,12 @@ export default function BookingWizard() {
     paymentLink?: string;
   } | null>(null);
 
+  // Check if WhatsApp service is enabled for this company
+  const { data: serviceStatus } = useQuery({
+    queryKey: [`/api/external-services/status/${currentTenant?.companyId}`],
+    enabled: !!currentTenant?.companyId,
+  });
+
   // Get tenant business hours
   const { data: businessHours } = useQuery({
     queryKey: ["/api/admin/business-hours", currentTenant?.id],
@@ -274,6 +280,25 @@ export default function BookingWizard() {
 
   const debouncedGeocode = debounce(geocodeAddress, 1000);
 
+  // Helper function to copy WhatsApp message to clipboard
+  const copyMessageToClipboard = async (message: string) => {
+    try {
+      await navigator.clipboard.writeText(message);
+      toast({
+        title: "✅ Cita confirmada",
+        description: "Mensaje de confirmación copiado al portapapeles. Pégalo en WhatsApp para enviar al cliente.",
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      toast({
+        title: "✅ Cita confirmada",
+        description: "Cita creada exitosamente. Mensaje de confirmación disponible en la consola.",
+      });
+      console.log('WhatsApp confirmation message:', message);
+    }
+  };
+
   // Auto-select "Otro" breed when "Otro" species is selected
   useEffect(() => {
     if (petData.species === 'otro') {
@@ -317,47 +342,46 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
 
 ¡Gracias por confiar en VetGroom!`;
 
-        // Prepare WhatsApp data for modal
-        try {
-          const response = await fetch('/api/prepare-whatsapp', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              phone: customerData.phone,
-              message: whatsappMessage,
-              tenantId: currentTenant?.id,
-              type: 'appointment_confirmation'
-            })
-          });
-          
-          const result = await response.json();
-          
-          if (result.success) {
-            setWhatsappData({
-              phoneNumber: result.data.phoneNumber,
-              message: result.data.message,
-              paymentLink: result.data.paymentLink
+        // Check if WhatsApp service is enabled and handle accordingly
+        if (serviceStatus?.whatsapp?.enabled && serviceStatus?.whatsapp?.creditsRemaining > 0) {
+          // WhatsApp service is active - prepare message for sending
+          try {
+            const response = await fetch('/api/prepare-whatsapp', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                phone: customerData.phone,
+                message: whatsappMessage,
+                tenantId: currentTenant?.id,
+                type: 'appointment_confirmation'
+              })
             });
-            setWhatsappModalOpen(true);
             
-            toast({
-              title: "Cita confirmada",
-              description: "WhatsApp message ready to send",
-            });
-          } else {
-            toast({
-              title: "Cita creada",
-              description: "Cita creada exitosamente",
-            });
+            const result = await response.json();
+            
+            if (result.success) {
+              setWhatsappData({
+                phoneNumber: result.data.phoneNumber,
+                message: result.data.message,
+                paymentLink: result.data.paymentLink
+              });
+              setWhatsappModalOpen(true);
+              
+              toast({
+                title: "✅ Cita confirmada",
+                description: "Mensaje de WhatsApp listo para enviar",
+              });
+            }
+          } catch (whatsappError) {
+            console.error('WhatsApp preparation error:', whatsappError);
+            // Fallback to clipboard copy
+            await copyMessageToClipboard(whatsappMessage);
           }
-        } catch (whatsappError) {
-          console.error('WhatsApp preparation error:', whatsappError);
-          toast({
-            title: "Cita creada",
-            description: "Cita creada exitosamente",
-          });
+        } else {
+          // WhatsApp service not active - copy message to clipboard
+          await copyMessageToClipboard(whatsappMessage);
         }
       } else {
         toast({
