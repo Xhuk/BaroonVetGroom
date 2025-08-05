@@ -182,11 +182,12 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
                   // Dynamic sizing based on slot occupation
                   isMarkerInOccupiedSlot
                     ? "left-24 right-4 bg-red-500 rounded-lg shadow-xl border-l-4 border-red-600" // Full slot size when over appointment
-                    : "left-0 w-3 bg-red-400 h-0.5 rounded-r-full" // Thin line when over free slot
+                    : "left-0 bg-red-400 rounded-r-full" // Wider line when over free slot
                 )}
                 style={{ 
-                  top: `${currentTimePosition - (isMarkerInOccupiedSlot ? 25 : 0)}px`, // Center in slot when expanded
-                  height: isMarkerInOccupiedSlot ? '50px' : '2px', // Match appointment slot height
+                  top: `${currentTimePosition - (isMarkerInOccupiedSlot ? 35 : 0)}px`, // Center in slot when expanded
+                  height: isMarkerInOccupiedSlot ? '70px' : '5px', // Much taller for appointments, 5px for free slots
+                  width: isMarkerInOccupiedSlot ? 'auto' : '5px', // 5px width for testing when free
                   // Add glow effect when over occupied slot
                   ...(isMarkerInOccupiedSlot && {
                     boxShadow: '0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(239, 68, 68, 0.3)',
@@ -213,8 +214,8 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
                 <div 
                   className="absolute left-24 right-4 z-20 rounded-lg border-2 border-red-300 opacity-60"
                   style={{
-                    top: `${currentTimePosition - 27}px`,
-                    height: '54px',
+                    top: `${currentTimePosition - 37}px`,
+                    height: '74px',
                     animation: 'spin-border 4s linear infinite'
                   }}
                 />
@@ -225,8 +226,8 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
                 <div 
                   className="absolute left-24 right-4 z-10 bg-red-200 rounded-lg opacity-20"
                   style={{
-                    top: `${currentTimePosition - 30}px`,
-                    height: '60px',
+                    top: `${currentTimePosition - 40}px`,
+                    height: '80px',
                     animation: 'pulse-border 2s ease-in-out infinite'
                   }}
                 />
