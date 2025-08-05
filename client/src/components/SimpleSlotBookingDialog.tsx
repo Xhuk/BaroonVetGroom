@@ -38,6 +38,8 @@ export function SimpleSlotBookingDialog({
   const [showClientPopover, setShowClientPopover] = useState(false);
   const [showPetPopover, setShowPetPopover] = useState(false);
   const [showServicePopover, setShowServicePopover] = useState(false);
+  const [isCreatingClient, setIsCreatingClient] = useState(false);
+  const [isCreatingPet, setIsCreatingPet] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -107,19 +109,63 @@ export function SimpleSlotBookingDialog({
   }, [services, serviceSearch, selectedServices]);
 
   // Calculate total price
-  const totalPrice = selectedServices.reduce((sum, service) => sum + (service.price || 0), 0);
+  const totalPrice = selectedServices.reduce((sum, service) => sum + Number(service.price || 0), 0);
+
+  // Create new client mutation
+  const createClientMutation = useMutation({
+    mutationFn: async (name: string) => {
+      return await apiRequest("/api/clients", "POST", {
+        tenantId,
+        name: name.trim(),
+        email: "",
+        phone: "",
+      });
+    },
+  });
+
+  // Create new pet mutation
+  const createPetMutation = useMutation({
+    mutationFn: async (name: string) => {
+      if (!selectedClient) throw new Error("Client required");
+      return await apiRequest("/api/pets", "POST", {
+        clientId: selectedClient.id,
+        name: name.trim(),
+        species: "Unknown",
+        breed: "",
+        registeredAge: 0,
+      });
+    },
+  });
 
   // Create appointment directly
   const createAppointmentMutation = useMutation({
     mutationFn: async () => {
+      let finalClient = selectedClient;
+      let finalPet = selectedPet;
+
+      // Create new client if needed
+      if (!finalClient && clientSearch.trim()) {
+        finalClient = await createClientMutation.mutateAsync(clientSearch);
+      }
+
+      // Create new pet if needed
+      if (!finalPet && petSearch.trim() && finalClient) {
+        setSelectedClient(finalClient); // Ensure client is set for pet creation
+        finalPet = await createPetMutation.mutateAsync(petSearch);
+      }
+
+      if (!finalClient || !finalPet) {
+        throw new Error("Client and pet are required");
+      }
+
       // Create appointments for each selected service
       const appointments = [];
       
       for (const service of selectedServices) {
         const appointment = await apiRequest("/api/appointments", "POST", {
           tenantId,
-          clientId: selectedClient?.id,
-          petId: selectedPet?.id,
+          clientId: finalClient.id,
+          petId: finalPet.id,
           serviceId: service.id,
           scheduledDate: selectedDate,
           scheduledTime: selectedTime,
@@ -167,10 +213,13 @@ export function SimpleSlotBookingDialog({
   };
 
   const handleSubmit = () => {
-    if (!selectedClient || !selectedPet || selectedServices.length === 0) {
+    const hasClient = selectedClient || clientSearch.trim();
+    const hasPet = selectedPet || petSearch.trim();
+    
+    if (!hasClient || !hasPet || selectedServices.length === 0) {
       toast({
         title: "Campos requeridos",
-        description: "Por favor selecciona cliente, mascota y al menos un servicio",
+        description: "Por favor ingresa cliente, mascota y al menos un servicio",
         variant: "destructive",
       });
       return;
@@ -240,7 +289,36 @@ export function SimpleSlotBookingDialog({
                     onValueChange={setClientSearch}
                   />
                   <CommandList>
-                    <CommandEmpty>No se encontraron clientes.</CommandEmpty>
+                    <CommandEmpty>
+                      {clientSearch.trim() ? (
+                        <div className="p-2">
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Cliente no encontrado
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedClient({
+                                id: `new-${Date.now()}`,
+                                name: clientSearch.trim(),
+                                tenantId,
+                                email: "",
+                                phone: "",
+                              } as Client);
+                              setSelectedPet(null);
+                              setShowClientPopover(false);
+                            }}
+                            className="w-full"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Crear "{clientSearch.trim()}"
+                          </Button>
+                        </div>
+                      ) : (
+                        "No se encontraron clientes."
+                      )}
+                    </CommandEmpty>
                     <CommandGroup>
                       {filteredClients.map((client) => (
                         <CommandItem
@@ -295,7 +373,36 @@ export function SimpleSlotBookingDialog({
                     onValueChange={setPetSearch}
                   />
                   <CommandList>
-                    <CommandEmpty>No se encontraron mascotas.</CommandEmpty>
+                    <CommandEmpty>
+                      {petSearch.trim() ? (
+                        <div className="p-2">
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Mascota no encontrada
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedPet({
+                                id: `new-${Date.now()}`,
+                                name: petSearch.trim(),
+                                clientId: selectedClient?.id || "",
+                                species: "Unknown",
+                                breed: "",
+                                registeredAge: 0,
+                              } as Pet);
+                              setShowPetPopover(false);
+                            }}
+                            className="w-full"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Crear "{petSearch.trim()}"
+                          </Button>
+                        </div>
+                      ) : (
+                        "No se encontraron mascotas."
+                      )}
+                    </CommandEmpty>
                     <CommandGroup>
                       {filteredPets.map((pet) => (
                         <CommandItem
