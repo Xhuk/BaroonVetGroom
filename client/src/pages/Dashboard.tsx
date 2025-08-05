@@ -20,10 +20,14 @@ export default function Dashboard() {
   const { isInstant, startBackgroundLoad, completeLoad } = useFastLoad();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  });
   
-  // Fast fetch data after UI is shown
+  // Fast fetch data after UI is shown - now date-specific
   const { data: appointments } = useFastFetch<Appointment[]>(
-    `/api/appointments/${currentTenant?.id}`,
+    `/api/appointments-fast/${currentTenant?.id}?date=${selectedDate}`,
     !!currentTenant?.id && !isInstant
   );
   
@@ -128,7 +132,12 @@ export default function Dashboard() {
 
         {/* Fast Calendar - positioned to end at same level as navigation */}
         {showCalendar ? (
-          <FastCalendar appointments={appointments || []} className="shadow-lg" />
+          <FastCalendar 
+            appointments={appointments?.appointments || []} 
+            className="shadow-lg"
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+          />
         ) : (
           <div className="bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed" style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
             <div className="text-gray-500">Cargando calendario...</div>

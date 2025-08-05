@@ -3,17 +3,28 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
 import { getCurrentTimeInUserTimezone } from "@shared/userPreferences";
+import { getTodayCST1, addDaysCST1, formatCST1Date } from "@shared/timeUtils";
 
 interface FastCalendarProps {
   appointments: Appointment[];
   className?: string;
+  selectedDate?: string;
+  onDateChange?: (date: string) => void;
 }
 
-export function FastCalendar({ appointments, className }: FastCalendarProps) {
+export function FastCalendar({ appointments, className, selectedDate, onDateChange }: FastCalendarProps) {
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone());
   const [isScrolling, setIsScrolling] = useState(false);
+  const [displayDate, setDisplayDate] = useState(selectedDate || getTodayCST1());
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Update displayDate when selectedDate prop changes
+  useEffect(() => {
+    if (selectedDate) {
+      setDisplayDate(selectedDate);
+    }
+  }, [selectedDate]);
 
   // Update current time every minute using user's timezone
   useEffect(() => {
@@ -23,8 +34,8 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     return () => clearInterval(timer);
   }, []);
 
-  // Get current day in user's timezone
-  const todayStr = currentTime.toISOString().split('T')[0];
+  // Get display day (could be different from today)
+  const todayStr = displayDate;
 
   // Generate 30-minute time slots for the entire day
   const generateTimeSlots = () => {
@@ -196,6 +207,40 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     };
   }, [currentTime, isScrolling]);
 
+  // Navigation functions
+  const handlePreviousDay = () => {
+    const newDate = addDaysCST1(displayDate, -1);
+    setDisplayDate(newDate);
+    if (onDateChange) {
+      onDateChange(newDate);
+    }
+  };
+
+  const handleNextDay = () => {
+    const newDate = addDaysCST1(displayDate, 1);
+    setDisplayDate(newDate);
+    if (onDateChange) {
+      onDateChange(newDate);
+    }
+  };
+
+  const goToToday = () => {
+    const today = getTodayCST1();
+    setDisplayDate(today);
+    if (onDateChange) {
+      onDateChange(today);
+    }
+  };
+
+  const getAppointmentCount = () => {
+    return appointments.filter(appointment => {
+      const appointmentDate = appointment.scheduledDate;
+      if (!appointmentDate) return false;
+      const normalizedDate = appointmentDate.split('T')[0];
+      return normalizedDate === displayDate;
+    }).length;
+  };
+
   const currentTimeInfo = getCurrentTimeSlotInfo();
   const isMarkerInOccupiedSlot = isTimeMarkerInOccupiedSlot();
 
@@ -204,23 +249,25 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
       <CardHeader className="flex-shrink-0">
         <div className="flex justify-between items-center mb-2">
           <button
-            onClick={() => window.history.back()}
+            onClick={handlePreviousDay}
             className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition duration-300 text-sm"
           >
             ← Día Anterior
           </button>
           <h2 className="text-xl font-semibold text-gray-800 flex-1 text-center mx-2">
-            Calendario de Hoy - {currentTime.toLocaleDateString('es-ES', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
+            {formatCST1Date(displayDate)} - {getAppointmentCount()} citas
           </h2>
           <div className="flex gap-2">
-
+            {displayDate !== getTodayCST1() && (
+              <button
+                onClick={goToToday}
+                className="px-3 py-1 bg-blue-200 text-blue-800 rounded-lg shadow hover:bg-blue-300 transition duration-300 text-sm"
+              >
+                Hoy
+              </button>
+            )}
             <button
-              onClick={() => window.history.forward()}
+              onClick={handleNextDay}
               className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition duration-300 text-sm"
             >
               Día Siguiente →
