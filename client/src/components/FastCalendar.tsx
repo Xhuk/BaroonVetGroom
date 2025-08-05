@@ -102,8 +102,7 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
     const slotAppointments = getAppointmentsForSlot(currentTimeStr);
     console.log(`Checking slot ${currentTimeStr}: ${slotAppointments.length} appointments found`);
     
-    // For testing: force true to always show expanded marker
-    return true; // This will always show the expanded red marker for testing
+    return slotAppointments.length > 0;
   };
 
   // Auto-scroll to current time after 30 seconds of inactivity
@@ -174,84 +173,27 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
           
-          {/* TESTING: Fixed visible red marker at top */}
-          <div 
-            className="absolute left-0 right-0 top-10 bg-red-600 z-50 rounded-lg border-4 border-red-800 shadow-2xl"
-            style={{ height: '80px' }}
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-white font-bold text-lg drop-shadow-lg">
-                🔴 TEST MARKER - CURRENT TIME: {getCurrentTimeInUserTimezone().toLocaleTimeString('es-ES', { 
-                  hour: '2-digit', 
-                  minute: '2-digit',
-                  hour12: true 
-                })}
-              </span>
-            </div>
-          </div>
-
-          {/* Current time marker - red line that grows when over occupied slots */}
-          {/* Always show marker for testing - remove currentTimePosition !== null check */}
-          {true && (
-            <>
-              {/* Main time marker line */}
-              <div
-                className={cn(
-                  "absolute z-30 transition-all duration-700 ease-in-out transform",
-                  // Dynamic sizing based on slot occupation
-                  isMarkerInOccupiedSlot
-                    ? "left-24 right-4 bg-red-500 rounded-lg shadow-xl border-l-4 border-red-600" // Full slot size when over appointment
-                    : "left-0 bg-red-400 rounded-r-full" // Wider line when over free slot
-                )}
-                style={{ 
-                  top: `${currentTimePosition - (isMarkerInOccupiedSlot ? 35 : 0)}px`, // Center in slot when expanded
-                  height: isMarkerInOccupiedSlot ? '70px' : '10px', // Much taller for appointments, 10px for free slots
-                  width: isMarkerInOccupiedSlot ? 'auto' : '10px', // 10px width for testing when free
-                  // Add glow effect when over occupied slot
-                  ...(isMarkerInOccupiedSlot && {
-                    boxShadow: '0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(239, 68, 68, 0.3)',
-                    background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.9) 0%, rgba(239, 68, 68, 0.7) 50%, rgba(239, 68, 68, 0.9) 100%)'
-                  })
-                }}
-              >
-                {/* Time indicator text when expanded */}
-                {isMarkerInOccupiedSlot && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm drop-shadow-lg">
-                      ⏰ AHORA - {getCurrentTimeInUserTimezone().toLocaleTimeString('es-ES', { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        hour12: true 
-                      })}
-                    </span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Animated border ring for occupied slots */}
-              {isMarkerInOccupiedSlot && (
-                <div 
-                  className="absolute left-24 right-4 z-20 rounded-lg border-2 border-red-300 opacity-60"
-                  style={{
-                    top: `${currentTimePosition - 37}px`,
-                    height: '74px',
-                    animation: 'spin-border 4s linear infinite'
-                  }}
-                />
+          {/* Current time marker - subtle red line on left that grows when over occupied slots */}
+          {currentTimePosition !== null && (
+            <div
+              className={cn(
+                "absolute left-0 z-30 bg-red-500 transition-all duration-500 ease-out",
+                // Dynamic sizing based on slot occupation
+                isMarkerInOccupiedSlot
+                  ? "w-1 shadow-lg" // Thin line when over appointment, grows to slot width
+                  : "w-0.5" // Very thin line when over free slot
               )}
+              style={{ 
+                top: `${currentTimePosition - (isMarkerInOccupiedSlot ? 1 : 0)}px`, // Add 1px padding top when expanded
+                height: isMarkerInOccupiedSlot ? '52px' : '2px', // Match green slot height + 2px (1 top + 1 bottom)
+                // Subtle glow effect when over occupied slot
+                ...(isMarkerInOccupiedSlot && {
+                  boxShadow: '0 0 8px rgba(239, 68, 68, 0.6), 2px 0 12px rgba(239, 68, 68, 0.3)',
+                  animation: 'pulse 2s ease-in-out infinite'
+                })
+              }}
+            />
               
-              {/* Pulse effect for occupied slots */}
-              {isMarkerInOccupiedSlot && (
-                <div 
-                  className="absolute left-24 right-4 z-10 bg-red-200 rounded-lg opacity-20"
-                  style={{
-                    top: `${currentTimePosition - 40}px`,
-                    height: '80px',
-                    animation: 'pulse-border 2s ease-in-out infinite'
-                  }}
-                />
-              )}
-            </>
           )}
           
           {/* Time slots container with auto-scroll */}
@@ -290,7 +232,8 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
                     // Show only top half for last slot  
                     isLastSlot && "bottom-1/2 h-[40px]"
                   )}
-                />)}
+                />
+                )}
                 
                 {/* Time label */}
                 <div className="w-20 text-right pr-4 text-sm text-gray-500 font-medium z-10 relative">
