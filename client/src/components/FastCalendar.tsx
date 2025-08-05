@@ -138,8 +138,8 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
   const currentTimePosition = getCurrentTimePosition();
 
   return (
-    <Card className={cn("mx-6 fixed top-20", className)} style={{ bottom: 'calc(10px + 96px)', right: '24px', left: '312px' }}>
-      <CardHeader>
+    <Card className={cn("mx-6 fixed top-20 flex flex-col", className)} style={{ bottom: 'calc(10px + 96px)', right: '24px', left: '312px' }}>
+      <CardHeader className="flex-shrink-0">
         <h2 className="text-xl font-semibold text-gray-800">
           Calendario de Hoy - {currentTime.toLocaleDateString('es-ES', { 
             weekday: 'long', 
@@ -149,15 +149,15 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
           })}
         </h2>
       </CardHeader>
-      <CardContent className="h-full overflow-hidden">
+      <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
-
           
           {/* Time slots container with auto-scroll */}
           <div 
             ref={scrollContainerRef}
             className="overflow-y-auto h-full scroll-smooth"
             onScroll={handleScroll}
+            style={{ maxHeight: 'calc(100vh - 200px)' }}
           >
           
           {timeSlots.map((slot, index) => {
