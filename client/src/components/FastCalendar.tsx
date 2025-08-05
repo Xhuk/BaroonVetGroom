@@ -220,55 +220,34 @@ export function FastCalendar({ appointments, className }: FastCalendarProps) {
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
           
-          {/* Time marker container that runs behind all elements and grows for occupied slots */}
-          <div
-            className={cn(
-              "absolute z-10 pointer-events-none transition-all duration-700 ease-in-out",
-              isMarkerInOccupiedSlot
-                ? "bg-red-500/15 left-0 right-0" // Full width container when slot is occupied
-                : "bg-red-400/20 left-1/2 transform -translate-x-1/2 w-1" // Centered thin line when empty
-            )}
-            style={{ 
-              top: '50%',
-              transform: isMarkerInOccupiedSlot 
-                ? 'translateY(-50%)' // Full width positioning when occupied
-                : 'translateY(-50%) translateX(-50%)', // Centered positioning when empty
-              height: isMarkerInOccupiedSlot ? '70px' : '60px', // Slightly taller for occupied slots
-              borderRadius: '2px',
-              // Enhanced background and glow for occupied slots
-              ...(isMarkerInOccupiedSlot && {
+          {/* Time marker container - only visible when slot is occupied */}
+          {isMarkerInOccupiedSlot && (
+            <div
+              className="absolute z-10 pointer-events-none transition-all duration-700 ease-in-out bg-red-500/15 left-0 right-0"
+              style={{ 
+                top: '50%',
+                transform: 'translateY(-50%)',
+                height: '70px',
+                borderRadius: '2px',
                 background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.08) 50%, rgba(239, 68, 68, 0.12) 100%)',
                 boxShadow: 'inset 0 0 20px rgba(239, 68, 68, 0.1), 0 0 10px rgba(239, 68, 68, 0.05)',
                 animation: 'time-container-glow 3s ease-in-out infinite',
-              })
-            }}
-          >
-            {/* Time indicator line - always visible but adapts to container */}
-            <div
-              className={cn(
-                "absolute top-1/2 transform -translate-y-1/2 transition-all duration-700 ease-in-out",
-                isMarkerInOccupiedSlot
-                  ? "left-0 right-0 h-[2px] bg-red-500/60" // Full width line when occupied
-                  : "left-1/2 transform -translate-x-1/2 w-full h-[2px] bg-red-400/70" // Centered line when empty
-              )}
-              style={{
-                borderRadius: '1px',
-                boxShadow: isMarkerInOccupiedSlot ? '0 0 4px rgba(239, 68, 68, 0.3)' : '0 0 2px rgba(239, 68, 68, 0.2)'
               }}
-            />
-            
-            {/* Current time indicators */}
-            <div className={cn(
-              "absolute top-1/2 left-2 transform -translate-y-1/2 rounded-full transition-all duration-700 ease-in-out",
-              isMarkerInOccupiedSlot 
-                ? "w-2 h-2 bg-red-600 shadow-sm" 
-                : "w-1.5 h-1.5 bg-red-500 opacity-60"
-            )}></div>
-            
-            {isMarkerInOccupiedSlot && (
+            >
+              {/* Time indicator line - full width when occupied */}
+              <div
+                className="absolute top-1/2 transform -translate-y-1/2 left-0 right-0 h-[2px] bg-red-500/60 transition-all duration-700 ease-in-out"
+                style={{
+                  borderRadius: '1px',
+                  boxShadow: '0 0 4px rgba(239, 68, 68, 0.3)'
+                }}
+              />
+              
+              {/* Current time indicators */}
+              <div className="absolute top-1/2 left-2 transform -translate-y-1/2 w-2 h-2 bg-red-600 rounded-full shadow-sm transition-all duration-700 ease-in-out"></div>
               <div className="absolute top-1/2 right-2 transform -translate-y-1/2 w-2 h-2 bg-red-600 rounded-full animate-pulse shadow-sm"></div>
-            )}
-          </div>
+            </div>
+          )}
           
           {/* Time slots container with auto-scroll */}
           <div 
