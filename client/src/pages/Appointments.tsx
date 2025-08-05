@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Calendar, Clock, User, Phone, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Appointment, Client, Pet, Room, Staff, Service } from "@shared/schema";
 import { apiRequest } from '@/lib/queryClient';
+import { getTodayCST1, addDaysCST1, formatCST1Date } from "@shared/timeUtils";
 
 interface AppointmentData {
   appointments: Appointment[];
@@ -22,7 +23,8 @@ interface AppointmentData {
 const INSTANT_SKELETON = <InstantAppointmentsSkeleton />;
 
 const Appointments = memo(function Appointments() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  // Use CST-1 timezone for reliable date calculations
+  const [selectedDate, setSelectedDate] = useState(getTodayCST1());
 
   // FAST ENDPOINT: Rebuilt for reliable performance
   const { data, isLoading, error, refetch } = useQuery({
@@ -44,13 +46,12 @@ const Appointments = memo(function Appointments() {
   });
 
   const navigateDay = (direction: 'prev' | 'next') => {
-    const currentDate = new Date(selectedDate);
-    currentDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
-    setSelectedDate(currentDate.toISOString().split('T')[0]);
+    const days = direction === 'next' ? 1 : -1;
+    setSelectedDate(addDaysCST1(selectedDate, days));
   };
 
   const goToToday = () => {
-    setSelectedDate(new Date().toISOString().split('T')[0]);
+    setSelectedDate(getTodayCST1());
   };
 
   const getStatusColor = (status: string) => {
@@ -93,12 +94,7 @@ const Appointments = memo(function Appointments() {
           <div className="flex items-center gap-4">
             <div className="text-center">
               <div className="text-lg font-semibold text-gray-900">
-                {new Date(selectedDate).toLocaleDateString('es-ES', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
+                {formatCST1Date(selectedDate)}
               </div>
               <div className="text-sm text-gray-500">
                 {data?.appointments?.length || 0} citas programadas
@@ -146,9 +142,9 @@ const Appointments = memo(function Appointments() {
               </Button>
             </CardContent>
           </Card>
-        ) : data?.appointments?.map((appointment) => {
-          const client = data.clients?.find(c => c.id === appointment.clientId);
-          const pet = data.pets?.find(p => p.id === appointment.petId);
+        ) : data?.appointments?.map((appointment: Appointment) => {
+          const client = data.clients?.find((c: Client) => c.id === appointment.clientId);
+          const pet = data.pets?.find((p: Pet) => p.id === appointment.petId);
           
           return (
             <Card key={appointment.id} className="border-l-4 border-l-blue-400">

@@ -233,7 +233,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { tenantId } = req.params;
       const { date } = req.query;
-      const targetDate = date || new Date().toISOString().split('T')[0];
+      // Use CST-1 timezone for reliable date handling
+      const targetDate = date || require('./timeUtils').getCurrentDateCST1();
       
       console.log(`Fast appointments: ${tenantId} on ${targetDate}`);
       
