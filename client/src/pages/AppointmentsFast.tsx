@@ -23,7 +23,7 @@ export default function Appointments() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/appointments-data/vetgroom1', {
+        const response = await fetch('/api/appointments-fast/vetgroom1', {
           headers: { 'Cache-Control': 'no-cache' }
         });
         

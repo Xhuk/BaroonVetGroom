@@ -10,7 +10,7 @@ export function InstantNavigation() {
     const preloadRoutes = async () => {
       try {
         // Preload appointments data for instant loading
-        fetch('/api/appointments-data/vetgroom1', {
+        fetch('/api/appointments-fast/vetgroom1', {
           headers: { 'Cache-Control': 'max-age=300' }
         });
         
