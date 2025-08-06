@@ -6,8 +6,7 @@ import { useLocation } from "wouter";
 // Removed SimpleSlotBookingDialog - using existing booking page instead
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
-import { getCurrentTimeInUserTimezone } from "@shared/userPreferences";
-import { getTodayCST1, addDaysCST1, formatCST1Date } from "@shared/timeUtils";
+import { getTodayCST1, addDaysCST1, formatCST1Date, getCurrentTimeCST1 } from "@shared/timeUtils";
 
 interface FastCalendarProps {
   appointments: Appointment[];
@@ -19,7 +18,7 @@ interface FastCalendarProps {
 
 export function FastCalendar({ appointments, className, selectedDate, onDateChange, tenantId }: FastCalendarProps) {
   const [, setLocation] = useLocation();
-  const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone());
+  const [currentTime, setCurrentTime] = useState(getCurrentTimeCST1());
   const [isScrolling, setIsScrolling] = useState(false);
   const [displayDate, setDisplayDate] = useState(selectedDate || getTodayCST1());
   // Removed booking dialog state - using navigation instead
@@ -45,10 +44,10 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
 
   // Booking completion handled by booking page navigation
 
-  // Update current time every minute using user's timezone
+  // Update current time every minute using CST-1 timezone
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(getCurrentTimeInUserTimezone());
+      setCurrentTime(getCurrentTimeCST1());
     }, 60000);
     return () => clearInterval(timer);
   }, []);
@@ -125,7 +124,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
 
   // Determine if an appointment is currently ongoing
   const isOngoing = (appointment: Appointment) => {
-    const now = getCurrentTimeInUserTimezone();
+    const now = getCurrentTimeCST1();
     const appointmentTime = appointment.scheduledTime; // Using correct property name from schema
     if (!appointmentTime) return false;
     
@@ -139,7 +138,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   };
 
   const isTimeMarkerInOccupiedSlot = () => {
-    const now = getCurrentTimeInUserTimezone();
+    const now = getCurrentTimeCST1();
     
     // Check all appointments to see if current time falls within an in-progress appointment
     const currentlyActiveAppointments = appointments.filter(appointment => {
@@ -181,7 +180,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const scrollToCurrentTime = () => {
     if (!scrollContainerRef.current) return;
     
-    const now = getCurrentTimeInUserTimezone();
+    const now = getCurrentTimeCST1();
     const hours = now.getHours();
     
     if (hours < 6 || hours >= 22) return;
