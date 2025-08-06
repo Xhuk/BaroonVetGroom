@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTenant } from "@/contexts/TenantContext";
-import { useAuth } from "@/hooks/useAuth";
+import { useFastAuth } from "@/hooks/useFastAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,7 +74,7 @@ export default function BookingWizard() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { currentTenant } = useTenant();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useFastAuth();
   const { toast } = useToast();
   const mapRef = useRef<any>(null);
   
@@ -138,13 +138,23 @@ export default function BookingWizard() {
   } | null>(null);
 
   // Check if WhatsApp service is enabled for this company
-  const { data: serviceStatus } = useQuery({
+  const { data: serviceStatus } = useQuery<{
+    whatsapp: {
+      enabled: boolean;
+      creditsRemaining: number;
+      lowCreditAlert: boolean;
+    };
+  }>({
     queryKey: [`/api/external-services/status/${currentTenant?.companyId}`],
     enabled: !!currentTenant?.companyId,
   });
 
   // Get tenant business hours
-  const { data: businessHours } = useQuery({
+  const { data: businessHours } = useQuery<{
+    openTime: string;
+    closeTime: string;
+    timeSlotDuration: number;
+  }>({
     queryKey: ["/api/admin/business-hours", currentTenant?.id],
     enabled: !!currentTenant?.id,
   });
@@ -161,7 +171,12 @@ export default function BookingWizard() {
   }, [currentTenant]);
 
   // Fetch services
-  const { data: services, isLoading: servicesLoading, error: servicesError } = useQuery({
+  const { data: services, isLoading: servicesLoading, error: servicesError } = useQuery<Array<{
+    id: string;
+    name: string;
+    price: number;
+    duration: number;
+  }>>({
     queryKey: [`/api/services/${currentTenant?.id}`],
     enabled: !!currentTenant?.id
   });
@@ -171,7 +186,7 @@ export default function BookingWizard() {
     queryKey: [`/api/pet-breeds/${currentTenant?.id}`],
     enabled: !!currentTenant?.id,
     staleTime: 30 * 60 * 1000, // 30 minutes
-    cacheTime: 60 * 60 * 1000 // 1 hour
+    gcTime: 60 * 60 * 1000 // 1 hour (updated from cacheTime for TanStack Query v5)
   });
 
   // Memoized filtered breeds with browser-level caching for better performance
@@ -331,7 +346,7 @@ export default function BookingWizard() {
     onSuccess: async () => {
       // Prepare WhatsApp message for manual sending
       if (customerData.phone) {
-        const selectedService = services?.find((s: any) => s.id === bookingData.serviceId);
+        const selectedService = services?.find((s) => s.id === bookingData.serviceId);
         const whatsappMessage = `🏥 *Confirmación de Cita - VetGroom*
         
 ¡Hola ${customerData.name}!
