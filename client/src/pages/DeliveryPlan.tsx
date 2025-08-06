@@ -54,13 +54,13 @@ export default function DeliveryPlan() {
     queryKey: ["/api/delivery-routes-fast", currentTenant?.id, selectedDate],
     enabled: !!currentTenant?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
 
-  const routes = routesResponse?.routes || [];
-  const totalRoutes = routesResponse?.totalRoutes || 0;
+  const routes = (routesResponse as any)?.routes || [];
+  const totalRoutes = (routesResponse as any)?.totalRoutes || 0;
 
   const { data: fraccionamientos } = useQuery<any[]>({
     queryKey: ["/api/fraccionamientos", currentTenant?.id],
@@ -369,7 +369,7 @@ export default function DeliveryPlan() {
               </CardContent>
             </Card>
           ) : (
-            routes.map((route) => (
+            routes.map((route: any) => (
               <Card key={route.id} className="border-l-4 border-l-blue-400">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
@@ -492,9 +492,9 @@ export default function DeliveryPlan() {
                         <Truck className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="font-medium">{appointment.client?.name || "Cliente"}</h4>
-                        <p className="text-sm text-gray-600">Mascota: {appointment.pet?.name || "Sin nombre"}</p>
-                        <p className="text-xs text-gray-500">{appointment.client?.fraccionamiento || "Zona no especificada"}</p>
+                        <h4 className="font-medium">{(appointment as any).client?.name || "Cliente"}</h4>
+                        <p className="text-sm text-gray-600">Mascota: {(appointment as any).pet?.name || "Sin nombre"}</p>
+                        <p className="text-xs text-gray-500">{(appointment as any).client?.fraccionamiento || "Zona no especificada"}</p>
                       </div>
                     </div>
                     <div className="text-right">
