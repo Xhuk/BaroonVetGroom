@@ -49,6 +49,16 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     refetchOnMount: false,
   });
 
+  // Load all tenants for debug mode (only when user is a debug user)
+  const { data: allTenants = [] } = useQuery<Tenant[]>({
+    queryKey: ["/api/tenants/all"],
+    enabled: isAuthenticated && isDebugUser,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
   const isDebugUser = accessInfo?.canDebugTenants || user?.email?.includes('vetgroom') || false;
 
   const { data: tenant, isLoading: isLoadingCurrentTenant } = useQuery<Tenant>({
@@ -69,117 +79,14 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     
     setIsDebugMode(debugMode);
     
-    // Priority 1: Handle stored debug tenant selection (memory-based)
+    // Priority 1: Handle stored debug tenant selection (database-based)
     if (debugMode && isDebugUser && storedTenantId && !currentTenant) {
-      // Create tenant object from memory instead of API call
-      const debugTenants = [
-        {
-          id: 'vetgroom1',
-          name: 'Vetgroom1',
-          subdomain: 'vetgroom1',
-          companyId: 'vetgroom-corp',
-          address: 'Sucursal Principal - Av. Mascotas 456',
-          phone: '+1-555-2001',
-          email: 'vetgroom1@vetgroom.com',
-          latitude: '25.74055709021775',
-          longitude: '-100.407349161356',
-          postalCode: null,
-          openTime: '08:00:00',
-          closeTime: '18:00:00',
-          timeSlotDuration: 30,
-          reservationTimeout: 5,
-          deliveryTrackingEnabled: false,
-          settings: { language: 'es', timezone: 'America/Mexico_City' },
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: 'tenant-1', 
-          name: 'VetGroom Central',
-          subdomain: 'central',
-          companyId: 'comp-1',
-          address: 'Centro Veterinario - Calle Principal 123',
-          phone: '+1-555-1001',
-          email: 'central@vetcorp.com',
-          latitude: '25.6866',
-          longitude: '-100.3161',
-          postalCode: null,
-          openTime: '09:00:00',
-          closeTime: '19:00:00',
-          timeSlotDuration: 30,
-          reservationTimeout: 5,
-          deliveryTrackingEnabled: true,
-          settings: { language: 'es', timezone: 'America/Mexico_City' },
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        // Demo Company Tenants
-        {
-          id: 'demo-vet-1',
-          name: 'Clínica Veterinaria Centro',
-          subdomain: 'demo-vet-1',
-          companyId: 'demo-corp',
-          address: 'Av. Centro Médico 123, Col. Centro',
-          phone: '+52-81-8000-1234',
-          email: 'centro@demo-veterinaria.com',
-          latitude: '25.6714',
-          longitude: '-100.3089',
-          postalCode: '64000',
-          openTime: '08:00:00',
-          closeTime: '20:00:00',
-          timeSlotDuration: 30,
-          reservationTimeout: 10,
-          deliveryTrackingEnabled: true,
-          settings: { language: 'es', timezone: 'America/Mexico_City' },
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: 'demo-vet-2',
-          name: 'Hospital Veterinario Norte',
-          subdomain: 'demo-vet-2',
-          companyId: 'demo-corp',
-          address: 'Blvd. Norte 456, Col. Moderna',
-          phone: '+52-81-8000-5678',
-          email: 'norte@demo-veterinaria.com',
-          latitude: '25.7617',
-          longitude: '-100.3010',
-          postalCode: '64180',
-          openTime: '07:00:00',
-          closeTime: '22:00:00',
-          timeSlotDuration: 30,
-          reservationTimeout: 10,
-          deliveryTrackingEnabled: true,
-          settings: { language: 'es', timezone: 'America/Mexico_City' },
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: 'demo-grooming-1',
-          name: 'Pet Spa Deluxe',
-          subdomain: 'demo-grooming-1',
-          companyId: 'demo-corp',
-          address: 'Plaza Pet Care 789, Col. Residencial',
-          phone: '+52-81-8000-9012',
-          email: 'spa@demo-veterinaria.com',
-          latitude: '25.6500',
-          longitude: '-100.2950',
-          postalCode: '64850',
-          openTime: '09:00:00',
-          closeTime: '19:00:00',
-          timeSlotDuration: 60,
-          reservationTimeout: 15,
-          deliveryTrackingEnabled: false,
-          settings: { language: 'es', timezone: 'America/Mexico_City' },
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      ];
-      
-      const selectedTenant = debugTenants.find(t => t.id === storedTenantId);
+      // Find the selected tenant from all tenants (real database data)
+      const selectedTenant = allTenants.find(t => t.id === storedTenantId);
       if (selectedTenant) {
         setCurrentTenant(selectedTenant);
-      } else {
+      } else if (allTenants.length > 0) {
+        // If tenant not found in all tenants list, show debug selector
         setShowDebugTenantSelector(true);
       }
       return;
@@ -199,9 +106,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         // Create optimistic tenant object from user tenant data
         const optimisticTenant = {
           id: userTenant.tenantId,
-          name: userTenant.tenantName || userTenant.tenantId,
+          name: userTenant.tenantId, // Use tenantId as fallback name
           subdomain: userTenant.tenantId,
-          companyId: userTenant.companyId || 'unknown',
+          companyId: 'unknown',
           address: '',
           phone: '',
           email: '',
@@ -236,7 +143,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         }).catch(console.error);
       }
     }
-  }, [isAuthenticated, userTenants, currentTenant, isDebugUser, availableTenants.length, showDebugTenantSelector]);
+  }, [isAuthenticated, userTenants, currentTenant, isDebugUser, availableTenants.length, allTenants.length, showDebugTenantSelector]);
 
   const handleTenantSelect = (selectedTenant: Tenant) => {
     setCurrentTenant(selectedTenant);
@@ -275,7 +182,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     setCurrentTenant,
     isLoading: isLoadingTenants || isLoadingCurrentTenant,
     showTenantSelector,
-    availableTenants,
+    availableTenants: isDebugMode ? allTenants : availableTenants,
     isDebugMode,
     showDebugSelector,
     exitDebugMode,
