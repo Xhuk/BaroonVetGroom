@@ -22,18 +22,23 @@ export function Header() {
 
   // Use CST-1 timezone for accurate date and time display
   const cstTime = getCurrentTimeCST1();
+  
+  // Extract date and time from CST-1 ISO string for accuracy
+  const cstISOString = cstTime.toISOString();
+  const [datePart, timePart] = cstISOString.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes] = timePart.split(':').map(Number);
+  
+  // Create proper date object for formatting
+  const displayDate = new Date(year, month - 1, day);
   const dateOptions: Intl.DateTimeFormatOptions = {
     weekday: 'long',
     day: 'numeric',
     month: 'long', 
     year: 'numeric'
   };
-  const formattedDate = cstTime.toLocaleDateString('es-ES', dateOptions);
-  const formattedTime = cstTime.toLocaleTimeString('es-ES', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    hour12: false 
-  });
+  const formattedDate = displayDate.toLocaleDateString('es-ES', dateOptions);
+  const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   
   // Update time every minute
   useEffect(() => {

@@ -38,13 +38,13 @@ export function toCST1String(date?: Date): string {
  */
 export function getTodayCST1(): string {
   const cstTime = getCurrentTimeCST1();
-  const year = cstTime.getFullYear();
-  const month = String(cstTime.getMonth() + 1).padStart(2, '0');
-  const day = String(cstTime.getDate()).padStart(2, '0');
   
-  console.log(`getTodayCST1: CST time is ${cstTime.toISOString()}, returning ${year}-${month}-${day}`);
+  // Extract date from CST-1 ISO string to avoid timezone issues
+  const cstDateStr = cstTime.toISOString().split('T')[0]; // Get "2025-08-05"
   
-  return `${year}-${month}-${day}`;
+  console.log(`getTodayCST1: CST time is ${cstTime.toISOString()}, returning ${cstDateStr}`);
+  
+  return cstDateStr;
 }
 
 /**

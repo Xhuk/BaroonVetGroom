@@ -22,14 +22,14 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const [isScrolling, setIsScrolling] = useState(false);
   const [displayDate, setDisplayDate] = useState(getTodayCST1()); // Always start with today
   
-  // Force display date to be correct on load
+  // Force display date to be correct on load and keep it updated
   useEffect(() => {
     const todayCST1 = getTodayCST1();
     if (displayDate !== todayCST1 && !selectedDate) {
       console.log(`Forcing displayDate from ${displayDate} to ${todayCST1}`);
       setDisplayDate(todayCST1);
     }
-  }, []);
+  }, [displayDate, selectedDate]);
   // Removed booking dialog state - using navigation instead
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
@@ -124,10 +124,13 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   // Fixed marker doesn't need position calculation - it's always centered
   const getCurrentTimeSlotInfo = () => {
     const now = getCurrentTimeCST1();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
     
-    console.log(`getCurrentTimeSlotInfo: CST-1 time ${now.toISOString()} -> ${hours}:${minutes.toString().padStart(2, '0')}`);
+    // Extract time from CST-1 ISO string (format: 2025-08-05T21:41:15.700Z)
+    const cstTimeStr = now.toISOString();
+    const timePart = cstTimeStr.split('T')[1]; // Get "21:41:15.700Z"
+    const [hours, minutes] = timePart.split(':').map(Number); // Extract hours and minutes
+    
+    console.log(`getCurrentTimeSlotInfo: CST-1 time ${cstTimeStr} -> ${hours}:${minutes.toString().padStart(2, '0')}`);
     console.log(`Display date: ${displayDate}, Today: ${getTodayCST1()}`);
     
     // Always show time info during business hours (6 AM - 10 PM)
