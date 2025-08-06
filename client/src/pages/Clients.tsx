@@ -302,12 +302,12 @@ export default function Clients() {
     <div className="p-6 max-w-7xl mx-auto">
       <BackButton className="mb-4" />
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-blue-800">Gestión de Clientes y Mascotas - Actualización de Información</h1>
+        <h1 className="text-2xl font-bold text-blue-800 dark:text-blue-300">Gestión de Clientes y Mascotas - Actualización de Información</h1>
         <div className="flex items-center space-x-3">
           <DebugControls />
           <Button 
             onClick={() => setShowClientForm(true)}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
           >
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Cliente
@@ -316,7 +316,7 @@ export default function Clients() {
       </div>
 
       {/* Search Filter */}
-      <Card className="mb-6">
+      <Card className="mb-6 dark:bg-gray-800">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm text-muted-foreground">
@@ -343,9 +343,9 @@ export default function Clients() {
       </Card>
 
       {showClientForm && (
-        <Card className="mb-6">
+        <Card className="mb-6 dark:bg-gray-800">
           <CardHeader>
-            <CardTitle>Registrar Nuevo Cliente</CardTitle>
+            <CardTitle className="dark:text-gray-100">Registrar Nuevo Cliente</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateClient} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -378,7 +378,7 @@ export default function Clients() {
                 <Button 
                   type="submit" 
                   disabled={createClientMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
                 >
                   {createClientMutation.isPending ? "Guardando..." : "Registrar Cliente"}
                 </Button>
@@ -396,9 +396,9 @@ export default function Clients() {
       )}
 
       {showPetForm && selectedClient && (
-        <Card className="mb-6">
+        <Card className="mb-6 dark:bg-gray-800">
           <CardHeader>
-            <CardTitle>Registrar Nueva Mascota para {selectedClient.name}</CardTitle>
+            <CardTitle className="dark:text-gray-100">Registrar Nueva Mascota para {selectedClient.name}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreatePet} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -461,7 +461,7 @@ export default function Clients() {
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <Search className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">No se encontraron clientes</h3>
+              <h3 className="text-lg font-semibold text-foreground dark:text-gray-200 mb-2">No se encontraron clientes</h3>
               <p className="text-muted-foreground mb-4">
                 No hay clientes que coincidan con "{searchQuery}"
               </p>
@@ -475,7 +475,7 @@ export default function Clients() {
           </Card>
         ) : (
           filteredClients.map((client) => (
-          <Card key={client.id} className="border-l-4 border-l-blue-400">
+          <Card key={client.id} className="border-l-4 border-l-blue-400 dark:border-l-blue-500 dark:bg-gray-800">
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -523,10 +523,10 @@ export default function Clients() {
                     <>
                       <div className="flex items-center gap-3 mb-2">
                         <User className="w-5 h-5 text-blue-600" />
-                        <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{client.name}</h3>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-300">
                         <div className="flex items-center gap-2">
                           <Phone className="w-4 h-4" />
                           <span>{client.phone}</span>
@@ -546,7 +546,7 @@ export default function Clients() {
                       </div>
 
                       {client.address && (
-                        <p className="text-sm text-gray-600 mt-2">{client.address}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{client.address}</p>
                       )}
                     </>
                   )}
@@ -580,20 +580,20 @@ export default function Clients() {
 
               {/* Pets Section */}
               <div className="mt-6">
-                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
                   <Heart className="w-4 h-4 text-red-500" />
                   Mascotas ({getClientPets(client.id).length})
                 </h4>
 
                 {getClientPets(client.id).length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Heart className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <Heart className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-500" />
                     <p>No hay mascotas registradas para este cliente</p>
                   </div>
                 ) : (
                   <div className="grid gap-4">
                     {getClientPets(client.id).map((pet) => (
-                      <Card key={pet.id} className={`${(pet as any).isActive === false ? 'bg-red-50 border-red-200' : 'bg-gray-50'}`}>
+                      <Card key={pet.id} className={`${(pet as any).isActive === false ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' : 'bg-gray-50 dark:bg-gray-700'}`}>
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -654,7 +654,7 @@ export default function Clients() {
                                   </form>
                                 ) : (
                                   <>
-                                    <h5 className="font-medium text-gray-900">{pet.name}</h5>
+                                    <h5 className="font-medium text-gray-900 dark:text-gray-100">{pet.name}</h5>
                                     <Badge variant="secondary">{pet.species}</Badge>
                                     {pet.breed && <Badge variant="outline">{pet.breed}</Badge>}
                                     {(pet as any).isActive === false && (
@@ -665,13 +665,13 @@ export default function Clients() {
                               </div>
                               
                               {editingPet !== pet.id && (
-                                <div className="flex gap-4 text-sm text-gray-600">
+                                <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-300">
                                   {pet.registeredAge && <span>Edad Registrada: {pet.registeredAge} años</span>}
                                   {pet.birthDate && (
                                     <span>Edad Actual: {calculateCurrentAge(pet.birthDate, pet.registeredAge)} años</span>
                                   )}
                                   {!pet.birthDate && pet.registeredAge && (
-                                    <span className="text-orange-600">Huésped (sin fecha de nacimiento)</span>
+                                    <span className="text-orange-600 dark:text-orange-400">Huésped (sin fecha de nacimiento)</span>
                                   )}
                                   {pet.weight && <span>Peso: {pet.weight} kg</span>}
                                 </div>
@@ -696,16 +696,16 @@ export default function Clients() {
                                         </div>
                                       ))}
                                       {getPetAppointments(pet.id).length === 0 && (
-                                        <p className="text-gray-500 text-sm">No hay historial de citas</p>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm">No hay historial de citas</p>
                                       )}
                                     </div>
                                   </TabsContent>
 
                                   <TabsContent value="medical" className="mt-4">
-                                    <div className="text-sm text-gray-600">
+                                    <div className="text-sm text-gray-600 dark:text-gray-300">
                                       <p>Historial médico y notas veterinarias</p>
-                                      <div className="mt-2 p-3 bg-white rounded border">
-                                        <p className="text-xs text-gray-500">
+                                      <div className="mt-2 p-3 bg-white dark:bg-gray-800 rounded border dark:border-gray-600">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
                                           Los registros médicos se crearán con cada cita completada
                                         </p>
                                       </div>
@@ -716,7 +716,7 @@ export default function Clients() {
                                     <div className="flex items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg">
                                       <div className="text-center">
                                         <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                        <p className="text-sm text-gray-500">Galería de fotos y videos</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">Galería de fotos y videos</p>
                                         <Button variant="outline" size="sm" className="mt-2">
                                           <Camera className="w-4 h-4 mr-2" />
                                           Subir Media
