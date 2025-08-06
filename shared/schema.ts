@@ -966,6 +966,29 @@ export const invoiceLineItems = pgTable("invoice_line_items", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const tempLinks = pgTable('temp_links', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  token: varchar('token', { length: 100 }).notNull().unique(),
+  type: varchar('type', { length: 50 }).notNull(),
+  resourceId: varchar('resource_id', { length: 100 }).notNull(),
+  tenantId: varchar('tenant_id', { length: 100 }).notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  accessCount: integer('access_count').default(0).notNull(),
+  maxAccess: integer('max_access'),
+  createdBy: varchar('created_by', { length: 100 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  metadata: jsonb('metadata'),
+});
+
+// Relations for temporary links
+export const tempLinksRelations = relations(tempLinks, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [tempLinks.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
 // Relations for the new invoice tables
 export const taxConfigurationRelations = relations(taxConfiguration, ({ one }) => ({
   company: one(companies, {

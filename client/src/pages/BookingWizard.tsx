@@ -70,7 +70,7 @@ const generateTimeSlots = (openTime: string, closeTime: string, slotDuration: nu
   return slots;
 };
 
-export default function BookingWizard() {
+function BookingWizard() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { currentTenant } = useTenant();
@@ -1524,3 +1524,14 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
     </div>
   );
 }
+
+// Add dark theme to BookingWizard root container
+const BookingWizardPage = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <BookingWizard />
+    </div>
+  );
+};
+
+export default BookingWizardPage;

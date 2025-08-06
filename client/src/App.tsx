@@ -38,6 +38,7 @@ import AdminExternalServices from "@/pages/AdminExternalServices";
 
 import WebhookIntegrations from "@/pages/WebhookIntegrations";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
+import TempLinkHandler from "@/pages/TempLinkHandler";
 import { InstantNavigation } from "@/components/InstantNavigation";
 
 function Router() {
@@ -51,6 +52,7 @@ function Router() {
       {/* INSTANT ROUTING - All routes available immediately, no auth blocking */}
       <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
       <Route path="/plans" component={SubscriptionLanding} />
+      <Route path="/temp/:token" component={TempLinkHandler} />
       <Route path="/appointments" component={Appointments} />
       {isAuthenticated && (
         <>
@@ -81,6 +83,7 @@ function Router() {
           <Route path="/superadmin/webhook-integrations" component={WebhookIntegrations} />
         </>
       )}
+      <Route path="/temp/:token" component={TempLinkHandler} />
       <Route component={NotFound} />
     </Switch>
   );

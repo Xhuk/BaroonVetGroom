@@ -52,7 +52,7 @@ function getRoomTypeIcon(type: string) {
 }
 
 
-export default function Admin() {
+function Admin() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const { currentTenant, isLoading: tenantLoading } = useTenant();
@@ -2041,3 +2041,14 @@ export default function Admin() {
     </div>
   );
 }
+
+// Apply comprehensive dark theme wrapper for Admin page
+const AdminPage = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Admin />
+    </div>
+  );
+};
+
+export default AdminPage;

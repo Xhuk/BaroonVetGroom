@@ -44,7 +44,7 @@ const medicalRecordSchema = z.object({
 
 type MedicalRecordFormData = z.infer<typeof medicalRecordSchema>;
 
-export default function MedicalRecords() {
+function MedicalRecords() {
   const { currentTenant } = useTenant();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPet, setSelectedPet] = useState<string>("");
@@ -559,3 +559,14 @@ export default function MedicalRecords() {
     </div>
   );
 }
+
+// Apply dark theme wrapper for MedicalRecords
+const MedicalRecordsPage = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <MedicalRecords />
+    </div>
+  );
+};
+
+export default MedicalRecordsPage;

@@ -7,9 +7,11 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookMonitor } from "./webhookMonitor";
 import { advancedRouteOptimization, type OptimizedRoute, type RouteOptimizationOptions } from "./routeOptimizer";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { TempLinkService } from "./tempLinkService";
+import { tempLinkTypes } from "../shared/tempLinks";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
-import { pets, companies } from "@shared/schema";
+import { pets, companies, tempLinks } from "@shared/schema";
 import { gt } from "drizzle-orm";
 // Removed autoStatusService import - now using database functions
 
@@ -3579,6 +3581,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Failed to process inventory with AI",
         error: error instanceof Error ? error.message : "Unknown error"
       });
+    }
+  });
+
+  // Temporary Links API Routes
+  
+  // Create temporary link for QR codes
+  app.post("/api/temp-links/qr/:petId", isAuthenticated, async (req, res) => {
+    try {
+      const { petId } = req.params;
+      const userId = req.user?.claims?.sub;
+      const { tenantId } = req.body;
+      
+      if (!userId || !tenantId) {
+        return res.status(400).json({ error: "User and tenant required" });
+      }
+
+      // Verify pet exists and user has access
+      const pet = await storage.getPetById(petId);
+      if (!pet || pet.tenantId !== tenantId) {
+        return res.status(404).json({ error: "Pet not found" });
+      }
+
+      const tempLink = await TempLinkService.createTempLink({
+        type: tempLinkTypes.PET_QR,
+        resourceId: petId,
+        tenantId,
+        createdBy: userId,
+        expirationHours: 24 * 7, // 1 week
+        metadata: { petName: pet.name, petSpecies: pet.species }
+      });
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const linkUrl = `${baseUrl}/temp/${tempLink.token}`;
+
+      res.json({ 
+        token: tempLink.token, 
+        url: linkUrl,
+        expiresAt: tempLink.expiresAt 
+      });
+    } catch (error) {
+      console.error('Error creating pet QR link:', error);
+      res.status(500).json({ error: "Failed to create temporary link" });
+    }
+  });
+
+  // Create temporary link for file sharing
+  app.post("/api/temp-links/file-share", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { tenantId, expirationHours = 24, maxAccess = 10 } = req.body;
+      
+      if (!userId || !tenantId) {
+        return res.status(400).json({ error: "User and tenant required" });
+      }
+
+      const tempLink = await TempLinkService.createTempLink({
+        type: tempLinkTypes.FILE_SHARE,
+        resourceId: `file-${Date.now()}`,
+        tenantId,
+        createdBy: userId,
+        expirationHours,
+        maxAccess,
+        metadata: { purpose: 'file_sharing' }
+      });
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const linkUrl = `${baseUrl}/temp/${tempLink.token}`;
+
+      res.json({ 
+        token: tempLink.token, 
+        url: linkUrl,
+        expiresAt: tempLink.expiresAt,
+        maxAccess 
+      });
+    } catch (error) {
+      console.error('Error creating file share link:', error);
+      res.status(500).json({ error: "Failed to create temporary link" });
+    }
+  });
+
+  // Validate and access temporary link
+  app.get("/api/temp-links/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const result = await TempLinkService.validateAndAccess(token);
+      
+      if (!result.valid) {
+        return res.status(404).json({ valid: false, error: result.error });
+      }
+
+      const link = result.link!;
+      let responseData: any = { valid: true, link };
+
+      // Add additional data based on link type
+      if (link.type === tempLinkTypes.PET_QR) {
+        const pet = await storage.getPetById(link.resourceId);
+        if (pet) {
+          const client = await storage.getClientById(pet.clientId);
+          responseData.data = { pet, client };
+        }
+      }
+
+      res.json(responseData);
+    } catch (error) {
+      console.error('Error validating temp link:', error);
+      res.status(500).json({ valid: false, error: "Internal server error" });
+    }
+  });
+
+  // Update temp link with file information (for uploads)
+  app.post("/api/temp-links/:token/file", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { fileUrl } = req.body;
+      
+      const result = await TempLinkService.validateAndAccess(token);
+      if (!result.valid) {
+        return res.status(404).json({ error: result.error });
+      }
+
+      // Update the link metadata with file information
+      await db.update(tempLinks)
+        .set({ 
+          metadata: { 
+            ...result.link!.metadata, 
+            fileUrl,
+            uploadedAt: new Date().toISOString()
+          } 
+        })
+        .where(eq(tempLinks.token, token));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating temp link file:', error);
+      res.status(500).json({ error: "Failed to update file information" });
     }
   });
 
