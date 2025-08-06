@@ -44,8 +44,6 @@ import {
   taxConfiguration,
   pendingInvoices,
   invoiceLineItems,
-  inventoryItems,
-  inventoryTransactions,
   type User,
   type UpsertUser,
   type Company,
@@ -148,7 +146,6 @@ export interface IStorage {
   
   // Company operations
   getCompanies(): Promise<Company[]>;
-  getCompany(companyId: string): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   
   // Tenant operations
@@ -184,7 +181,6 @@ export interface IStorage {
   
   // Pet operations
   getPets(clientId: string): Promise<Pet[]>;
-  getPetsByClient(clientId: string): Promise<Pet[]>;
   createPet(pet: InsertPet): Promise<Pet>;
   
   // Appointment operations
@@ -253,7 +249,6 @@ export interface IStorage {
   createMedicalAppointment(appointment: InsertMedicalAppointment): Promise<MedicalAppointment>;
   updateMedicalAppointment(appointmentId: string, appointment: Partial<InsertMedicalAppointment>): Promise<MedicalAppointment>;
   getFollowUpTasks(tenantId: string): Promise<any[]>;
-  getFollowUpTasksFast(tenantId: string): Promise<any[]>;
 
   // Medical Documents
   createMedicalDocument(document: InsertMedicalDocument): Promise<MedicalDocument>;
@@ -282,14 +277,6 @@ export interface IStorage {
   createDeliverySchedule(schedule: InsertDeliverySchedule): Promise<DeliverySchedule>;
   getDeliverySchedulesByTenant(tenantId: string): Promise<DeliverySchedule[]>;
   updateDeliveryStatus(scheduleId: string, status: string): Promise<DeliverySchedule>;
-  getDeliveryRoutesFast(tenantId: string, date: string): Promise<any[]>;
-  getInventoryItemsFast(tenantId: string): Promise<any[]>;
-  getInventoryTransactionsFast(tenantId: string): Promise<any[]>;
-  getBillingInvoicesFast(tenantId: string): Promise<any[]>;
-  getStaffFast(tenantId: string): Promise<any[]>;
-  getRoomsFast(tenantId: string): Promise<any[]>;
-  getServicesFast(tenantId: string): Promise<any[]>;
-  getVansFast(tenantId: string): Promise<any[]>;
 
   // Payment gateway configuration operations
   getPaymentGatewayConfigs(companyId?: string, tenantId?: string): Promise<PaymentGatewayConfig[]>;
@@ -369,11 +356,6 @@ export class DatabaseStorage implements IStorage {
   // Company operations
   async getCompanies(): Promise<Company[]> {
     return await db.select().from(companies);
-  }
-
-  async getCompany(companyId: string): Promise<Company | undefined> {
-    const [company] = await db.select().from(companies).where(eq(companies.id, companyId));
-    return company;
   }
 
   async updateCompanySettings(companyId: string, settings: any): Promise<void> {
@@ -529,10 +511,6 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(pets).where(eq(pets.clientId, clientId));
   }
 
-  async getPetsByClient(clientId: string): Promise<Pet[]> {
-    return await db.select().from(pets).where(eq(pets.clientId, clientId));
-  }
-
   async getPetsByTenant(tenantId: string): Promise<Pet[]> {
     const results = await db.select()
       .from(pets)
@@ -564,6 +542,16 @@ export class DatabaseStorage implements IStorage {
       .where(eq(pets.id, petId))
       .returning();
     return updatedPet;
+  }
+
+  async getPetById(petId: string): Promise<Pet | undefined> {
+    const [pet] = await db.select().from(pets).where(eq(pets.id, petId));
+    return pet;
+  }
+
+  async getClientById(clientId: string): Promise<Client | undefined> {
+    const [client] = await db.select().from(clients).where(eq(clients.id, clientId));
+    return client;
   }
 
   // Appointment operations
@@ -1812,191 +1800,6 @@ export class DatabaseStorage implements IStorage {
     return updatedSchedule;
   }
 
-  // Fast delivery routes with 95% payload reduction
-  async getDeliveryRoutesFast(tenantId: string, date: string): Promise<any[]> {
-    const result = await db
-      .select({
-        id: appointments.id,
-        scheduledDate: appointments.scheduledDate,
-        scheduledTime: appointments.scheduledTime,
-        status: appointments.status,
-        notes: appointments.notes,
-        clientId: appointments.clientId,
-        petId: appointments.petId,
-        // Optimized fields with short names
-        cn: clients.name,        // client name
-        pn: pets.name,          // pet name  
-        sn: services.name,      // service name
-        cl: clients.address     // client address
-      })
-      .from(appointments)
-      .leftJoin(clients, eq(appointments.clientId, clients.id))
-      .leftJoin(pets, eq(appointments.petId, pets.id))
-      .leftJoin(services, eq(appointments.serviceId, services.id))
-      .where(
-        and(
-          eq(appointments.tenantId, tenantId),
-          eq(appointments.scheduledDate, date),
-          or(
-            sql`${services.name} ILIKE '%entrega%'`,
-            sql`${services.name} ILIKE '%delivery%'`,
-            sql`${clients.address} IS NOT NULL AND ${clients.address} != ''`
-          )
-        )
-      )
-      .orderBy(appointments.scheduledTime);
-
-    return result.map(item => ({
-      id: item.id,
-      scheduledDate: item.scheduledDate,
-      scheduledTime: item.scheduledTime,
-      status: item.status,
-      notes: item.notes,
-      clientId: item.clientId,
-      petId: item.petId,
-      client: { name: item.cn, address: item.cl },
-      pet: { name: item.pn },
-      service: { name: item.sn }
-    }));
-  }
-
-  // Fast inventory items with 95% payload reduction
-  async getInventoryItemsFast(tenantId: string): Promise<any[]> {
-    const result = await db
-      .select({
-        id: inventoryItems.id,
-        name: inventoryItems.name,
-        category: inventoryItems.category,
-        currentStock: inventoryItems.currentStock,
-        minStock: inventoryItems.minStock,
-        unitPrice: inventoryItems.unitPrice,
-        isActive: inventoryItems.isActive
-      })
-      .from(inventoryItems)
-      .where(eq(inventoryItems.tenantId, tenantId))
-      .orderBy(inventoryItems.name);
-
-    return result;
-  }
-
-  // Fast inventory transactions with 95% payload reduction
-  async getInventoryTransactionsFast(tenantId: string): Promise<any[]> {
-    const result = await db
-      .select({
-        id: inventoryTransactions.id,
-        itemId: inventoryTransactions.itemId,
-        type: inventoryTransactions.type,
-        quantity: inventoryTransactions.quantity,
-        unitCost: inventoryTransactions.unitCost,
-        createdAt: inventoryTransactions.createdAt
-      })
-      .from(inventoryTransactions)
-      .where(eq(inventoryTransactions.tenantId, tenantId))
-      .orderBy(sql`${inventoryTransactions.createdAt} DESC`)
-      .limit(100); // Last 100 transactions only
-
-    return result;
-  }
-
-  // Fast billing invoices with 95% payload reduction
-  async getBillingInvoicesFast(tenantId: string): Promise<any[]> {
-    const result = await db
-      .select({
-        id: billingInvoices.id,
-        invoiceNumber: billingInvoices.invoiceNumber,
-        invoiceDate: billingInvoices.invoiceDate,
-        totalAmount: billingInvoices.totalAmount,
-        status: billingInvoices.status,
-        clientId: billingInvoices.clientId,
-        // Client name optimization
-        cn: clients.name
-      })
-      .from(billingInvoices)
-      .leftJoin(clients, eq(billingInvoices.clientId, clients.id))
-      .where(eq(billingInvoices.tenantId, tenantId))
-      .orderBy(desc(billingInvoices.invoiceDate));
-
-    return result.map(item => ({
-      id: item.id,
-      invoiceNumber: item.invoiceNumber,
-      invoiceDate: item.invoiceDate,
-      totalAmount: item.totalAmount,
-      status: item.status,
-      clientId: item.clientId,
-      client: { name: item.cn }
-    }));
-  }
-
-  // Fast staff with 95% payload reduction
-  async getStaffFast(tenantId: string): Promise<any[]> {
-    const result = await db
-      .select({
-        id: staff.id,
-        name: staff.name,
-        role: staff.role,
-        specialization: staff.specialization,
-        isActive: staff.isActive
-      })
-      .from(staff)
-      .where(eq(staff.tenantId, tenantId))
-      .orderBy(staff.name);
-
-    return result;
-  }
-
-  // Fast rooms with 95% payload reduction
-  async getRoomsFast(tenantId: string): Promise<any[]> {
-    const result = await db
-      .select({
-        id: rooms.id,
-        name: rooms.name,
-        type: rooms.type,
-        capacity: rooms.capacity,
-        isActive: rooms.isActive
-      })
-      .from(rooms)
-      .where(eq(rooms.tenantId, tenantId))
-      .orderBy(rooms.name);
-
-    return result;
-  }
-
-  // Fast services with 95% payload reduction
-  async getServicesFast(tenantId: string): Promise<any[]> {
-    const result = await db
-      .select({
-        id: services.id,
-        name: services.name,
-        type: services.type,
-        duration: services.duration,
-        price: services.price,
-        isActive: services.isActive
-      })
-      .from(services)
-      .where(eq(services.tenantId, tenantId))
-      .orderBy(services.name);
-
-    return result;
-  }
-
-  // Fast vans with 95% payload reduction
-  async getVansFast(tenantId: string): Promise<any[]> {
-    const result = await db
-      .select({
-        id: vans.id,
-        name: vans.name,
-        capacity: vans.capacity,
-        maxPets: vans.maxPets,
-        maxWeight: vans.maxWeight,
-        isActive: vans.isActive
-      })
-      .from(vans)
-      .where(eq(vans.tenantId, tenantId))
-      .orderBy(vans.name);
-
-    return result;
-  }
-
   // Medical Documents operations
   async createMedicalDocument(document: InsertMedicalDocument): Promise<MedicalDocument> {
     const [newDocument] = await db.insert(medicalDocuments).values(document).returning();
@@ -2055,53 +1858,6 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(medicalAppointments.followUpDate), asc(medicalAppointments.visitDate));
 
     return result;
-  }
-
-  // Fast Follow-up Tasks with 95% payload reduction
-  async getFollowUpTasksFast(tenantId: string): Promise<any[]> {
-    const result = await db
-      .select({
-        id: medicalAppointments.id,
-        visitDate: medicalAppointments.visitDate,
-        followUpDate: medicalAppointments.followUpDate,
-        isConfirmed: medicalAppointments.isConfirmed,
-        clientId: medicalAppointments.clientId,
-        petId: medicalAppointments.petId,
-        veterinarianId: medicalAppointments.veterinarianId,
-        // Only essential fields for display
-        cn: clients.name, // client name
-        pn: pets.name,    // pet name
-        ps: pets.species, // pet species
-        vn: staff.name    // veterinarian name
-      })
-      .from(medicalAppointments)
-      .leftJoin(clients, eq(medicalAppointments.clientId, clients.id))
-      .leftJoin(pets, eq(medicalAppointments.petId, pets.id))
-      .leftJoin(staff, eq(medicalAppointments.veterinarianId, staff.id))
-      .where(
-        and(
-          eq(medicalAppointments.tenantId, tenantId),
-          eq(medicalAppointments.followUpRequired, true),
-          or(
-            eq(medicalAppointments.isConfirmed, false),
-            isNull(medicalAppointments.isConfirmed)
-          )
-        )
-      )
-      .orderBy(desc(medicalAppointments.visitDate));
-
-    return result.map(item => ({
-      id: item.id,
-      visitDate: item.visitDate,
-      followUpDate: item.followUpDate,
-      isConfirmed: item.isConfirmed,
-      clientId: item.clientId,
-      petId: item.petId,
-      veterinarianId: item.veterinarianId,
-      client: { name: item.cn },
-      pet: { name: item.pn, species: item.ps },
-      veterinarian: { name: item.vn }
-    }));
   }
 
   // Payment gateway configuration operations

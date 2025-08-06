@@ -30,25 +30,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Staff, Appointment } from "@shared/schema";
 
 export default function DeliveryPlan() {
+  // ALL HOOKS MUST BE CALLED AT THE TOP LEVEL - NO EARLY RETURNS BEFORE THIS POINT
   const { currentTenant } = useTenant();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showRouteForm, setShowRouteForm] = useState(false);
-  // Generate next 7 days for date selection
-  const generateNext7Days = () => {
-    const days = [];
-    const today = new Date();
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      days.push(date.toISOString().split('T')[0]);
-    }
-    return days;
-  };
-
   const [selectedDate, setSelectedDate] = useState("2025-08-25"); // Date with pickup appointments
-  const next7Days = generateNext7Days();
-
+  
   // Fast delivery routes query with optimized caching
   const { data: routesResponse, isLoading } = useQuery<{routes: any[], totalRoutes: number}>({
     queryKey: ["/api/delivery-routes-fast", currentTenant?.id, selectedDate],
@@ -58,9 +46,6 @@ export default function DeliveryPlan() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
-
-  const routes = (routesResponse as any)?.routes || [];
-  const totalRoutes = (routesResponse as any)?.totalRoutes || 0;
 
   const { data: fraccionamientos } = useQuery<any[]>({
     queryKey: ["/api/fraccionamientos", currentTenant?.id],
@@ -97,6 +82,23 @@ export default function DeliveryPlan() {
       });
     },
   });
+
+  // Generate next 7 days for date selection
+  const generateNext7Days = () => {
+    const days = [];
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      days.push(date.toISOString().split('T')[0]);
+    }
+    return days;
+  };
+
+  // NOW it's safe to have derived state and early returns
+  const next7Days = generateNext7Days();
+  const routes = (routesResponse as any)?.routes || [];
+  const totalRoutes = (routesResponse as any)?.totalRoutes || 0;
 
   if (isLoading) {
     return (

@@ -169,7 +169,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       setTimeout(() => reject(new Error('Token refresh timeout')), 5000)
     );
     
-    const tokenResponse = await Promise.race([refreshPromise, timeoutPromise]);
+    const tokenResponse = await Promise.race([refreshPromise, timeoutPromise]) as any;
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {

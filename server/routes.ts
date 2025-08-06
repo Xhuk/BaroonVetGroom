@@ -1,8 +1,8 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { and } from 'drizzle-orm';
-import { clients, rooms, services, staff, slotReservations, appointments, deliveryRoutes, deliveryRouteStops } from '@shared/schema';
+import { clients, rooms, services, staff, slotReservations, appointments } from '@shared/schema';
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookMonitor } from "./webhookMonitor";
 import { advancedRouteOptimization, type OptimizedRoute, type RouteOptimizationOptions } from "./routeOptimizer";
@@ -10,10 +10,22 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { TempLinkService } from "./tempLinkService";
 import { tempLinkTypes } from "../shared/tempLinks";
 import { db } from "./db";
-import { eq, sql, isNotNull } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { pets, companies, tempLinks } from "@shared/schema";
 import { gt } from "drizzle-orm";
 // Removed autoStatusService import - now using database functions
+
+// Extended request type for authenticated requests
+interface AuthenticatedRequest extends Request {
+  user: {
+    claims: {
+      sub: string;
+      email?: string;
+      first_name?: string;
+      last_name?: string;
+    };
+  };
+}
 
 // Helper function to check system admin access
 async function isSystemAdmin(req: any): Promise<boolean> {
@@ -313,56 +325,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Filtered results: ${relevantPets.length} pets, ${relevantClients.length} clients`);
       
-      // Sort appointments by time - current time first, then chronological order
-      const now = new Date();
-      const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
-      
-      const sortedAppointments = medicalAppointments.sort((a, b) => {
-        const aDate = new Date(a.visitDate);
-        const bDate = new Date(b.visitDate);
-        
-        // If appointments are on different days, sort by date
-        const aDateOnly = aDate.toDateString();
-        const bDateOnly = bDate.toDateString();
-        const todayString = now.toDateString();
-        
-        // Priority: Today's appointments first, then future dates, then past dates
-        const aIsToday = aDateOnly === todayString;
-        const bIsToday = bDateOnly === todayString;
-        
-        if (aIsToday && !bIsToday) return -1;
-        if (!aIsToday && bIsToday) return 1;
-        
-        // If both are today, sort by proximity to current time
-        if (aIsToday && bIsToday) {
-          const aMinutes = aDate.getHours() * 60 + aDate.getMinutes();
-          const bMinutes = bDate.getHours() * 60 + bDate.getMinutes();
-          
-          // Calculate distance from current time
-          const aDistance = Math.abs(aMinutes - currentTimeMinutes);
-          const bDistance = Math.abs(bMinutes - currentTimeMinutes);
-          
-          // Current or next appointments first
-          if (aMinutes >= currentTimeMinutes && bMinutes >= currentTimeMinutes) {
-            return aMinutes - bMinutes; // Earliest upcoming first
-          }
-          if (aMinutes < currentTimeMinutes && bMinutes < currentTimeMinutes) {
-            return bMinutes - aMinutes; // Most recent past first
-          }
-          
-          // Mix of past and future - future appointments first
-          if (aMinutes >= currentTimeMinutes) return -1;
-          if (bMinutes >= currentTimeMinutes) return 1;
-          
-          return aDistance - bDistance;
-        }
-        
-        // For non-today appointments, sort chronologically
-        return aDate.getTime() - bDate.getTime();
-      });
-      
       res.json({
-        medicalAppointments: sortedAppointments.map(apt => ({
+        medicalAppointments: medicalAppointments.map(apt => ({
           id: apt.id,
           petId: apt.petId,
           clientId: apt.clientId,
@@ -1501,62 +1465,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Fast inventory endpoint with 95% payload reduction
-  app.get("/api/inventory-fast/:tenantId", async (req, res) => {
-    try {
-      const [items, transactions] = await Promise.all([
-        storage.getInventoryItemsFast(req.params.tenantId),
-        storage.getInventoryTransactionsFast(req.params.tenantId)
-      ]);
-      
-      res.json({ 
-        items,
-        transactions,
-        totalItems: items.length
-      });
-    } catch (error) {
-      console.error("Error getting inventory fast:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  // Fast billing endpoint with 95% payload reduction
-  app.get("/api/billing-fast/:tenantId", async (req, res) => {
-    try {
-      const invoices = await storage.getBillingInvoicesFast(req.params.tenantId);
-      
-      res.json({ 
-        invoices,
-        totalInvoices: invoices.length
-      });
-    } catch (error) {
-      console.error("Error getting billing fast:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  // Fast admin endpoint with 95% payload reduction
-  app.get("/api/admin-fast/:tenantId", async (req, res) => {
-    try {
-      const [vans, staff, rooms, services] = await Promise.all([
-        storage.getVansFast(req.params.tenantId),
-        storage.getStaffFast(req.params.tenantId),
-        storage.getRoomsFast(req.params.tenantId),
-        storage.getServicesFast(req.params.tenantId)
-      ]);
-      
-      res.json({ 
-        vans,
-        staff,
-        rooms,
-        services
-      });
-    } catch (error) {
-      console.error("Error getting admin fast:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
   // Test webhook monitoring (for demonstration)
   app.post('/api/test-webhook-monitoring', isAuthenticated, async (req: any, res) => {
     try {
@@ -2117,35 +2025,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Demo Data Seeder endpoint
-  app.post("/api/seed-demo-data", isAuthenticated, isSuperAdmin, async (req, res) => {
-    try {
-      console.log("🌱 Demo data seeding requested by user:", req.user?.claims?.sub);
-      
-      const { runDemoDataSeeder } = await import('./seedDemoData');
-      const result = await runDemoDataSeeder();
-      
-      if (result.success) {
-        res.json({ 
-          success: true, 
-          message: result.message,
-          timestamp: new Date().toISOString()
-        });
-      } else {
-        res.status(500).json({ 
-          success: false, 
-          message: result.message || "Demo data seeding failed"
-        });
-      }
-    } catch (error) {
-      console.error("Error seeding demo data:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: error instanceof Error ? error.message : "Unknown error during demo data seeding"
-      });
-    }
-  });
-
   // Driver check-in endpoint
   app.post("/api/driver-checkin", isAuthenticated, async (req, res) => {
     try {
@@ -2636,28 +2515,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Fast Follow-up Tasks API with 95% payload reduction
-  app.get('/api/medical-appointments/follow-up-fast/:tenantId', isAuthenticated, async (req, res) => {
-    try {
-      const { tenantId } = req.params;
-      console.log(`Fast follow-up tasks: ${tenantId}`);
-      
-      // Set ultra-aggressive cache headers for instant subsequent loads
-      res.set({
-        'Cache-Control': 'private, max-age=300, s-maxage=300', // 5 minutes browser cache
-        'ETag': `"followup-${tenantId}-${Math.floor(Date.now() / 60000)}"`, // Change every minute
-        'Vary': 'Cookie, Authorization',
-        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
-      });
-      
-      const followUpTasks = await storage.getFollowUpTasksFast(tenantId);
-      res.json({ followUpTasks });
-    } catch (error) {
-      console.error("Error fetching fast follow-up tasks:", error);
-      res.status(500).json({ message: "Failed to fetch fast follow-up tasks" });
-    }
-  });
-
   app.put('/api/medical-appointments/:appointmentId/complete-followup', isAuthenticated, async (req, res) => {
     try {
       const { appointmentId } = req.params;
@@ -2704,233 +2561,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching all tenants for debug:", error);
       res.status(500).json({ message: "Failed to fetch tenants" });
-    }
-  });
-
-  // Driver Route Management APIs
-  
-  // Get route details for driver mobile view
-  app.get('/api/driver-routes/:routeId', async (req, res) => {
-    try {
-      const { routeId } = req.params;
-      
-      const [route] = await db
-        .select({
-          id: deliveryRoutes.id,
-          name: deliveryRoutes.name,
-          scheduledDate: deliveryRoutes.scheduledDate,
-          status: deliveryRoutes.status,
-          estimatedDuration: deliveryRoutes.estimatedDuration,
-          driverName: staff.name,
-        })
-        .from(deliveryRoutes)
-        .leftJoin(staff, eq(deliveryRoutes.driverId, staff.id))
-        .where(eq(deliveryRoutes.id, routeId));
-
-      if (!route) {
-        return res.status(404).json({ message: "Route not found" });
-      }
-
-      // Get route stops with client details
-      const stops = await db
-        .select({
-          id: deliveryRouteStops.id,
-          address: deliveryRouteStops.address,
-          estimatedTime: deliveryRouteStops.estimatedTime,
-          actualArrivalTime: deliveryRouteStops.actualArrivalTime,
-          actualCompletionTime: deliveryRouteStops.actualCompletionTime,
-          status: deliveryRouteStops.status,
-          stopOrder: deliveryRouteStops.stopOrder,
-          services: deliveryRouteStops.services,
-          clientName: clients.name,
-          clientPhone: clients.phone,
-        })
-        .from(deliveryRouteStops)
-        .leftJoin(clients, eq(deliveryRouteStops.clientId, clients.id))
-        .where(eq(deliveryRouteStops.routeId, routeId))
-        .orderBy(deliveryRouteStops.stopOrder);
-
-      res.json({
-        ...route,
-        stops: stops.map(stop => ({
-          id: stop.id,
-          address: stop.address,
-          clientName: stop.clientName || "Cliente desconocido",
-          phone: stop.clientPhone,
-          estimatedTime: stop.estimatedTime,
-          actualArrivalTime: stop.actualArrivalTime,
-          actualCompletionTime: stop.actualCompletionTime,
-          status: stop.status,
-          services: stop.services || [],
-        }))
-      });
-    } catch (error) {
-      console.error("Error fetching driver route:", error);
-      res.status(500).json({ message: "Failed to fetch route" });
-    }
-  });
-
-  // Update route stop status (for drivers)
-  app.patch('/api/driver-routes/:routeId/stops/:stopId', async (req, res) => {
-    try {
-      const { routeId, stopId } = req.params;
-      const { status } = req.body;
-
-      const now = new Date();
-      const updateData: any = { status, updatedAt: now };
-
-      // Set timestamps based on status
-      if (status === 'in_progress' && !req.body.actualArrivalTime) {
-        updateData.actualArrivalTime = now;
-      } else if (status === 'completed') {
-        updateData.actualCompletionTime = now;
-        // Also set arrival time if not set
-        const [currentStop] = await db
-          .select({ actualArrivalTime: deliveryRouteStops.actualArrivalTime })
-          .from(deliveryRouteStops)
-          .where(eq(deliveryRouteStops.id, stopId));
-        
-        if (!currentStop?.actualArrivalTime) {
-          updateData.actualArrivalTime = now;
-        }
-      }
-
-      await db
-        .update(deliveryRouteStops)
-        .set(updateData)
-        .where(eq(deliveryRouteStops.id, stopId));
-
-      // Update route status if all stops are completed
-      if (status === 'completed') {
-        const allStops = await db
-          .select({ status: deliveryRouteStops.status })
-          .from(deliveryRouteStops)
-          .where(eq(deliveryRouteStops.routeId, routeId));
-
-        const allCompleted = allStops.every(stop => stop.status === 'completed');
-        
-        if (allCompleted) {
-          const completedStops = await db
-            .select({
-              actualArrivalTime: deliveryRouteStops.actualArrivalTime,
-              actualCompletionTime: deliveryRouteStops.actualCompletionTime,
-            })
-            .from(deliveryRouteStops)
-            .where(eq(deliveryRouteStops.routeId, routeId))
-            .orderBy(deliveryRouteStops.stopOrder);
-
-          // Calculate actual duration from first arrival to last completion
-          const firstArrival = completedStops.find(s => s.actualArrivalTime)?.actualArrivalTime;
-          const lastCompletion = completedStops
-            .filter(s => s.actualCompletionTime)
-            .sort((a, b) => new Date(b.actualCompletionTime!).getTime() - new Date(a.actualCompletionTime!).getTime())[0]?.actualCompletionTime;
-
-          let actualDuration = null;
-          if (firstArrival && lastCompletion) {
-            actualDuration = Math.round((new Date(lastCompletion).getTime() - new Date(firstArrival).getTime()) / (1000 * 60));
-          }
-
-          await db
-            .update(deliveryRoutes)
-            .set({
-              status: 'completed',
-              endTime: now,
-              actualDuration,
-              updatedAt: now,
-            })
-            .where(eq(deliveryRoutes.id, routeId));
-        }
-      }
-
-      res.json({ success: true, timestamp: now });
-    } catch (error) {
-      console.error("Error updating route stop:", error);
-      res.status(500).json({ message: "Failed to update stop status" });
-    }
-  });
-
-  // Complete entire route
-  app.post('/api/driver-routes/:routeId/complete', async (req, res) => {
-    try {
-      const { routeId } = req.params;
-      const now = new Date();
-
-      // Get all stops to calculate actual duration
-      const completedStops = await db
-        .select({
-          actualArrivalTime: deliveryRouteStops.actualArrivalTime,
-          actualCompletionTime: deliveryRouteStops.actualCompletionTime,
-        })
-        .from(deliveryRouteStops)
-        .where(eq(deliveryRouteStops.routeId, routeId))
-        .orderBy(deliveryRouteStops.stopOrder);
-
-      const firstArrival = completedStops.find(s => s.actualArrivalTime)?.actualArrivalTime;
-      const lastCompletion = completedStops
-        .filter(s => s.actualCompletionTime)
-        .sort((a, b) => new Date(b.actualCompletionTime!).getTime() - new Date(a.actualCompletionTime!).getTime())[0]?.actualCompletionTime;
-
-      let actualDuration = null;
-      if (firstArrival && lastCompletion) {
-        actualDuration = Math.round((new Date(lastCompletion).getTime() - new Date(firstArrival).getTime()) / (1000 * 60));
-      }
-
-      await db
-        .update(deliveryRoutes)
-        .set({
-          status: 'completed',
-          endTime: now,
-          actualDuration,
-          updatedAt: now,
-        })
-        .where(eq(deliveryRoutes.id, routeId));
-
-      res.json({ success: true, completedAt: now, actualDuration });
-    } catch (error) {
-      console.error("Error completing route:", error);
-      res.status(500).json({ message: "Failed to complete route" });
-    }
-  });
-
-  // Get delivery routes for a tenant and date
-  app.get('/api/delivery-routes/:tenantId/:date', isAuthenticated, async (req, res) => {
-    try {
-      const { tenantId, date } = req.params;
-      
-      const routes = await db
-        .select({
-          id: deliveryRoutes.id,
-          name: deliveryRoutes.name,
-          scheduledDate: deliveryRoutes.scheduledDate,
-          status: deliveryRoutes.status,
-          estimatedDuration: deliveryRoutes.estimatedDuration,
-          actualDuration: deliveryRoutes.actualDuration,
-          totalDistance: deliveryRoutes.totalDistance,
-          driverName: staff.name,
-        })
-        .from(deliveryRoutes)
-        .leftJoin(staff, eq(deliveryRoutes.driverId, staff.id))
-        .where(eq(deliveryRoutes.tenantId, tenantId) && eq(deliveryRoutes.scheduledDate, date))
-        .orderBy(deliveryRoutes.createdAt);
-
-      res.json(routes);
-    } catch (error) {
-      console.error("Error fetching delivery routes:", error);
-      res.status(500).json({ message: "Failed to fetch delivery routes" });
-    }
-  });
-
-  // Seed sample delivery routes endpoint (for testing)
-  app.post('/api/seed-delivery-routes/:tenantId', isAuthenticated, async (req, res) => {
-    try {
-      const { tenantId } = req.params;
-      const { seedDeliveryRoutes } = await import('./seedDeliveryRoutes');
-      
-      await seedDeliveryRoutes(tenantId);
-      res.json({ success: true, message: "Delivery routes seeded successfully" });
-    } catch (error) {
-      console.error("Error seeding delivery routes:", error);
-      res.status(500).json({ message: "Failed to seed delivery routes" });
     }
   });
 
@@ -3010,70 +2640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ULTRA-OPTIMIZED: Fast grooming records with minimal payload
-  app.get('/api/grooming-records-fast/:tenantId', isAuthenticated, async (req: any, res) => {
-    try {
-      const { tenantId } = req.params;
-      
-      console.log(`Fast grooming records: ${tenantId}`);
-      
-      const [groomingRecords, pets, groomers] = await Promise.all([
-        storage.getGroomingRecords(tenantId),
-        storage.getPetsByTenant(tenantId),
-        storage.getStaff(tenantId)
-      ]);
-
-      // Create lookup maps for efficient filtering
-      const recordPetIds = new Set(groomingRecords.map((record: any) => record.petId));
-      const recordGroomerIds = new Set(groomingRecords.map((record: any) => record.groomerId));
-      
-      // Only include relevant data
-      const relevantPets = pets.filter((pet: any) => recordPetIds.has(pet.id));
-      const relevantGroomers = groomers.filter((groomer: any) => recordGroomerIds.has(groomer.id));
-      
-      console.log(`Grooming FastData - Found ${groomingRecords.length} records, ${relevantPets.length} pets, ${relevantGroomers.length} groomers`);
-      
-      // Sort records by grooming date (most recent first)
-      const sortedRecords = groomingRecords.sort((a: any, b: any) => {
-        return new Date(b.groomingDate).getTime() - new Date(a.groomingDate).getTime();
-      });
-      
-      res.json({
-        groomingRecords: sortedRecords.map((record: any) => ({
-          id: record.id,
-          petId: record.petId,
-          groomerId: record.groomerId,
-          groomingDate: record.groomingDate,
-          services: record.services,
-          notes: record.notes,
-          totalCost: record.totalCost,
-          status: record.status || 'completed',
-          nextAppointmentRecommended: record.nextAppointmentRecommended,
-          nextAppointmentDate: record.nextAppointmentDate
-        })),
-        pets: relevantPets.map((pet: any) => ({
-          id: pet.id,
-          name: pet.name,
-          species: pet.species,
-          breed: pet.breed,
-          clientId: pet.clientId
-        })),
-        groomers: relevantGroomers.map((groomer: any) => ({
-          id: groomer.id,
-          name: groomer.name
-        })),
-        recordsCount: groomingRecords.length,
-        petsCount: relevantPets.length,
-        firstRecord: groomingRecords[0] || null
-      });
-      
-    } catch (error) {
-      console.error("Fast grooming records error:", error);
-      res.status(500).json({ error: "Failed to load grooming records" });
-    }
-  });
-
-  // Legacy grooming records endpoint (kept for compatibility)
+  // Grooming Records API
   app.get('/api/grooming-records/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;
@@ -3334,167 +2901,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating invoice status:", error);
       res.status(500).json({ message: "Failed to update invoice status" });
-    }
-  });
-
-  // Delivery routes endpoints (for delivery plan)
-  app.get('/api/delivery-routes/:tenantId/:date', isAuthenticated, async (req, res) => {
-    try {
-      const { tenantId, date } = req.params;
-      
-      // Get delivery-related appointments for the date
-      const deliveryAppointments = await db
-        .select({
-          id: appointments.id,
-          clientId: appointments.clientId,
-          petId: appointments.petId,
-          scheduledDate: appointments.scheduledDate,
-          scheduledTime: appointments.scheduledTime,
-          status: appointments.status,
-          notes: appointments.notes,
-          clientName: clients.name,
-          petName: pets.name,
-          serviceName: services.name
-        })
-        .from(appointments)
-        .leftJoin(clients, eq(appointments.clientId, clients.id))
-        .leftJoin(pets, eq(appointments.petId, pets.id))
-        .leftJoin(services, eq(appointments.serviceId, services.id))
-        .where(
-          and(
-            eq(appointments.tenantId, tenantId),
-            eq(appointments.scheduledDate, date),
-            sql`${services.name} ILIKE '%entrega%' OR ${services.name} ILIKE '%delivery%'`
-          )
-        )
-        .orderBy(appointments.scheduledTime);
-
-      res.json(deliveryAppointments);
-    } catch (error) {
-      console.error("Error fetching delivery routes:", error);
-      res.status(500).json({ message: "Failed to fetch delivery routes" });
-    }
-  });
-
-  // Fast delivery routes endpoint with optimized payload
-  app.get('/api/delivery-routes-fast/:tenantId/:date', isAuthenticated, async (req, res) => {
-    try {
-      const { tenantId, date } = req.params;
-      console.log(`Fast delivery routes: ${tenantId} on ${date}`);
-      
-      // Set ultra-aggressive cache headers
-      res.set({
-        'Cache-Control': 'private, max-age=300, s-maxage=300', // 5 minutes
-        'ETag': `"delivery-${tenantId}-${date}-${Math.floor(Date.now() / 60000)}"`,
-        'Vary': 'Cookie, Authorization',
-        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
-      });
-
-      // Get optimized delivery data
-      const routes = await storage.getDeliveryRoutesFast(tenantId, date);
-      res.json({ routes, totalRoutes: routes.length });
-    } catch (error) {
-      console.error("Error fetching fast delivery routes:", error);
-      res.status(500).json({ message: "Failed to fetch fast delivery routes" });
-    }
-  });
-
-  // Fraccionamientos (subdivisions/areas) endpoint
-  app.get('/api/fraccionamientos/:tenantId', isAuthenticated, async (req, res) => {
-    try {
-      const { tenantId } = req.params;
-      
-      // Get distinct fraccionamientos from client data
-      const areas = await db
-        .selectDistinct({ 
-          area: clients.fraccionamiento,
-          count: sql<number>`count(*)::int` 
-        })
-        .from(clients)
-        .where(
-          and(
-            eq(clients.tenantId, tenantId),
-            isNotNull(clients.fraccionamiento)
-          )
-        )
-        .groupBy(clients.fraccionamiento)
-        .orderBy(clients.fraccionamiento);
-
-      res.json(areas);
-    } catch (error) {
-      console.error("Error fetching fraccionamientos:", error);
-      res.status(500).json({ message: "Failed to fetch fraccionamientos" });
-    }
-  });
-
-  // Fast inventory endpoint with 95% payload reduction
-  app.get('/api/inventory-fast/:tenantId', isAuthenticated, async (req, res) => {
-    try {
-      const { tenantId } = req.params;
-      
-      // Set ultra-aggressive cache headers
-      res.set({
-        'Cache-Control': 'private, max-age=300, s-maxage=300', // 5 minutes
-        'ETag': `"inventory-${tenantId}-${Math.floor(Date.now() / 60000)}"`,
-        'Vary': 'Cookie, Authorization',
-        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
-      });
-
-      const items = await storage.getInventoryItemsFast(tenantId);
-      const transactions = await storage.getInventoryTransactionsFast(tenantId);
-      
-      res.json({ items, transactions, totalItems: items.length });
-    } catch (error) {
-      console.error("Error fetching fast inventory:", error);
-      res.status(500).json({ message: "Failed to fetch fast inventory" });
-    }
-  });
-
-  // Fast billing endpoint with 95% payload reduction
-  app.get('/api/billing-fast/:tenantId', isAuthenticated, async (req, res) => {
-    try {
-      const { tenantId } = req.params;
-      
-      // Set ultra-aggressive cache headers
-      res.set({
-        'Cache-Control': 'private, max-age=300, s-maxage=300', // 5 minutes
-        'ETag': `"billing-${tenantId}-${Math.floor(Date.now() / 60000)}"`,
-        'Vary': 'Cookie, Authorization',
-        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
-      });
-
-      const invoices = await storage.getBillingInvoicesFast(tenantId);
-      res.json({ invoices, totalInvoices: invoices.length });
-    } catch (error) {
-      console.error("Error fetching fast billing:", error);
-      res.status(500).json({ message: "Failed to fetch fast billing" });
-    }
-  });
-
-  // Fast admin data endpoint with combined queries
-  app.get('/api/admin-fast/:tenantId', isAuthenticated, async (req, res) => {
-    try {
-      const { tenantId } = req.params;
-      
-      // Set ultra-aggressive cache headers
-      res.set({
-        'Cache-Control': 'private, max-age=300, s-maxage=300', // 5 minutes
-        'ETag': `"admin-${tenantId}-${Math.floor(Date.now() / 60000)}"`,
-        'Vary': 'Cookie, Authorization',
-        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
-      });
-
-      const [staff, rooms, services, vans] = await Promise.all([
-        storage.getStaffFast(tenantId),
-        storage.getRoomsFast(tenantId), 
-        storage.getServicesFast(tenantId),
-        storage.getVansFast(tenantId)
-      ]);
-      
-      res.json({ staff, rooms, services, vans, totalStaff: staff.length });
-    } catch (error) {
-      console.error("Error fetching fast admin data:", error);
-      res.status(500).json({ message: "Failed to fetch fast admin data" });
     }
   });
 
