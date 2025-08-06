@@ -20,17 +20,17 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const [, setLocation] = useLocation();
   const [currentTime, setCurrentTime] = useState(getCurrentTimeCST1());
   const [isScrolling, setIsScrolling] = useState(false);
-  const [displayDate, setDisplayDate] = useState(selectedDate || getTodayCST1());
+  const [displayDate, setDisplayDate] = useState(getTodayCST1()); // Always start with today
   // Removed booking dialog state - using navigation instead
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Update displayDate when selectedDate prop changes
+  // Always prioritize today's date on load, then respect selectedDate changes
   useEffect(() => {
-    if (selectedDate) {
+    if (selectedDate && selectedDate !== displayDate) {
       setDisplayDate(selectedDate);
     }
-  }, [selectedDate]);
+  }, [selectedDate, displayDate]);
 
   // Handle slot click for booking - use wouter for instant navigation
   const handleSlotClick = (time: string) => {
@@ -112,10 +112,11 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     const minutes = now.getMinutes();
     
     console.log(`Current time: ${hours}:${minutes.toString().padStart(2, '0')}`);
+    console.log(`Display date: ${displayDate}, Today: ${getTodayCST1()}`);
     
-    // Return null if outside visible hours (6 AM - 10 PM)
+    // Always show time info during business hours (6 AM - 10 PM)
     if (hours < 6 || hours >= 22) {
-      console.log('Current time outside visible hours');
+      console.log('Current time outside visible hours (6-22)');
       return null;
     }
     
