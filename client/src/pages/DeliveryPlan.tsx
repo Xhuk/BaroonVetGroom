@@ -49,14 +49,18 @@ export default function DeliveryPlan() {
   const [selectedDate, setSelectedDate] = useState("2025-08-25"); // Date with pickup appointments
   const next7Days = generateNext7Days();
 
-  const { data: routes, isLoading } = useQuery<any[]>({
-    queryKey: ["/api/delivery-routes", currentTenant?.id, selectedDate],
+  // Fast delivery routes query with optimized caching
+  const { data: routesResponse, isLoading } = useQuery<{routes: any[], totalRoutes: number}>({
+    queryKey: ["/api/delivery-routes-fast", currentTenant?.id, selectedDate],
     enabled: !!currentTenant?.id,
-    staleTime: 2 * 60 * 1000, // 2 minutes cache
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+
+  const routes = routesResponse?.routes || [];
+  const totalRoutes = routesResponse?.totalRoutes || 0;
 
   const { data: fraccionamientos } = useQuery<any[]>({
     queryKey: ["/api/fraccionamientos", currentTenant?.id],
@@ -339,12 +343,25 @@ export default function DeliveryPlan() {
             Rutas del {new Date(selectedDate).toLocaleDateString()}
           </h2>
 
-          {routes?.length === 0 ? (
+          {isLoading ? (
+            <Card className="bg-gray-800 border-gray-700">
+              <CardContent className="p-6">
+                <div className="text-gray-300">Cargando rutas de entrega...</div>
+              </CardContent>
+            </Card>
+          ) : totalRoutes === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
                 <Route className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No hay rutas programadas</h3>
-                <p className="text-gray-500 mb-4">Crea rutas para organizar las entregas y recolecciones.</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No hay rutas de entrega para {selectedDate}</h3>
+                <p className="text-gray-500 mb-4">
+                  No se encontraron citas de entrega o servicios de delivery para esta fecha.
+                  <br />
+                  Selecciona una fecha con citas programadas o crea nuevas citas de entrega.
+                </p>
+                <div className="bg-blue-50 p-4 rounded-lg mb-4 text-sm text-blue-800">
+                  <strong>Busca citas con:</strong> servicios de entrega, delivery o con direcciones de cliente
+                </div>
                 <Button onClick={() => setShowRouteForm(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Crear Primera Ruta
@@ -352,7 +369,7 @@ export default function DeliveryPlan() {
               </CardContent>
             </Card>
           ) : (
-            routes?.map((route) => (
+            routes.map((route) => (
               <Card key={route.id} className="border-l-4 border-l-blue-400">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">

@@ -10,7 +10,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { TempLinkService } from "./tempLinkService";
 import { tempLinkTypes } from "../shared/tempLinks";
 import { db } from "./db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, isNotNull } from "drizzle-orm";
 import { pets, companies, tempLinks } from "@shared/schema";
 import { gt } from "drizzle-orm";
 // Removed autoStatusService import - now using database functions
@@ -3022,6 +3022,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating invoice status:", error);
       res.status(500).json({ message: "Failed to update invoice status" });
+    }
+  });
+
+  // Delivery routes endpoints (for delivery plan)
+  app.get('/api/delivery-routes/:tenantId/:date', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId, date } = req.params;
+      
+      // Get delivery-related appointments for the date
+      const deliveryAppointments = await db
+        .select({
+          id: appointments.id,
+          clientId: appointments.clientId,
+          petId: appointments.petId,
+          scheduledDate: appointments.scheduledDate,
+          scheduledTime: appointments.scheduledTime,
+          status: appointments.status,
+          notes: appointments.notes,
+          clientName: clients.name,
+          petName: pets.name,
+          serviceName: services.name
+        })
+        .from(appointments)
+        .leftJoin(clients, eq(appointments.clientId, clients.id))
+        .leftJoin(pets, eq(appointments.petId, pets.id))
+        .leftJoin(services, eq(appointments.serviceId, services.id))
+        .where(
+          and(
+            eq(appointments.tenantId, tenantId),
+            eq(appointments.scheduledDate, date),
+            sql`${services.name} ILIKE '%entrega%' OR ${services.name} ILIKE '%delivery%'`
+          )
+        )
+        .orderBy(appointments.scheduledTime);
+
+      res.json(deliveryAppointments);
+    } catch (error) {
+      console.error("Error fetching delivery routes:", error);
+      res.status(500).json({ message: "Failed to fetch delivery routes" });
+    }
+  });
+
+  // Fast delivery routes endpoint with optimized payload
+  app.get('/api/delivery-routes-fast/:tenantId/:date', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId, date } = req.params;
+      console.log(`Fast delivery routes: ${tenantId} on ${date}`);
+      
+      // Set ultra-aggressive cache headers
+      res.set({
+        'Cache-Control': 'private, max-age=300, s-maxage=300', // 5 minutes
+        'ETag': `"delivery-${tenantId}-${date}-${Math.floor(Date.now() / 60000)}"`,
+        'Vary': 'Cookie, Authorization',
+        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
+      });
+
+      // Get optimized delivery data
+      const routes = await storage.getDeliveryRoutesFast(tenantId, date);
+      res.json({ routes, totalRoutes: routes.length });
+    } catch (error) {
+      console.error("Error fetching fast delivery routes:", error);
+      res.status(500).json({ message: "Failed to fetch fast delivery routes" });
+    }
+  });
+
+  // Fraccionamientos (subdivisions/areas) endpoint
+  app.get('/api/fraccionamientos/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      // Get distinct fraccionamientos from client data
+      const areas = await db
+        .selectDistinct({ 
+          area: clients.fraccionamiento,
+          count: sql<number>`count(*)::int` 
+        })
+        .from(clients)
+        .where(
+          and(
+            eq(clients.tenantId, tenantId),
+            isNotNull(clients.fraccionamiento)
+          )
+        )
+        .groupBy(clients.fraccionamiento)
+        .orderBy(clients.fraccionamiento);
+
+      res.json(areas);
+    } catch (error) {
+      console.error("Error fetching fraccionamientos:", error);
+      res.status(500).json({ message: "Failed to fetch fraccionamientos" });
     }
   });
 

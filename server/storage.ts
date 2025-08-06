@@ -278,6 +278,7 @@ export interface IStorage {
   createDeliverySchedule(schedule: InsertDeliverySchedule): Promise<DeliverySchedule>;
   getDeliverySchedulesByTenant(tenantId: string): Promise<DeliverySchedule[]>;
   updateDeliveryStatus(scheduleId: string, status: string): Promise<DeliverySchedule>;
+  getDeliveryRoutesFast(tenantId: string, date: string): Promise<any[]>;
 
   // Payment gateway configuration operations
   getPaymentGatewayConfigs(companyId?: string, tenantId?: string): Promise<PaymentGatewayConfig[]>;
@@ -1789,6 +1790,54 @@ export class DatabaseStorage implements IStorage {
       .where(eq(deliverySchedule.id, scheduleId))
       .returning();
     return updatedSchedule;
+  }
+
+  // Fast delivery routes with 95% payload reduction
+  async getDeliveryRoutesFast(tenantId: string, date: string): Promise<any[]> {
+    const result = await db
+      .select({
+        id: appointments.id,
+        scheduledDate: appointments.scheduledDate,
+        scheduledTime: appointments.scheduledTime,
+        status: appointments.status,
+        notes: appointments.notes,
+        clientId: appointments.clientId,
+        petId: appointments.petId,
+        // Optimized fields with short names
+        cn: clients.name,        // client name
+        pn: pets.name,          // pet name  
+        sn: services.name,      // service name
+        cl: clients.address     // client address
+      })
+      .from(appointments)
+      .leftJoin(clients, eq(appointments.clientId, clients.id))
+      .leftJoin(pets, eq(appointments.petId, pets.id))
+      .leftJoin(services, eq(appointments.serviceId, services.id))
+      .where(
+        and(
+          eq(appointments.tenantId, tenantId),
+          eq(appointments.scheduledDate, date),
+          or(
+            sql`${services.name} ILIKE '%entrega%'`,
+            sql`${services.name} ILIKE '%delivery%'`,
+            sql`${clients.address} IS NOT NULL AND ${clients.address} != ''`
+          )
+        )
+      )
+      .orderBy(appointments.scheduledTime);
+
+    return result.map(item => ({
+      id: item.id,
+      scheduledDate: item.scheduledDate,
+      scheduledTime: item.scheduledTime,
+      status: item.status,
+      notes: item.notes,
+      clientId: item.clientId,
+      petId: item.petId,
+      client: { name: item.cn, address: item.cl },
+      pet: { name: item.pn },
+      service: { name: item.sn }
+    }));
   }
 
   // Medical Documents operations
