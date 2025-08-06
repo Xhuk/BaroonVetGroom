@@ -31,7 +31,7 @@ const Appointments = memo(function Appointments() {
   // Use CST-1 timezone for reliable date calculations
   const [selectedDate, setSelectedDate] = useState(getTodayCST1());
 
-  // Use WebSocket for real-time appointment updates instead of polling
+  // Use WebSocket for real-time appointment updates
   const { 
     appointments: wsAppointments, 
     isLoading: wsLoading, 
@@ -40,8 +40,8 @@ const Appointments = memo(function Appointments() {
     refresh 
   } = useWebSocketAppointments('vetgroom1', 'user123', selectedDate);
 
-  // Fallback to REST API if WebSocket fails
-  const { data: fallbackData, isLoading: restLoading, error: restError } = useQuery({
+  // Stable fallback - always fetch initial data, then WebSocket takes over
+  const { data: fallbackData, isLoading: restLoading } = useQuery({
     queryKey: ['appointments-fast', selectedDate],
     queryFn: async () => {
       const url = `/api/appointments-fast/vetgroom1?date=${selectedDate}`;
@@ -51,16 +51,18 @@ const Appointments = memo(function Appointments() {
       }
       return response.json();
     },
-    enabled: !isConnected && !!selectedDate, // Only use REST as fallback
-    staleTime: 30000,
-    retry: false
+    enabled: !!selectedDate,
+    staleTime: 60000, // Keep data fresh for 1 minute
+    retry: 1
   });
 
-  // Use WebSocket data primarily, fallback to REST if needed
-  const appointments = isConnected ? wsAppointments : (fallbackData?.appointments || []);
-  const isLoading = isConnected ? wsLoading : restLoading;
-  const error = wsError || restError;
-  const data = isConnected ? { appointments: wsAppointments, clients: [], pets: [], rooms: [], staff: [], services: [] } : fallbackData;
+  // Anti-flickering logic: prioritize stable data sources
+  const appointments = wsAppointments?.length > 0 ? wsAppointments : (fallbackData?.appointments || []);
+  const isLoading = wsLoading && restLoading; // Only show loading when both are loading
+  const error = wsError && !appointments.length ? wsError : null; // Only show error if no data available
+  const data = appointments.length > 0 ? 
+    { appointments, clients: fallbackData?.clients || [], pets: fallbackData?.pets || [], rooms: fallbackData?.rooms || [], staff: fallbackData?.staff || [], services: fallbackData?.services || [] } : 
+    fallbackData;
 
   const navigateDay = (direction: 'prev' | 'next') => {
     const days = direction === 'next' ? 1 : -1;
@@ -163,8 +165,8 @@ const Appointments = memo(function Appointments() {
         <div className="grid gap-4">
           {/* Scalability demonstration */}
           <ScalabilityDemo />
-          {isLoading ? (
-            // Instant skeleton - shows immediately
+          {(isLoading && appointments.length === 0) ? (
+            // Only show skeleton if no data is available
             <InstantAppointmentsSkeleton />
           ) : error ? (
           <Card>

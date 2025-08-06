@@ -80,11 +80,14 @@ export function useWebSocketAppointments(tenantId: string, userId: string, selec
           switch (message.type) {
             case 'initial_data':
             case 'date_data':
-              setAppointmentData({
-                appointments: message.appointments || [],
-                date: message.date || selectedDate,
-                timestamp: message.timestamp
-              });
+              // Only update if we have actual data to prevent flickering
+              if (message.appointments && message.appointments.length >= 0) {
+                setAppointmentData({
+                  appointments: message.appointments,
+                  date: message.date || selectedDate,
+                  timestamp: message.timestamp
+                });
+              }
               setIsLoading(false);
               break;
 
@@ -175,15 +178,19 @@ export function useWebSocketAppointments(tenantId: string, userId: string, selec
     }
   }, [tenantId, userId, selectedDate, appointmentData]);
 
-  // Handle date changes
+  // Handle date changes with debouncing to prevent flickering
   useEffect(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ 
-        type: 'date_change', 
-        date: selectedDate 
-      }));
-      setIsLoading(true);
-    }
+    const timer = setTimeout(() => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ 
+          type: 'date_change', 
+          date: selectedDate 
+        }));
+        // Don't set loading immediately to prevent flicker
+      }
+    }, 100); // 100ms debounce
+    
+    return () => clearTimeout(timer);
   }, [selectedDate]);
 
   // Initial connection
