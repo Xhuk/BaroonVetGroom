@@ -257,11 +257,23 @@ export default function Clients() {
     if (!clients || !searchQuery.trim()) return clients || [];
     
     const query = searchQuery.toLowerCase().trim();
-    return clients.filter(client => 
-      client.name.toLowerCase().includes(query) ||
-      (client.email && client.email.toLowerCase().includes(query)) ||
-      (client.phone && client.phone.toLowerCase().includes(query))
-    );
+    console.log('Search Query:', query);
+    console.log('Total Clients:', clients.length);
+    
+    const filtered = clients.filter(client => {
+      const nameMatch = client.name.toLowerCase().includes(query);
+      const emailMatch = client.email && client.email.toLowerCase().includes(query);
+      const phoneMatch = client.phone && client.phone.toLowerCase().includes(query);
+      
+      if (nameMatch || emailMatch || phoneMatch) {
+        console.log('Match found:', client.name, client.email, client.phone);
+      }
+      
+      return nameMatch || emailMatch || phoneMatch;
+    });
+    
+    console.log('Filtered Results:', filtered.length);
+    return filtered;
   }, [clients, searchQuery]);
 
   return (
@@ -287,7 +299,8 @@ export default function Clients() {
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm text-muted-foreground">
               <strong>Tenant:</strong> {currentTenant?.id || 'No tenant selected'} | 
-              <strong> Total Clientes:</strong> {clients?.length || 0}
+              <strong> Total Clientes:</strong> {clients?.length || 0} |
+              <strong> Loading:</strong> {clientsLoading ? 'Yes' : 'No'}
             </div>
           </div>
           <div className="relative">
