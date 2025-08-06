@@ -290,6 +290,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getRooms(tenantId)
       ]);
 
+      // Create lookup maps for efficient filtering
+      const appointmentClientIds = new Set(medicalAppointments.map(apt => apt.clientId));
+      const appointmentPetIds = new Set(medicalAppointments.map(apt => apt.petId));
+      const appointmentVetIds = new Set(medicalAppointments.map(apt => apt.veterinarianId));
+      const appointmentRoomIds = new Set(medicalAppointments.map(apt => apt.roomId).filter(Boolean));
+
       // Debug logging to see what IDs we're looking for
       console.log(`Medical appointments debug - Found ${medicalAppointments.length} appointments, ${pets.length} total pets`);
       if (medicalAppointments.length > 0) {
@@ -298,17 +304,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (pets.length > 0) {
         console.log('Sample pet IDs:', pets.slice(0, 3).map(p => p.id));
       }
-      
-      // Create lookup maps for efficient filtering
-      const appointmentClientIds = new Set(medicalAppointments.map(apt => apt.clientId));
-      const appointmentPetIds = new Set(medicalAppointments.map(apt => apt.petId));
-      const appointmentVetIds = new Set(medicalAppointments.map(apt => apt.veterinarianId));
-      const appointmentRoomIds = new Set(medicalAppointments.map(apt => apt.roomId).filter(Boolean));
-      
-      // Debug logging to see what IDs we're looking for
-      console.log(`Medical appointments debug - Found ${medicalAppointments.length} appointments, ${pets.length} total pets`);
-      console.log('Sample appointment petIds:', Array.from(appointmentPetIds).slice(0, 3));
-      console.log('Sample pet IDs:', pets.slice(0, 3).map(p => p.id));
       
       // Only include relevant data
       const relevantClients = clients.filter(client => appointmentClientIds.has(client.id));
