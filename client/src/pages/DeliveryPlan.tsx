@@ -52,7 +52,8 @@ export default function DeliveryPlan() {
   const [selectedWave, setSelectedWave] = useState("1");
   const [deliveryMode, setDeliveryMode] = useState<"wave" | "free">("wave");
   const [customHour, setCustomHour] = useState("13:00");
-  const [activeTab, setActiveTab] = useState("planning");
+  const [activeTab, setActiveTab] = useState("inbound");
+  const [routeType, setRouteType] = useState<"inbound" | "outbound">("inbound");
   
   // Fast delivery routes query with optimized caching
   const { data: routesResponse, isLoading } = useQuery<{routes: any[], totalRoutes: number}>({
@@ -127,10 +128,10 @@ export default function DeliveryPlan() {
     mutationFn: async (data: { date: string; vanCapacity: string }) => {
       return apiRequest(`/api/delivery-routes/optimize/${currentTenant?.id}`, "POST", data);
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Ruta Optimizada con VRP",
-        description: `${data.summary.totalStops} paradas optimizadas • ${data.summary.totalDistance.toFixed(1)}km • ${data.summary.estimatedTime}min`,
+        description: `${data.summary?.totalStops || 0} paradas optimizadas • ${data.summary?.totalDistance?.toFixed(1) || 0}km • ${data.summary?.estimatedTime || 0}min`,
       });
       // Refresh routes data
       queryClient.invalidateQueries({ queryKey: ["/api/delivery-routes-fast", currentTenant?.id, selectedDate] });
@@ -215,9 +216,10 @@ export default function DeliveryPlan() {
       scheduledTime: scheduledTime,
       selectedMascots: selectedMascots,
       estimatedDuration: selectedMascots.length * 15, // 15 minutes per mascot
+      routeType: routeType, // Add route type for inbound/outbound
       notes: deliveryMode === "wave" 
-        ? `Wave ${selectedWave} delivery route with ${selectedMascots.length} mascots`
-        : `Free-time delivery at ${customHour} with ${selectedMascots.length} mascots`,
+        ? `${routeType === "inbound" ? "Pickup" : "Delivery"} Wave ${selectedWave} route with ${selectedMascots.length} pets`
+        : `${routeType === "inbound" ? "Pickup" : "Delivery"} free-time at ${customHour} with ${selectedMascots.length} pets`,
     };
 
     createRouteMutation.mutate(data);
@@ -291,7 +293,10 @@ export default function DeliveryPlan() {
             className="text-gray-600 hover:text-gray-900"
             testId="button-back-to-dashboard"
           />
-          <h1 className="text-2xl font-bold text-blue-800">Planificación de Entregas</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-blue-800">Pickup & Delivery System</h1>
+            <p className="text-sm text-gray-600">Gestión de recolección y entrega de mascotas con ondas programadas</p>
+          </div>
         </div>
         <div className="flex gap-3 items-center">
           <DebugControls />
@@ -328,61 +333,60 @@ export default function DeliveryPlan() {
             <Route className="w-4 h-4 mr-2" />
             {optimizeRouteMutation.isPending ? "Optimizando..." : "Optimizar VRP"}
           </Button>
-          <Button 
-            onClick={() => setShowRouteForm(true)}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva Ruta
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => {
+                setRouteType("inbound");
+                setShowRouteForm(true);
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Ruta Inbound
+            </Button>
+            <Button 
+              onClick={() => {
+                setRouteType("outbound");
+                setShowRouteForm(true);
+              }}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Ruta Outbound
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Unified Delivery Management Tabs */}
+      {/* Pickup & Delivery Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="planning" className="flex items-center gap-2">
-            <Route className="w-4 h-4" />
-            Planificación
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="inbound" className="flex items-center gap-2">
+            <MapPin className="w-4 h-4" />
+            Inbound (Pickup)
+          </TabsTrigger>
+          <TabsTrigger value="outbound" className="flex items-center gap-2">
+            <Navigation className="w-4 h-4" />
+            Outbound (Delivery)
           </TabsTrigger>
           <TabsTrigger value="tracking" className="flex items-center gap-2">
             <Activity className="w-4 h-4" />
-            Seguimiento
-          </TabsTrigger>
-          <TabsTrigger value="schedules" className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Programación
+            Driver Tracking
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
-            Analíticas
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="w-4 h-4" />
-            Configuración
+            Analytics
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="planning" className="space-y-6">
-          {/* Statistics for Planning */}
+        <TabsContent value="inbound" className="space-y-6">
+          {/* Inbound Pickup Statistics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
+            <Card className="bg-green-50 dark:bg-green-900/20 border-green-200">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Rutas Programadas</p>
-                    <p className="text-2xl font-bold text-blue-600">{routes?.length || 0}</p>
-                  </div>
-                  <Route className="w-8 h-8 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Recolecciones</p>
+                    <p className="text-sm text-green-700">Pickups Programados</p>
                     <p className="text-2xl font-bold text-green-600">{pickupAppointments.length}</p>
                   </div>
                   <MapPin className="w-8 h-8 text-green-600" />
@@ -394,10 +398,10 @@ export default function DeliveryPlan() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Fraccionamientos</p>
-                    <p className="text-2xl font-bold text-purple-600">{fraccionamientos?.length || 0}</p>
+                    <p className="text-sm text-gray-600">Clientes Registrados</p>
+                    <p className="text-2xl font-bold text-blue-600">{appointments?.filter(apt => apt.logistics === "pickup").length || 0}</p>
                   </div>
-                  <Map className="w-8 h-8 text-purple-600" />
+                  <User className="w-8 h-8 text-blue-600" />
                 </div>
               </CardContent>
             </Card>
@@ -406,12 +410,24 @@ export default function DeliveryPlan() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Conductores</p>
+                    <p className="text-sm text-gray-600">Rutas Inbound</p>
+                    <p className="text-2xl font-bold text-purple-600">{routes?.filter((r: any) => r.type === "inbound").length || 0}</p>
+                  </div>
+                  <Route className="w-8 h-8 text-purple-600" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Vans Disponibles</p>
                     <p className="text-2xl font-bold text-orange-600">
                       {staff?.filter(s => s.role === "driver").length || 0}
                     </p>
                   </div>
-                  <User className="w-8 h-8 text-orange-600" />
+                  <Truck className="w-8 h-8 text-orange-600" />
                 </div>
               </CardContent>
             </Card>
@@ -555,16 +571,22 @@ export default function DeliveryPlan() {
           ) : (
             <Card>
               <CardContent className="text-center py-12">
-                <Truck className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <MapPin className="w-16 h-16 mx-auto mb-4 text-green-400" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  No hay rutas programadas para {selectedDate}
+                  No hay pickups inbound programados para {selectedDate}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Crea una nueva ruta o selecciona una fecha diferente
+                  Crea una nueva ruta de recolección para mascotas de clientes registrados
                 </p>
-                <Button onClick={() => setShowRouteForm(true)}>
+                <Button 
+                  onClick={() => {
+                    setRouteType("inbound");
+                    setShowRouteForm(true);
+                  }}
+                  className="bg-green-600 hover:bg-green-700"
+                >
                   <Plus className="w-4 h-4 mr-2" />
-                  Crear Primera Ruta
+                  Crear Ruta Inbound
                 </Button>
               </CardContent>
             </Card>
@@ -572,51 +594,151 @@ export default function DeliveryPlan() {
         </TabsContent>
 
         <TabsContent value="tracking" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="w-5 h-5" />
-                Seguimiento en Tiempo Real
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center h-32">
-                  <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
-                  <span className="ml-2">Cargando seguimiento...</span>
-                </div>
-              ) : deliveryTracking?.length ? (
-                <div className="space-y-4">
-                  {deliveryTracking.map((tracking: any) => (
-                    <div key={tracking.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Truck className="w-6 h-6 text-blue-600" />
-                        <div>
-                          <p className="font-medium">{tracking.vanName}</p>
-                          <p className="text-sm text-gray-600">{tracking.driverName}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Driver Tracking Panel */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  Driver Tracking Dashboard
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {deliveryTracking?.length ? (
+                  <div className="space-y-4">
+                    {deliveryTracking.map((tracking: any) => (
+                      <div key={tracking.id} className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3 h-3 rounded-full ${
+                              tracking.status === 'active' ? 'bg-green-500' : 
+                              tracking.status === 'in_progress' ? 'bg-blue-500' : 'bg-gray-400'
+                            }`} />
+                            <div>
+                              <p className="font-medium">{tracking.driverName}</p>
+                              <p className="text-sm text-gray-600">{tracking.vanName}</p>
+                            </div>
+                          </div>
+                          <Badge className={getStatusColor(tracking.status)}>
+                            {tracking.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-500">Tipo de Ruta</p>
+                            <p className="font-medium">{tracking.routeType || 'Mixed'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Paradas</p>
+                            <p className="font-medium">{tracking.route?.completedStops || 0}/{tracking.route?.totalStops || 0}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 mt-4">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              // Generate driver-specific mobile link
+                              const driverLink = `/driver-dashboard/${tracking.id}`;
+                              navigator.clipboard.writeText(`${window.location.origin}${driverLink}`);
+                              toast({
+                                title: "Enlace copiado",
+                                description: "Link del dashboard móvil copiado para el conductor",
+                              });
+                            }}
+                            className="flex-1"
+                          >
+                            <Navigation className="w-4 h-4 mr-1" />
+                            Mobile Link
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              // Generate Waze/Google Maps export
+                              const wazeUrl = `https://waze.com/ul?navigate=yes&ll=${tracking.currentLocation?.lat || 25.6866},${tracking.currentLocation?.lng || -100.3161}`;
+                              window.open(wazeUrl, '_blank');
+                            }}
+                            className="flex-1"
+                          >
+                            <Map className="w-4 h-4 mr-1" />
+                            Waze
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <Badge className={getStatusColor(tracking.status)}>
-                          {getStatusIcon(tracking.status)}
-                          {tracking.status}
-                        </Badge>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">{tracking.route?.totalStops || 0} paradas</p>
-                          <p className="text-xs text-gray-600">{tracking.route?.completedStops || 0} completadas</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Truck className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>No hay conductores activos en este momento</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Route Export Panel */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Navigation className="w-5 h-5" />
+                  Route Export Tools
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                  <h4 className="font-medium mb-2">Inbound Routes (Pickup)</h4>
+                  <p className="text-sm text-gray-600 mb-3">Export pickup routes to driver mobile apps</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="flex-1">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      Google Maps
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1">
+                      <Navigation className="w-4 h-4 mr-1" />
+                      Waze
+                    </Button>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Truck className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No hay entregas activas en este momento</p>
+                
+                <div className="p-4 border rounded-lg bg-orange-50 dark:bg-orange-900/20">
+                  <h4 className="font-medium mb-2">Outbound Routes (Delivery)</h4>
+                  <p className="text-sm text-gray-600 mb-3">Export delivery routes to driver mobile apps</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="flex-1">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      Google Maps
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1">
+                      <Navigation className="w-4 h-4 mr-1" />
+                      Waze
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                <div className="p-4 border rounded-lg">
+                  <h4 className="font-medium mb-2">Driver Mobile Dashboard</h4>
+                  <p className="text-sm text-gray-600 mb-3">Generate mobile-friendly tracking links for drivers</p>
+                  <Button 
+                    className="w-full" 
+                    onClick={() => {
+                      const mobileUrl = `/driver-mobile`;
+                      navigator.clipboard.writeText(`${window.location.origin}${mobileUrl}`);
+                      toast({
+                        title: "Link móvil copiado",
+                        description: "Dashboard móvil para conductores copiado al clipboard",
+                      });
+                    }}
+                  >
+                    <Activity className="w-4 h-4 mr-2" />
+                    Generate Mobile Link
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="schedules" className="space-y-6">
@@ -763,8 +885,17 @@ export default function DeliveryPlan() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Target className="w-5 h-5" />
-              Crear Ruta de Entrega con Mascotas
+              {routeType === "inbound" ? (
+                <>
+                  <MapPin className="w-5 h-5 text-green-600" />
+                  Crear Ruta Inbound (Pickup)
+                </>
+              ) : (
+                <>
+                  <Navigation className="w-5 h-5 text-orange-600" />
+                  Crear Ruta Outbound (Delivery)
+                </>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -824,7 +955,11 @@ export default function DeliveryPlan() {
                   <Input 
                     name="name" 
                     required 
-                    placeholder={deliveryMode === "wave" ? "Ej: Wave 1 - Entrega Tarde" : "Ej: Entrega Flexible Norte"} 
+                    placeholder={
+                      routeType === "inbound" 
+                        ? (deliveryMode === "wave" ? "Ej: Wave 1 - Pickup Tarde" : "Ej: Pickup Flexible Norte")
+                        : (deliveryMode === "wave" ? "Ej: Wave 1 - Entrega Tarde" : "Ej: Entrega Flexible Centro")
+                    } 
                   />
                 </div>
 

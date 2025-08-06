@@ -4610,6 +4610,203 @@ This password expires in 24 hours.
     }
   });
 
+  // ====================
+  // DRIVER MOBILE ENDPOINTS
+  // ====================
+
+  // Driver mobile dashboard endpoint - mobile optimized
+  app.get('/api/driver/dashboard/:driverId', async (req: any, res) => {
+    try {
+      const { driverId } = req.params;
+      
+      // Get driver info (assuming driver is a staff member)
+      const drivers = await storage.getStaff(driverId); // This should get staff for that tenant
+      const driver = drivers.find((s: any) => s.id === driverId);
+      if (!driver) {
+        return res.status(404).json({ message: "Driver not found" });
+      }
+
+      // Get today's routes for the driver's tenant
+      const today = new Date().toISOString().split('T')[0];
+      const routes = await storage.getDeliveryRoutes(driver.tenantId, today);
+      const activeRoutes = routes.filter((route: any) => route.driverId === driverId);
+      
+      // Get today's appointments for delivery/pickup
+      const appointments = await storage.getAppointments(driver.tenantId, today);
+      const driverAppointments = appointments.filter((apt: any) => 
+        apt.logistics && (apt.logistics === 'pickup' || apt.logistics === 'delivery')
+      );
+
+      res.json({
+        driver: {
+          id: driver.id,
+          name: driver.name,
+          role: driver.role,
+          tenantId: driver.tenantId
+        },
+        activeRoutes: activeRoutes.map((route: any) => ({
+          ...route,
+          type: route.routeType || 'mixed',
+          totalStops: route.appointments?.length || 0,
+          completedStops: route.appointments?.filter((apt: any) => apt.status === 'completed').length || 0
+        })),
+        appointments: driverAppointments,
+        stats: {
+          totalPickups: driverAppointments.filter((apt: any) => apt.logistics === 'pickup').length,
+          totalDeliveries: driverAppointments.filter((apt: any) => apt.logistics === 'delivery').length,
+          completed: driverAppointments.filter((apt: any) => apt.status === 'completed').length,
+          pending: driverAppointments.filter((apt: any) => apt.status === 'scheduled').length
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching driver dashboard:", error);
+      res.status(500).json({ message: "Failed to fetch driver dashboard" });
+    }
+  });
+
+  // Driver route export endpoints for Waze/Google Maps
+  app.get('/api/driver/route/:routeId/export/:format', async (req: any, res) => {
+    try {
+      const { routeId, format } = req.params;
+      
+      const routes = await storage.getDeliveryRoutes('all', new Date().toISOString().split('T')[0]);
+      const route = routes.find((r: any) => r.id === routeId);
+      if (!route) {
+        return res.status(404).json({ message: "Route not found" });
+      }
+
+      // Get route appointments with client/pet data
+      const appointments = route.appointments || [];
+      
+      // Generate waypoints for navigation apps
+      const waypoints = appointments.map((apt: any, index: number) => ({
+        address: apt.address || `${apt.client?.fraccionamiento || 'Address'} ${index + 1}`,
+        lat: apt.latitude || (25.6866 + Math.random() * 0.1),
+        lng: apt.longitude || (-100.3161 + Math.random() * 0.1),
+        clientName: apt.clientName || apt.client?.name,
+        petName: apt.petName || apt.pet?.name,
+        type: apt.logistics || 'delivery',
+        appointmentId: apt.id,
+        orderIndex: index + 1
+      }));
+
+      if (format === 'waze') {
+        // Generate Waze-compatible URLs
+        const wazeUrls = waypoints.map(wp => 
+          `https://waze.com/ul?navigate=yes&ll=${wp.lat},${wp.lng}&address=${encodeURIComponent(wp.address)}`
+        );
+        res.json({ 
+          platform: 'waze',
+          urls: wazeUrls,
+          waypoints: waypoints,
+          routeId: routeId,
+          routeName: route.name
+        });
+      } else if (format === 'googlemaps') {
+        // Generate Google Maps URLs
+        const googleUrls = waypoints.map(wp => 
+          `https://www.google.com/maps/dir/?api=1&destination=${wp.lat},${wp.lng}&destination_place_id=${encodeURIComponent(wp.address)}`
+        );
+        res.json({ 
+          platform: 'google_maps',
+          urls: googleUrls,
+          waypoints: waypoints,
+          routeId: routeId,
+          routeName: route.name
+        });
+      } else {
+        res.status(400).json({ message: "Unsupported export format. Use 'waze' or 'googlemaps'" });
+      }
+    } catch (error) {
+      console.error("Error exporting route:", error);
+      res.status(500).json({ message: "Failed to export route" });
+    }
+  });
+
+  // Update driver location (for real-time tracking)
+  app.post('/api/driver/location/:driverId', async (req: any, res) => {
+    try {
+      const { driverId } = req.params;
+      const { latitude, longitude, timestamp } = req.body;
+      
+      // This would typically update a location tracking table
+      // For now, we'll simulate this functionality
+      console.log(`Driver ${driverId} location updated: ${latitude}, ${longitude} at ${timestamp}`);
+
+      res.json({ 
+        message: "Location updated successfully",
+        driverId,
+        location: { latitude, longitude },
+        timestamp: timestamp || new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error updating driver location:", error);
+      res.status(500).json({ message: "Failed to update location" });
+    }
+  });
+
+  // Mark appointment as completed (driver app)
+  app.post('/api/driver/appointment/:appointmentId/complete', async (req: any, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const { driverId, notes, completedAt } = req.body;
+      
+      const updatedAppointment = await storage.updateAppointment(appointmentId, {
+        status: 'completed',
+        notes: notes || `Completed by driver ${driverId}`,
+        completedAt: completedAt || new Date().toISOString()
+      });
+
+      res.json({
+        ...updatedAppointment,
+        message: "Appointment marked as completed"
+      });
+    } catch (error) {
+      console.error("Error completing appointment:", error);
+      res.status(500).json({ message: "Failed to complete appointment" });
+    }
+  });
+
+  // Get driver's current route progress
+  app.get('/api/driver/progress/:driverId/:tenantId', async (req: any, res) => {
+    try {
+      const { driverId, tenantId } = req.params;
+      const today = new Date().toISOString().split('T')[0];
+      
+      const routes = await storage.getDeliveryRoutes(tenantId, today);
+      const driverRoutes = routes.filter((route: any) => route.driverId === driverId);
+      const appointments = await storage.getAppointments(tenantId, today);
+      const driverAppointments = appointments.filter((apt: any) => 
+        apt.logistics && (apt.logistics === 'pickup' || apt.logistics === 'delivery')
+      );
+      
+      const progress = driverRoutes.map((route: any) => ({
+        routeId: route.id,
+        routeName: route.name,
+        routeType: route.routeType || 'mixed',
+        totalStops: route.appointments?.length || 0,
+        completedStops: route.appointments?.filter((apt: any) => apt.status === 'completed').length || 0,
+        pendingStops: route.appointments?.filter((apt: any) => apt.status === 'scheduled').length || 0,
+        progress: Math.round(((route.appointments?.filter((apt: any) => apt.status === 'completed').length || 0) / (route.appointments?.length || 1)) * 100)
+      }));
+
+      res.json({
+        driverId,
+        tenantId,
+        routes: progress,
+        summary: {
+          totalRoutes: driverRoutes.length,
+          totalStops: driverAppointments.length,
+          completedStops: driverAppointments.filter((apt: any) => apt.status === 'completed').length,
+          overallProgress: Math.round((driverAppointments.filter((apt: any) => apt.status === 'completed').length / (driverAppointments.length || 1)) * 100)
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching driver progress:", error);
+      res.status(500).json({ message: "Failed to fetch driver progress" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

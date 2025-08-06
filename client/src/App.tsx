@@ -42,6 +42,7 @@ import WebhookIntegrations from "@/pages/WebhookIntegrations";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
 import TempLinkHandler from "@/pages/TempLinkHandler";
 import DriverRoute from "@/pages/DriverRoute";
+import DriverMobile from "@/pages/DriverMobile";
 import { InstantNavigation } from "@/components/InstantNavigation";
 import { DebugBanner } from "@/components/DebugBanner";
 
@@ -92,6 +93,8 @@ function Router() {
           <Route path="/superadmin/deployment" component={() => <VersionedSuperAdminDashboard />} />
         </>
       )}
+      <Route path="/driver-mobile" component={DriverMobile} />
+      <Route path="/driver-dashboard/:driverId" component={DriverMobile} />
       <Route path="/temp/:token" component={TempLinkHandler} />
       <Route component={NotFound} />
       </Switch>
