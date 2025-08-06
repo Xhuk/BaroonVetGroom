@@ -24,9 +24,21 @@ interface RouteStop {
   address: string;
   clientName: string;
   phone?: string;
-  estimatedTime: string;
+  estimatedTime?: string;
+  actualArrivalTime?: string;
+  actualCompletionTime?: string;
   status: 'pending' | 'in_progress' | 'completed';
   services: string[];
+}
+
+interface DeliveryRoute {
+  id: string;
+  name: string;
+  driverName: string;
+  scheduledDate: string;
+  estimatedDuration: number;
+  status: string;
+  stops: RouteStop[];
 }
 
 export default function DriverRoute() {
@@ -34,46 +46,9 @@ export default function DriverRoute() {
   const { toast } = useToast();
   const [currentStop, setCurrentStop] = useState<number>(0);
 
-  // Mock data for demonstration - replace with real API call
-  const { data: route, isLoading } = useQuery({
+  // Fetch real route data from API
+  const { data: route, isLoading } = useQuery<DeliveryRoute>({
     queryKey: [`/api/driver-routes/${routeId}`],
-    queryFn: () => ({
-      id: routeId,
-      name: "Ruta Norte - Mañana",
-      driverName: "Carlos Mendoza",
-      scheduledDate: "2025-08-06",
-      estimatedDuration: 180,
-      status: "in_progress",
-      stops: [
-        {
-          id: "1",
-          address: "Calle Primavera 123, Fracc. Los Pinos",
-          clientName: "María González",
-          phone: "+52 667 123 4567",
-          estimatedTime: "09:00",
-          status: "completed" as const,
-          services: ["Consulta", "Vacunación"]
-        },
-        {
-          id: "2", 
-          address: "Av. Reforma 456, Fracc. Las Flores",
-          clientName: "Juan Pérez",
-          phone: "+52 667 234 5678",
-          estimatedTime: "09:30",
-          status: "in_progress" as const,
-          services: ["Grooming", "Baño"]
-        },
-        {
-          id: "3",
-          address: "Blvd. Centro 789, Fracc. El Rosal",
-          clientName: "Ana Martínez", 
-          phone: "+52 667 345 6789",
-          estimatedTime: "10:00",
-          status: "pending" as const,
-          services: ["Entrega medicamentos"]
-        }
-      ] as RouteStop[]
-    }),
     enabled: !!routeId,
   });
 
@@ -81,11 +56,17 @@ export default function DriverRoute() {
     mutationFn: async ({ stopId, status }: { stopId: string; status: string }) => {
       return apiRequest(`/api/driver-routes/${routeId}/stops/${stopId}`, "PATCH", { status });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [`/api/driver-routes/${routeId}`] });
+      const statusMessage = {
+        'in_progress': 'Parada marcada como en progreso',
+        'completed': `Parada completada a las ${data?.timestamp ? new Date(data.timestamp).toLocaleTimeString() : 'ahora'}`,
+        'pending': 'Parada marcada como pendiente'
+      };
+      
       toast({
         title: "Estado actualizado",
-        description: "El estado de la parada se ha actualizado correctamente.",
+        description: statusMessage[status as keyof typeof statusMessage] || "El estado de la parada se ha actualizado correctamente.",
       });
     },
   });
@@ -257,7 +238,10 @@ export default function DriverRoute() {
                         )}
                       </div>
                       <Badge variant="outline" className="text-xs">
-                        {stop.estimatedTime}
+                        {stop.actualCompletionTime ? 
+                          new Date(stop.actualCompletionTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) :
+                          stop.estimatedTime || 'Pendiente'
+                        }
                       </Badge>
                     </div>
                     

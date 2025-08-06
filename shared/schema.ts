@@ -689,6 +689,76 @@ export const routeOptimizationConfig = pgTable("route_optimization_config", {
 export type RouteOptimizationConfig = typeof routeOptimizationConfig.$inferSelect;
 export type InsertRouteOptimizationConfig = typeof routeOptimizationConfig.$inferInsert;
 
+// Delivery routes for actual driver route management
+export const deliveryRoutes = pgTable("delivery_routes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  name: varchar("name").notNull(),
+  scheduledDate: date("scheduled_date").notNull(),
+  driverId: varchar("driver_id").references(() => staff.id),
+  status: varchar("status", { enum: ["scheduled", "in_progress", "completed", "cancelled"] }).default("scheduled"),
+  estimatedDuration: integer("estimated_duration"), // in minutes
+  actualDuration: integer("actual_duration"), // in minutes, calculated from completion times
+  totalDistance: decimal("total_distance", { precision: 8, scale: 2 }), // in kilometers
+  startTime: timestamp("start_time"),
+  endTime: timestamp("end_time"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Individual stops within a delivery route
+export const deliveryRouteStops = pgTable("delivery_route_stops", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  routeId: varchar("route_id").notNull().references(() => deliveryRoutes.id),
+  appointmentId: varchar("appointment_id").references(() => appointments.id),
+  clientId: varchar("client_id").references(() => clients.id),
+  address: text("address").notNull(),
+  estimatedTime: time("estimated_time"), // estimated time to arrive
+  actualArrivalTime: timestamp("actual_arrival_time"), // when driver actually arrived
+  actualCompletionTime: timestamp("actual_completion_time"), // when stop was marked complete
+  status: varchar("status", { enum: ["pending", "in_progress", "completed", "skipped"] }).default("pending"),
+  stopOrder: integer("stop_order").notNull(), // order in route sequence
+  services: jsonb("services"), // services to be performed at this stop
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type DeliveryRoute = typeof deliveryRoutes.$inferSelect;
+export type InsertDeliveryRoute = typeof deliveryRoutes.$inferInsert;
+
+export type DeliveryRouteStop = typeof deliveryRouteStops.$inferSelect;
+export type InsertDeliveryRouteStop = typeof deliveryRouteStops.$inferInsert;
+
+// Relations for delivery routes
+export const deliveryRoutesRelations = relations(deliveryRoutes, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [deliveryRoutes.tenantId],
+    references: [tenants.id],
+  }),
+  driver: one(staff, {
+    fields: [deliveryRoutes.driverId],
+    references: [staff.id],
+  }),
+  stops: many(deliveryRouteStops),
+}));
+
+export const deliveryRouteStopsRelations = relations(deliveryRouteStops, ({ one }) => ({
+  route: one(deliveryRoutes, {
+    fields: [deliveryRouteStops.routeId],
+    references: [deliveryRoutes.id],
+  }),
+  appointment: one(appointments, {
+    fields: [deliveryRouteStops.appointmentId],
+    references: [appointments.id],
+  }),
+  client: one(clients, {
+    fields: [deliveryRouteStops.clientId],
+    references: [clients.id],
+  }),
+}));
+
 // Delivery tracking for real-time monitoring
 export const deliveryTracking = pgTable("delivery_tracking", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -757,10 +827,10 @@ export const deliveryTrackingRelations = relations(deliveryTracking, ({ one, man
     fields: [deliveryTracking.driverId],
     references: [staff.id],
   }),
-  // route: one(deliveryRoutes, {
-  //   fields: [deliveryTracking.routeId],
-  //   references: [deliveryRoutes.id],
-  // }),
+  route: one(deliveryRoutes, {
+    fields: [deliveryTracking.routeId],
+    references: [deliveryRoutes.id],
+  }),
   alerts: many(deliveryAlerts),
   checkIns: many(driverCheckIns),
 }));

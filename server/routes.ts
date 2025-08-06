@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { and } from 'drizzle-orm';
-import { clients, rooms, services, staff, slotReservations, appointments } from '@shared/schema';
+import { clients, rooms, services, staff, slotReservations, appointments, deliveryRoutes, deliveryRouteStops } from '@shared/schema';
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookMonitor } from "./webhookMonitor";
 import { advancedRouteOptimization, type OptimizedRoute, type RouteOptimizationOptions } from "./routeOptimizer";
@@ -2704,6 +2704,233 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching all tenants for debug:", error);
       res.status(500).json({ message: "Failed to fetch tenants" });
+    }
+  });
+
+  // Driver Route Management APIs
+  
+  // Get route details for driver mobile view
+  app.get('/api/driver-routes/:routeId', async (req, res) => {
+    try {
+      const { routeId } = req.params;
+      
+      const [route] = await db
+        .select({
+          id: deliveryRoutes.id,
+          name: deliveryRoutes.name,
+          scheduledDate: deliveryRoutes.scheduledDate,
+          status: deliveryRoutes.status,
+          estimatedDuration: deliveryRoutes.estimatedDuration,
+          driverName: staff.name,
+        })
+        .from(deliveryRoutes)
+        .leftJoin(staff, eq(deliveryRoutes.driverId, staff.id))
+        .where(eq(deliveryRoutes.id, routeId));
+
+      if (!route) {
+        return res.status(404).json({ message: "Route not found" });
+      }
+
+      // Get route stops with client details
+      const stops = await db
+        .select({
+          id: deliveryRouteStops.id,
+          address: deliveryRouteStops.address,
+          estimatedTime: deliveryRouteStops.estimatedTime,
+          actualArrivalTime: deliveryRouteStops.actualArrivalTime,
+          actualCompletionTime: deliveryRouteStops.actualCompletionTime,
+          status: deliveryRouteStops.status,
+          stopOrder: deliveryRouteStops.stopOrder,
+          services: deliveryRouteStops.services,
+          clientName: clients.name,
+          clientPhone: clients.phone,
+        })
+        .from(deliveryRouteStops)
+        .leftJoin(clients, eq(deliveryRouteStops.clientId, clients.id))
+        .where(eq(deliveryRouteStops.routeId, routeId))
+        .orderBy(deliveryRouteStops.stopOrder);
+
+      res.json({
+        ...route,
+        stops: stops.map(stop => ({
+          id: stop.id,
+          address: stop.address,
+          clientName: stop.clientName || "Cliente desconocido",
+          phone: stop.clientPhone,
+          estimatedTime: stop.estimatedTime,
+          actualArrivalTime: stop.actualArrivalTime,
+          actualCompletionTime: stop.actualCompletionTime,
+          status: stop.status,
+          services: stop.services || [],
+        }))
+      });
+    } catch (error) {
+      console.error("Error fetching driver route:", error);
+      res.status(500).json({ message: "Failed to fetch route" });
+    }
+  });
+
+  // Update route stop status (for drivers)
+  app.patch('/api/driver-routes/:routeId/stops/:stopId', async (req, res) => {
+    try {
+      const { routeId, stopId } = req.params;
+      const { status } = req.body;
+
+      const now = new Date();
+      const updateData: any = { status, updatedAt: now };
+
+      // Set timestamps based on status
+      if (status === 'in_progress' && !req.body.actualArrivalTime) {
+        updateData.actualArrivalTime = now;
+      } else if (status === 'completed') {
+        updateData.actualCompletionTime = now;
+        // Also set arrival time if not set
+        const [currentStop] = await db
+          .select({ actualArrivalTime: deliveryRouteStops.actualArrivalTime })
+          .from(deliveryRouteStops)
+          .where(eq(deliveryRouteStops.id, stopId));
+        
+        if (!currentStop?.actualArrivalTime) {
+          updateData.actualArrivalTime = now;
+        }
+      }
+
+      await db
+        .update(deliveryRouteStops)
+        .set(updateData)
+        .where(eq(deliveryRouteStops.id, stopId));
+
+      // Update route status if all stops are completed
+      if (status === 'completed') {
+        const allStops = await db
+          .select({ status: deliveryRouteStops.status })
+          .from(deliveryRouteStops)
+          .where(eq(deliveryRouteStops.routeId, routeId));
+
+        const allCompleted = allStops.every(stop => stop.status === 'completed');
+        
+        if (allCompleted) {
+          const completedStops = await db
+            .select({
+              actualArrivalTime: deliveryRouteStops.actualArrivalTime,
+              actualCompletionTime: deliveryRouteStops.actualCompletionTime,
+            })
+            .from(deliveryRouteStops)
+            .where(eq(deliveryRouteStops.routeId, routeId))
+            .orderBy(deliveryRouteStops.stopOrder);
+
+          // Calculate actual duration from first arrival to last completion
+          const firstArrival = completedStops.find(s => s.actualArrivalTime)?.actualArrivalTime;
+          const lastCompletion = completedStops
+            .filter(s => s.actualCompletionTime)
+            .sort((a, b) => new Date(b.actualCompletionTime!).getTime() - new Date(a.actualCompletionTime!).getTime())[0]?.actualCompletionTime;
+
+          let actualDuration = null;
+          if (firstArrival && lastCompletion) {
+            actualDuration = Math.round((new Date(lastCompletion).getTime() - new Date(firstArrival).getTime()) / (1000 * 60));
+          }
+
+          await db
+            .update(deliveryRoutes)
+            .set({
+              status: 'completed',
+              endTime: now,
+              actualDuration,
+              updatedAt: now,
+            })
+            .where(eq(deliveryRoutes.id, routeId));
+        }
+      }
+
+      res.json({ success: true, timestamp: now });
+    } catch (error) {
+      console.error("Error updating route stop:", error);
+      res.status(500).json({ message: "Failed to update stop status" });
+    }
+  });
+
+  // Complete entire route
+  app.post('/api/driver-routes/:routeId/complete', async (req, res) => {
+    try {
+      const { routeId } = req.params;
+      const now = new Date();
+
+      // Get all stops to calculate actual duration
+      const completedStops = await db
+        .select({
+          actualArrivalTime: deliveryRouteStops.actualArrivalTime,
+          actualCompletionTime: deliveryRouteStops.actualCompletionTime,
+        })
+        .from(deliveryRouteStops)
+        .where(eq(deliveryRouteStops.routeId, routeId))
+        .orderBy(deliveryRouteStops.stopOrder);
+
+      const firstArrival = completedStops.find(s => s.actualArrivalTime)?.actualArrivalTime;
+      const lastCompletion = completedStops
+        .filter(s => s.actualCompletionTime)
+        .sort((a, b) => new Date(b.actualCompletionTime!).getTime() - new Date(a.actualCompletionTime!).getTime())[0]?.actualCompletionTime;
+
+      let actualDuration = null;
+      if (firstArrival && lastCompletion) {
+        actualDuration = Math.round((new Date(lastCompletion).getTime() - new Date(firstArrival).getTime()) / (1000 * 60));
+      }
+
+      await db
+        .update(deliveryRoutes)
+        .set({
+          status: 'completed',
+          endTime: now,
+          actualDuration,
+          updatedAt: now,
+        })
+        .where(eq(deliveryRoutes.id, routeId));
+
+      res.json({ success: true, completedAt: now, actualDuration });
+    } catch (error) {
+      console.error("Error completing route:", error);
+      res.status(500).json({ message: "Failed to complete route" });
+    }
+  });
+
+  // Get delivery routes for a tenant and date
+  app.get('/api/delivery-routes/:tenantId/:date', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId, date } = req.params;
+      
+      const routes = await db
+        .select({
+          id: deliveryRoutes.id,
+          name: deliveryRoutes.name,
+          scheduledDate: deliveryRoutes.scheduledDate,
+          status: deliveryRoutes.status,
+          estimatedDuration: deliveryRoutes.estimatedDuration,
+          actualDuration: deliveryRoutes.actualDuration,
+          totalDistance: deliveryRoutes.totalDistance,
+          driverName: staff.name,
+        })
+        .from(deliveryRoutes)
+        .leftJoin(staff, eq(deliveryRoutes.driverId, staff.id))
+        .where(eq(deliveryRoutes.tenantId, tenantId) && eq(deliveryRoutes.scheduledDate, date))
+        .orderBy(deliveryRoutes.createdAt);
+
+      res.json(routes);
+    } catch (error) {
+      console.error("Error fetching delivery routes:", error);
+      res.status(500).json({ message: "Failed to fetch delivery routes" });
+    }
+  });
+
+  // Seed sample delivery routes endpoint (for testing)
+  app.post('/api/seed-delivery-routes/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { seedDeliveryRoutes } = await import('./seedDeliveryRoutes');
+      
+      await seedDeliveryRoutes(tenantId);
+      res.json({ success: true, message: "Delivery routes seeded successfully" });
+    } catch (error) {
+      console.error("Error seeding delivery routes:", error);
+      res.status(500).json({ message: "Failed to seed delivery routes" });
     }
   });
 

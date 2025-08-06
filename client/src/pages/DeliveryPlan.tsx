@@ -176,6 +176,8 @@ export default function DeliveryPlan() {
     }
   };
 
+  // Remove conflicting query - use existing routes from routesResponse
+
   // Mock data for fraccionamientos with weights for demonstration
   const fraccionamientosWithWeights = fraccionamientos?.map(f => ({
     ...f,
