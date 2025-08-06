@@ -39,6 +39,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     
     // Use wouter's setLocation for instant SPA navigation (no page reload)
     const bookingUrl = `/booking-wizard?date=${displayDate}&time=${time}`;
+    console.log(`Navigating to booking with date: ${displayDate}, time: ${time}`);
     setLocation(bookingUrl);
   };
 

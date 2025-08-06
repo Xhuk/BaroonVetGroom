@@ -83,6 +83,13 @@ export default function BookingWizard() {
   const preSelectedDate = urlParams.get('date');
   const preSelectedTime = urlParams.get('time');
   
+  // Debug log to confirm parameters are received
+  useEffect(() => {
+    if (preSelectedDate && preSelectedTime) {
+      console.log(`BookingWizard loaded with pre-selected date: ${preSelectedDate}, time: ${preSelectedTime}`);
+    }
+  }, [preSelectedDate, preSelectedTime]);
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [customerData, setCustomerData] = useState<CustomerData>({
     name: "",
