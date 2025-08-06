@@ -284,6 +284,12 @@ export default function Clients() {
       {/* Search Filter */}
       <Card className="mb-6">
         <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-sm text-muted-foreground">
+              <strong>Tenant:</strong> {currentTenant?.id || 'No tenant selected'} | 
+              <strong> Total Clientes:</strong> {clients?.length || 0}
+            </div>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
@@ -296,7 +302,7 @@ export default function Clients() {
           </div>
           {searchQuery && (
             <div className="mt-2 text-sm text-muted-foreground">
-              {filteredClients.length} cliente{filteredClients.length !== 1 ? 's' : ''} encontrado{filteredClients.length !== 1 ? 's' : ''}
+              {filteredClients.length} cliente{filteredClients.length !== 1 ? 's' : ''} encontrado{filteredClients.length !== 1 ? 's' : ''} de {clients?.length || 0}
             </div>
           )}
         </CardContent>
