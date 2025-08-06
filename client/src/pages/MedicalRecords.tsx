@@ -475,19 +475,19 @@ function MedicalRecords() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Fecha de Visita</p>
-                  <p>{format(new Date(selectedRecord.visitDate), "dd 'de' MMMM, yyyy", { locale: es })}</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha de Visita</p>
+                  <p className="text-gray-900 dark:text-gray-100">{format(new Date(selectedRecord.visitDate), "dd 'de' MMMM, yyyy", { locale: es })}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Tipo de Visita</p>
-                  <p>{getVisitTypeLabel(selectedRecord.visitType)}</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Visita</p>
+                  <p className="text-gray-900 dark:text-gray-100">{getVisitTypeLabel(selectedRecord.visitType)}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Veterinario</p>
-                  <p>Dr. {veterinarians.find(v => v.id === selectedRecord.veterinarianId)?.name}</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Veterinario</p>
+                  <p className="text-gray-900 dark:text-gray-100">Dr. {veterinarians.find(v => v.id === selectedRecord.veterinarianId)?.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Estado</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Estado</p>
                   <Badge className={cn("px-2 py-1", getStatusColor(selectedRecord.status))}>
                     {selectedRecord.status === 'active' ? 'Activo' : 
                      selectedRecord.status === 'resolved' ? 'Resuelto' : 'En Progreso'}
@@ -497,27 +497,27 @@ function MedicalRecords() {
 
               {selectedRecord.chiefComplaint && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Motivo Principal de Consulta</p>
-                  <p className="p-3 bg-gray-50 rounded-lg">{selectedRecord.chiefComplaint}</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Motivo Principal de Consulta</p>
+                  <p className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100">{selectedRecord.chiefComplaint}</p>
                 </div>
               )}
 
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">Diagnóstico</p>
-                <p className="p-3 bg-blue-50 rounded-lg">{selectedRecord.diagnosis}</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Diagnóstico</p>
+                <p className="p-3 bg-blue-50 dark:bg-blue-900 rounded-lg text-gray-900 dark:text-gray-100">{selectedRecord.diagnosis}</p>
               </div>
 
               {selectedRecord.treatmentPlan && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Plan de Tratamiento</p>
-                  <p className="p-3 bg-green-50 rounded-lg">{selectedRecord.treatmentPlan}</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Plan de Tratamiento</p>
+                  <p className="p-3 bg-green-50 dark:bg-green-900 rounded-lg text-gray-900 dark:text-gray-100">{selectedRecord.treatmentPlan}</p>
                 </div>
               )}
 
               {selectedRecord.vitals && typeof selectedRecord.vitals === 'object' && Object.keys(selectedRecord.vitals).length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Signos Vitales</p>
-                  <div className="grid grid-cols-2 gap-4 p-3 bg-yellow-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Signos Vitales</p>
+                  <div className="grid grid-cols-2 gap-4 p-3 bg-yellow-50 dark:bg-yellow-900 rounded-lg text-gray-900 dark:text-gray-100">
                     {(selectedRecord.vitals as any).temperature && (
                       <div>
                         <span className="text-sm font-medium">Temperatura:</span>
@@ -536,13 +536,13 @@ function MedicalRecords() {
 
               {selectedRecord.notes && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Notas Adicionales</p>
-                  <p className="p-3 bg-gray-50 rounded-lg">{selectedRecord.notes}</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notas Adicionales</p>
+                  <p className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100">{selectedRecord.notes}</p>
                 </div>
               )}
 
               {selectedRecord.followUpRequired && (
-                <div className="flex items-center p-3 bg-orange-50 rounded-lg text-orange-800">
+                <div className="flex items-center p-3 bg-orange-50 dark:bg-orange-900 rounded-lg text-orange-800 dark:text-orange-200">
                   <AlertCircle className="w-5 h-5 mr-2" />
                   <span className="font-medium">Seguimiento requerido</span>
                   {selectedRecord.followUpDate && (

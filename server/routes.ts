@@ -275,6 +275,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ULTRA-OPTIMIZED: Fast medical appointments with minimal payload
+  app.get('/api/medical-appointments-fast/:tenantId', async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      console.log(`Fast medical appointments: ${tenantId}`);
+      
+      const [medicalAppointments, pets, clients, veterinarians, rooms] = await Promise.all([
+        storage.getMedicalAppointments(tenantId),
+        storage.getPets(tenantId),
+        storage.getClients(tenantId),
+        storage.getStaff(tenantId, 'veterinarian'),
+        storage.getRooms(tenantId)
+      ]);
+      
+      // Create lookup maps for efficient filtering
+      const appointmentClientIds = new Set(medicalAppointments.map(apt => apt.clientId));
+      const appointmentPetIds = new Set(medicalAppointments.map(apt => apt.petId));
+      const appointmentVetIds = new Set(medicalAppointments.map(apt => apt.veterinarianId));
+      const appointmentRoomIds = new Set(medicalAppointments.map(apt => apt.roomId).filter(Boolean));
+      
+      // Only include relevant data
+      const relevantClients = clients.filter(client => appointmentClientIds.has(client.id));
+      const relevantPets = pets.filter(pet => appointmentPetIds.has(pet.id));
+      const relevantVets = veterinarians.filter(vet => appointmentVetIds.has(vet.id));
+      const relevantRooms = rooms.filter(room => appointmentRoomIds.has(room.id));
+      
+      res.json({
+        medicalAppointments: medicalAppointments.map(apt => ({
+          id: apt.id,
+          petId: apt.petId,
+          clientId: apt.clientId,
+          veterinarianId: apt.veterinarianId,
+          roomId: apt.roomId,
+          visitDate: apt.visitDate,
+          visitType: apt.visitType,
+          chiefComplaint: apt.chiefComplaint,
+          diagnosis: apt.diagnosis,
+          treatment: apt.treatment,
+          status: apt.status,
+          followUpRequired: apt.followUpRequired,
+          followUpDate: apt.followUpDate
+        })),
+        clients: relevantClients.map(client => ({
+          id: client.id,
+          name: client.name,
+          phone: client.phone,
+          email: client.email
+        })),
+        pets: relevantPets.map(pet => ({
+          id: pet.id,
+          name: pet.name,
+          species: pet.species,
+          breed: pet.breed,
+          clientId: pet.clientId
+        })),
+        veterinarians: relevantVets.map(vet => ({
+          id: vet.id,
+          name: vet.name,
+          email: vet.email
+        })),
+        rooms: relevantRooms.map(room => ({
+          id: room.id,
+          name: room.name,
+          roomType: room.roomType
+        })),
+        count: medicalAppointments.length
+      });
+      
+    } catch (error) {
+      console.error("Fast medical appointments error:", error);
+      res.status(500).json({ error: "Failed to load medical appointments" });
+    }
+  });
+
 
 
   // Create appointment

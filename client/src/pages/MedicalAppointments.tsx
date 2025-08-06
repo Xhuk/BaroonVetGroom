@@ -82,38 +82,27 @@ export default function MedicalAppointments() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Ultra-fast data loading
-  const { data: medicalAppointmentsData, isLoading } = useFastFetch<MedicalAppointment[]>(
-    `/api/medical-appointments/${currentTenant?.id}`,
+  // Ultra-fast data loading with single optimized endpoint
+  interface FastMedicalData {
+    medicalAppointments: MedicalAppointment[];
+    clients: Client[];
+    pets: Pet[];
+    veterinarians: Staff[];
+    rooms: Room[];
+    count: number;
+  }
+
+  const { data: fastData, isLoading } = useFastFetch<FastMedicalData>(
+    `/api/medical-appointments-fast/${currentTenant?.id}`,
     !!currentTenant?.id && !isInstant
   );
 
-  const { data: petsData } = useFastFetch<Pet[]>(
-    `/api/pets/${currentTenant?.id}`,
-    !!currentTenant?.id && !isInstant
-  );
-
-  const { data: clientsData } = useFastFetch<Client[]>(
-    `/api/clients/${currentTenant?.id}`,
-    !!currentTenant?.id && !isInstant
-  );
-
-  const { data: veterinariansData } = useFastFetch<Staff[]>(
-    `/api/staff/${currentTenant?.id}/veterinarian`,
-    !!currentTenant?.id && !isInstant
-  );
-
-  const { data: roomsData } = useFastFetch<Room[]>(
-    `/api/rooms/${currentTenant?.id}`,
-    !!currentTenant?.id && !isInstant
-  );
-
-  // Ensure we have safe arrays to work with
-  const medicalAppointments = medicalAppointmentsData || [];
-  const pets = petsData || [];
-  const clients = clientsData || [];
-  const veterinarians = veterinariansData || [];
-  const rooms = roomsData || [];
+  // Ensure we have safe arrays to work with from the optimized response
+  const medicalAppointments = fastData?.medicalAppointments || [];
+  const pets = fastData?.pets || [];
+  const clients = fastData?.clients || [];
+  const veterinarians = fastData?.veterinarians || [];
+  const rooms = fastData?.rooms || [];
 
   const form = useForm<MedicalAppointmentFormData>({
     resolver: zodResolver(medicalAppointmentSchema),
