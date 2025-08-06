@@ -1051,6 +1051,24 @@ export const tempLinks = pgTable('temp_links', {
   metadata: jsonb('metadata'),
 });
 
+// Delivery configuration for tenants
+export const deliveryConfig = pgTable("delivery_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id).unique(),
+  mode: varchar("mode", { enum: ["wave", "free"] }).notNull().default("wave"),
+  totalWaves: integer("total_waves").notNull().default(5),
+  pickupVans: integer("pickup_vans").notNull().default(2),
+  deliveryVans: integer("delivery_vans").notNull().default(3),
+  pickupStartTime: varchar("pickup_start_time").notNull().default("08:00"),
+  pickupEndTime: varchar("pickup_end_time").notNull().default("12:00"),
+  deliveryStartTime: varchar("delivery_start_time").notNull().default("13:00"),
+  deliveryEndTime: varchar("delivery_end_time").notNull().default("17:00"),
+  freeStartTime: varchar("free_start_time").notNull().default("08:00"),
+  freeEndTime: varchar("free_end_time").notNull().default("20:00"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations for temporary links
 export const tempLinksRelations = relations(tempLinks, ({ one }) => ({
   tenant: one(tenants, {
@@ -1111,6 +1129,9 @@ export type InsertPendingInvoice = typeof pendingInvoices.$inferInsert;
 
 export type InvoiceLineItem = typeof invoiceLineItems.$inferSelect;
 export type InsertInvoiceLineItem = typeof invoiceLineItems.$inferInsert;
+
+export type DeliveryConfig = typeof deliveryConfig.$inferSelect;
+export type InsertDeliveryConfig = typeof deliveryConfig.$inferInsert;
 
 // Inventory Management System
 export const inventoryItems = pgTable("inventory_items", {

@@ -1909,6 +1909,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delivery configuration endpoints
+  app.get("/api/admin/delivery-config/:tenantId", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const config = await storage.getDeliveryConfig(tenantId);
+      res.json(config);
+    } catch (error) {
+      console.error("Error fetching delivery config:", error);
+      res.status(500).json({ error: "Failed to fetch delivery configuration" });
+    }
+  });
+
+  app.post("/api/admin/delivery-config", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId, ...configData } = req.body;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+
+      const config = await storage.updateDeliveryConfig(tenantId, configData);
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating delivery config:", error);
+      res.status(500).json({ error: "Failed to update delivery configuration" });
+    }
+  });
+
   // Delivery tracking routes
   app.get("/api/delivery-tracking/:tenantId", isAuthenticated, async (req, res) => {
     try {

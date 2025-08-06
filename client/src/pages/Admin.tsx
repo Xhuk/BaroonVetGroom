@@ -94,6 +94,12 @@ function Admin() {
     refetchInterval: 30000,
   });
 
+  // Fetch delivery configuration
+  const { data: deliveryConfigData } = useQuery({
+    queryKey: ["/api/admin/delivery-config", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
+
   const { data: staffData, isLoading: staffLoading } = useQuery({
     queryKey: ['/api', 'staff', currentTenant?.id].filter(Boolean),
     enabled: !!currentTenant?.id,
@@ -104,7 +110,10 @@ function Admin() {
     if (servicesData) setServices(servicesData);
     if (rolesData) setRoles(rolesData);
     if (staffData) setStaff(staffData);
-  }, [roomsData, servicesData, rolesData, staffData]);
+    if (deliveryConfigData) {
+      setDeliveryConfig(deliveryConfigData);
+    }
+  }, [roomsData, servicesData, rolesData, staffData, deliveryConfigData]);
 
   // State for roles (loaded from database)
   const [roles, setRoles] = useState([]);
@@ -141,6 +150,20 @@ function Admin() {
     displayName: '',
     department: '',
     permissions: []
+  });
+
+  // Delivery configuration state
+  const [deliveryConfig, setDeliveryConfig] = useState({
+    mode: 'wave', // 'wave' or 'free'
+    totalWaves: 10,
+    pickupVans: 2,
+    deliveryVans: 6,
+    pickupStartTime: '08:00',
+    pickupEndTime: '12:00',
+    deliveryStartTime: '13:00',
+    deliveryEndTime: '17:00',
+    freeStartTime: '08:00',
+    freeEndTime: '20:00'
   });
   
   const [editingStaff, setEditingStaff] = useState(null);
@@ -627,6 +650,37 @@ function Admin() {
     }
   };
 
+  // Delivery configuration mutation
+  const updateDeliveryConfigMutation = useMutation({
+    mutationFn: async (config) => {
+      return apiRequest('/api/admin/delivery-config', 'POST', { 
+        ...config, 
+        tenantId: currentTenant?.id 
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/admin/delivery-config", currentTenant?.id] 
+      });
+      toast({
+        title: "Configuración guardada",
+        description: "La configuración de entregas ha sido actualizada exitosamente.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo guardar la configuración",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle save delivery configuration
+  const handleSaveDeliveryConfig = () => {
+    updateDeliveryConfigMutation.mutate(deliveryConfig);
+  };
+
   // Handle edit role
   const handleEditRole = (role) => {
     setEditingRole(role);
@@ -835,7 +889,7 @@ function Admin() {
           </div>
 
           <Tabs defaultValue="rooms" className="w-full">
-            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-6' : 'grid-cols-5'}`}>
+            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-7' : 'grid-cols-6'}`}>
               <TabsTrigger value="rooms" className="flex items-center gap-2">
                 <DoorOpen className="w-4 h-4" />
                 Salas
@@ -852,15 +906,19 @@ function Admin() {
                 <Clock className="w-4 h-4" />
                 Servicios
               </TabsTrigger>
+              <TabsTrigger value="delivery-config" className="flex items-center gap-2">
+                <Truck className="w-4 h-4" />
+                Entregas
+              </TabsTrigger>
               <TabsTrigger value="stats" className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 Estadísticas
               </TabsTrigger>
               {isVetGroomDeveloper && (
                 <TabsTrigger value="delivery-tracking" className="flex items-center gap-2">
-                  <Truck className="w-4 h-4" />
+                  <MapPin className="w-4 h-4" />
                   <Badge variant="secondary" className="ml-1 text-xs">BETA</Badge>
-                  Entregas
+                  Tracking
                 </TabsTrigger>
               )}
             </TabsList>
@@ -1746,6 +1804,241 @@ function Admin() {
                   </div>
                 </DialogContent>
               </Dialog>
+            </TabsContent>
+
+            {/* Delivery Configuration Tab */}
+            <TabsContent value="delivery-config" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Configuración de Entregas</h2>
+                  <p className="text-gray-600 dark:text-gray-400">Configura el sistema de entregas, waves y vanes para tu negocio</p>
+                </div>
+                <Button 
+                  onClick={handleSaveDeliveryConfig} 
+                  disabled={updateDeliveryConfigMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  {updateDeliveryConfigMutation.isPending ? "Guardando..." : "Guardar Configuración"}
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Delivery Mode Configuration */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Truck className="w-5 h-5" />
+                      Modo de Entrega
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium">Tipo de Programación</Label>
+                      <Select 
+                        value={deliveryConfig.mode} 
+                        onValueChange={(value) => setDeliveryConfig(prev => ({ ...prev, mode: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="wave">Programación por Waves (Horarios fijos)</SelectItem>
+                          <SelectItem value="free">Selección Libre (Cualquier hora)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {deliveryConfig.mode === 'wave' 
+                          ? 'Entregas organizadas en waves de horarios fijos'
+                          : 'Entregas flexibles en cualquier horario disponible'
+                        }
+                      </p>
+                    </div>
+
+                    {deliveryConfig.mode === 'wave' && (
+                      <>
+                        <div>
+                          <Label className="text-sm font-medium">Número Total de Waves</Label>
+                          <Input 
+                            type="number" 
+                            min="1" 
+                            max="20"
+                            value={deliveryConfig.totalWaves}
+                            onChange={(e) => setDeliveryConfig(prev => ({ 
+                              ...prev, 
+                              totalWaves: parseInt(e.target.value) || 1 
+                            }))}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Ejemplo: 10 waves = Wave 1, Wave 2, ..., Wave 10
+                          </p>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-sm font-medium">Horario de Recogida</Label>
+                            <div className="space-y-2">
+                              <Input 
+                                type="time" 
+                                value={deliveryConfig.pickupStartTime}
+                                onChange={(e) => setDeliveryConfig(prev => ({ 
+                                  ...prev, 
+                                  pickupStartTime: e.target.value 
+                                }))}
+                              />
+                              <Input 
+                                type="time" 
+                                value={deliveryConfig.pickupEndTime}
+                                onChange={(e) => setDeliveryConfig(prev => ({ 
+                                  ...prev, 
+                                  pickupEndTime: e.target.value 
+                                }))}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium">Horario de Entrega</Label>
+                            <div className="space-y-2">
+                              <Input 
+                                type="time" 
+                                value={deliveryConfig.deliveryStartTime}
+                                onChange={(e) => setDeliveryConfig(prev => ({ 
+                                  ...prev, 
+                                  deliveryStartTime: e.target.value 
+                                }))}
+                              />
+                              <Input 
+                                type="time" 
+                                value={deliveryConfig.deliveryEndTime}
+                                onChange={(e) => setDeliveryConfig(prev => ({ 
+                                  ...prev, 
+                                  deliveryEndTime: e.target.value 
+                                }))}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {deliveryConfig.mode === 'free' && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">Hora Inicio</Label>
+                          <Input 
+                            type="time" 
+                            value={deliveryConfig.freeStartTime}
+                            onChange={(e) => setDeliveryConfig(prev => ({ 
+                              ...prev, 
+                              freeStartTime: e.target.value 
+                            }))}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Hora Fin</Label>
+                          <Input 
+                            type="time" 
+                            value={deliveryConfig.freeEndTime}
+                            onChange={(e) => setDeliveryConfig(prev => ({ 
+                              ...prev, 
+                              freeEndTime: e.target.value 
+                            }))}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Van Configuration */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Truck className="w-5 h-5" />
+                      Configuración de Vanes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium">Vanes para Recogida</Label>
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        max="10"
+                        value={deliveryConfig.pickupVans}
+                        onChange={(e) => setDeliveryConfig(prev => ({ 
+                          ...prev, 
+                          pickupVans: parseInt(e.target.value) || 1 
+                        }))}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Número de vehículos disponibles para recoger mascotas
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-medium">Vanes para Entrega</Label>
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        max="10"
+                        value={deliveryConfig.deliveryVans}
+                        onChange={(e) => setDeliveryConfig(prev => ({ 
+                          ...prev, 
+                          deliveryVans: parseInt(e.target.value) || 1 
+                        }))}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Número de vehículos disponibles para entregar mascotas
+                      </p>
+                    </div>
+
+                    {/* Van Capacity Info */}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                      <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Capacidades por Van</h4>
+                      <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        <div>🚐 <strong>Pequeño:</strong> 8 mascotas</div>
+                        <div>🚚 <strong>Mediano:</strong> 15 mascotas</div>
+                        <div>🚛 <strong>Grande:</strong> 25 mascotas</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Configuration Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Resumen de Configuración
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {deliveryConfig.mode === 'wave' ? deliveryConfig.totalWaves : '∞'}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {deliveryConfig.mode === 'wave' ? 'Waves Configurados' : 'Horarios Disponibles'}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        {deliveryConfig.pickupVans}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Vanes de Recogida</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                        {deliveryConfig.deliveryVans}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Vanes de Entrega</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Statistics Tab */}

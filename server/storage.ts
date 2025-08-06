@@ -44,6 +44,7 @@ import {
   taxConfiguration,
   pendingInvoices,
   invoiceLineItems,
+  deliveryConfig,
   type User,
   type UpsertUser,
   type Company,
@@ -123,6 +124,8 @@ import {
   type InsertPendingInvoice,
   type InvoiceLineItem,
   type InsertInvoiceLineItem,
+  type DeliveryConfig,
+  type InsertDeliveryConfig,
   webhookIntegrations,
   type WebhookIntegration,
   type InsertWebhookIntegration,
@@ -329,6 +332,10 @@ export interface IStorage {
   getWhatsAppUsageStats(companyId: string, startDate?: string, endDate?: string): Promise<any>;
   recordWhatsAppUsage(usage: any): Promise<any>;
   getExternalServiceSubscriptionByType(companyId: string, serviceType: string): Promise<any>;
+
+  // Delivery Configuration operations
+  getDeliveryConfig(tenantId: string): Promise<DeliveryConfig | undefined>;
+  updateDeliveryConfig(tenantId: string, config: Partial<InsertDeliveryConfig>): Promise<DeliveryConfig>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2419,6 +2426,56 @@ export class DatabaseStorage implements IStorage {
     `);
     
     return result.rows[0];
+  }
+
+  // Delivery Configuration operations
+  async getDeliveryConfig(tenantId: string): Promise<DeliveryConfig | undefined> {
+    const [config] = await db
+      .select()
+      .from(deliveryConfig)
+      .where(eq(deliveryConfig.tenantId, tenantId));
+    
+    // Return default configuration if none exists
+    if (!config) {
+      return {
+        id: '',
+        tenantId,
+        mode: 'wave',
+        totalWaves: 5,
+        pickupVans: 2,
+        deliveryVans: 3,
+        pickupStartTime: '08:00',
+        pickupEndTime: '12:00',
+        deliveryStartTime: '13:00',
+        deliveryEndTime: '17:00',
+        freeStartTime: '08:00',
+        freeEndTime: '20:00',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    }
+    
+    return config;
+  }
+
+  async updateDeliveryConfig(tenantId: string, config: Partial<InsertDeliveryConfig>): Promise<DeliveryConfig> {
+    const [updatedConfig] = await db
+      .insert(deliveryConfig)
+      .values({
+        tenantId,
+        ...config,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: deliveryConfig.tenantId,
+        set: {
+          ...config,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    
+    return updatedConfig;
   }
 }
 
