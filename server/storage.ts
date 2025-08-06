@@ -148,6 +148,7 @@ export interface IStorage {
   
   // Company operations
   getCompanies(): Promise<Company[]>;
+  getCompany(companyId: string): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   
   // Tenant operations
@@ -183,6 +184,7 @@ export interface IStorage {
   
   // Pet operations
   getPets(clientId: string): Promise<Pet[]>;
+  getPetsByClient(clientId: string): Promise<Pet[]>;
   createPet(pet: InsertPet): Promise<Pet>;
   
   // Appointment operations
@@ -369,6 +371,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(companies);
   }
 
+  async getCompany(companyId: string): Promise<Company | undefined> {
+    const [company] = await db.select().from(companies).where(eq(companies.id, companyId));
+    return company;
+  }
+
   async updateCompanySettings(companyId: string, settings: any): Promise<void> {
     await db.update(companies)
       .set({ 
@@ -519,6 +526,10 @@ export class DatabaseStorage implements IStorage {
 
   // Pet operations
   async getPets(clientId: string): Promise<Pet[]> {
+    return await db.select().from(pets).where(eq(pets.clientId, clientId));
+  }
+
+  async getPetsByClient(clientId: string): Promise<Pet[]> {
     return await db.select().from(pets).where(eq(pets.clientId, clientId));
   }
 
