@@ -4,6 +4,15 @@
 A high-performance veterinary clinic management platform with ultra-optimized user experience and operational efficiency.
 
 ## Recent Changes
+### Multi-Timezone UTC-Based Time Management System (August 2025) - COMPLETED ✅
+- **UTC as Source of Truth**: Migrated from fixed CST-1 timezone to proper UTC-based system
+- **Multi-Region Support**: Added timezone configurations for Mexico City, Culiacán, Colombia, Argentina
+- **Timezone Context Provider**: Implemented React context for global timezone management with localStorage persistence
+- **Backwards Compatibility**: Maintained existing CST-1 functions while adding new UTC-based utilities
+- **User Timezone Selection**: Enhanced timezone settings component with full region support
+- **Database Consistency**: All datetime operations now convert properly between user timezone and UTC for storage
+- **Cross-Location Data Integrity**: Ensures appointments and records make sense regardless of user location
+
 ### Enhanced Booking System with Smart Creation & Real-Time Updates (August 2025) - COMPLETED ✅
 - **Azure Portal-Style Search Interfaces**: Type-ahead search for clients (name, email, phone) and pets (name, species, breed)
 - **Multi-Service Selection**: Tag-style interface for selecting multiple services with real-time price calculation

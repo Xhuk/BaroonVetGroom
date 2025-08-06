@@ -1,31 +1,29 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Settings, Clock, MapPin } from "lucide-react";
-import { TIMEZONE_OPTIONS, getUserTimezone, saveUserTimezone, getCurrentTimeInUserTimezone } from "@shared/userPreferences";
+import { useTimezone } from "@/contexts/TimezoneContext";
+import { TimezoneKey, getCurrentTimeInUserTimezone } from "@shared/timeUtils";
 
 interface TimezoneSettingsProps {
   onTimezoneChange?: () => void;
 }
 
 export function TimezoneSettings({ onTimezoneChange }: TimezoneSettingsProps) {
-  const [selectedTimezone, setSelectedTimezone] = useState(getUserTimezone().id);
+  const { timezone, setTimezone, timezoneConfig, availableTimezones } = useTimezone();
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone());
 
   const handleTimezoneChange = (timezoneId: string) => {
-    setSelectedTimezone(timezoneId);
-    saveUserTimezone(timezoneId);
-    setCurrentTime(getCurrentTimeInUserTimezone());
+    const newTimezone = timezoneId as TimezoneKey;
+    setTimezone(newTimezone);
+    setCurrentTime(getCurrentTimeInUserTimezone(newTimezone));
     
     // Notify parent component to refresh
     if (onTimezoneChange) {
       onTimezoneChange();
     }
   };
-
-  const selectedTz = TIMEZONE_OPTIONS.find(tz => tz.id === selectedTimezone);
 
   return (
     <Card className="w-full max-w-md">
@@ -40,18 +38,18 @@ export function TimezoneSettings({ onTimezoneChange }: TimezoneSettingsProps) {
           <Label htmlFor="timezone" className="text-sm font-medium">
             Zona Horaria
           </Label>
-          <Select value={selectedTimezone} onValueChange={handleTimezoneChange}>
+          <Select value={timezone} onValueChange={handleTimezoneChange}>
             <SelectTrigger className="w-full mt-1">
               <SelectValue placeholder="Selecciona tu zona horaria" />
             </SelectTrigger>
             <SelectContent>
-              {TIMEZONE_OPTIONS.map((tz) => (
-                <SelectItem key={tz.id} value={tz.id}>
+              {Object.entries(availableTimezones).map(([key, config]) => (
+                <SelectItem key={key} value={key}>
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
                     <div>
-                      <div className="font-medium">{tz.name}</div>
-                      <div className="text-xs text-gray-500">{tz.description}</div>
+                      <div className="font-medium">{config.displayName}</div>
+                      <div className="text-xs text-gray-500">UTC{config.offset >= 0 ? '+' : ''}{config.offset}</div>
                     </div>
                   </div>
                 </SelectItem>
@@ -60,38 +58,34 @@ export function TimezoneSettings({ onTimezoneChange }: TimezoneSettingsProps) {
           </Select>
         </div>
 
-        {selectedTz && (
-          <div className="p-3 bg-blue-50 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="w-4 h-4 text-blue-600" />
-              <span className="font-medium text-blue-800">Hora Actual</span>
-            </div>
-            <div className="text-2xl font-bold text-blue-900">
-              {currentTime.toLocaleTimeString('es-ES', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
-              })}
-            </div>
-            <div className="text-sm text-blue-700">
-              {currentTime.toLocaleDateString('es-ES', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </div>
-            <div className="text-xs text-blue-600 mt-1">
-              {selectedTz.daylightSaving 
-                ? "⚠️ Incluye horario de verano automático" 
-                : "✅ Sin horario de verano (fijo todo el año)"
-              }
-            </div>
+        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="w-4 h-4 text-blue-600" />
+            <span className="font-medium text-blue-800 dark:text-blue-200">Hora Actual</span>
           </div>
-        )}
+          <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+            {currentTime.toLocaleTimeString('es-ES', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              second: '2-digit'
+            })}
+          </div>
+          <div className="text-sm text-blue-700 dark:text-blue-300">
+            {currentTime.toLocaleDateString('es-ES', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </div>
+          <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+            ✅ Zona horaria: {timezoneConfig.displayName}
+          </div>
+        </div>
 
-        <div className="text-xs text-gray-500">
-          La configuración se guarda automáticamente y afecta a todos los horarios mostrados en la aplicación.
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          El sistema usa UTC como fuente de verdad y convierte automáticamente a tu zona horaria.
+          Esto asegura consistencia entre usuarios en diferentes ubicaciones.
         </div>
       </CardContent>
     </Card>

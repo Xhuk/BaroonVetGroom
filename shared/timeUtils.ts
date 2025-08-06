@@ -1,56 +1,93 @@
 /**
- * Reliable timezone utilities for CST-1 (UTC-6) timezone
- * Ensures consistent time handling across the application
+ * Multi-timezone utilities with UTC as source of truth
+ * Supports customers across Mexico, Colombia, Argentina, and other regions
  */
 
-// CST-1 is UTC-6 (Central Standard Time minus 1 hour)
-const CST_MINUS_1_OFFSET = -6 * 60; // minutes from UTC
+// Timezone configurations for different regions
+export const TIMEZONE_CONFIGS = {
+  'UTC': { offset: 0, name: 'UTC', displayName: 'UTC' },
+  'Mexico/General': { offset: -6, name: 'CST', displayName: 'Mexico Central (CST-6)' },
+  'America/Mexico_City': { offset: -6, name: 'CST', displayName: 'Mexico City (CST-6)' },
+  'America/Mazatlan': { offset: -7, name: 'MST', displayName: 'Culiacán (MST-7)' },
+  'America/Bogota': { offset: -5, name: 'COT', displayName: 'Colombia (COT-5)' },
+  'America/Argentina/Buenos_Aires': { offset: -3, name: 'ART', displayName: 'Argentina (ART-3)' }
+} as const;
+
+export type TimezoneKey = keyof typeof TIMEZONE_CONFIGS;
+
+// Default timezone can be configured per tenant
+const DEFAULT_TIMEZONE: TimezoneKey = 'Mexico/General';
 
 /**
- * Get current time in CST-1 timezone (UTC-6, no daylight saving)
+ * Get current UTC time - this is the source of truth for all operations
  */
-export function getCurrentTimeCST1(): Date {
-  const now = new Date();
-  
-  // Create a new date in CST-1 timezone (UTC-6)
-  // Add the offset to get CST-1 time (subtract 6 hours from UTC)
-  const cstMinus1Time = new Date(now.getTime() + (CST_MINUS_1_OFFSET * 60000));
-  
-  console.log(`getCurrentTimeCST1: UTC time: ${now.toISOString()}, CST-1 time: ${cstMinus1Time.toISOString()}`);
-  
-  return cstMinus1Time;
+export function getCurrentUTC(): Date {
+  return new Date();
 }
 
 /**
- * Convert any date to CST-1 timezone string for database storage
+ * Get user's timezone from localStorage or default
  */
-export function toCST1String(date?: Date): string {
-  const cstTime = date ? date : getCurrentTimeCST1();
-  const year = cstTime.getFullYear();
-  const month = String(cstTime.getMonth() + 1).padStart(2, '0');
-  const day = String(cstTime.getDate()).padStart(2, '0');
-  
-  return `${year}-${month}-${day}`;
+export function getUserTimezone(): TimezoneKey {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('userTimezone') as TimezoneKey;
+    if (stored && TIMEZONE_CONFIGS[stored]) {
+      return stored;
+    }
+  }
+  return DEFAULT_TIMEZONE;
 }
 
 /**
- * Get today's date in CST-1 timezone as YYYY-MM-DD string
+ * Set user's timezone preference
  */
-export function getTodayCST1(): string {
-  const cstTime = getCurrentTimeCST1();
-  
-  // Extract date from CST-1 ISO string to avoid timezone issues
-  const cstDateStr = cstTime.toISOString().split('T')[0]; // Get "2025-08-05"
-  
-  console.log(`getTodayCST1: CST time is ${cstTime.toISOString()}, returning ${cstDateStr}`);
-  
-  return cstDateStr;
+export function setUserTimezone(timezone: TimezoneKey): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('userTimezone', timezone);
+  }
 }
 
 /**
- * Convert CST-1 date string to display format
+ * Convert UTC time to user's timezone
  */
-export function formatCST1Date(dateString: string): string {
+export function convertUTCToUserTimezone(utcDate: Date, timezone?: TimezoneKey): Date {
+  const tz = timezone || getUserTimezone();
+  const config = TIMEZONE_CONFIGS[tz];
+  return new Date(utcDate.getTime() + (config.offset * 60 * 60 * 1000));
+}
+
+/**
+ * Convert user's local time to UTC for database storage
+ */
+export function convertUserTimezoneToUTC(localDate: Date, timezone?: TimezoneKey): Date {
+  const tz = timezone || getUserTimezone();
+  const config = TIMEZONE_CONFIGS[tz];
+  return new Date(localDate.getTime() - (config.offset * 60 * 60 * 1000));
+}
+
+/**
+ * Get current time in user's timezone
+ */
+export function getCurrentTimeInUserTimezone(timezone?: TimezoneKey): Date {
+  return convertUTCToUserTimezone(getCurrentUTC(), timezone);
+}
+
+/**
+ * Get today's date in user's timezone as YYYY-MM-DD string
+ */
+export function getTodayInUserTimezone(timezone?: TimezoneKey): string {
+  const userTime = getCurrentTimeInUserTimezone(timezone);
+  const dateStr = userTime.toISOString().split('T')[0];
+  
+  console.log(`getTodayInUserTimezone: User time is ${userTime.toISOString()}, returning ${dateStr}`);
+  
+  return dateStr;
+}
+
+/**
+ * Format date for display in user's timezone
+ */
+export function formatDateInUserTimezone(dateString: string, timezone?: TimezoneKey): string {
   const [year, month, day] = dateString.split('-');
   const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   
@@ -63,9 +100,9 @@ export function formatCST1Date(dateString: string): string {
 }
 
 /**
- * Get next/previous day in CST-1 timezone
+ * Add days to a date string
  */
-export function addDaysCST1(dateString: string, days: number): string {
+export function addDaysToDate(dateString: string, days: number): string {
   const [year, month, day] = dateString.split('-');
   const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   date.setDate(date.getDate() + days);
@@ -78,19 +115,84 @@ export function addDaysCST1(dateString: string, days: number): string {
 }
 
 /**
- * Get current time in CST-1 for appointment scheduling
+ * Get current time string in user's timezone for display
  */
-export function getCurrentTimeStringCST1(): string {
-  const cstTime = getCurrentTimeCST1();
-  const hours = String(cstTime.getHours()).padStart(2, '0');
-  const minutes = String(cstTime.getMinutes()).padStart(2, '0');
+export function getCurrentTimeStringInUserTimezone(timezone?: TimezoneKey): string {
+  const userTime = getCurrentTimeInUserTimezone(timezone);
+  const timeStr = userTime.toISOString();
+  const timePart = timeStr.split('T')[1];
+  const [hours, minutes] = timePart.split(':');
   
   return `${hours}:${minutes}`;
 }
 
 /**
- * Validate if a date string is valid CST-1 format
+ * Create a date object for a specific time in user's timezone
+ * Returns UTC date that when stored in database represents the correct local time
  */
+export function createDateTimeInUserTimezone(
+  dateString: string, 
+  timeString: string, 
+  timezone?: TimezoneKey
+): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const [hours, minutes] = timeString.split(':').map(Number);
+  
+  // Create date in user's timezone
+  const localDate = new Date(year, month - 1, day, hours, minutes);
+  
+  // Convert to UTC for database storage
+  return convertUserTimezoneToUTC(localDate, timezone);
+}
+
+/**
+ * Extract time from a date in user's timezone
+ */
+export function extractTimeFromDate(utcDate: Date, timezone?: TimezoneKey): string {
+  const userTime = convertUTCToUserTimezone(utcDate, timezone);
+  const timeStr = userTime.toISOString();
+  const timePart = timeStr.split('T')[1];
+  const [hours, minutes] = timePart.split(':');
+  
+  return `${hours}:${minutes}`;
+}
+
+/**
+ * Extract date from a date in user's timezone
+ */
+export function extractDateFromDate(utcDate: Date, timezone?: TimezoneKey): string {
+  const userTime = convertUTCToUserTimezone(utcDate, timezone);
+  return userTime.toISOString().split('T')[0];
+}
+
+/**
+ * Backwards compatibility functions
+ */
+export function getCurrentTimeCST1(): Date {
+  return getCurrentTimeInUserTimezone('Mexico/General');
+}
+
+export function getTodayCST1(): string {
+  return getTodayInUserTimezone('Mexico/General');
+}
+
+export function formatCST1Date(dateString: string): string {
+  return formatDateInUserTimezone(dateString, 'Mexico/General');
+}
+
+export function addDaysCST1(dateString: string, days: number): string {
+  return addDaysToDate(dateString, days);
+}
+
+export function toCST1String(date?: Date): string {
+  const targetDate = date || getCurrentTimeCST1();
+  return extractDateFromDate(targetDate, 'Mexico/General');
+}
+
+export function getCurrentTimeStringCST1(): string {
+  return getCurrentTimeStringInUserTimezone('Mexico/General');
+}
+
 export function isValidCST1Date(dateString: string): boolean {
   const regex = /^\d{4}-\d{2}-\d{2}$/;
   if (!regex.test(dateString)) return false;

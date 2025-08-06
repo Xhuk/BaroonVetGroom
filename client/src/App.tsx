@@ -86,18 +86,22 @@ function Router() {
   );
 }
 
+import { TimezoneProvider } from "@/contexts/TimezoneContext";
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ThemeProvider>
-          <InstantNavigation />
-          <TenantProvider>
-            <RoleImpersonationProvider>
-              <Toaster />
-              <Router />
-            </RoleImpersonationProvider>
-          </TenantProvider>
+          <TimezoneProvider>
+            <InstantNavigation />
+            <TenantProvider>
+              <RoleImpersonationProvider>
+                <Toaster />
+                <Router />
+              </RoleImpersonationProvider>
+            </TenantProvider>
+          </TimezoneProvider>
         </ThemeProvider>
       </TooltipProvider>
     </QueryClientProvider>
