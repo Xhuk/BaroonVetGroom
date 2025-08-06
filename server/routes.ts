@@ -2025,6 +2025,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced VRP Route Optimization with Completed Mascots API
+  app.post("/api/delivery-routes/optimize/:tenantId", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { date, vanCapacity = 'medium' } = req.body;
+      
+      // Get completed appointments with pet and client data
+      const appointments = await storage.getAppointmentsByDate(tenantId, date);
+      const completedAppointments = appointments.filter(apt => apt.status === 'completed');
+      
+      // Enhance with pet and client data
+      const appointmentsWithData = await Promise.all(
+        completedAppointments.map(async (apt) => {
+          const client = await storage.getClientById(apt.clientId);
+          const pet = await storage.getPetById(apt.petId);
+          return { ...apt, client, pet };
+        })
+      );
+      
+      // Get fraccionamiento weights
+      const fraccionamientos = await storage.getFraccionamientos(tenantId);
+      const fraccionamientoWeights = fraccionamientos.reduce((acc, frac) => {
+        acc[frac.name] = frac.weight || 5.0;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      // Default clinic location (you may want to get this from tenant settings)
+      const clinicLocation: [number, number] = [24.8066, -107.3938]; // Culiacán
+      
+      // Import and use the VRP optimizer
+      const { optimizeDeliveryRouteWithCompletedMascots } = await import('./routeOptimizer');
+      
+      const optimizedRoute = optimizeDeliveryRouteWithCompletedMascots(
+        clinicLocation,
+        appointmentsWithData,
+        fraccionamientoWeights,
+        vanCapacity
+      );
+      
+      res.json({
+        success: true,
+        route: optimizedRoute,
+        summary: {
+          totalStops: optimizedRoute.points.length,
+          totalDistance: optimizedRoute.totalDistance,
+          estimatedTime: optimizedRoute.estimatedTime,
+          efficiency: optimizedRoute.efficiency,
+          fraccionamientoOrder: optimizedRoute.fraccionamientoOrder
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error optimizing delivery route:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to optimize delivery route",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Driver check-in endpoint
   app.post("/api/driver-checkin", isAuthenticated, async (req, res) => {
     try {

@@ -69,7 +69,7 @@ export default function DeliveryPlan() {
     onSuccess: () => {
       toast({
         title: "Ruta creada",
-        description: "La ruta de entrega se ha creado exitosamente.",
+        description: "La ruta de entrega se ha creada exitosamente.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/delivery-routes"] });
       setShowRouteForm(false);
@@ -78,6 +78,28 @@ export default function DeliveryPlan() {
       toast({
         title: "Error",
         description: error.message || "No se pudo crear la ruta",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // VRP Route Optimization Mutation for Completed Mascots
+  const optimizeRouteMutation = useMutation({
+    mutationFn: async (data: { date: string; vanCapacity: string }) => {
+      return apiRequest(`/api/delivery-routes/optimize/${currentTenant?.id}`, "POST", data);
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Ruta Optimizada con VRP",
+        description: `${data.summary.totalStops} paradas optimizadas • ${data.summary.totalDistance.toFixed(1)}km • ${data.summary.estimatedTime}min`,
+      });
+      // Refresh routes data
+      queryClient.invalidateQueries({ queryKey: ["/api/delivery-routes-fast", currentTenant?.id, selectedDate] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error de Optimización",
+        description: error.message || "No se pudo optimizar la ruta con algoritmos VRP",
         variant: "destructive",
       });
     },
@@ -232,6 +254,18 @@ export default function DeliveryPlan() {
               })}
             </select>
           </div>
+          <Button 
+            onClick={() => optimizeRouteMutation.mutate({ 
+              date: selectedDate, 
+              vanCapacity: 'medium' 
+            })}
+            disabled={optimizeRouteMutation.isPending}
+            className="bg-green-600 hover:bg-green-700"
+            data-testid="button-optimize-route"
+          >
+            <Route className="w-4 h-4 mr-2" />
+            {optimizeRouteMutation.isPending ? "Optimizando..." : "Optimizar VRP"}
+          </Button>
           <Button 
             onClick={() => setShowRouteForm(true)}
             className="bg-blue-600 hover:bg-blue-700"
