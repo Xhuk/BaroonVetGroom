@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NewCompanyDialog } from "@/components/NewCompanyDialog";
@@ -102,6 +102,19 @@ export default function SuperAdmin() {
       });
     },
   });
+
+  // Fetch dashboard statistics from the database cube
+  const { data: dashboardStats, isLoading: isLoadingStats, error: statsError } = useQuery({
+    queryKey: ['/api/superadmin/dashboard-stats'],
+    refetchInterval: 30000, // Refresh every 30 seconds
+    enabled: isAuthenticated,
+  });
+
+  const overview = dashboardStats?.overview || {};
+  const companies = dashboardStats?.companies || [];
+  const growth = dashboardStats?.growth || {};
+  const health = dashboardStats?.health || {};
+  const resources = dashboardStats?.resources || {};
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -207,9 +220,15 @@ export default function SuperAdmin() {
                 <Building className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">45</div>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    overview.totalCompanies || 0
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +5 nuevas este mes
+                  {growth.newCompanies || 0} nuevas este mes
                 </p>
               </CardContent>
             </Card>
@@ -220,9 +239,15 @@ export default function SuperAdmin() {
                 <Globe className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">234</div>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    overview.totalTenants || 0
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Across all companies
+                  {growth.newTenants || 0} nuevos este mes
                 </p>
               </CardContent>
             </Card>
@@ -233,22 +258,34 @@ export default function SuperAdmin() {
                 <Shield className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">2,847</div>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+                  ) : (
+                    overview.totalUsers || 0
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +18% growth this quarter
+                  {growth.newUsers || 0} nuevos este mes
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Uptime del Sistema</CardTitle>
+                <CardTitle className="text-sm font-medium">Sistema Saludable</CardTitle>
                 <Server className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">99.9%</div>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    health.uptime || "99.9%"
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Last 30 days
+                  {health.totalRecords || 0} registros totales
                 </p>
               </CardContent>
             </Card>
@@ -274,41 +311,54 @@ export default function SuperAdmin() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">VetCorp Internacional</h4>
-                      <p className="text-sm text-gray-600">12 tenants • 156 usuarios</p>
-                      <p className="text-xs text-gray-500">Plan: Enterprise</p>
+                  {isLoadingStats ? (
+                    // Loading skeleton
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <div className="animate-pulse bg-gray-200 h-5 w-40 rounded mb-2"></div>
+                          <div className="animate-pulse bg-gray-200 h-4 w-32 rounded mb-1"></div>
+                          <div className="animate-pulse bg-gray-200 h-3 w-24 rounded"></div>
+                        </div>
+                        <div className="text-right">
+                          <div className="animate-pulse bg-gray-200 h-6 w-16 rounded mb-1"></div>
+                          <div className="animate-pulse bg-gray-200 h-3 w-20 rounded"></div>
+                        </div>
+                      </div>
+                    ))
+                  ) : companies.length > 0 ? (
+                    companies.map((company: any) => (
+                      <div key={company.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <h4 className="font-medium">{company.name}</h4>
+                          <p className="text-sm text-gray-600">
+                            {company.tenantCount} tenants • {company.totalUsers} usuarios
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Plan: {company.subscriptionTier || 'Básico'} • 
+                            Ingresos: ${(company.monthlyRevenue || 0).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            company.subscriptionStatus === 'active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {company.subscriptionStatus === 'active' ? 'Activa' : 'Trial'}
+                          </span>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {company.appointmentsToday || 0} citas hoy
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center p-8 text-gray-500">
+                      <Building className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p>No hay empresas registradas</p>
                     </div>
-                    <div className="text-right">
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Activa</span>
-                      <p className="text-xs text-gray-500 mt-1">Desde 2023</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Clínica Veterinaria Central</h4>
-                      <p className="text-sm text-gray-600">3 tenants • 24 usuarios</p>
-                      <p className="text-xs text-gray-500">Plan: Professional</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Activa</span>
-                      <p className="text-xs text-gray-500 mt-1">Desde 2024</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">PetCare Solutions</h4>
-                      <p className="text-sm text-gray-600">8 tenants • 89 usuarios</p>
-                      <p className="text-xs text-gray-500">Plan: Enterprise</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Trial</span>
-                      <p className="text-xs text-gray-500 mt-1">15 días restantes</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -325,31 +375,48 @@ export default function SuperAdmin() {
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                       <span className="font-medium">Base de Datos</span>
                     </div>
-                    <span className="text-sm text-green-600">Operacional</span>
+                    <div className="text-right">
+                      <span className="text-sm text-green-600">{health.databaseStatus || 'Operacional'}</span>
+                      <p className="text-xs text-gray-500">{resources.databaseSizeMB || 0} MB</p>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center space-x-3">
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span className="font-medium">API Gateway</span>
+                      <span className="font-medium">Conexiones Activas</span>
                     </div>
-                    <span className="text-sm text-green-600">Operacional</span>
+                    <div className="text-right">
+                      <span className="text-sm text-green-600">{health.activeConnections || 0}</span>
+                      <p className="text-xs text-gray-500">/{resources.maxConnections || 450} max</p>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                      <span className="font-medium">CDN</span>
+                      <div className={`w-3 h-3 rounded-full ${
+                        (resources.cpuUsagePercent || 0) > 70 ? 'bg-red-500' :
+                        (resources.cpuUsagePercent || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                      }`}></div>
+                      <span className="font-medium">CPU / Memoria</span>
                     </div>
-                    <span className="text-sm text-yellow-600">Latencia alta</span>
+                    <div className="text-right">
+                      <span className="text-sm text-green-600">
+                        {Math.round(resources.cpuUsagePercent || 0)}% / {Math.round(resources.memoryUsagePercent || 0)}%
+                      </span>
+                      <p className="text-xs text-gray-500">Uso actual</p>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center space-x-3">
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span className="font-medium">Autenticación</span>
+                      <span className="font-medium">Rendimiento</span>
                     </div>
-                    <span className="text-sm text-green-600">Operacional</span>
+                    <div className="text-right">
+                      <span className="text-sm text-green-600">{health.avgResponseTime || 0}ms</span>
+                      <p className="text-xs text-gray-500">Resp. promedio</p>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -366,19 +433,33 @@ export default function SuperAdmin() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Nuevas Empresas</span>
-                    <span className="font-medium text-green-600">+5</span>
+                    <span className="font-medium text-green-600">
+                      {isLoadingStats ? '...' : `+${growth.newCompanies || 0}`}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Nuevos Tenants</span>
-                    <span className="font-medium text-green-600">+23</span>
+                    <span className="font-medium text-green-600">
+                      {isLoadingStats ? '...' : `+${growth.newTenants || 0}`}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Nuevos Usuarios</span>
-                    <span className="font-medium text-green-600">+187</span>
+                    <span className="font-medium text-green-600">
+                      {isLoadingStats ? '...' : `+${growth.newUsers || 0}`}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Citas Procesadas</span>
-                    <span className="font-medium text-blue-600">12,456</span>
+                    <span className="font-medium text-blue-600">
+                      {isLoadingStats ? '...' : (growth.appointmentsProcessed || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Ingresos del Mes</span>
+                    <span className="font-medium text-purple-600">
+                      {isLoadingStats ? '...' : `$${(growth.monthlyRevenue || 0).toLocaleString()}`}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -393,30 +474,52 @@ export default function SuperAdmin() {
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>CPU</span>
-                      <span>34%</span>
+                      <span>{isLoadingStats ? '...' : `${Math.round(resources.cpuUsagePercent || 0)}%`}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-600 h-2 rounded-full" style={{ width: "34%" }}></div>
+                      <div 
+                        className={`h-2 rounded-full ${
+                          (resources.cpuUsagePercent || 0) > 70 ? 'bg-red-500' :
+                          (resources.cpuUsagePercent || 0) > 50 ? 'bg-yellow-500' : 'bg-blue-600'
+                        }`}
+                        style={{ width: `${Math.round(resources.cpuUsagePercent || 0)}%` }}
+                      ></div>
                     </div>
                   </div>
                   
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Memoria</span>
-                      <span>67%</span>
+                      <span>{isLoadingStats ? '...' : `${Math.round(resources.memoryUsagePercent || 0)}%`}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-yellow-500 h-2 rounded-full" style={{ width: "67%" }}></div>
+                      <div 
+                        className={`h-2 rounded-full ${
+                          (resources.memoryUsagePercent || 0) > 70 ? 'bg-red-500' :
+                          (resources.memoryUsagePercent || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}
+                        style={{ width: `${Math.round(resources.memoryUsagePercent || 0)}%` }}
+                      ></div>
                     </div>
                   </div>
                   
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Almacenamiento</span>
-                      <span>23%</span>
+                      <span>{isLoadingStats ? '...' : `${Math.round(resources.storageUsagePercent || 0)}%`}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{ width: "23%" }}></div>
+                      <div 
+                        className="bg-green-500 h-2 rounded-full"
+                        style={{ width: `${Math.round(resources.storageUsagePercent || 0)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 pt-3 border-t">
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>BD: {resources.databaseSizeMB || 0} MB</span>
+                      <span>Conexiones: {health.activeConnections || 0}/{resources.maxConnections || 450}</span>
                     </div>
                   </div>
                 </div>
@@ -425,33 +528,72 @@ export default function SuperAdmin() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Alertas Críticas</CardTitle>
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span>Estado del Sistema</span>
+                  {isLoadingStats && (
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-yellow-800">Alto uso de CPU en servidor principal</p>
-                      <p className="text-xs text-yellow-600">Hace 5 minutos</p>
+                  {statsError ? (
+                    <div className="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-red-800">Error al cargar estadísticas</p>
+                        <p className="text-xs text-red-600">Verifica la conexión de base de datos</p>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-green-800">Backup completado exitosamente</p>
-                      <p className="text-xs text-green-600">Hace 2 horas</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-blue-800">Nueva versión desplegada</p>
-                      <p className="text-xs text-blue-600">Hace 6 horas</p>
-                    </div>
-                  </div>
+                  ) : (
+                    <>
+                      {/* CPU Alert */}
+                      {(resources.cpuUsagePercent || 0) > 70 && (
+                        <div className="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-red-800">Alto uso de CPU: {Math.round(resources.cpuUsagePercent || 0)}%</p>
+                            <p className="text-xs text-red-600">Acción requerida</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Memory Alert */}
+                      {(resources.memoryUsagePercent || 0) > 70 && (
+                        <div className="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-yellow-800">Alto uso de memoria: {Math.round(resources.memoryUsagePercent || 0)}%</p>
+                            <p className="text-xs text-yellow-600">Monitoreo requerido</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* System Health */}
+                      {health.totalRecords > 0 && (
+                        <div className="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-green-800">Sistema operacional</p>
+                            <p className="text-xs text-green-600">{health.totalRecords.toLocaleString()} registros activos</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Default state when no specific alerts and no data */}
+                      {!isLoadingStats && 
+                       (resources.cpuUsagePercent || 0) <= 70 && 
+                       (resources.memoryUsagePercent || 0) <= 70 && (
+                        <div className="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-green-800">Sistema funcionando normalmente</p>
+                            <p className="text-xs text-green-600">Todos los servicios operacionales</p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>

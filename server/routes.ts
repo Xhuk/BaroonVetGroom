@@ -2105,6 +2105,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SuperAdmin Dashboard Statistics API
+  app.get("/api/superadmin/dashboard-stats", isAuthenticated, async (req, res) => {
+    try {
+      // Check if user has system admin access
+      const hasSystemAccess = await isSystemAdmin(req);
+      if (!hasSystemAccess) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+
+      // Execute the data cube function to get all dashboard statistics
+      const result = await db.execute(sql`SELECT get_superadmin_dashboard_cube() as dashboard_data`);
+      const dashboardData = result.rows[0] as any;
+      
+      res.json(dashboardData?.dashboard_data || {});
+    } catch (error) {
+      console.error("Error fetching SuperAdmin dashboard stats:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to fetch dashboard statistics",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Enhanced VRP Route Optimization with Completed Mascots API
   app.post("/api/delivery-routes/optimize/:tenantId", isAuthenticated, async (req, res) => {
     try {
