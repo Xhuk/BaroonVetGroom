@@ -16,12 +16,39 @@
 .dark form textarea,
 .dark [role="dialog"] textarea,
 .dark [data-testid="textarea-diagnosis"],
+.dark [data-testid="textarea-treatment"],
+.dark [data-testid="textarea-treatment-plan"],
+.dark [data-testid="textarea-followup-instructions"],
+.dark [data-testid="textarea-notes"],
+.dark [data-testid="textarea-chief-complaint"],
 .dark textarea[placeholder*="Descripción"],
 .dark textarea[placeholder*="Tratamiento"],
-.dark textarea[placeholder*="diagnóstico"] {
+.dark textarea[placeholder*="diagnóstico"],
+.dark textarea[placeholder*="motivo"],
+.dark textarea[placeholder*="Observaciones"],
+.dark textarea[placeholder*="Instrucciones"] {
   background-color: rgb(31 41 55) !important; /* gray-800 */
   color: rgb(243 244 246) !important; /* gray-100 */
   border-color: rgb(75 85 99) !important; /* gray-600 */
+}
+
+/* Ultra-aggressive textarea dark mode override */
+.dark textarea,
+.dark .lucide-textarea,
+html.dark textarea,
+.dark textarea:focus,
+.dark textarea:hover,
+textarea.dark,
+[data-theme="dark"] textarea {
+  background-color: rgb(31 41 55) !important; /* gray-800 */
+  color: rgb(243 244 246) !important; /* gray-100 */
+  border-color: rgb(75 85 99) !important; /* gray-600 */
+}
+
+/* Override any possible conflicting styles */
+.dark textarea[style] {
+  background-color: rgb(31 41 55) !important; /* gray-800 */
+  color: rgb(243 244 246) !important; /* gray-100 */
 }
 
 /* Custom animation for time container glow effect behind all elements */

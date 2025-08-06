@@ -104,6 +104,19 @@ export default function MedicalAppointments() {
   const veterinarians = fastData?.veterinarians || [];
   const rooms = fastData?.rooms || [];
 
+  // Debug logging to check data structure
+  useEffect(() => {
+    if (fastData) {
+      console.log('Medical Appointments FastData received:', {
+        appointmentsCount: medicalAppointments.length,
+        petsCount: pets.length,
+        clientsCount: clients.length,
+        firstPet: pets[0],
+        firstAppointment: medicalAppointments[0]
+      });
+    }
+  }, [fastData, medicalAppointments, pets, clients]);
+
   const form = useForm<MedicalAppointmentFormData>({
     resolver: zodResolver(medicalAppointmentSchema),
     defaultValues: {
