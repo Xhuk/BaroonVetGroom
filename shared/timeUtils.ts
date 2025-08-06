@@ -123,6 +123,8 @@ export function getCurrentTimeStringInUserTimezone(timezone?: TimezoneKey): stri
   const timePart = timeStr.split('T')[1];
   const [hours, minutes] = timePart.split(':');
   
+  console.log(`getCurrentTimeStringInUserTimezone: UTC time converted to ${timezone}: ${timeStr} -> ${hours}:${minutes}`);
+  
   return `${hours}:${minutes}`;
 }
 

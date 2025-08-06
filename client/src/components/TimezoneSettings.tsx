@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -17,13 +17,24 @@ export function TimezoneSettings({ onTimezoneChange }: TimezoneSettingsProps) {
   const handleTimezoneChange = (timezoneId: string) => {
     const newTimezone = timezoneId as TimezoneKey;
     setTimezone(newTimezone);
-    setCurrentTime(getCurrentTimeInUserTimezone(newTimezone));
+    const newTime = getCurrentTimeInUserTimezone(newTimezone);
+    console.log(`Timezone changed to ${newTimezone}, new time: ${newTime.toISOString()}`);
+    setCurrentTime(newTime);
     
     // Notify parent component to refresh
     if (onTimezoneChange) {
       onTimezoneChange();
     }
   };
+  
+  // Update time every second for real-time display
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const newTime = getCurrentTimeInUserTimezone(timezone);
+      setCurrentTime(newTime);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timezone]);
 
   return (
     <Card className="w-full max-w-md">
