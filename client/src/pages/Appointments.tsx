@@ -35,13 +35,14 @@ const Appointments = memo(function Appointments() {
     return today;
   });
 
-  // Enforce today's date on component mount/reload
+  // CRITICAL: Force today's date immediately on any component mount or reload
   useEffect(() => {
     const today = getTodayInUserTimezone();
-    if (selectedDate !== today) {
-      console.log(`Enforcing today's date: ${today} (was: ${selectedDate})`);
-      setSelectedDate(today);
-    }
+    console.log(`FORCE ENFORCEMENT: Current selectedDate=${selectedDate}, today=${today}`);
+    
+    // ALWAYS set to today regardless of current value - force override
+    console.log(`FORCING today's date: ${today} (was: ${selectedDate})`);
+    setSelectedDate(today);
   }, []); // Only run on mount
 
   // Use WebSocket for real-time appointment updates

@@ -12,6 +12,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, Truck, Phone, CalendarIcon } from "lucide-react";
 import { Link } from "wouter";
 import type { Appointment } from "@shared/schema";
+import { getTodayInUserTimezone } from "@shared/timeUtils";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -21,8 +22,10 @@ export default function Dashboard() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
-    const now = new Date();
-    return now.toISOString().split('T')[0];
+    // Use timezone-aware today calculation to prevent tomorrow's date
+    const today = getTodayInUserTimezone();
+    console.log(`Dashboard initialized with today: ${today}`);
+    return today;
   });
   
   // Fast fetch data after UI is shown - now date-specific
