@@ -286,11 +286,15 @@ export default function MedicalAppointments() {
     return matchesSearch && matchesPet;
   });
 
-  // Sort by visit date (most recent first, in_progress at top)
+  // Enhanced sorting: in_progress first, then by current time proximity (similar to daily calendar)
   const sortedAppointments = filteredAppointments.sort((a, b) => {
+    // Always prioritize in_progress appointments
     if (a.status === "in_progress" && b.status !== "in_progress") return -1;
     if (b.status === "in_progress" && a.status !== "in_progress") return 1;
-    return new Date(b.visitDate).getTime() - new Date(a.visitDate).getTime();
+    
+    // For other appointments, the backend already provides optimal time-based sorting
+    // We just maintain the order received from the backend
+    return 0;
   });
 
   const getStatusColor = (status: string) => {
@@ -310,6 +314,35 @@ export default function MedicalAppointments() {
       case "completed": return <CheckCircle className="w-4 h-4" />;
       case "cancelled": return <AlertCircle className="w-4 h-4" />;
       default: return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const getTimeRelativeInfo = (visitDate: string) => {
+    const now = new Date();
+    const appointmentDate = new Date(visitDate);
+    const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+    const appointmentTimeMinutes = appointmentDate.getHours() * 60 + appointmentDate.getMinutes();
+    
+    const isToday = appointmentDate.toDateString() === now.toDateString();
+    const isPast = appointmentDate < now;
+    const isUpcoming = appointmentDate > now;
+    
+    if (isToday) {
+      const timeDifference = appointmentTimeMinutes - currentTimeMinutes;
+      
+      if (Math.abs(timeDifference) <= 15) {
+        return { type: "current", label: "AHORA", color: "bg-red-100 text-red-800 border-red-300" };
+      } else if (timeDifference > 0 && timeDifference <= 60) {
+        return { type: "upcoming", label: "PRÓXIMA", color: "bg-orange-100 text-orange-800 border-orange-300" };
+      } else if (timeDifference > 0) {
+        return { type: "later", label: "HOY", color: "bg-blue-100 text-blue-800 border-blue-300" };
+      } else {
+        return { type: "past", label: "PASADA", color: "bg-gray-100 text-gray-700 border-gray-300" };
+      }
+    } else if (isUpcoming) {
+      return { type: "future", label: "FUTURA", color: "bg-green-100 text-green-800 border-green-300" };
+    } else {
+      return { type: "past", label: "PASADA", color: "bg-gray-100 text-gray-700 border-gray-300" };
     }
   };
 
@@ -608,6 +641,16 @@ export default function MedicalAppointments() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
+                      {/* Time-based priority indicator */}
+                      {(() => {
+                        const timeInfo = getTimeRelativeInfo(appointment.visitDate);
+                        return (
+                          <Badge className={cn("text-xs font-semibold", timeInfo.color)}>
+                            {timeInfo.label}
+                          </Badge>
+                        );
+                      })()}
+                      
                       <Badge className={cn("flex items-center space-x-1", getStatusColor(appointment.status || "scheduled"))}>
                         {getStatusIcon(appointment.status || "scheduled")}
                         <span>

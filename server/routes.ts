@@ -313,8 +313,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Filtered results: ${relevantPets.length} pets, ${relevantClients.length} clients`);
       
+      // Sort appointments by time - current time first, then chronological order
+      const now = new Date();
+      const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+      
+      const sortedAppointments = medicalAppointments.sort((a, b) => {
+        const aDate = new Date(a.visitDate);
+        const bDate = new Date(b.visitDate);
+        
+        // If appointments are on different days, sort by date
+        const aDateOnly = aDate.toDateString();
+        const bDateOnly = bDate.toDateString();
+        const todayString = now.toDateString();
+        
+        // Priority: Today's appointments first, then future dates, then past dates
+        const aIsToday = aDateOnly === todayString;
+        const bIsToday = bDateOnly === todayString;
+        
+        if (aIsToday && !bIsToday) return -1;
+        if (!aIsToday && bIsToday) return 1;
+        
+        // If both are today, sort by proximity to current time
+        if (aIsToday && bIsToday) {
+          const aMinutes = aDate.getHours() * 60 + aDate.getMinutes();
+          const bMinutes = bDate.getHours() * 60 + bDate.getMinutes();
+          
+          // Calculate distance from current time
+          const aDistance = Math.abs(aMinutes - currentTimeMinutes);
+          const bDistance = Math.abs(bMinutes - currentTimeMinutes);
+          
+          // Current or next appointments first
+          if (aMinutes >= currentTimeMinutes && bMinutes >= currentTimeMinutes) {
+            return aMinutes - bMinutes; // Earliest upcoming first
+          }
+          if (aMinutes < currentTimeMinutes && bMinutes < currentTimeMinutes) {
+            return bMinutes - aMinutes; // Most recent past first
+          }
+          
+          // Mix of past and future - future appointments first
+          if (aMinutes >= currentTimeMinutes) return -1;
+          if (bMinutes >= currentTimeMinutes) return 1;
+          
+          return aDistance - bDistance;
+        }
+        
+        // For non-today appointments, sort chronologically
+        return aDate.getTime() - bDate.getTime();
+      });
+      
       res.json({
-        medicalAppointments: medicalAppointments.map(apt => ({
+        medicalAppointments: sortedAppointments.map(apt => ({
           id: apt.id,
           petId: apt.petId,
           clientId: apt.clientId,
