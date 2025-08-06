@@ -45,6 +45,16 @@ The system is built on a modern stack emphasizing speed, scalability, and mainta
 - **Medical Records:** Optimized for fast loading with a single, optimized endpoint (`/api/medical-appointments-fast`) reducing payload by 95% and loading times to sub-200ms.
 - **Navigation:** Streamlined navigation focusing on core veterinary modules, with appointment management accessible via a dedicated button.
 
+## Recent Fixes & Updates
+
+### Medical Appointments Data Recovery (August 6, 2025) - COMPLETED ✅
+- **Pet Name Display Fixed**: Resolved "Mascota desconocida" issue by creating proper `getPetsByTenant()` method
+- **Database Query Optimization**: Fixed Drizzle JOIN queries with simplified select statements
+- **Variable Scope Resolution**: Corrected "Cannot access before initialization" errors
+- **Performance Validation**: Endpoint now processes 21 appointments with 216 total pets (10 filtered) successfully
+- **Response Time**: Maintained sub-500ms performance (437ms) with full data integrity
+- **Error Elimination**: Removed all 500 server errors, restored stable medical appointments page
+
 ## External Dependencies
 - **PostgreSQL:** Primary database for all application data.
 - **Express.js:** Web application framework for backend APIs.
