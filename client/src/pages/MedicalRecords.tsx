@@ -137,17 +137,18 @@ function MedicalRecords() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto pt-8">
-      <div className="flex items-center justify-between mb-4">
-        <BackButton />
-        <DebugControls />
-      </div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <Stethoscope className="w-8 h-8 text-blue-600" />
-          <h1 className="text-2xl font-bold text-blue-800">Expedientes Médicos</h1>
+    <div className="min-h-screen bg-background dark:bg-gray-900">
+      <div className="p-6 max-w-7xl mx-auto pt-8">
+        <div className="flex items-center justify-between mb-4">
+          <BackButton />
+          <DebugControls />
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <Stethoscope className="w-8 h-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Expedientes Médicos</h1>
+          </div>
+          <div className="flex items-center space-x-3">
           <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
             <DialogTrigger asChild>
               <Button className="bg-blue-600 hover:bg-blue-700" data-testid="button-create-record">

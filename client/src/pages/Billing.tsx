@@ -173,11 +173,12 @@ export default function Billing() {
   }) || [];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <BackButton className="mb-4" />
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-blue-800">Facturación y Pagos</h1>
-        <div className="flex gap-3">
+    <div className="min-h-screen bg-background dark:bg-gray-900">
+      <div className="p-6 max-w-7xl mx-auto">
+        <BackButton className="mb-4" />
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Facturación y Pagos</h1>
+          <div className="flex gap-3">
           <Button variant="outline">
             <Download className="w-4 h-4 mr-2" />
             Reporte Contable
@@ -189,16 +190,16 @@ export default function Billing() {
             <Plus className="w-4 h-4 mr-2" />
             Registrar Pago
           </Button>
+          </div>
         </div>
-      </div>
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Ingresos Totales</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Ingresos Totales</p>
                 <p className="text-2xl font-bold text-green-600">${totalRevenue.toLocaleString()}</p>
               </div>
               <DollarSign className="w-8 h-8 text-green-600" />
@@ -206,11 +207,11 @@ export default function Billing() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Pagos Pendientes</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Pagos Pendientes</p>
                 <p className="text-2xl font-bold text-yellow-600">{pendingPayments.length}</p>
               </div>
               <Clock className="w-8 h-8 text-yellow-600" />
@@ -218,11 +219,11 @@ export default function Billing() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Pagos Hoy</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Pagos Hoy</p>
                 <p className="text-2xl font-bold text-blue-600">{todayPayments.length}</p>
               </div>
               <Receipt className="w-8 h-8 text-blue-600" />
@@ -230,11 +231,11 @@ export default function Billing() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Citas Sin Pagar</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Citas Sin Pagar</p>
                 <p className="text-2xl font-bold text-red-600">{unpaidAppointments.length}</p>
               </div>
               <XCircle className="w-8 h-8 text-red-600" />
@@ -606,6 +607,7 @@ export default function Billing() {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

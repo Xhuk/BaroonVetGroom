@@ -135,22 +135,25 @@ export default function AdminVanConfig() {
 
   if (isLoading) {
     return (
-      <div className="p-6 max-w-6xl mx-auto">
-        <div className="animate-pulse space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
-          ))}
+      <div className="min-h-screen bg-background dark:bg-gray-900">
+        <div className="p-6 max-w-6xl mx-auto">
+          <div className="animate-pulse space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Configuración de Vans</h1>
-          <p className="text-gray-600">Administre la flota de vans para entregas y recolecciones</p>
+    <div className="min-h-screen bg-background dark:bg-gray-900">
+      <div className="p-6 max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Configuración de Vans</h1>
+            <p className="text-gray-600 dark:text-gray-400">Administre la flota de vans para entregas y recolecciones</p>
         </div>
         <Button
           onClick={() => setShowAddForm(true)}

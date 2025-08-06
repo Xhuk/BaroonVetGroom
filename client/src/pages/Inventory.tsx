@@ -221,11 +221,12 @@ export default function Inventory() {
   const totalInventoryValue = inventoryItems?.reduce((sum, item) => sum + (item.currentStock * (item.unitPrice || 0)), 0) || 0;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <BackButton className="mb-4" />
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-blue-800">Gestión de Inventario</h1>
-        <div className="flex items-center space-x-3">
+    <div className="min-h-screen bg-background dark:bg-gray-900">
+      <div className="p-6 max-w-7xl mx-auto">
+        <BackButton className="mb-4" />
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Gestión de Inventario</h1>
+          <div className="flex items-center space-x-3">
           <DebugControls />
           <Button 
             variant="outline"
@@ -294,16 +295,16 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
-      </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Productos</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total Productos</p>
                 <p className="text-2xl font-bold text-blue-600">{inventoryItems?.length || 0}</p>
               </div>
               <Package className="w-8 h-8 text-blue-600" />
@@ -311,11 +312,11 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Stock Bajo</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Stock Bajo</p>
                 <p className="text-2xl font-bold text-yellow-600">{lowStockItems.length}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-yellow-600" />
@@ -323,11 +324,11 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Valor Total</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Valor Total</p>
                 <p className="text-2xl font-bold text-green-600">${totalInventoryValue.toLocaleString()}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-green-600" />
@@ -335,11 +336,11 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Transacciones Hoy</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Transacciones Hoy</p>
                 <p className="text-2xl font-bold text-purple-600">
                   {transactions?.filter(t => 
                     new Date(t.createdAt).toDateString() === new Date().toDateString()
