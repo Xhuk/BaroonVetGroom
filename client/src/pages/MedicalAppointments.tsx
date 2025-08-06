@@ -665,9 +665,9 @@ export default function MedicalAppointments() {
               <span>Diagnóstico y Tratamiento</span>
             </DialogTitle>
             {selectedAppointment && (
-              <div className="text-sm text-gray-600">
-                {pets.find(p => p.id === selectedAppointment.petId)?.name} - {" "}
-                {clients.find(c => c.id === selectedAppointment.clientId)?.name}
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {pets.find(p => p.id === selectedAppointment.petId)?.name || 'Mascota desconocida'} - {" "}
+                {clients.find(c => c.id === selectedAppointment.clientId)?.name || 'Cliente desconocido'}
               </div>
             )}
           </DialogHeader>

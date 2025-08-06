@@ -12,6 +12,18 @@
   border-color: rgb(75 85 99) !important; /* gray-600 */
 }
 
+/* Additional force for form textarea elements */
+.dark form textarea,
+.dark [role="dialog"] textarea,
+.dark [data-testid="textarea-diagnosis"],
+.dark textarea[placeholder*="Descripción"],
+.dark textarea[placeholder*="Tratamiento"],
+.dark textarea[placeholder*="diagnóstico"] {
+  background-color: rgb(31 41 55) !important; /* gray-800 */
+  color: rgb(243 244 246) !important; /* gray-100 */
+  border-color: rgb(75 85 99) !important; /* gray-600 */
+}
+
 /* Custom animation for time container glow effect behind all elements */
 @keyframes time-container-glow {
   0%, 100% {
