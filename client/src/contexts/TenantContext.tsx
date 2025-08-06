@@ -49,17 +49,17 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     refetchOnMount: false,
   });
 
+  const isDebugUser = accessInfo?.canDebugTenants || user?.email?.includes('vetgroom') || false;
+
   // Load all tenants for debug mode (only when user is a debug user)
   const { data: allTenants = [] } = useQuery<Tenant[]>({
     queryKey: ["/api/tenants/all"],
-    enabled: isAuthenticated && isDebugUser,
+    enabled: isAuthenticated && !!accessInfo && isDebugUser,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
-
-  const isDebugUser = accessInfo?.canDebugTenants || user?.email?.includes('vetgroom') || false;
 
   const { data: tenant, isLoading: isLoadingCurrentTenant } = useQuery<Tenant>({
     queryKey: ["/api/tenants", currentTenant?.id],

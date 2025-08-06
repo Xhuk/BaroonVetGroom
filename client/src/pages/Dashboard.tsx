@@ -17,7 +17,7 @@ import { getTodayInUserTimezone } from "@shared/timeUtils";
 export default function Dashboard() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
-  const { currentTenant, isLoading: tenantLoading } = useTenant();
+  const { currentTenant, isLoading: tenantLoading, isDebugMode } = useTenant();
   const { isInstant, startBackgroundLoad, completeLoad } = useFastLoad();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -118,7 +118,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="ml-[10px] pb-40">
         {/* Action Buttons - Positioned to align with card container */}
-        <div className="fixed flex gap-4" style={{ top: '95px', left: '298px', right: '24px' }}>
+        <div className="fixed flex gap-4" style={{ top: isDebugMode ? '111px' : '95px', left: '298px', right: '24px' }}>
           <Link href="/booking">
             <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
               <Phone className="w-4 h-4 mr-2" />
@@ -141,9 +141,10 @@ export default function Dashboard() {
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             tenantId={currentTenant?.id}
+            debugMode={isDebugMode}
           />
         ) : (
-          <div className="bg-card rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed" style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
+          <div className="bg-card rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed" style={{ top: isDebugMode ? '156px' : '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
             <div className="text-muted-foreground">Cargando calendario...</div>
           </div>
         )}
