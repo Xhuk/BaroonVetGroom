@@ -261,6 +261,41 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
 
   const currentTimeInfo = getCurrentTimeSlotInfo();
   const isMarkerInOccupiedSlot = isTimeMarkerInOccupiedSlot();
+  
+  // Calculate precise position of red line based on current time within the slot
+  const calculateRedLinePosition = () => {
+    if (!currentTimeInfo || displayDate !== getTodayCST1()) return { display: 'none' };
+    
+    const { hours, minutes } = currentTimeInfo;
+    
+    // Find which slot the current time falls into
+    const currentSlotIndex = visibleTimeSlots.findIndex(slot => {
+      const slotHour = parseInt(slot.split(':')[0]);
+      const slotMinute = parseInt(slot.split(':')[1]);
+      return hours === slotHour && minutes >= slotMinute && minutes < slotMinute + 30;
+    });
+    
+    if (currentSlotIndex === -1) return { display: 'none' };
+    
+    // Calculate exact position within the slot (each slot is 80px high)
+    const slotHeight = 80;
+    const slotStartTime = parseInt(visibleTimeSlots[currentSlotIndex].split(':')[1]);
+    const minutesIntoSlot = minutes - slotStartTime;
+    const positionWithinSlot = (minutesIntoSlot / 30) * slotHeight; // 30 minutes per slot
+    
+    const topPosition = (currentSlotIndex * slotHeight) + positionWithinSlot;
+    
+    return {
+      position: 'absolute',
+      top: `${topPosition}px`,
+      left: 0,
+      right: 0,
+      zIndex: 10,
+      pointerEvents: 'none'
+    };
+  };
+  
+  const redLineStyle = calculateRedLinePosition();
 
   return (
     <Card className={cn("fixed flex flex-col", className)} style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
@@ -296,60 +331,62 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
           
-          {/* Current time indicator - always visible when in visible hours */}
-          {currentTimeInfo && displayDate === getTodayCST1() && (
-            <div
-              className={cn(
-                "absolute z-10 pointer-events-none transition-all duration-700 ease-in-out left-0 right-0",
-                isMarkerInOccupiedSlot ? "bg-red-500/15" : "bg-red-500/8"
-              )}
-              style={{ 
-                top: '50%',
-                transform: 'translateY(-50%)',
-                height: isMarkerInOccupiedSlot ? '60px' : '40px',
-                borderRadius: '6px',
-                background: isMarkerInOccupiedSlot 
-                  ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.08) 50%, rgba(239, 68, 68, 0.12) 100%)'
-                  : 'linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, rgba(239, 68, 68, 0.04) 50%, rgba(239, 68, 68, 0.06) 100%)',
-                boxShadow: isMarkerInOccupiedSlot 
-                  ? 'inset 0 0 20px rgba(239, 68, 68, 0.1), 0 0 10px rgba(239, 68, 68, 0.05)'
-                  : 'inset 0 0 10px rgba(239, 68, 68, 0.05), 0 0 5px rgba(239, 68, 68, 0.03)',
-                animation: isMarkerInOccupiedSlot ? 'time-container-glow 3s ease-in-out infinite' : 'none',
-              }}
-            >
-              {/* Time indicator line - always visible */}
-              <div
-                className={cn(
-                  "absolute top-1/2 transform -translate-y-1/2 left-0 right-0 transition-all duration-700 ease-in-out",
-                  isMarkerInOccupiedSlot ? "h-[2px] bg-red-500/60" : "h-[1px] bg-red-500/50"
-                )}
-                style={{
-                  borderRadius: '1px',
-                  boxShadow: isMarkerInOccupiedSlot 
-                    ? '0 0 4px rgba(239, 68, 68, 0.3)'
-                    : '0 0 2px rgba(239, 68, 68, 0.2)'
-                }}
-              />
-              
-              {/* Current time indicators */}
-              <div className={cn(
-                "absolute top-1/2 left-2 transform -translate-y-1/2 bg-red-600 rounded-full shadow-sm transition-all duration-700 ease-in-out",
-                isMarkerInOccupiedSlot ? "w-2 h-2" : "w-1.5 h-1.5"
-              )}></div>
-              <div className={cn(
-                "absolute top-1/2 right-2 transform -translate-y-1/2 bg-red-600 rounded-full shadow-sm",
-                isMarkerInOccupiedSlot ? "w-2 h-2 animate-pulse" : "w-1.5 h-1.5"
-              )}></div>
-            </div>
-          )}
-          
           {/* Time slots container with auto-scroll */}
           <div 
             ref={scrollContainerRef}
-            className="overflow-y-auto h-full scroll-smooth"
+            className="overflow-y-auto h-full scroll-smooth relative"
             onScroll={handleScroll}
             style={{ maxHeight: 'calc(100vh - 200px)' }}
           >
+            
+            {/* Current time indicator - positioned precisely within the scroll container */}
+            {currentTimeInfo && displayDate === getTodayCST1() && redLineStyle.position && (
+              <div
+                className={cn(
+                  "absolute z-20 pointer-events-none transition-all duration-700 ease-in-out",
+                  isMarkerInOccupiedSlot ? "bg-red-500/15" : "bg-red-500/8"
+                )}
+                style={{ 
+                  ...redLineStyle,
+                  height: isMarkerInOccupiedSlot ? '60px' : '40px',
+                  transform: 'translateY(-50%)',
+                  borderRadius: '6px',
+                  background: isMarkerInOccupiedSlot 
+                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.08) 50%, rgba(239, 68, 68, 0.12) 100%)'
+                    : 'linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, rgba(239, 68, 68, 0.04) 50%, rgba(239, 68, 68, 0.06) 100%)',
+                  boxShadow: isMarkerInOccupiedSlot 
+                    ? 'inset 0 0 20px rgba(239, 68, 68, 0.1), 0 0 10px rgba(239, 68, 68, 0.05)'
+                    : 'inset 0 0 10px rgba(239, 68, 68, 0.05), 0 0 5px rgba(239, 68, 68, 0.03)',
+                  animation: isMarkerInOccupiedSlot ? 'time-container-glow 3s ease-in-out infinite' : 'none',
+                }}
+              >
+                {/* Time indicator line - always visible */}
+                <div
+                  className={cn(
+                    "absolute top-1/2 transform -translate-y-1/2 left-0 right-0 transition-all duration-700 ease-in-out",
+                    isMarkerInOccupiedSlot ? "h-[2px] bg-red-500/60" : "h-[1px] bg-red-500/50"
+                  )}
+                  style={{
+                    borderRadius: '1px',
+                    boxShadow: isMarkerInOccupiedSlot 
+                      ? '0 0 4px rgba(239, 68, 68, 0.3)'
+                      : '0 0 2px rgba(239, 68, 68, 0.2)'
+                  }}
+                />
+                
+                {/* Current time indicators */}
+                <div className={cn(
+                  "absolute top-1/2 left-2 transform -translate-y-1/2 bg-red-600 rounded-full shadow-sm transition-all duration-700 ease-in-out",
+                  isMarkerInOccupiedSlot ? "w-2 h-2" : "w-1.5 h-1.5"
+                )}></div>
+                <div className={cn(
+                  "absolute top-1/2 right-2 transform -translate-y-1/2 bg-red-600 rounded-full shadow-sm",
+                  isMarkerInOccupiedSlot ? "w-2 h-2 animate-pulse" : "w-1.5 h-1.5"
+                )}></div>
+              </div>
+            )}
+          
+
           
           {visibleTimeSlots.map((slot, index) => {
             const slotAppointments = getAppointmentsForSlot(slot);
