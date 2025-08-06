@@ -401,11 +401,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                 
                 {/* Time label */}
                 <div className="w-20 text-right pr-4 text-sm text-muted-foreground font-medium z-10 relative">
-                  {new Date(`2000-01-01T${slot}`).toLocaleTimeString('es-ES', { 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    hour12: true 
-                  })}
+                  {slot}
                 </div>
                 
                 {/* Appointment content */}
