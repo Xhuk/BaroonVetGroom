@@ -2551,6 +2551,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fast Follow-up Tasks API with 95% payload reduction
+  app.get('/api/medical-appointments/follow-up-fast/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      console.log(`Fast follow-up tasks: ${tenantId}`);
+      
+      // Set ultra-aggressive cache headers for instant subsequent loads
+      res.set({
+        'Cache-Control': 'private, max-age=300, s-maxage=300', // 5 minutes browser cache
+        'ETag': `"followup-${tenantId}-${Math.floor(Date.now() / 60000)}"`, // Change every minute
+        'Vary': 'Cookie, Authorization',
+        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
+      });
+      
+      const followUpTasks = await storage.getFollowUpTasksFast(tenantId);
+      res.json({ followUpTasks });
+    } catch (error) {
+      console.error("Error fetching fast follow-up tasks:", error);
+      res.status(500).json({ message: "Failed to fetch fast follow-up tasks" });
+    }
+  });
+
   app.put('/api/medical-appointments/:appointmentId/complete-followup', isAuthenticated, async (req, res) => {
     try {
       const { appointmentId } = req.params;

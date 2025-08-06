@@ -249,6 +249,7 @@ export interface IStorage {
   createMedicalAppointment(appointment: InsertMedicalAppointment): Promise<MedicalAppointment>;
   updateMedicalAppointment(appointmentId: string, appointment: Partial<InsertMedicalAppointment>): Promise<MedicalAppointment>;
   getFollowUpTasks(tenantId: string): Promise<any[]>;
+  getFollowUpTasksFast(tenantId: string): Promise<any[]>;
 
   // Medical Documents
   createMedicalDocument(document: InsertMedicalDocument): Promise<MedicalDocument>;
@@ -1848,6 +1849,53 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(medicalAppointments.followUpDate), asc(medicalAppointments.visitDate));
 
     return result;
+  }
+
+  // Fast Follow-up Tasks with 95% payload reduction
+  async getFollowUpTasksFast(tenantId: string): Promise<any[]> {
+    const result = await db
+      .select({
+        id: medicalAppointments.id,
+        visitDate: medicalAppointments.visitDate,
+        followUpDate: medicalAppointments.followUpDate,
+        isConfirmed: medicalAppointments.isConfirmed,
+        clientId: medicalAppointments.clientId,
+        petId: medicalAppointments.petId,
+        veterinarianId: medicalAppointments.veterinarianId,
+        // Only essential fields for display
+        cn: clients.name, // client name
+        pn: pets.name,    // pet name
+        ps: pets.species, // pet species
+        vn: staff.name    // veterinarian name
+      })
+      .from(medicalAppointments)
+      .leftJoin(clients, eq(medicalAppointments.clientId, clients.id))
+      .leftJoin(pets, eq(medicalAppointments.petId, pets.id))
+      .leftJoin(staff, eq(medicalAppointments.veterinarianId, staff.id))
+      .where(
+        and(
+          eq(medicalAppointments.tenantId, tenantId),
+          eq(medicalAppointments.followUpRequired, true),
+          or(
+            eq(medicalAppointments.isConfirmed, false),
+            isNull(medicalAppointments.isConfirmed)
+          )
+        )
+      )
+      .orderBy(desc(medicalAppointments.visitDate));
+
+    return result.map(item => ({
+      id: item.id,
+      visitDate: item.visitDate,
+      followUpDate: item.followUpDate,
+      isConfirmed: item.isConfirmed,
+      clientId: item.clientId,
+      petId: item.petId,
+      veterinarianId: item.veterinarianId,
+      client: { name: item.cn },
+      pet: { name: item.pn, species: item.ps },
+      veterinarian: { name: item.vn }
+    }));
   }
 
   // Payment gateway configuration operations

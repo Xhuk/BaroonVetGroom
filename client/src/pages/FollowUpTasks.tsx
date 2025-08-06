@@ -43,11 +43,15 @@ export default function FollowUpTasks() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get all medical appointments that require follow-up
-  const { data: followUpTasks = [], isLoading } = useQuery<FollowUpTask[]>({
-    queryKey: ["/api/medical-appointments/follow-up", currentTenant?.id],
+  // Get all medical appointments that require follow-up with fast loading
+  const { data: followUpResponse, isLoading } = useQuery<{followUpTasks: FollowUpTask[]}>({
+    queryKey: ["/api/medical-appointments/follow-up-fast", currentTenant?.id],
     enabled: !!currentTenant?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
   });
+
+  const followUpTasks = followUpResponse?.followUpTasks || [];
 
   const { data: pets = [] } = useQuery<Pet[]>({
     queryKey: ["/api/pets", currentTenant?.id],
@@ -72,7 +76,7 @@ export default function FollowUpTasks() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/medical-appointments/follow-up"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/medical-appointments/follow-up-fast", currentTenant?.id] });
       toast({
         title: "Seguimiento completado",
         description: "El seguimiento ha sido marcado como completado",
@@ -96,7 +100,7 @@ export default function FollowUpTasks() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/medical-appointments/follow-up"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/medical-appointments/follow-up-fast", currentTenant?.id] });
       toast({
         title: "Seguimiento programado",
         description: "La fecha de seguimiento ha sido actualizada",
