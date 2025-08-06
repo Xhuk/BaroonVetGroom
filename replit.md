@@ -115,6 +115,14 @@ The system is built on a modern stack emphasizing speed, scalability, and mainta
 - **Grooming Staff Role Fix**: Fixed grooming seeder 500 error by correcting staff role filtering from 'grooming' to 'groomer', 'admin', and 'veterinarian'
 - **Database Role Compliance**: Updated role matching to align with actual database schema (staff table uses 'groomer' not 'grooming')
 
+### Configurable Seeder Days Parameter Implementation (August 6, 2025) - COMPLETED ✅
+- **Demo Data Seeder Enhancement**: Enhanced `seedDemoData()` function to accept configurable days parameter (1-365 days)
+- **Grooming Seeder Multi-Day Support**: Updated `seedGroomingAppointmentsToday()` to support multiple days (1-30 days) with automatic appointment distribution
+- **SuperAdmin UI Enhancement**: Added input fields for both demo data days and grooming days with validation and dynamic display
+- **API Endpoint Updates**: Enhanced both `/api/seed-demo-data` and `/api/seed-grooming-today/:tenantId` endpoints to accept days parameter from request body
+- **Dynamic Button Labels**: Buttons automatically display current configured values ("Seed {demoDays} Days Demo Data" and "Seed {groomingDays} Day(s) Grooming")
+- **Intelligent Date Distribution**: Grooming seeder distributes appointments evenly across the configured date range instead of just today
+
 ## External Dependencies
 - **PostgreSQL:** Primary database for all application data.
 - **Express.js:** Web application framework for backend APIs.
