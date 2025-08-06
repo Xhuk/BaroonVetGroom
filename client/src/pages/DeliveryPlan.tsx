@@ -93,6 +93,18 @@ export default function DeliveryPlan() {
     enabled: !!currentTenant?.id,
   });
 
+  // Get vans/vehicles from inventory
+  const { data: vans } = useQuery<any[]>({
+    queryKey: ["/api/vans", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
+
+  // Alternative: Get vehicles from inventory items
+  const { data: inventoryVehicles } = useQuery<any[]>({
+    queryKey: ["/api/inventory", currentTenant?.id, "vehicle"],
+    enabled: !!currentTenant?.id,
+  });
+
   const createRouteMutation = useMutation({
     mutationFn: async (data: any) => {
       return apiRequest(`/api/delivery-routes`, "POST", { ...data, tenantId: currentTenant?.id });
@@ -424,7 +436,11 @@ export default function DeliveryPlan() {
                   <div>
                     <p className="text-sm text-gray-600">Vans Disponibles</p>
                     <p className="text-2xl font-bold text-orange-600">
-                      {staff?.filter(s => s.role === "driver").length || 0}
+                      {(() => {
+                        const activeVans = vans?.filter(v => v.isActive).length || 0;
+                        const inventoryVans = inventoryVehicles?.filter(iv => iv.category === 'vehicle' && iv.isActive).length || 0;
+                        return activeVans + inventoryVans;
+                      })()}
                     </p>
                   </div>
                   <Truck className="w-8 h-8 text-orange-600" />

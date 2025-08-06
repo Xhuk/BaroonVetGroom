@@ -1875,6 +1875,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Inventory API for retrieving vehicles
+  app.get('/api/inventory/:tenantId/:category', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId, category } = req.params;
+      // Check if storage has getInventoryItems method
+      if (typeof storage.getInventoryItems === 'function') {
+        const inventoryItems = await storage.getInventoryItems(tenantId);
+        const filteredItems = inventoryItems.filter(item => 
+          item.category === category && item.isActive
+        );
+        res.json(filteredItems);
+      } else {
+        // Return empty array if inventory system not implemented yet
+        res.json([]);
+      }
+    } catch (error) {
+      console.error("Error fetching inventory by category:", error);
+      res.json([]); // Return empty array on error to prevent UI breaking
+    }
+  });
+
   // Super Admin route optimization configuration endpoints
   app.get("/api/superadmin/companies-route-config", isAuthenticated, async (req, res) => {
     try {
