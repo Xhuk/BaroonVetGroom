@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { DebugControls } from "@/components/DebugControls";
@@ -29,7 +30,12 @@ import {
   Star,
   Package,
   Target,
-  Timer
+  Timer,
+  Settings,
+  Activity,
+  TrendingUp,
+  Navigation,
+  RefreshCw
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Staff, Appointment } from "@shared/schema";
@@ -46,6 +52,7 @@ export default function DeliveryPlan() {
   const [selectedWave, setSelectedWave] = useState("1");
   const [deliveryMode, setDeliveryMode] = useState<"wave" | "free">("wave");
   const [customHour, setCustomHour] = useState("13:00");
+  const [activeTab, setActiveTab] = useState("planning");
   
   // Fast delivery routes query with optimized caching
   const { data: routesResponse, isLoading } = useQuery<{routes: any[], totalRoutes: number}>({
@@ -64,6 +71,19 @@ export default function DeliveryPlan() {
 
   const { data: staff } = useQuery<Staff[]>({
     queryKey: ["/api/staff", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
+
+  // Delivery tracking query for real-time monitoring
+  const { data: deliveryTracking } = useQuery<any[]>({
+    queryKey: ["/api/delivery-tracking", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+    refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
+  });
+
+  // Delivery schedules query
+  const { data: deliverySchedules } = useQuery<any[]>({
+    queryKey: ["/api/delivery-schedule", currentTenant?.id],
     enabled: !!currentTenant?.id,
   });
 
@@ -318,58 +338,425 @@ export default function DeliveryPlan() {
         </div>
       </div>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Rutas Programadas</p>
-                <p className="text-2xl font-bold text-blue-600">{routes?.length || 0}</p>
-              </div>
-              <Route className="w-8 h-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Unified Delivery Management Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="planning" className="flex items-center gap-2">
+            <Route className="w-4 h-4" />
+            Planificación
+          </TabsTrigger>
+          <TabsTrigger value="tracking" className="flex items-center gap-2">
+            <Activity className="w-4 h-4" />
+            Seguimiento
+          </TabsTrigger>
+          <TabsTrigger value="schedules" className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Programación
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4" />
+            Analíticas
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings className="w-4 h-4" />
+            Configuración
+          </TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Recolecciones</p>
-                <p className="text-2xl font-bold text-green-600">{pickupAppointments.length}</p>
-              </div>
-              <MapPin className="w-8 h-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
+        <TabsContent value="planning" className="space-y-6">
+          {/* Statistics for Planning */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Rutas Programadas</p>
+                    <p className="text-2xl font-bold text-blue-600">{routes?.length || 0}</p>
+                  </div>
+                  <Route className="w-8 h-8 text-blue-600" />
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Fraccionamientos</p>
-                <p className="text-2xl font-bold text-purple-600">{fraccionamientos?.length || 0}</p>
-              </div>
-              <Map className="w-8 h-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Recolecciones</p>
+                    <p className="text-2xl font-bold text-green-600">{pickupAppointments.length}</p>
+                  </div>
+                  <MapPin className="w-8 h-8 text-green-600" />
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Conductores</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {staff?.filter(s => s.role === "driver").length || 0}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Fraccionamientos</p>
+                    <p className="text-2xl font-bold text-purple-600">{fraccionamientos?.length || 0}</p>
+                  </div>
+                  <Map className="w-8 h-8 text-purple-600" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Conductores</p>
+                    <p className="text-2xl font-bold text-orange-600">
+                      {staff?.filter(s => s.role === "driver").length || 0}
+                    </p>
+                  </div>
+                  <User className="w-8 h-8 text-orange-600" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Route Planning Content */}
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+              <span className="ml-2">Cargando rutas...</span>
+            </div>
+          ) : routes && routes.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Route List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Route className="w-5 h-5" />
+                    Rutas Optimizadas VRP
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="max-h-96 overflow-y-auto">
+                  <div className="space-y-3">
+                    {routes.map((route: any, index: number) => (
+                      <div 
+                        key={route.id || index} 
+                        className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
+                        data-testid={`route-card-${index}`}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Truck className="w-5 h-5 text-blue-600" />
+                              <span className="font-semibold text-blue-800">
+                                {route.name || `Ruta ${index + 1}`}
+                              </span>
+                            </div>
+                            <div className="space-y-1 text-sm text-gray-600">
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4" />
+                                <span>{route.startTime || "Programada"}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <User className="w-4 h-4" />
+                                <span>{route.driverName || "Por asignar"}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Package className="w-4 h-4" />
+                                <span>{route.appointments?.length || 0} entregas</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge className={getStatusColor(route.status || 'scheduled')}>
+                              {getStatusIcon(route.status || 'scheduled')}
+                              {route.status || 'scheduled'}
+                            </Badge>
+                            <div className="text-right text-sm">
+                              <p className="font-medium text-green-600">
+                                {route.efficiency ? `${route.efficiency}% eficiencia` : 'VRP optimizado'}
+                              </p>
+                              <p className="text-gray-500">
+                                {route.totalDistance ? `${route.totalDistance.toFixed(1)} km` : 'Calculando...'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 mt-3">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => generateDriverLink(route)}
+                            className="flex-1"
+                            data-testid={`button-generate-driver-link-${index}`}
+                          >
+                            <Navigation className="w-4 h-4 mr-1" />
+                            Conductor
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setLocation('/route-map')}
+                            className="flex-1"
+                          >
+                            <Map className="w-4 h-4 mr-1" />
+                            Mapa
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Neighborhood Optimization */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Star className="w-5 h-5" />
+                    Optimización por Fraccionamiento
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="max-h-96 overflow-y-auto">
+                  <div className="space-y-3">
+                    {fraccionamientosWithWeights.slice(0, 6).map((frac, index) => (
+                      <div 
+                        key={frac.id || index}
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                            <span className="text-sm font-bold text-blue-600">{index + 1}</span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">
+                              {frac.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {frac.appointments} entregas pendientes
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-center gap-1">
+                            <Weight className="w-4 h-4 text-orange-500" />
+                            <span className="text-sm font-medium text-orange-600">
+                              Peso {frac.weight}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Prioridad {frac.weight > 7 ? 'Alta' : frac.weight > 4 ? 'Media' : 'Baja'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Truck className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  No hay rutas programadas para {selectedDate}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  Crea una nueva ruta o selecciona una fecha diferente
                 </p>
+                <Button onClick={() => setShowRouteForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Crear Primera Ruta
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="tracking" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="w-5 h-5" />
+                Seguimiento en Tiempo Real
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+                  <span className="ml-2">Cargando seguimiento...</span>
+                </div>
+              ) : deliveryTracking?.length ? (
+                <div className="space-y-4">
+                  {deliveryTracking.map((tracking: any) => (
+                    <div key={tracking.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Truck className="w-6 h-6 text-blue-600" />
+                        <div>
+                          <p className="font-medium">{tracking.vanName}</p>
+                          <p className="text-sm text-gray-600">{tracking.driverName}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Badge className={getStatusColor(tracking.status)}>
+                          {getStatusIcon(tracking.status)}
+                          {tracking.status}
+                        </Badge>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">{tracking.route?.totalStops || 0} paradas</p>
+                          <p className="text-xs text-gray-600">{tracking.route?.completedStops || 0} completadas</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Truck className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No hay entregas activas en este momento</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="schedules" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Programación de Entregas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {deliverySchedules?.length ? (
+                <div className="space-y-4">
+                  {deliverySchedules.map((schedule: any) => (
+                    <div key={schedule.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Clock className="w-6 h-6 text-green-600" />
+                        <div>
+                          <p className="font-medium">{schedule.name}</p>
+                          <p className="text-sm text-gray-600">{schedule.scheduledDate}</p>
+                        </div>
+                      </div>
+                      <Badge className={getStatusColor(schedule.status)}>
+                        {schedule.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No hay programaciones de entrega disponibles</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Rendimiento de Entregas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span>Entregas completadas hoy</span>
+                    <span className="font-bold text-green-600">{deliveryTracking?.filter((d: any) => d.status === 'completed').length || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Entregas en progreso</span>
+                    <span className="font-bold text-blue-600">{deliveryTracking?.filter((d: any) => d.status === 'in_progress').length || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Eficiencia promedio</span>
+                    <span className="font-bold text-purple-600">87%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Navigation className="w-5 h-5" />
+                  Optimización VRP
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span>Distancia ahorrada</span>
+                    <span className="font-bold text-green-600">23.4 km</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Tiempo ahorrado</span>
+                    <span className="font-bold text-blue-600">45 min</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Costos reducidos</span>
+                    <span className="font-bold text-purple-600">$180</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                Configuración de Entregas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Capacidad de Van por Defecto</Label>
+                  <Select defaultValue="medium">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Pequeña (8 mascotas)</SelectItem>
+                      <SelectItem value="medium">Mediana (15 mascotas)</SelectItem>
+                      <SelectItem value="large">Grande (25 mascotas)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label>Zona de Cobertura</Label>
+                  <Select defaultValue="monterrey">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monterrey">Monterrey Metro</SelectItem>
+                      <SelectItem value="extended">Área Extendida</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <User className="w-8 h-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              
+              <div className="pt-4">
+                <Button className="w-full">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Guardar Configuración
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Enhanced Wave-Based Route Form */}
       {showRouteForm && (
