@@ -21,6 +21,15 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const [currentTime, setCurrentTime] = useState(getCurrentTimeCST1());
   const [isScrolling, setIsScrolling] = useState(false);
   const [displayDate, setDisplayDate] = useState(getTodayCST1()); // Always start with today
+  
+  // Force display date to be correct on load
+  useEffect(() => {
+    const todayCST1 = getTodayCST1();
+    if (displayDate !== todayCST1 && !selectedDate) {
+      console.log(`Forcing displayDate from ${displayDate} to ${todayCST1}`);
+      setDisplayDate(todayCST1);
+    }
+  }, []);
   // Removed booking dialog state - using navigation instead
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();

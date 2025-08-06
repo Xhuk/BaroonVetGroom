@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Calendar, Phone, Mail, LogOut, Moon, Sun, Settings } from "lucide-react";
+import { Calendar, Phone, Mail, LogOut, Moon, Sun, Settings, Clock } from "lucide-react";
 import { VetGroomLogo } from "./VetGroomLogo";
 import { DebugControls } from "./DebugControls";
 import { TimezoneSettings } from "./TimezoneSettings";
+import { getCurrentTimeCST1, getTodayCST1 } from "@shared/timeUtils";
+import { useState, useEffect } from "react";
 import { 
   Popover,
   PopoverContent,
@@ -16,15 +18,30 @@ export function Header() {
   const { user } = useAuth();
   const { currentTenant, isDebugMode } = useTenant();
   const { theme, toggleTheme } = useTheme();
+  const [currentTime, setCurrentTime] = useState(getCurrentTimeCST1());
 
-  const currentDate = new Date();
+  // Use CST-1 timezone for accurate date and time display
+  const cstTime = getCurrentTimeCST1();
   const dateOptions: Intl.DateTimeFormatOptions = {
     weekday: 'long',
     day: 'numeric',
     month: 'long', 
     year: 'numeric'
   };
-  const formattedDate = currentDate.toLocaleDateString('es-ES', dateOptions);
+  const formattedDate = cstTime.toLocaleDateString('es-ES', dateOptions);
+  const formattedTime = cstTime.toLocaleTimeString('es-ES', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: false 
+  });
+  
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(getCurrentTimeCST1());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleLogout = () => {
     // Clear debug mode on logout
@@ -46,8 +63,14 @@ export function Header() {
             </div>
           </div>
           <div className="text-sm text-gray-600 dark:text-slate-300">
-            <Calendar className="inline w-4 h-4 mr-2" />
-            {formattedDate}
+            <div className="flex items-center mb-1">
+              <Calendar className="inline w-4 h-4 mr-2" />
+              {formattedDate}
+            </div>
+            <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium">
+              <Clock className="inline w-4 h-4 mr-2" />
+              {formattedTime} CST-1
+            </div>
           </div>
         </div>
         
