@@ -1896,6 +1896,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sales/Cashier API endpoints
+  app.get('/api/sales/:tenantId', async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const salesData = await storage.getSales(tenantId);
+      
+      // Fetch sale items for each sale
+      const salesWithItems = await Promise.all(
+        salesData.map(async (sale) => {
+          const items = await storage.getSaleItems(sale.id);
+          return { ...sale, items };
+        })
+      );
+      
+      res.json(salesWithItems);
+    } catch (error) {
+      console.error("Error fetching sales:", error);
+      res.status(500).json({ message: "Failed to fetch sales" });
+    }
+  });
+
+  app.post('/api/sales', async (req, res) => {
+    try {
+      const saleData = req.body;
+      const newSale = await storage.createSale(saleData);
+      res.json(newSale);
+    } catch (error) {
+      console.error("Error creating sale:", error);
+      res.status(500).json({ message: "Failed to create sale" });
+    }
+  });
+
+  app.patch('/api/sales/:saleId/items/:itemId/deliver', async (req, res) => {
+    try {
+      const { saleId, itemId } = req.params;
+      const { deliveredAt } = req.body;
+      
+      const updatedItem = await storage.updateSaleItem(itemId, {
+        delivered: true,
+        deliveredAt: new Date(deliveredAt)
+      });
+      
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error marking item as delivered:", error);
+      res.status(500).json({ message: "Failed to mark item as delivered" });
+    }
+  });
+
+  app.patch('/api/sales/:saleId/complete-delivery', async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const { deliveredAt, notes } = req.body;
+      
+      // Update all items as delivered
+      const items = await storage.getSaleItems(saleId);
+      await Promise.all(
+        items.map(item => 
+          storage.updateSaleItem(item.id, {
+            delivered: true,
+            deliveredAt: new Date(deliveredAt)
+          })
+        )
+      );
+      
+      // Update sale status
+      const updatedSale = await storage.updateSale(saleId, {
+        deliveryStatus: 'delivered',
+        deliveredAt: new Date(deliveredAt),
+        notes
+      });
+      
+      res.json(updatedSale);
+    } catch (error) {
+      console.error("Error completing delivery:", error);
+      res.status(500).json({ message: "Failed to complete delivery" });
+    }
+  });
+
+  app.post('/api/sales/:saleId/add-item', async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const itemData = {
+        ...req.body,
+        saleId
+      };
+      
+      const newItem = await storage.createSaleItem(itemData);
+      
+      // Update sale total amount
+      const sale = await storage.getSale(saleId);
+      const allItems = await storage.getSaleItems(saleId);
+      const newTotal = allItems.reduce((sum, item) => sum + parseFloat(item.total.toString()), 0);
+      
+      await storage.updateSale(saleId, {
+        totalAmount: newTotal.toString()
+      });
+      
+      res.json(newItem);
+    } catch (error) {
+      console.error("Error adding item to sale:", error);
+      res.status(500).json({ message: "Failed to add item to sale" });
+    }
+  });
+
   // Super Admin route optimization configuration endpoints
   app.get("/api/superadmin/companies-route-config", isAuthenticated, async (req, res) => {
     try {

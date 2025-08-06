@@ -80,7 +80,7 @@ export function Navigation({ className }: NavigationProps) {
     { icon: Scissors, label: "Estética", href: "/grooming-services" },
     { icon: Heart, label: "Seguimientos", href: "/follow-up-tasks" },
     { icon: Truck, label: "Plan de Entregas", href: "/delivery-plan" },
-    { icon: DollarSign, label: "Facturación", href: "/billing" },
+    { icon: CreditCard, label: "Caja", href: "/cashier" },
 
   ];
 

@@ -1178,6 +1178,45 @@ export type InsertInventoryItem = typeof inventoryItems.$inferInsert;
 export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;
 export type InsertInventoryTransaction = typeof inventoryTransactions.$inferInsert;
 
+// Sales Management System
+export const sales = pgTable("sales", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  receiptId: varchar("receipt_id").notNull(), // User-facing receipt number
+  customerName: varchar("customer_name").notNull(),
+  customerPhone: varchar("customer_phone"),
+  customerEmail: varchar("customer_email"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  paymentStatus: varchar("payment_status").notNull().default("pending"), // paid, pending, partial
+  deliveryStatus: varchar("delivery_status").notNull().default("pending"), // pending, partial, delivered
+  paymentMethod: varchar("payment_method"), // cash, card, transfer
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  deliveredAt: timestamp("delivered_at"),
+  deliveredBy: varchar("delivered_by").references(() => staff.id),
+});
+
+export const saleItems = pgTable("sale_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  saleId: varchar("sale_id").notNull().references(() => sales.id),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  category: varchar("category").notNull(), // medicine, supply, equipment, food, service, additional
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  delivered: boolean("delivered").default(false),
+  deliveredAt: timestamp("delivered_at"),
+  inventoryItemId: varchar("inventory_item_id").references(() => inventoryItems.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Type exports for sales
+export type Sale = typeof sales.$inferSelect;
+export type InsertSale = typeof sales.$inferInsert;
+export type SaleItem = typeof saleItems.$inferSelect;
+export type InsertSaleItem = typeof saleItems.$inferInsert;
+
 // LateNode Webhook Integration Configuration
 export const webhookIntegrations = pgTable("webhook_integrations", {
   id: varchar("id", { length: 50 }).primaryKey().$defaultFn(() => `whi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`),

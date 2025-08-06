@@ -27,6 +27,7 @@ import RoutePlanMap from "@/pages/RoutePlanMap";
 import DeliveryTracking from "@/pages/DeliveryTracking";
 import AdminVanConfig from "@/pages/AdminVanConfig";
 import Billing from "@/pages/Billing";
+import Cashier from "@/pages/Cashier";
 import MedicalRecords from "@/pages/MedicalRecords";
 import MedicalAppointments from "@/pages/MedicalAppointments";
 import GroomingServices from "@/pages/GroomingServices";
@@ -76,6 +77,7 @@ function Router() {
           <Route path="/delivery-plan" component={DeliveryPlan} />
           <Route path="/route-map" component={RoutePlanMap} />
           <Route path="/billing" component={Billing} />
+          <Route path="/cashier" component={Cashier} />
           <Route path="/admin" component={Admin} />
           <Route path="/admin/settings" component={AdminSettings} />
           <Route path="/admin/business-hours" component={AdminBusinessHours} />

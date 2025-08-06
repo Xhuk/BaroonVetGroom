@@ -47,6 +47,8 @@ import {
   deliveryConfig,
   inventoryItems,
   inventoryTransactions,
+  sales,
+  saleItems,
   type User,
   type UpsertUser,
   type Company,
@@ -132,6 +134,10 @@ import {
   type InsertInventoryItem,
   type InventoryTransaction,
   type InsertInventoryTransaction,
+  type Sale,
+  type InsertSale,
+  type SaleItem,
+  type InsertSaleItem,
   webhookIntegrations,
   type WebhookIntegration,
   type InsertWebhookIntegration,
@@ -173,6 +179,16 @@ export interface IStorage {
   createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem>;
   updateInventoryItem(itemId: string, updates: Partial<InsertInventoryItem>): Promise<InventoryItem>;
   deleteInventoryItem(itemId: string): Promise<void>;
+  
+  // Sales operations
+  getSales(tenantId: string): Promise<Sale[]>;
+  getSale(saleId: string): Promise<Sale | undefined>;
+  createSale(sale: InsertSale): Promise<Sale>;
+  updateSale(saleId: string, updates: Partial<InsertSale>): Promise<Sale>;
+  getSaleItems(saleId: string): Promise<SaleItem[]>;
+  createSaleItem(item: InsertSaleItem): Promise<SaleItem>;
+  updateSaleItem(itemId: string, updates: Partial<InsertSaleItem>): Promise<SaleItem>;
+  deleteSaleItem(itemId: string): Promise<void>;
   
   // Room operations
   getRooms(tenantId: string): Promise<Room[]>;
@@ -1235,6 +1251,79 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(inventoryItems)
       .where(eq(inventoryItems.id, itemId));
+  }
+
+  // Sales operations
+  async getSales(tenantId: string): Promise<Sale[]> {
+    const salesData = await db
+      .select()
+      .from(sales)
+      .where(eq(sales.tenantId, tenantId))
+      .orderBy(desc(sales.createdAt));
+    return salesData;
+  }
+
+  async getSale(saleId: string): Promise<Sale | undefined> {
+    const [sale] = await db
+      .select()
+      .from(sales)
+      .where(eq(sales.id, saleId));
+    return sale;
+  }
+
+  async createSale(sale: InsertSale): Promise<Sale> {
+    const [newSale] = await db
+      .insert(sales)
+      .values({
+        ...sale,
+        id: undefined, // Let DB generate ID
+      })
+      .returning();
+    return newSale;
+  }
+
+  async updateSale(saleId: string, updates: Partial<InsertSale>): Promise<Sale> {
+    const [updatedSale] = await db
+      .update(sales)
+      .set(updates)
+      .where(eq(sales.id, saleId))
+      .returning();
+    return updatedSale;
+  }
+
+  async getSaleItems(saleId: string): Promise<SaleItem[]> {
+    const items = await db
+      .select()
+      .from(saleItems)
+      .where(eq(saleItems.saleId, saleId))
+      .orderBy(saleItems.createdAt);
+    return items;
+  }
+
+  async createSaleItem(item: InsertSaleItem): Promise<SaleItem> {
+    const [newItem] = await db
+      .insert(saleItems)
+      .values({
+        ...item,
+        id: undefined, // Let DB generate ID
+      })
+      .returning();
+    return newItem;
+  }
+
+  async updateSaleItem(itemId: string, updates: Partial<InsertSaleItem>): Promise<SaleItem> {
+    const [updatedItem] = await db
+      .update(saleItems)
+      .set(updates)
+      .where(eq(saleItems.id, itemId))
+      .returning();
+    return updatedItem;
+  }
+
+  async deleteSaleItem(itemId: string): Promise<void> {
+    await db
+      .delete(saleItems)
+      .where(eq(saleItems.id, itemId));
   }
 
   // Route optimization caching
