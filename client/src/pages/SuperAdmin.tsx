@@ -433,6 +433,13 @@ export default function SuperAdmin() {
                     <span className="text-sm font-medium text-green-700">LateNode</span>
                   </Button>
                 </Link>
+
+                <Link href="/superadmin/billing" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-emerald-50 hover:bg-emerald-100 border-emerald-300">
+                    <CreditCard className="w-5 h-5 text-emerald-600" />
+                    <span className="text-sm font-medium text-emerald-700">Billing</span>
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
