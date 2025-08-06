@@ -264,18 +264,27 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   
   // Calculate precise position of red line based on current time within the slot
   const calculateRedLinePosition = () => {
-    if (!currentTimeInfo || displayDate !== getTodayCST1()) return { display: 'none' };
+    if (!currentTimeInfo || displayDate !== getTodayCST1()) {
+      console.log('Red line hidden: no currentTimeInfo or not today');
+      return { display: 'none' };
+    }
     
     const { hours, minutes } = currentTimeInfo;
+    console.log(`Calculating red line position for ${hours}:${minutes}`);
     
     // Find which slot the current time falls into
     const currentSlotIndex = visibleTimeSlots.findIndex(slot => {
       const slotHour = parseInt(slot.split(':')[0]);
       const slotMinute = parseInt(slot.split(':')[1]);
-      return hours === slotHour && minutes >= slotMinute && minutes < slotMinute + 30;
+      const isInSlot = hours === slotHour && minutes >= slotMinute && minutes < slotMinute + 30;
+      console.log(`Checking slot ${slot}: hour=${slotHour}, minute=${slotMinute}, isInSlot=${isInSlot}`);
+      return isInSlot;
     });
     
-    if (currentSlotIndex === -1) return { display: 'none' };
+    if (currentSlotIndex === -1) {
+      console.log('Red line hidden: no matching slot found');
+      return { display: 'none' };
+    }
     
     // Calculate exact position within the slot (each slot is 80px high)
     const slotHeight = 80;
@@ -285,12 +294,14 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     
     const topPosition = (currentSlotIndex * slotHeight) + positionWithinSlot;
     
+    console.log(`Red line positioned at slot ${currentSlotIndex}, position ${topPosition}px (${minutesIntoSlot} mins into slot)`);
+    
     return {
       position: 'absolute',
       top: `${topPosition}px`,
       left: 0,
       right: 0,
-      zIndex: 10,
+      zIndex: 20,
       pointerEvents: 'none'
     };
   };
@@ -339,50 +350,20 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
             style={{ maxHeight: 'calc(100vh - 200px)' }}
           >
             
-            {/* Current time indicator - positioned precisely within the scroll container */}
-            {currentTimeInfo && displayDate === getTodayCST1() && redLineStyle.position && (
+            {/* Current time indicator - simple and visible line */}
+            {currentTimeInfo && displayDate === getTodayCST1() && (
               <div
-                className={cn(
-                  "absolute z-20 pointer-events-none transition-all duration-700 ease-in-out",
-                  isMarkerInOccupiedSlot ? "bg-red-500/15" : "bg-red-500/8"
-                )}
+                className="absolute z-30 pointer-events-none left-0 right-0 h-1 bg-red-500 shadow-lg"
                 style={{ 
                   ...redLineStyle,
-                  height: isMarkerInOccupiedSlot ? '60px' : '40px',
                   transform: 'translateY(-50%)',
-                  borderRadius: '6px',
-                  background: isMarkerInOccupiedSlot 
-                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.08) 50%, rgba(239, 68, 68, 0.12) 100%)'
-                    : 'linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, rgba(239, 68, 68, 0.04) 50%, rgba(239, 68, 68, 0.06) 100%)',
-                  boxShadow: isMarkerInOccupiedSlot 
-                    ? 'inset 0 0 20px rgba(239, 68, 68, 0.1), 0 0 10px rgba(239, 68, 68, 0.05)'
-                    : 'inset 0 0 10px rgba(239, 68, 68, 0.05), 0 0 5px rgba(239, 68, 68, 0.03)',
-                  animation: isMarkerInOccupiedSlot ? 'time-container-glow 3s ease-in-out infinite' : 'none',
+                  borderRadius: '2px',
+                  boxShadow: '0 0 8px rgba(239, 68, 68, 0.6), 0 0 4px rgba(239, 68, 68, 0.8)',
                 }}
               >
-                {/* Time indicator line - always visible */}
-                <div
-                  className={cn(
-                    "absolute top-1/2 transform -translate-y-1/2 left-0 right-0 transition-all duration-700 ease-in-out",
-                    isMarkerInOccupiedSlot ? "h-[2px] bg-red-500/60" : "h-[1px] bg-red-500/50"
-                  )}
-                  style={{
-                    borderRadius: '1px',
-                    boxShadow: isMarkerInOccupiedSlot 
-                      ? '0 0 4px rgba(239, 68, 68, 0.3)'
-                      : '0 0 2px rgba(239, 68, 68, 0.2)'
-                  }}
-                />
-                
-                {/* Current time indicators */}
-                <div className={cn(
-                  "absolute top-1/2 left-2 transform -translate-y-1/2 bg-red-600 rounded-full shadow-sm transition-all duration-700 ease-in-out",
-                  isMarkerInOccupiedSlot ? "w-2 h-2" : "w-1.5 h-1.5"
-                )}></div>
-                <div className={cn(
-                  "absolute top-1/2 right-2 transform -translate-y-1/2 bg-red-600 rounded-full shadow-sm",
-                  isMarkerInOccupiedSlot ? "w-2 h-2 animate-pulse" : "w-1.5 h-1.5"
-                )}></div>
+                {/* Time indicator dots */}
+                <div className="absolute top-1/2 left-2 transform -translate-y-1/2 w-3 h-3 bg-red-600 rounded-full shadow-md"></div>
+                <div className="absolute top-1/2 right-2 transform -translate-y-1/2 w-3 h-3 bg-red-600 rounded-full shadow-md animate-pulse"></div>
               </div>
             )}
           
