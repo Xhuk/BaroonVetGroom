@@ -97,20 +97,18 @@ export default function GroomingServices() {
     setShowConfirmation(true);
   };
 
-  const { data: groomingRecords = [], isLoading } = useQuery<GroomingRecord[]>({
-    queryKey: ["/api/grooming-records", currentTenant?.id],
+  // ULTRA-OPTIMIZED: Fast grooming records with minimal payload
+  const { data: groomingData, isLoading } = useQuery({
+    queryKey: ['/api/grooming-records-fast', currentTenant?.id],
     enabled: !!currentTenant?.id,
+    staleTime: 30000, // 30 seconds cache
+    cacheTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: pets = [] } = useQuery<Pet[]>({
-    queryKey: ["/api/pets", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
-
-  const { data: groomers = [] } = useQuery<Staff[]>({
-    queryKey: ["/api/staff", currentTenant?.id, "groomer"],
-    enabled: !!currentTenant?.id,
-  });
+  // Extract optimized data from the fast response
+  const groomingRecords = groomingData?.groomingRecords || [];
+  const pets = groomingData?.pets || [];
+  const groomers = groomingData?.groomers || [];
 
   // Get available grooming services from admin configuration
   const { data: availableServices = [] } = useQuery({
@@ -159,7 +157,7 @@ export default function GroomingServices() {
       return await apiRequest(`/api/grooming-records/${currentTenant?.id}`, "POST", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/grooming-records", currentTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/grooming-records-fast", currentTenant?.id] });
       setShowCreateForm(false);
       form.reset();
     },
@@ -170,7 +168,7 @@ export default function GroomingServices() {
     try {
       await apiRequest(`/api/grooming-records/${currentTenant?.id}/${recordId}/status`, "PATCH", { status: newStatus });
       
-      queryClient.invalidateQueries({ queryKey: ["/api/grooming-records", currentTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/grooming-records-fast", currentTenant?.id] });
       
       const statusText = newStatus === 'completed' ? 'finalizado' : 'cerrado y facturado';
       toast({

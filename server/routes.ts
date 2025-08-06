@@ -2676,7 +2676,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Grooming Records API
+  // ULTRA-OPTIMIZED: Fast grooming records with minimal payload
+  app.get('/api/grooming-records-fast/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      console.log(`Fast grooming records: ${tenantId}`);
+      
+      const [groomingRecords, pets, groomers] = await Promise.all([
+        storage.getGroomingRecords(tenantId),
+        storage.getPetsByTenant(tenantId),
+        storage.getStaff(tenantId)
+      ]);
+
+      // Create lookup maps for efficient filtering
+      const recordPetIds = new Set(groomingRecords.map((record: any) => record.petId));
+      const recordGroomerIds = new Set(groomingRecords.map((record: any) => record.groomerId));
+      
+      // Only include relevant data
+      const relevantPets = pets.filter((pet: any) => recordPetIds.has(pet.id));
+      const relevantGroomers = groomers.filter((groomer: any) => recordGroomerIds.has(groomer.id));
+      
+      console.log(`Grooming FastData - Found ${groomingRecords.length} records, ${relevantPets.length} pets, ${relevantGroomers.length} groomers`);
+      
+      // Sort records by grooming date (most recent first)
+      const sortedRecords = groomingRecords.sort((a: any, b: any) => {
+        return new Date(b.groomingDate).getTime() - new Date(a.groomingDate).getTime();
+      });
+      
+      res.json({
+        groomingRecords: sortedRecords.map((record: any) => ({
+          id: record.id,
+          petId: record.petId,
+          groomerId: record.groomerId,
+          groomingDate: record.groomingDate,
+          services: record.services,
+          notes: record.notes,
+          totalCost: record.totalCost,
+          status: record.status || 'completed',
+          nextAppointmentRecommended: record.nextAppointmentRecommended,
+          nextAppointmentDate: record.nextAppointmentDate
+        })),
+        pets: relevantPets.map((pet: any) => ({
+          id: pet.id,
+          name: pet.name,
+          species: pet.species,
+          breed: pet.breed,
+          clientId: pet.clientId
+        })),
+        groomers: relevantGroomers.map((groomer: any) => ({
+          id: groomer.id,
+          name: groomer.name
+        })),
+        recordsCount: groomingRecords.length,
+        petsCount: relevantPets.length,
+        firstRecord: groomingRecords[0] || null
+      });
+      
+    } catch (error) {
+      console.error("Fast grooming records error:", error);
+      res.status(500).json({ error: "Failed to load grooming records" });
+    }
+  });
+
+  // Legacy grooming records endpoint (kept for compatibility)
   app.get('/api/grooming-records/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;

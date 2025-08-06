@@ -1,79 +1,57 @@
-import { db } from "./db";
-import { groomingRecords } from "@shared/schema";
+import { db } from "./storage.ts";
+import { groomingRecords } from "../shared/schema.ts";
 import { eq } from "drizzle-orm";
 
 const minimalGroomingData = [
   {
     id: "groom-001",
     tenantId: "vetgroom1",
-    petId: "vg1-pet-1", // Firulais
+    petId: "vg1-pet-1", // Luna
     groomerId: "vg1-staff-4", 
     groomingDate: new Date("2024-12-20"),
     services: ["full_bath", "haircut", "nail_trimming", "ear_cleaning"],
-    notes: "Muy tranquilo durante el baño. Excelente comportamiento.",
-    totalCost: 850,
-    nextAppointmentRecommended: true,
-    nextAppointmentDate: new Date("2025-02-20")
+    notes: "Muy tranquila durante el baño. Excelente comportamiento.",
+    totalCost: "850.00"
   },
   {
     id: "groom-002",
     tenantId: "vetgroom1", 
-    petId: "vg1-pet-2", // Whiskers
+    petId: "vg1-pet-2", // Max
     groomerId: "vg1-staff-4",
     groomingDate: new Date("2024-12-18"),
     services: ["full_bath", "brushing", "nail_trimming"],
     notes: "Un poco nervioso al principio, pero se calmó rápidamente.",
-    totalCost: 650,
-    nextAppointmentRecommended: true,
-    nextAppointmentDate: new Date("2025-03-18")
+    totalCost: "650.00"
   },
   {
     id: "groom-003",
     tenantId: "vetgroom1",
-    petId: "vg1-pet-3", // Bobby
+    petId: "vg1-pet-3", // Mimi
     groomerId: "vg1-staff-4",
     groomingDate: new Date("2024-12-15"),
     services: ["full_bath", "haircut", "brushing"],
-    notes: "Algo estresado, pero cooperativo. Transformación increíble.",
-    totalCost: 950,
-    nextAppointmentRecommended: true,
-    nextAppointmentDate: new Date("2025-01-15")
+    notes: "Algo estresada, pero cooperativa. Transformación increíble.",
+    totalCost: "950.00"
   },
   {
     id: "groom-004",
     tenantId: "vetgroom1",
-    petId: "vg1-pet-4", // Princess
+    petId: "vg1-pet-4", // Whiskers
     groomerId: "vg1-staff-4",
     groomingDate: new Date("2024-12-22"),
     services: ["brushing", "nail_trimming", "ear_cleaning"],
-    notes: "Muy calmada y cooperativa durante todo el proceso.",
-    totalCost: 350,
-    nextAppointmentRecommended: true,
-    nextAppointmentDate: new Date("2025-02-22")
+    notes: "Muy calmado y cooperativo durante todo el proceso.",
+    totalCost: "350.00"
   },
   {
     id: "groom-005",
     tenantId: "vetgroom1",
-    petId: "vg1-pet-1", // Firulais
-    groomerId: "vg1-staff-5",
+    petId: "vg1-pet-5", // Rocky
+    groomerId: "vg1-staff-4",
     groomingDate: new Date("2024-12-19"),
     services: ["full_bath", "nail_trimming", "ear_cleaning"],
-    notes: "Respiración pesada pero normal. Muy amigable.",
-    totalCost: 550,
-    nextAppointmentRecommended: true,
-    nextAppointmentDate: new Date("2025-01-19")
-  },
-  {
-    id: "groom-006",
-    tenantId: "vetgroom1",
-    petId: "vg1-pet-2", // Whiskers
-    groomerId: "vg1-staff-5",
-    groomingDate: new Date("2024-12-21"),
-    services: ["full_bath", "haircut", "nail_trimming", "ear_cleaning"],
-    notes: "Perfectamente acostumbrado al grooming. Muy colaborador.",
-    totalCost: 780,
-    nextAppointmentRecommended: true,
-    nextAppointmentDate: new Date("2025-02-21")
+    notes: "Respiración pesada pero normal para la raza. Muy amigable.",
+    totalCost: "550.00"
   }
 ];
 
