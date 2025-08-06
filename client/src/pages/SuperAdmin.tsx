@@ -64,6 +64,39 @@ export default function SuperAdmin() {
     },
   });
 
+  // Grooming appointments seeding mutation
+  const seedGroomingTodayMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/seed-grooming-today/demo-grooming-1', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Grooming Appointments Created Successfully",
+        description: data.message || "30 grooming appointments have been created for today with completed payment status.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Grooming Seeding Failed",
+        description: error?.message || "Failed to create grooming appointments. Please check logs and try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -438,11 +471,19 @@ export default function SuperAdmin() {
                       staff, clients, pets, services, rooms, and generates 45 days of realistic appointment data 
                       for deployment demonstrations.
                     </p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-blue-600">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-blue-600 mb-4">
                       <div>• 3 Demo Tenants</div>
                       <div>• 7+ Staff Members</div>
                       <div>• 8+ Clients & Pets</div>
                       <div>• 45 Days of Appointments</div>
+                    </div>
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-3">
+                      <h5 className="font-medium text-purple-900 text-sm mb-1">Grooming Today Seeder</h5>
+                      <p className="text-xs text-purple-700">
+                        Adds 30 completed grooming appointments for today in demo-grooming-1 tenant. 
+                        Distributed across 8 fraccionamientos with realistic services, pricing, and payment status. 
+                        Ready for VRP delivery route optimization testing.
+                      </p>
                     </div>
                   </div>
                   
@@ -455,24 +496,45 @@ export default function SuperAdmin() {
                         ⚠️ This will create or update demo company data. Safe to run multiple times.
                       </p>
                     </div>
-                    <Button
-                      onClick={() => seedDemoDataMutation.mutate()}
-                      disabled={seedDemoDataMutation.isPending}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                      data-testid="button-seed-demo-data"
-                    >
-                      {seedDemoDataMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Seeding...
-                        </>
-                      ) : (
-                        <>
-                          <Database className="mr-2 h-4 w-4" />
-                          Seed Demo Data
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        onClick={() => seedDemoDataMutation.mutate()}
+                        disabled={seedDemoDataMutation.isPending}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        data-testid="button-seed-demo-data"
+                      >
+                        {seedDemoDataMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Seeding...
+                          </>
+                        ) : (
+                          <>
+                            <Database className="mr-2 h-4 w-4" />
+                            Seed Demo Data
+                          </>
+                        )}
+                      </Button>
+                      
+                      <Button
+                        onClick={() => seedGroomingTodayMutation.mutate()}
+                        disabled={seedGroomingTodayMutation.isPending}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                        data-testid="button-seed-grooming-today"
+                      >
+                        {seedGroomingTodayMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="mr-2 h-4 w-4" />
+                            Seed 30 Grooming Today
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
