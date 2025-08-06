@@ -6,7 +6,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Truck, MapPin, Route, Settings, Calculator, Scale } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ArrowLeft, Truck, MapPin, Route, Settings, Calculator, Scale, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -210,6 +211,28 @@ export default function RoutePlanMap() {
     },
   });
 
+  // VRP Route Optimization Mutation for Completed Mascots
+  const optimizeVRPMutation = useMutation({
+    mutationFn: async (data: { date: string; vanCapacity: string }) => {
+      return apiRequest(`/api/delivery-routes/optimize/${currentTenant?.id}`, "POST", data);
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Ruta Optimizada con VRP",
+        description: `${data.summary.totalStops} paradas optimizadas • ${data.summary.totalDistance.toFixed(1)}km • ${data.summary.estimatedTime}min`,
+      });
+      // Refresh the map with VRP optimized data if needed
+      queryClient.invalidateQueries({ queryKey: ["/api/delivery-routes-fast", currentTenant?.id, selectedDate] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error de Optimización VRP",
+        description: error.message || "No se pudo optimizar la ruta con algoritmos VRP",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleOptimizeRoute = () => {
     if (pickupAppointments.length === 0) {
       toast({
@@ -237,6 +260,22 @@ export default function RoutePlanMap() {
       clinicLocation,
     });
     setIsOptimizing(false);
+  };
+
+  const handleOptimizeVRP = () => {
+    if (pickupAppointments.length === 0) {
+      toast({
+        title: "Sin Recolecciones",
+        description: "No hay recolecciones programadas para optimizar con VRP",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    optimizeVRPMutation.mutate({ 
+      date: selectedDate, 
+      vanCapacity: selectedVanCapacity
+    });
   };
 
   // Generate route polyline coordinates
@@ -286,15 +325,39 @@ export default function RoutePlanMap() {
             <option value="large">Van Grande (20-25)</option>
           </select>
           
-          <Button
-            onClick={handleOptimizeRoute}
-            disabled={isOptimizing || pickupAppointments.length === 0}
-            className="bg-green-600 hover:bg-green-700"
-            data-testid="button-optimize-route"
-          >
-            <Calculator className="w-4 h-4 mr-2" />
-            {isOptimizing ? "Optimizando..." : "Optimizar Ruta"}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                disabled={pickupAppointments.length === 0}
+                className="bg-green-600 hover:bg-green-700"
+                data-testid="button-calculate-route"
+              >
+                <Calculator className="w-4 h-4 mr-2" />
+                Calcular Ruta
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem 
+                onClick={handleOptimizeRoute}
+                disabled={isOptimizing || pickupAppointments.length === 0}
+                className="cursor-pointer"
+                data-testid="dropdown-optimize-route"
+              >
+                <Route className="w-4 h-4 mr-2" />
+                {isOptimizing ? "Optimizando..." : "Optimización Básica"}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleOptimizeVRP}
+                disabled={optimizeVRPMutation.isPending || pickupAppointments.length === 0}
+                className="cursor-pointer"
+                data-testid="dropdown-optimize-vrp"
+              >
+                <Scale className="w-4 h-4 mr-2" />
+                {optimizeVRPMutation.isPending ? "Optimizando VRP..." : "Optimizar VRP"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
