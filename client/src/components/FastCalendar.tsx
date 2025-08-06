@@ -271,19 +271,14 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     }
     
     const { hours, minutes } = currentTimeInfo;
-    console.log(`Calculating red line position for ${hours}:${minutes}`);
-    
     // Find which slot the current time falls into
     const currentSlotIndex = visibleTimeSlots.findIndex(slot => {
       const slotHour = parseInt(slot.split(':')[0]);
       const slotMinute = parseInt(slot.split(':')[1]);
-      const isInSlot = hours === slotHour && minutes >= slotMinute && minutes < slotMinute + 30;
-      console.log(`Checking slot ${slot}: hour=${slotHour}, minute=${slotMinute}, isInSlot=${isInSlot}`);
-      return isInSlot;
+      return hours === slotHour && minutes >= slotMinute && minutes < slotMinute + 30;
     });
     
     if (currentSlotIndex === -1) {
-      console.log('Red line hidden: no matching slot found');
       return { display: 'none' };
     }
     
@@ -294,8 +289,6 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     const positionWithinSlot = (minutesIntoSlot / 30) * slotHeight; // 30 minutes per slot
     
     const topPosition = (currentSlotIndex * slotHeight) + positionWithinSlot;
-    
-    console.log(`Red line positioned at slot ${currentSlotIndex}, position ${topPosition}px (${minutesIntoSlot} mins into slot)`);
     
     return {
       position: 'absolute',
@@ -351,20 +344,26 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
             style={{ maxHeight: 'calc(100vh - 200px)' }}
           >
             
-            {/* Current time indicator - simple and visible line */}
+            {/* Current time indicator - subtle and elegant */}
             {currentTimeInfo && displayDate === getTodayCST1() && (
               <div
-                className="absolute z-30 pointer-events-none left-0 right-0 h-1 bg-red-500 shadow-lg"
+                className="absolute z-20 pointer-events-none left-0 right-0"
                 style={{ 
                   ...redLineStyle,
                   transform: 'translateY(-50%)',
-                  borderRadius: '2px',
-                  boxShadow: '0 0 8px rgba(239, 68, 68, 0.6), 0 0 4px rgba(239, 68, 68, 0.8)',
                 }}
               >
-                {/* Time indicator dots */}
-                <div className="absolute top-1/2 left-2 transform -translate-y-1/2 w-3 h-3 bg-red-600 rounded-full shadow-md"></div>
-                <div className="absolute top-1/2 right-2 transform -translate-y-1/2 w-3 h-3 bg-red-600 rounded-full shadow-md animate-pulse"></div>
+                {/* Subtle gradient line */}
+                <div 
+                  className="w-full h-[1px] opacity-70"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(239, 68, 68, 0.8) 20%, rgba(239, 68, 68, 0.9) 50%, rgba(239, 68, 68, 0.8) 80%, transparent 100%)',
+                    boxShadow: '0 0 3px rgba(239, 68, 68, 0.3)',
+                  }}
+                />
+                {/* Minimal time indicator dots */}
+                <div className="absolute top-1/2 left-3 transform -translate-y-1/2 w-1.5 h-1.5 bg-red-500/60 rounded-full"></div>
+                <div className="absolute top-1/2 right-3 transform -translate-y-1/2 w-1.5 h-1.5 bg-red-500/60 rounded-full"></div>
               </div>
             )}
           
