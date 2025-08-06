@@ -235,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { tenantId } = req.params;
       const { date } = req.query;
-      // Use CST-1 timezone for reliable date handling
+      // Use current date in UTC format for consistent handling
       const targetDate = date || new Date().toISOString().split('T')[0];
       
       console.log(`Fast appointments: ${tenantId} on ${targetDate}`);

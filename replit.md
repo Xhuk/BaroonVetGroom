@@ -13,6 +13,15 @@ A high-performance veterinary clinic management platform with ultra-optimized us
 - **Database Consistency**: All datetime operations now convert properly between user timezone and UTC for storage
 - **Cross-Location Data Integrity**: Ensures appointments and records make sense regardless of user location
 
+### Global UTC Storage Implementation (August 2025) - COMPLETED ✅
+- **Database UTC Enforcement**: PostgreSQL session timezone set to UTC for all operations
+- **Storage Layer Conversion**: All appointment creation/updates automatically convert user input to UTC
+- **Retrieval Layer Conversion**: All appointment queries convert UTC back to user's timezone for display
+- **Slot Availability UTC Logic**: Available slot checking uses UTC comparison for accurate conflict detection
+- **Reservation System UTC**: Temporary slot reservations store dates/times in UTC format
+- **Conversion Functions**: Added `convertUserDateTimeToUTC()` and `convertUTCToUserDateTime()` utilities
+- **Global Compliance**: ALL saved information now uses UTC globally across the entire application
+
 ### Enhanced Booking System with Smart Creation & Real-Time Updates (August 2025) - COMPLETED ✅
 - **Azure Portal-Style Search Interfaces**: Type-ahead search for clients (name, email, phone) and pets (name, species, breed)
 - **Multi-Service Selection**: Tag-style interface for selecting multiple services with real-time price calculation

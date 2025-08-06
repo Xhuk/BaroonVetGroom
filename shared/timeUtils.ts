@@ -1,6 +1,10 @@
 /**
  * Multi-timezone utilities with UTC as source of truth
  * Supports customers across Mexico, Colombia, Argentina, and other regions
+ * 
+ * CRITICAL: ALL DATABASE STORAGE MUST USE UTC
+ * - User input (date/time) → Convert to UTC for storage
+ * - Database retrieval → Convert from UTC to user timezone for display
  */
 
 // Timezone configurations for different regions
@@ -82,6 +86,72 @@ export function getTodayInUserTimezone(timezone?: TimezoneKey): string {
   console.log(`getTodayInUserTimezone: User time is ${userTime.toISOString()}, returning ${dateStr}`);
   
   return dateStr;
+}
+
+// UTC STORAGE CONVERSION FUNCTIONS
+
+/**
+ * Convert user's local date/time input to UTC for database storage
+ * @param localDate Date string in YYYY-MM-DD format (user's perspective)
+ * @param localTime Time string in HH:MM format (user's perspective)
+ * @param timezone User's timezone
+ * @returns Object with UTC date and time strings for database storage
+ */
+export function convertUserDateTimeToUTC(localDate: string, localTime: string, timezone?: TimezoneKey): {
+  utcDate: string;
+  utcTime: string;
+  utcISO: string;
+} {
+  const tz = timezone || getUserTimezone();
+  
+  // Create datetime in user's timezone
+  const localDateTime = new Date(`${localDate}T${localTime}:00`);
+  
+  // Convert to UTC for storage
+  const utcDateTime = convertUserTimezoneToUTC(localDateTime, tz);
+  
+  const utcDate = utcDateTime.toISOString().split('T')[0];
+  const utcTime = utcDateTime.toISOString().split('T')[1].substring(0, 5); // HH:MM format
+  
+  console.log(`convertUserDateTimeToUTC: ${localDate} ${localTime} (${tz}) → UTC ${utcDate} ${utcTime}`);
+  
+  return {
+    utcDate,
+    utcTime,
+    utcISO: utcDateTime.toISOString()
+  };
+}
+
+/**
+ * Convert UTC date/time from database to user's timezone for display
+ * @param utcDate Date string in YYYY-MM-DD format (from database)
+ * @param utcTime Time string in HH:MM format (from database)
+ * @param timezone User's timezone
+ * @returns Object with local date and time strings for display
+ */
+export function convertUTCToUserDateTime(utcDate: string, utcTime: string, timezone?: TimezoneKey): {
+  localDate: string;
+  localTime: string;
+  localISO: string;
+} {
+  const tz = timezone || getUserTimezone();
+  
+  // Create UTC datetime from database values
+  const utcDateTime = new Date(`${utcDate}T${utcTime}:00Z`);
+  
+  // Convert to user's timezone for display
+  const localDateTime = convertUTCToUserTimezone(utcDateTime, tz);
+  
+  const localDate = localDateTime.toISOString().split('T')[0];
+  const localTime = localDateTime.toISOString().split('T')[1].substring(0, 5); // HH:MM format
+  
+  console.log(`convertUTCToUserDateTime: UTC ${utcDate} ${utcTime} → ${localDate} ${localTime} (${tz})`);
+  
+  return {
+    localDate,
+    localTime,
+    localISO: localDateTime.toISOString()
+  };
 }
 
 /**

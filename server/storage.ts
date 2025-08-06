@@ -132,9 +132,11 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
+import { convertUserDateTimeToUTC, convertUTCToUserDateTime } from "@shared/timeUtils";
 
-// Set database session timezone to CST-1 (UTC-6) on module load
-db.execute(sql`SET timezone = 'CST6CDT'`);
+// CRITICAL: Set database session timezone to UTC for consistent storage
+// All data must be stored in UTC, converted at application layer
+db.execute(sql`SET timezone = 'UTC'`);
 
 // Interface for storage operations
 export interface IStorage {
@@ -574,48 +576,93 @@ export class DatabaseStorage implements IStorage {
 
     const results = await appointmentsQuery;
 
-    // Transform to match expected format
-    return results.map(row => ({
-      id: row.id,
-      tenantId: row.tenantId,
-      clientId: row.clientId,
-      petId: row.petId,
-      staffId: row.staffId,
-      roomId: row.roomId,
-      serviceId: row.serviceId,
-      scheduledDate: row.scheduledDate,
-      scheduledTime: row.scheduledTime,
-      duration: row.duration,
-      status: row.status,
-      type: row.type,
-      notes: row.notes,
-      totalCost: row.totalCost,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-      client: row.clientName ? {
-        id: row.clientId,
-        name: row.clientName,
-        phone: row.clientPhone,
-        email: row.clientEmail,
-      } : null,
-      pet: row.petName ? {
-        id: row.petId,
-        name: row.petName,
-        species: row.petSpecies,
-        breed: row.petBreed,
-      } : null,
-    }));
+    // Transform to match expected format and convert UTC to user timezone
+    return results.map(row => {
+      // CRITICAL: Convert UTC from database to user timezone for display
+      let displayDate = row.scheduledDate;
+      let displayTime = row.scheduledTime;
+      
+      if (row.scheduledDate && row.scheduledTime) {
+        const { localDate, localTime } = convertUTCToUserDateTime(
+          row.scheduledDate,
+          row.scheduledTime
+        );
+        displayDate = localDate;
+        displayTime = localTime;
+        
+        console.log(`Storage UTC Display: UTC ${row.scheduledDate} ${row.scheduledTime} → User ${localDate} ${localTime}`);
+      }
+      
+      return {
+        id: row.id,
+        tenantId: row.tenantId,
+        clientId: row.clientId,
+        petId: row.petId,
+        staffId: row.staffId,
+        roomId: row.roomId,
+        serviceId: row.serviceId,
+        scheduledDate: displayDate,
+        scheduledTime: displayTime,
+        duration: row.duration,
+        status: row.status,
+        type: row.type,
+        notes: row.notes,
+        totalCost: row.totalCost,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        client: row.clientName ? {
+          id: row.clientId,
+          name: row.clientName,
+          phone: row.clientPhone,
+          email: row.clientEmail,
+        } : null,
+        pet: row.petName ? {
+          id: row.petId,
+          name: row.petName,
+          species: row.petSpecies,
+          breed: row.petBreed,
+        } : null,
+      };
+    });
   }
 
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
-    const [newAppointment] = await db.insert(appointments).values(appointment).returning();
+    // CRITICAL: Convert user input to UTC for database storage
+    let appointmentData = { ...appointment };
+    
+    if (appointment.scheduledDate && appointment.scheduledTime) {
+      const { utcDate, utcTime } = convertUserDateTimeToUTC(
+        appointment.scheduledDate,
+        appointment.scheduledTime
+      );
+      appointmentData.scheduledDate = utcDate;
+      appointmentData.scheduledTime = utcTime;
+      
+      console.log(`Storage UTC Conversion: User ${appointment.scheduledDate} ${appointment.scheduledTime} → UTC ${utcDate} ${utcTime}`);
+    }
+    
+    const [newAppointment] = await db.insert(appointments).values(appointmentData).returning();
     return newAppointment;
   }
 
   async updateAppointment(appointmentId: string, appointment: Partial<InsertAppointment>): Promise<Appointment> {
+    // CRITICAL: Convert user input to UTC for database storage
+    let appointmentData = { ...appointment };
+    
+    if (appointment.scheduledDate && appointment.scheduledTime) {
+      const { utcDate, utcTime } = convertUserDateTimeToUTC(
+        appointment.scheduledDate,
+        appointment.scheduledTime
+      );
+      appointmentData.scheduledDate = utcDate;
+      appointmentData.scheduledTime = utcTime;
+      
+      console.log(`Storage UTC Update: User ${appointment.scheduledDate} ${appointment.scheduledTime} → UTC ${utcDate} ${utcTime}`);
+    }
+    
     const [updatedAppointment] = await db
       .update(appointments)
-      .set(appointment)
+      .set(appointmentData)
       .where(eq(appointments.id, appointmentId))
       .returning();
     return updatedAppointment;
@@ -630,13 +677,22 @@ export class DatabaseStorage implements IStorage {
     const [service] = await db.select().from(services).where(eq(services.id, serviceId));
     if (!service) return [];
 
-    // Get existing appointments for the date
+    // CRITICAL: Convert user date to UTC for database comparison
+    // Note: Input date is in user's timezone, need to check against UTC stored appointments
+    const { utcDate } = convertUserDateTimeToUTC(date, "00:00");
+
+    // Get existing appointments for the UTC date
     const existingAppointments = await db
       .select()
       .from(appointments)
-      .where(eq(appointments.tenantId, tenantId));
+      .where(and(
+        eq(appointments.tenantId, tenantId),
+        eq(appointments.scheduledDate, utcDate)
+      ));
 
-    // Generate time slots from 8:00 AM to 6:00 PM
+    console.log(`getAvailableSlots: User date ${date} → UTC ${utcDate}, found ${existingAppointments.length} appointments`);
+
+    // Generate time slots from 8:00 AM to 6:00 PM (in user timezone)
     const slots = [];
     for (let hour = 8; hour < 18; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
@@ -647,17 +703,18 @@ export class DatabaseStorage implements IStorage {
 
     // Filter out slots that conflict with existing appointments
     const availableSlots = slots.filter(slot => {
-      const slotTime = new Date(`${date}T${slot}:00`);
-      const slotEndTime = new Date(slotTime.getTime() + service.duration * 60000);
+      // Convert user slot time to UTC for comparison
+      const { utcDate: slotUTCDate, utcTime: slotUTCTime } = convertUserDateTimeToUTC(date, slot);
+      const slotTimeUTC = new Date(`${slotUTCDate}T${slotUTCTime}:00Z`);
+      const slotEndTimeUTC = new Date(slotTimeUTC.getTime() + service.duration * 60000);
 
       return !existingAppointments.some(apt => {
-        if (apt.scheduledDate !== date) return false;
-        
-        const aptTime = new Date(`${apt.scheduledDate}T${apt.scheduledTime}:00`);
-        const aptEndTime = new Date(aptTime.getTime() + (apt.duration || 30) * 60000);
+        // Appointments are already stored in UTC, compare directly
+        const aptTimeUTC = new Date(`${apt.scheduledDate}T${apt.scheduledTime}:00Z`);
+        const aptEndTimeUTC = new Date(aptTimeUTC.getTime() + (apt.duration || 30) * 60000);
 
-        // Check for time overlap
-        return slotTime < aptEndTime && slotEndTime > aptTime;
+        // Check for time overlap in UTC
+        return slotTimeUTC < aptEndTimeUTC && slotEndTimeUTC > aptTimeUTC;
       });
     });
 
@@ -683,6 +740,20 @@ export class DatabaseStorage implements IStorage {
   async reserveSlot(reservation: any): Promise<any> {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
     
+    // CRITICAL: Convert user input to UTC for database storage
+    let reservationData = { ...reservation };
+    
+    if (reservation.scheduledDate && reservation.scheduledTime) {
+      const { utcDate, utcTime } = convertUserDateTimeToUTC(
+        reservation.scheduledDate,
+        reservation.scheduledTime
+      );
+      reservationData.scheduledDate = utcDate;
+      reservationData.scheduledTime = utcTime;
+      
+      console.log(`Storage UTC Reservation: User ${reservation.scheduledDate} ${reservation.scheduledTime} → UTC ${utcDate} ${utcTime}`);
+    }
+    
     // Clean up expired reservations first
     await db.delete(tempSlotReservations)
       .where(sql`expires_at < ${new Date()}`);
@@ -691,7 +762,7 @@ export class DatabaseStorage implements IStorage {
     const [newReservation] = await db
       .insert(tempSlotReservations)
       .values({
-        ...reservation,
+        ...reservationData,
         expiresAt
       })
       .returning();
