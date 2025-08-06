@@ -1,4 +1,4 @@
-import { useState, Suspense, memo } from "react";
+import { useState, useEffect, Suspense, memo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BackButton } from "@/components/BackButton";
 import { InstantAppointmentsSkeleton } from "@/components/InstantSkeletonUI";
@@ -34,6 +34,15 @@ const Appointments = memo(function Appointments() {
     console.log(`Appointments page initialized with today in user timezone: ${today}`);
     return today;
   });
+
+  // Enforce today's date on component mount/reload
+  useEffect(() => {
+    const today = getTodayInUserTimezone();
+    if (selectedDate !== today) {
+      console.log(`Enforcing today's date: ${today} (was: ${selectedDate})`);
+      setSelectedDate(today);
+    }
+  }, []); // Only run on mount
 
   // Use WebSocket for real-time appointment updates
   const { 

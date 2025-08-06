@@ -6,7 +6,7 @@ import { useLocation } from "wouter";
 // Removed SimpleSlotBookingDialog - using existing booking page instead
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
-import { getTodayCST1, addDaysCST1, formatCST1Date, getCurrentTimeCST1, getCurrentTimeInUserTimezone, getTodayInUserTimezone } from "@shared/timeUtils";
+import { getTodayCST1, addDaysCST1, formatCST1Date, getCurrentTimeCST1, getCurrentTimeInUserTimezone, getTodayInUserTimezone, addDaysInUserTimezone } from "@shared/timeUtils";
 
 interface FastCalendarProps {
   appointments: Appointment[];
@@ -40,19 +40,26 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Always prioritize today's date on load, then respect selectedDate changes (using user timezone)
+  // Enforce today's date when no selectedDate is provided
   useEffect(() => {
     const todayUserTZ = getTodayInUserTimezone();
     console.log(`Calendar useEffect: selectedDate=${selectedDate}, displayDate=${displayDate}, todayUserTZ=${todayUserTZ}`);
     
-    if (selectedDate && selectedDate !== displayDate) {
+    if (!selectedDate) {
+      // No selectedDate means we should show today
+      if (displayDate !== todayUserTZ) {
+        console.log(`No selectedDate - enforcing today: ${todayUserTZ}`);
+        setDisplayDate(todayUserTZ);
+        if (onDateChange) {
+          onDateChange(todayUserTZ);
+        }
+      }
+    } else if (selectedDate !== displayDate) {
+      // selectedDate provided, use it
       console.log(`Setting display date to selectedDate: ${selectedDate}`);
       setDisplayDate(selectedDate);
-    } else if (!selectedDate && displayDate !== todayUserTZ) {
-      console.log(`Setting display date to today: ${todayUserTZ} (user timezone)`);
-      setDisplayDate(todayUserTZ);
     }
-  }, [selectedDate, displayDate]);
+  }, [selectedDate, displayDate, onDateChange]);
 
   // Handle slot click for booking - use wouter for instant navigation
   const handleSlotClick = (time: string) => {
@@ -250,9 +257,9 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     };
   }, [currentTime, isScrolling]);
 
-  // Navigation functions
+  // Navigation functions - using user timezone
   const handlePreviousDay = () => {
-    const newDate = addDaysCST1(displayDate, -1);
+    const newDate = addDaysInUserTimezone(displayDate, -1);
     setDisplayDate(newDate);
     if (onDateChange) {
       onDateChange(newDate);
@@ -260,7 +267,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   };
 
   const handleNextDay = () => {
-    const newDate = addDaysCST1(displayDate, 1);
+    const newDate = addDaysInUserTimezone(displayDate, 1);
     setDisplayDate(newDate);
     if (onDateChange) {
       onDateChange(newDate);
