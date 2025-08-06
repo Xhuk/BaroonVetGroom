@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { BackButton } from "@/components/BackButton";
 import {
   CreditCard,
   DollarSign,
@@ -103,12 +104,7 @@ export default function BillingManagement() {
       <div className="border-b border-gray-800 bg-gray-900/50">
         <div className="container max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link href="/superadmin">
-              <Button variant="ghost" size="sm" data-testid="button-back">
-                <ArrowLeft className="h-4 w-4" />
-                Back to SuperAdmin
-              </Button>
-            </Link>
+            <BackButton />
             <div>
               <h1 className="text-2xl font-bold text-white">Billing & Credits</h1>
               <p className="text-gray-400">Manage your account balance and usage</p>

@@ -20,6 +20,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Header } from '@/components/Header';
+import { BackButton } from '@/components/BackButton';
 
 interface Feature {
   id: string;
@@ -158,6 +159,9 @@ export function VersionedSuperAdminDashboard() {
       <Header />
       
       <main className="space-y-6 p-6">
+        {/* Back Button */}
+        <BackButton />
+        
         {/* Header */}
         <div className="flex items-center justify-between">
         <div>
