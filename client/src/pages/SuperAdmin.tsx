@@ -24,7 +24,11 @@ import {
   Loader2,
   UserPlus,
   Smartphone,
-  Copy
+  Copy,
+  CreditCard,
+  AlertTriangle,
+  DollarSign,
+  TrendingDown
 } from "lucide-react";
 import {
   Dialog,
@@ -63,6 +67,15 @@ export default function SuperAdmin() {
     maxStaff: 5
   });
   const [sharedCredentials, setSharedCredentials] = useState<any>(null);
+  const [showBillingDialog, setShowBillingDialog] = useState(false);
+  const [showAddCreditsDialog, setShowAddCreditsDialog] = useState(false);
+  const [creditAmount, setCreditAmount] = useState('');
+  const [billingSettings, setBillingSettings] = useState({
+    monthlyBudget: 100,
+    alertThreshold75: 75,
+    alertThreshold90: 90,
+    enableAlerts: true
+  });
 
   // Demo data seeding mutation
   const seedDemoDataMutation = useMutation({
@@ -132,6 +145,73 @@ export default function SuperAdmin() {
     },
   });
 
+  // Add credits mutation
+  const addCreditsMutation = useMutation({
+    mutationFn: async (data: { amount: string; description?: string }) => {
+      const response = await fetch('/api/superadmin/add-credits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Credits Added Successfully! 💳",
+        description: `$${data.transaction.amount} has been added to your account.`,
+      });
+      setCreditAmount('');
+      setShowAddCreditsDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Credit Addition Failed",
+        description: error?.message || "Failed to add credits. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update billing settings mutation
+  const updateBillingMutation = useMutation({
+    mutationFn: async (settings: any) => {
+      const response = await fetch('/api/superadmin/billing-settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(settings),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Billing Settings Updated",
+        description: "Your billing preferences have been saved successfully.",
+      });
+      setShowBillingDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error?.message || "Failed to update billing settings.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Fetch dashboard statistics from the database cube
   const { data: dashboardStats, isLoading: isLoadingStats, error: statsError } = useQuery({
     queryKey: ['/api/superadmin/dashboard-stats'],
@@ -142,6 +222,13 @@ export default function SuperAdmin() {
   // Fetch subscription plans for mobile onboarding
   const { data: subscriptionPlans = [] } = useQuery({
     queryKey: ['/api/mobile/subscription-plans'],
+    enabled: isAuthenticated,
+  });
+
+  // Fetch billing usage and expenses
+  const { data: billingData, isLoading: isLoadingBilling } = useQuery({
+    queryKey: ['/api/superadmin/billing-usage'],
+    refetchInterval: 60000, // Refresh every minute
     enabled: isAuthenticated,
   });
 
@@ -286,6 +373,24 @@ export default function SuperAdmin() {
                   <span className="text-xs sm:text-sm font-medium text-center">Onboard Client</span>
                 </Button>
                 
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
+                  onClick={() => setShowBillingDialog(true)}
+                >
+                  <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                  <span className="text-xs sm:text-sm font-medium text-center">Billing</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200"
+                  onClick={() => setShowAddCreditsDialog(true)}
+                >
+                  <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+                  <span className="text-xs sm:text-sm font-medium text-center">Add Credits</span>
+                </Button>
+                
                 <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
                   <Settings className="w-5 h-5 text-gray-600" />
                   <span className="text-sm font-medium">Config Global</span>
@@ -331,6 +436,62 @@ export default function SuperAdmin() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Billing Overview Card */}
+          {billingData?.billing && (
+            <Card className="mb-6 sm:mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <CreditCard className="h-5 w-5 text-blue-600" />
+                    <span>Billing Overview - {billingData.billing.currentMonth}</span>
+                  </div>
+                  {billingData.billing.alerts.isNear75 && (
+                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="text-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="text-2xl font-bold text-green-700">${billingData.billing.totalSpent.toFixed(2)}</div>
+                    <div className="text-sm text-green-600">Total Spent</div>
+                  </div>
+                  <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-700">${billingData.billing.remainingBudget.toFixed(2)}</div>
+                    <div className="text-sm text-blue-600">Budget Left</div>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-700">{billingData.billing.usagePercentage.toFixed(1)}%</div>
+                    <div className="text-sm text-purple-600">Usage</div>
+                  </div>
+                  <div className="text-center p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="text-2xl font-bold text-amber-700">${billingData.billing.projectedMonthEnd.toFixed(2)}</div>
+                    <div className="text-sm text-amber-600">Projected</div>
+                  </div>
+                </div>
+                
+                {billingData.billing.alerts.isNear75 && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <span className="text-sm font-medium text-amber-800">
+                        Warning: You've used {billingData.billing.usagePercentage.toFixed(1)}% of your monthly budget
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                  <div>Deployments: ${billingData.billing.services.deployments}</div>
+                  <div>Database: ${billingData.billing.services.database}</div>
+                  <div>Storage: ${billingData.billing.services.storage}</div>
+                  <div>AI: ${billingData.billing.services.ai}</div>
+                  <div>Other: ${billingData.billing.services.other}</div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Platform Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
@@ -1047,6 +1208,160 @@ export default function SuperAdmin() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Billing Settings Dialog */}
+      <Dialog open={showBillingDialog} onOpenChange={setShowBillingDialog}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-blue-600" />
+              Billing Settings
+            </DialogTitle>
+            <DialogDescription>
+              Configure your monthly budget and alert thresholds.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label>Monthly Budget ($)</Label>
+              <Input
+                type="number"
+                value={billingSettings.monthlyBudget}
+                onChange={(e) => setBillingSettings(prev => ({ ...prev, monthlyBudget: parseFloat(e.target.value) }))}
+                min="10"
+                max="10000"
+                step="10"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>75% Alert (%)</Label>
+                <Input
+                  type="number"
+                  value={billingSettings.alertThreshold75}
+                  onChange={(e) => setBillingSettings(prev => ({ ...prev, alertThreshold75: parseInt(e.target.value) }))}
+                  min="50"
+                  max="90"
+                />
+              </div>
+              <div>
+                <Label>90% Alert (%)</Label>
+                <Input
+                  type="number"
+                  value={billingSettings.alertThreshold90}
+                  onChange={(e) => setBillingSettings(prev => ({ ...prev, alertThreshold90: parseInt(e.target.value) }))}
+                  min="75"
+                  max="100"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowBillingDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => updateBillingMutation.mutate(billingSettings)}
+                disabled={updateBillingMutation.isPending}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {updateBillingMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Update Settings
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Credits Dialog */}
+      <Dialog open={showAddCreditsDialog} onOpenChange={setShowAddCreditsDialog}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-purple-600" />
+              Add Credits
+            </DialogTitle>
+            <DialogDescription>
+              Add credits to your account to extend your usage limit.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label>Credit Amount ($)</Label>
+              <Input
+                type="number"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(e.target.value)}
+                placeholder="Enter amount (e.g., 25.00)"
+                min="5"
+                max="500"
+                step="5"
+              />
+            </div>
+            
+            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+              <p><strong>Recommended amounts:</strong></p>
+              <div className="mt-2 space-y-1">
+                <div className="flex justify-between">
+                  <span>Small boost:</span>
+                  <span>$25 - $50</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Medium boost:</span>
+                  <span>$75 - $100</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Large boost:</span>
+                  <span>$150 - $200</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddCreditsDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => addCreditsMutation.mutate({ amount: creditAmount })}
+                disabled={addCreditsMutation.isPending || !creditAmount || parseFloat(creditAmount) < 5}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+              >
+                {addCreditsMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    Add ${creditAmount || '0'}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

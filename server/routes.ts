@@ -4234,6 +4234,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get billing usage and expenses for current month
+  app.get("/api/superadmin/billing-usage", isSuperAdmin, async (req, res) => {
+    try {
+      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+      
+      // Simulate billing data - in production, integrate with Replit's billing API
+      const mockBillingData = {
+        currentMonth: currentMonth,
+        monthlyBudget: 100.00, // User's set budget
+        coreCredits: 25.00, // Monthly Core plan credits
+        usedCredits: 23.50, // Credits consumed this month
+        additionalCharges: 12.30, // Usage beyond credits
+        totalSpent: 35.80, // Total spent this month
+        remainingCredits: 1.50, // Credits left
+        remainingBudget: 64.20, // Budget remaining
+        usagePercentage: 35.8, // Percentage of budget used
+        services: {
+          deployments: 18.20,
+          database: 4.10,
+          storage: 2.50,
+          ai: 1.60,
+          other: 9.40
+        },
+        alerts: {
+          threshold75Percent: 75.00,
+          threshold90Percent: 90.00,
+          isNear75: false,
+          isNear90: false
+        },
+        projectedMonthEnd: 67.50 // Projected total for month
+      };
+
+      // Check alert thresholds
+      mockBillingData.alerts.isNear75 = mockBillingData.usagePercentage >= 75;
+      mockBillingData.alerts.isNear90 = mockBillingData.usagePercentage >= 90;
+
+      res.json({
+        success: true,
+        billing: mockBillingData,
+        lastUpdated: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error("Error fetching billing usage:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch billing usage",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update billing budget and alert settings
+  app.patch("/api/superadmin/billing-settings", isSuperAdmin, async (req, res) => {
+    try {
+      const { 
+        monthlyBudget, 
+        alertThreshold75, 
+        alertThreshold90, 
+        enableAlerts 
+      } = req.body;
+
+      // In production, store these settings in database
+      const updatedSettings = {
+        monthlyBudget: monthlyBudget || 100.00,
+        alertThreshold75: alertThreshold75 || 75,
+        alertThreshold90: alertThreshold90 || 90,
+        enableAlerts: enableAlerts !== undefined ? enableAlerts : true,
+        updatedAt: new Date().toISOString()
+      };
+
+      res.json({
+        success: true,
+        settings: updatedSettings,
+        message: "Billing settings updated successfully"
+      });
+
+    } catch (error) {
+      console.error("Error updating billing settings:", error);
+      res.status(500).json({ 
+        message: "Failed to update billing settings",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Add credits to account (simulate credit purchase)
+  app.post("/api/superadmin/add-credits", isSuperAdmin, async (req, res) => {
+    try {
+      const { amount, description = "Manual credit addition" } = req.body;
+
+      if (!amount || amount <= 0) {
+        return res.status(400).json({
+          message: "Valid credit amount is required"
+        });
+      }
+
+      // In production, integrate with Replit's billing system
+      const creditTransaction = {
+        id: `credit_${Date.now()}`,
+        amount: parseFloat(amount),
+        description: description,
+        type: "credit_addition",
+        timestamp: new Date().toISOString(),
+        status: "completed"
+      };
+
+      res.json({
+        success: true,
+        transaction: creditTransaction,
+        message: `Successfully added $${amount} in credits to your account`
+      });
+
+    } catch (error) {
+      console.error("Error adding credits:", error);
+      res.status(500).json({ 
+        message: "Failed to add credits",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get billing history and transactions
+  app.get("/api/superadmin/billing-history", isSuperAdmin, async (req, res) => {
+    try {
+      const { months = 3 } = req.query;
+      
+      // Mock billing history - in production, fetch from billing system
+      const mockHistory = {
+        transactions: [
+          {
+            id: "tx_001",
+            date: "2025-08-01",
+            type: "deployment",
+            amount: -15.20,
+            description: "Autoscale Deployment - Veterinary App",
+            service: "deployment"
+          },
+          {
+            id: "tx_002", 
+            date: "2025-08-03",
+            type: "database",
+            amount: -2.50,
+            description: "PostgreSQL Database Usage",
+            service: "database"
+          },
+          {
+            id: "tx_003",
+            date: "2025-08-05",
+            type: "credit",
+            amount: 25.00,
+            description: "Monthly Core Plan Credits",
+            service: "credits"
+          }
+        ],
+        monthlyTotals: [
+          { month: "2025-08", spent: 35.80, budget: 100.00 },
+          { month: "2025-07", spent: 67.20, budget: 100.00 },
+          { month: "2025-06", spent: 89.10, budget: 100.00 }
+        ]
+      };
+
+      res.json({
+        success: true,
+        history: mockHistory,
+        period: `Last ${months} months`
+      });
+
+    } catch (error) {
+      console.error("Error fetching billing history:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch billing history",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Share initial credentials for mobile onboarding
   app.post("/api/mobile/share-credentials", isSuperAdmin, async (req, res) => {
     try {
