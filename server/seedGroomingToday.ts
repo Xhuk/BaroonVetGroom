@@ -116,7 +116,7 @@ export async function seedGroomingAppointmentsToday(tenantId: string): Promise<v
     
     // Get staff for grooming
     const staff = await storage.getStaff(tenantId);
-    const groomingStaff = staff.filter(s => s.role?.includes('grooming') || s.role?.includes('admin'));
+    const groomingStaff = staff.filter(s => s.role?.includes('groomer') || s.role?.includes('admin') || s.role?.includes('veterinarian'));
     
     if (groomingStaff.length === 0) {
       throw new Error("No grooming staff found for tenant");

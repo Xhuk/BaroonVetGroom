@@ -107,6 +107,14 @@ The system is built on a modern stack emphasizing speed, scalability, and mainta
 - **Priority Override System**: Manual mascot assignment to specific delivery times for business flexibility
 - **Enhanced User Experience**: Visual mode selection with color-coded delivery type indicators and dynamic form adaptation
 
+### Route Optimization UI Enhancement & Grooming Seeder Fix (August 6, 2025) - COMPLETED ✅
+- **Dropdown Route Optimization**: Converted single "Optimizar Ruta" button into "Calcular Ruta" dropdown menu system
+- **Dual Optimization Methods**: Added dropdown options for "Optimización Básica" and "Optimizar VRP" with distinct functionality
+- **Enhanced VRP Integration**: Integrated VRP optimization mutation with proper error handling and success feedback
+- **Professional UI Design**: Added chevron indicator and proper icons (Route for basic, Scale for VRP) with loading states
+- **Grooming Staff Role Fix**: Fixed grooming seeder 500 error by correcting staff role filtering from 'grooming' to 'groomer', 'admin', and 'veterinarian'
+- **Database Role Compliance**: Updated role matching to align with actual database schema (staff table uses 'groomer' not 'grooming')
+
 ## External Dependencies
 - **PostgreSQL:** Primary database for all application data.
 - **Express.js:** Web application framework for backend APIs.
