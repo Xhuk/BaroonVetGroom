@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { useFastLoad, useFastFetch } from "@/hooks/useFastLoad";
+import { useInstantLoad } from "@/hooks/useInstantLoad";
 import { BackButton } from "@/components/BackButton";
 import { DebugControls } from "@/components/DebugControls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,10 +17,36 @@ import { Plus, User, Phone, Mail, MapPin, Heart, Camera, QrCode, History, Power,
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client, Pet, Appointment } from "@shared/schema";
 
+// Status translation utilities
+const getStatusTranslation = (status: string) => {
+  const translations: Record<string, string> = {
+    'scheduled': 'Programada',
+    'in_progress': 'En Proceso',
+    'completed': 'Completada',
+    'confirmed': 'Confirmada',
+    'pending': 'Pendiente',
+    'cancelled': 'Cancelada'
+  };
+  return translations[status] || status;
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "scheduled": return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
+    case "in_progress": return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
+    case "completed": return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+    case "confirmed": return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+    case "pending": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+    case "cancelled": return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+    default: return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+  }
+};
+
 export default function Clients() {
   const { currentTenant } = useTenant();
   const { toast } = useToast();
   const { isInstant } = useFastLoad();
+  useInstantLoad(); // Enable instant loading for this page
   const [showClientForm, setShowClientForm] = useState(false);
   const [showPetForm, setShowPetForm] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -244,11 +271,18 @@ export default function Clients() {
   };
 
   const generateQRCode = (petId: string) => {
-    // In a real app, this would generate an actual QR code
-    const qrUrl = `${window.location.origin}/pet/${petId}`;
-    toast({
-      title: "Código QR generado",
-      description: `URL del perfil: ${qrUrl}`,
+    // Generate QR code URL for pet medical records access
+    const qrUrl = `${window.location.origin}/pet-records/${petId}`;
+    navigator.clipboard.writeText(qrUrl).then(() => {
+      toast({
+        title: "Código QR - URL copiada",
+        description: `URL del perfil médico copiada al portapapeles: ${qrUrl}`,
+      });
+    }).catch(() => {
+      toast({
+        title: "Código QR generado",
+        description: `URL del perfil médico: ${qrUrl}`,
+      });
     });
   };
 
@@ -257,23 +291,11 @@ export default function Clients() {
     if (!clients || !searchQuery.trim()) return clients || [];
     
     const query = searchQuery.toLowerCase().trim();
-    console.log('Search Query:', query);
-    console.log('Total Clients:', clients.length);
-    
-    const filtered = clients.filter(client => {
-      const nameMatch = client.name.toLowerCase().includes(query);
-      const emailMatch = client.email && client.email.toLowerCase().includes(query);
-      const phoneMatch = client.phone && client.phone.toLowerCase().includes(query);
-      
-      if (nameMatch || emailMatch || phoneMatch) {
-        console.log('Match found:', client.name, client.email, client.phone);
-      }
-      
-      return nameMatch || emailMatch || phoneMatch;
-    });
-    
-    console.log('Filtered Results:', filtered.length);
-    return filtered;
+    return clients.filter(client => 
+      client.name.toLowerCase().includes(query) ||
+      (client.email && client.email.toLowerCase().includes(query)) ||
+      (client.phone && client.phone.toLowerCase().includes(query))
+    );
   }, [clients, searchQuery]);
 
   return (
@@ -299,8 +321,7 @@ export default function Clients() {
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm text-muted-foreground">
               <strong>Tenant:</strong> {currentTenant?.id || 'No tenant selected'} | 
-              <strong> Total Clientes:</strong> {clients?.length || 0} |
-              <strong> Loading:</strong> {clientsLoading ? 'Yes' : 'No'}
+              <strong> Total Clientes:</strong> {clients?.length || 0}
             </div>
           </div>
           <div className="relative">
@@ -669,7 +690,9 @@ export default function Clients() {
                                       {getPetAppointments(pet.id).slice(0, 3).map((appointment) => (
                                         <div key={appointment.id} className="flex items-center justify-between text-sm">
                                           <span>{appointment.scheduledDate} - {appointment.type}</span>
-                                          <Badge variant="outline">{appointment.status}</Badge>
+                                          <Badge className={getStatusColor(appointment.status)}>
+                                            {getStatusTranslation(appointment.status)}
+                                          </Badge>
                                         </div>
                                       ))}
                                       {getPetAppointments(pet.id).length === 0 && (
