@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { useFastLoad, useFastFetch } from "@/hooks/useFastLoad";
@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, User, Phone, Mail, MapPin, Heart, Camera, QrCode, History, Power, Edit, Save, X } from "lucide-react";
+import { Plus, User, Phone, Mail, MapPin, Heart, Camera, QrCode, History, Power, Edit, Save, X, Search } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client, Pet, Appointment } from "@shared/schema";
 
@@ -26,6 +26,7 @@ export default function Clients() {
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [editingClient, setEditingClient] = useState<string | null>(null);
   const [editingPet, setEditingPet] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: clients, isLoading: clientsLoading } = useFastFetch<Client[]>(
     `/api/clients/${currentTenant?.id}`,
@@ -251,6 +252,18 @@ export default function Clients() {
     });
   };
 
+  // Filter clients based on search query
+  const filteredClients = useMemo(() => {
+    if (!clients || !searchQuery.trim()) return clients || [];
+    
+    const query = searchQuery.toLowerCase().trim();
+    return clients.filter(client => 
+      client.name.toLowerCase().includes(query) ||
+      (client.email && client.email.toLowerCase().includes(query)) ||
+      (client.phone && client.phone.toLowerCase().includes(query))
+    );
+  }, [clients, searchQuery]);
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <BackButton className="mb-4" />
@@ -267,6 +280,27 @@ export default function Clients() {
           </Button>
         </div>
       </div>
+
+      {/* Search Filter */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Buscar clientes por nombre, email o teléfono..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+              data-testid="input-client-search"
+            />
+          </div>
+          {searchQuery && (
+            <div className="mt-2 text-sm text-muted-foreground">
+              {filteredClients.length} cliente{filteredClients.length !== 1 ? 's' : ''} encontrado{filteredClients.length !== 1 ? 's' : ''}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {showClientForm && (
         <Card className="mb-6">
@@ -383,7 +417,24 @@ export default function Clients() {
       )}
 
       <div className="grid gap-6">
-        {clients?.map((client) => (
+        {filteredClients.length === 0 && searchQuery ? (
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <Search className="w-12 h-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No se encontraron clientes</h3>
+              <p className="text-muted-foreground mb-4">
+                No hay clientes que coincidan con "{searchQuery}"
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => setSearchQuery("")}
+              >
+                Limpiar búsqueda
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredClients.map((client) => (
           <Card key={client.id} className="border-l-4 border-l-blue-400">
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
@@ -679,9 +730,10 @@ export default function Clients() {
               </div>
             </CardContent>
           </Card>
-        ))}
+          ))
+        )}
 
-        {clients?.length === 0 && (
+        {filteredClients.length === 0 && !searchQuery && (
           <Card>
             <CardContent className="p-12 text-center">
               <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
