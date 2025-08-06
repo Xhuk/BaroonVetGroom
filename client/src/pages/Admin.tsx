@@ -681,6 +681,40 @@ function Admin() {
     updateDeliveryConfigMutation.mutate(deliveryConfig);
   };
 
+  // Seed grooming appointments for today mutation
+  const seedGroomingTodayMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/seed-grooming-today/${currentTenant?.id}`, {});
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Citas de grooming generadas",
+        description: `Se han creado exitosamente 30 citas de grooming para hoy en el tenant ${currentTenant?.name}`,
+      });
+      // Refresh relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments-fast', currentTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats', currentTenant?.id] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para generar datos de prueba",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error al generar citas",
+        description: error.message || "No se pudieron crear las citas de grooming",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle edit role
   const handleEditRole = (role) => {
     setEditingRole(role);
@@ -2310,6 +2344,41 @@ function Admin() {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Developer Demo Data Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5" />
+                      Datos de Prueba para Entregas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                      Genera citas completadas de grooming para hoy para probar la optimización de rutas de entrega.
+                    </p>
+                    
+                    <Button
+                      onClick={() => {
+                        const mutation = seedGroomingTodayMutation;
+                        mutation.mutate();
+                      }}
+                      disabled={seedGroomingTodayMutation.isPending}
+                      className="bg-purple-600 hover:bg-purple-700"
+                      data-testid="button-seed-grooming-today"
+                    >
+                      {seedGroomingTodayMutation.isPending ? (
+                        "Generando..."
+                      ) : (
+                        "Generar 30 Citas de Grooming Hoy"
+                      )}
+                    </Button>
+                    
+                    <p className="text-xs text-gray-500">
+                      Crea 30 citas completadas y pagadas distribuidas en diferentes fraccionamientos para optimización VRP.
+                    </p>
+                  </CardContent>
+                </Card>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-start gap-3">

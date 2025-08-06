@@ -2053,6 +2053,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create grooming appointments for today
+  app.post("/api/seed-grooming-today/:tenantId", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      // Import and run the seeding function
+      const { seedGroomingAppointmentsToday } = await import('./seedGroomingToday');
+      await seedGroomingAppointmentsToday(tenantId);
+      
+      res.json({ 
+        success: true, 
+        message: "Successfully created 30 grooming appointments for today",
+        tenantId 
+      });
+    } catch (error) {
+      console.error("Error seeding grooming appointments:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to create grooming appointments",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Enhanced VRP Route Optimization with Completed Mascots API
   app.post("/api/delivery-routes/optimize/:tenantId", isAuthenticated, async (req, res) => {
     try {
