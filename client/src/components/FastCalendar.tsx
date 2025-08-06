@@ -297,40 +297,24 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const currentTimeInfo = getCurrentTimeSlotInfo();
   const isMarkerInOccupiedSlot = isTimeMarkerInOccupiedSlot();
   
-  // Calculate red line position - centered at 50% of slot container
-  const calculateRedLinePosition = () => {
+  // Red line is fixed at 50% of card container - always visible
+  const getRedLineStyle = () => {
     if (!currentTimeInfo || displayDate !== getTodayInUserTimezone()) {
-      console.log('Red line hidden: no currentTimeInfo or not today');
       return { display: 'none' };
     }
-    
-    const { hours, minutes } = currentTimeInfo;
-    // Find which slot the current time falls into
-    const currentSlotIndex = visibleTimeSlots.findIndex(slot => {
-      const slotHour = parseInt(slot.split(':')[0]);
-      const slotMinute = parseInt(slot.split(':')[1]);
-      return hours === slotHour && minutes >= slotMinute && minutes < slotMinute + 30;
-    });
-    
-    if (currentSlotIndex === -1) {
-      return { display: 'none' };
-    }
-    
-    // Position red line at center (50%) of the current slot container
-    const slotHeight = 80;
-    const topPosition = (currentSlotIndex * slotHeight) + (slotHeight / 2); // Center of slot
     
     return {
       position: 'absolute' as const,
-      top: `${topPosition}px`,
+      top: '50%',
       left: 0,
       right: 0,
       zIndex: 20,
-      pointerEvents: 'none' as const
+      pointerEvents: 'none' as const,
+      transform: 'translateY(-50%)'
     };
   };
   
-  const redLineStyle = calculateRedLinePosition();
+  const redLineStyle = getRedLineStyle();
 
   return (
     <Card className={cn("fixed flex flex-col", className)} style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
@@ -366,6 +350,26 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
           
+          {/* Fixed red line at 50% of card container */}
+          {currentTimeInfo && displayDate === getTodayInUserTimezone() && (
+            <div
+              className="absolute z-20 pointer-events-none left-0 right-0"
+              style={redLineStyle}
+            >
+              {/* Prominent red line fixed at center */}
+              <div 
+                className="w-full h-[2px] opacity-90"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(239, 68, 68, 0.9) 10%, rgba(239, 68, 68, 1) 50%, rgba(239, 68, 68, 0.9) 90%, transparent 100%)',
+                  boxShadow: '0 0 4px rgba(239, 68, 68, 0.5)',
+                }}
+              />
+              {/* Time indicator dots at center */}
+              <div className="absolute top-1/2 left-2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full shadow-sm"></div>
+              <div className="absolute top-1/2 right-2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full shadow-sm"></div>
+            </div>
+          )}
+          
           {/* Time slots container with auto-scroll */}
           <div 
             ref={scrollContainerRef}
@@ -373,26 +377,6 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
             onScroll={handleScroll}
             style={{ maxHeight: 'calc(100vh - 200px)' }}
           >
-            
-            {/* Current time indicator - centered at 50% of slot container */}
-            {currentTimeInfo && displayDate === getTodayInUserTimezone() && (
-              <div
-                className="absolute z-20 pointer-events-none left-0 right-0"
-                style={redLineStyle}
-              >
-                {/* Prominent red line centered in slot */}
-                <div 
-                  className="w-full h-[2px] opacity-90"
-                  style={{
-                    background: 'linear-gradient(90deg, transparent 0%, rgba(239, 68, 68, 0.9) 10%, rgba(239, 68, 68, 1) 50%, rgba(239, 68, 68, 0.9) 90%, transparent 100%)',
-                    boxShadow: '0 0 4px rgba(239, 68, 68, 0.5)',
-                  }}
-                />
-                {/* Time indicator dots at center */}
-                <div className="absolute top-1/2 left-2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full shadow-sm"></div>
-                <div className="absolute top-1/2 right-2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full shadow-sm"></div>
-              </div>
-            )}
           
 
           
