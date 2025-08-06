@@ -44,6 +44,7 @@ The system is built on a modern stack emphasizing speed, scalability, and mainta
 - **Advanced VRP Delivery Planning:** Vehicle Routing Problem (VRP) solver with nearest neighbor heuristic for optimizing delivery routes based on pet addresses and neighborhood priority. Supports filtering completed appointments.
 - **Flexible Delivery Scheduling:** Toggle between "Wave-based" (fixed slots) and "Free Selection" (any hour) modes. Includes intelligent neighborhood suggestions and flexible time selection.
 - **Mobile SuperAdmin Dashboard:** Optimized for mobile devices (e.g., Samsung Galaxy S25 Ultra) with touch-friendly navigation, database-driven analytics, and mobile client onboarding/subscription management endpoints.
+- **Comprehensive Pickup & Delivery System:** Redesigned interface with separate Inbound (Pickup) and Outbound (Delivery) tabs for distinct pet transportation workflows. Includes route type selection, mobile driver dashboard at `/driver-mobile` with real-time GPS tracking, navigation app export (Waze/Google Maps), appointment completion workflow, and location-based progress monitoring.
 
 **Feature Specifications:**
 - **Appointment Management:** Redesigned for rescheduling focus, with a dedicated `/api/appointments/:id/reschedule` endpoint.
