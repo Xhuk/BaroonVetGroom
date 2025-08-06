@@ -27,8 +27,15 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
 
   // Always prioritize today's date on load, then respect selectedDate changes
   useEffect(() => {
+    const todayCST1 = getTodayCST1();
+    console.log(`Calendar useEffect: selectedDate=${selectedDate}, displayDate=${displayDate}, todayCST1=${todayCST1}`);
+    
     if (selectedDate && selectedDate !== displayDate) {
+      console.log(`Setting display date to selectedDate: ${selectedDate}`);
       setDisplayDate(selectedDate);
+    } else if (!selectedDate && displayDate !== todayCST1) {
+      console.log(`Setting display date to today: ${todayCST1}`);
+      setDisplayDate(todayCST1);
     }
   }, [selectedDate, displayDate]);
 
@@ -111,7 +118,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     const hours = now.getHours();
     const minutes = now.getMinutes();
     
-    console.log(`Current time: ${hours}:${minutes.toString().padStart(2, '0')}`);
+    console.log(`getCurrentTimeSlotInfo: CST-1 time ${now.toISOString()} -> ${hours}:${minutes.toString().padStart(2, '0')}`);
     console.log(`Display date: ${displayDate}, Today: ${getTodayCST1()}`);
     
     // Always show time info during business hours (6 AM - 10 PM)
