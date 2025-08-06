@@ -15,7 +15,14 @@ import {
   Code,
   Database,
   Globe,
-  Bot
+  Bot,
+  MessageCircle,
+  Mail,
+  Phone,
+  Calendar,
+  Video,
+  CreditCard,
+  FlaskConical
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -266,14 +273,81 @@ export function VersionedSuperAdminDashboard() {
         </CardContent>
       </Card>
 
+      {/* External Integrations Status */}
+      {insights?.featuresByCategory?.external_integrations && (
+        <Card className="bg-white border-gray-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-gray-900">
+              <Globe className="h-5 w-5" />
+              External System Integrations
+            </CardTitle>
+            <p className="text-sm text-gray-600">Current integration status for external services</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {insights.featuresByCategory.external_integrations.map((feature: any) => {
+                const getStatusInfo = (f: any) => {
+                  if (!f.enabled) return { color: 'text-red-600 bg-red-50 border-red-200', text: 'Disabled' };
+                  if (f.betaFeature) return { color: 'text-yellow-600 bg-yellow-50 border-yellow-200', text: 'Development' };
+                  return { color: 'text-green-600 bg-green-50 border-green-200', text: 'Enabled' };
+                };
+                
+                const getIntegrationIcon = (id: string) => {
+                  switch (id) {
+                    case 'whatsapp_integration': return <MessageCircle className="h-4 w-4" />;
+                    case 'email_integration': return <Mail className="h-4 w-4" />;
+                    case 'sms_integration': return <Phone className="h-4 w-4" />;
+                    case 'google_calendar_sync': return <Calendar className="h-4 w-4" />;
+                    case 'outlook_integration': return <Calendar className="h-4 w-4" />;
+                    case 'telemedicine_api': return <Video className="h-4 w-4" />;
+                    case 'payment_gateways': return <CreditCard className="h-4 w-4" />;
+                    case 'lab_integration': return <FlaskConical className="h-4 w-4" />;
+                    default: return <Globe className="h-4 w-4" />;
+                  }
+                };
+                
+                const status = getStatusInfo(feature);
+                
+                return (
+                  <div key={feature.id} className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        {getIntegrationIcon(feature.id)}
+                        <span className="font-medium text-sm text-gray-900">{feature.name}</span>
+                      </div>
+                      <Badge className={`text-xs px-2 py-1 border ${status.color}`}>
+                        {status.text}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-2">{feature.description}</p>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-500">
+                        Min Tier: {feature.minimumTier?.charAt(0).toUpperCase() + feature.minimumTier?.slice(1)}
+                      </span>
+                      {feature.requiresConfiguration && (
+                        <Badge variant="outline" className="text-xs">
+                          Config Required
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Features by Category */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {insights?.featuresByCategory && Object.entries(insights.featuresByCategory).map(([category, features]) => {
+        {insights?.featuresByCategory && Object.entries(insights.featuresByCategory)
+          .filter(([category]) => category !== 'external_integrations') // Skip external integrations as it has its own section
+          .map(([category, features]) => {
           const IconComponent = getCategoryIcon(category);
           return (
-            <Card key={category} className="bg-gray-800 border-gray-700">
+            <Card key={category} className="bg-white border-gray-200">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
+                <CardTitle className="flex items-center gap-2 text-gray-900">
                   <IconComponent className="h-5 w-5" />
                   {category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </CardTitle>
@@ -281,22 +355,22 @@ export function VersionedSuperAdminDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {features.map((feature) => (
-                    <div key={feature.id} className="flex items-center justify-between p-3 bg-gray-700 rounded">
+                    <div key={feature.id} className="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-white">{feature.name}</span>
+                          <span className="text-sm font-medium text-gray-900">{feature.name}</span>
                           {feature.betaFeature && (
-                            <Badge variant="secondary" className="text-xs bg-yellow-600 text-white">
+                            <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
                               Beta
                             </Badge>
                           )}
                           {feature.requiresConfiguration && (
-                            <Badge variant="secondary" className="text-xs bg-blue-600 text-white">
+                            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-300">
                               Config Required
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-gray-400">{feature.description}</p>
+                        <p className="text-xs text-gray-600">{feature.description}</p>
                       </div>
                       <Switch
                         checked={feature.enabled}
@@ -314,36 +388,36 @@ export function VersionedSuperAdminDashboard() {
 
       {/* Configuration Limits */}
       {config && (
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-white">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
               <Settings className="h-5 w-5" />
               Current Tier Limits
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-gray-700 rounded">
-                <div className="text-lg font-bold text-white">
+              <div className="text-center p-3 bg-gray-50 rounded border border-gray-200">
+                <div className="text-lg font-bold text-gray-900">
                   {config.maxTenants === -1 ? '∞' : config.maxTenants}
                 </div>
-                <div className="text-xs text-gray-400">Max Tenants</div>
+                <div className="text-xs text-gray-600">Max Tenants</div>
               </div>
-              <div className="text-center p-3 bg-gray-700 rounded">
-                <div className="text-lg font-bold text-white">
+              <div className="text-center p-3 bg-gray-50 rounded border border-gray-200">
+                <div className="text-lg font-bold text-gray-900">
                   {config.maxStaffPerTenant === -1 ? '∞' : config.maxStaffPerTenant}
                 </div>
-                <div className="text-xs text-gray-400">Staff per Tenant</div>
+                <div className="text-xs text-gray-600">Staff per Tenant</div>
               </div>
-              <div className="text-center p-3 bg-gray-700 rounded">
-                <div className="text-lg font-bold text-white">
+              <div className="text-center p-3 bg-gray-50 rounded border border-gray-200">
+                <div className="text-lg font-bold text-gray-900">
                   {config.apiRateLimit?.toLocaleString()}
                 </div>
-                <div className="text-xs text-gray-400">API Rate Limit</div>
+                <div className="text-xs text-gray-600">API Rate Limit</div>
               </div>
-              <div className="text-center p-3 bg-gray-700 rounded">
-                <div className="text-lg font-bold text-white">{config.storageLimit}</div>
-                <div className="text-xs text-gray-400">Storage Limit</div>
+              <div className="text-center p-3 bg-gray-50 rounded border border-gray-200">
+                <div className="text-lg font-bold text-gray-900">{config.storageLimit}</div>
+                <div className="text-xs text-gray-600">Storage Limit</div>
               </div>
             </div>
           </CardContent>

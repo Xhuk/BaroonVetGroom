@@ -13,7 +13,8 @@ export type FeatureCategory =
   | 'webhook_monitoring'
   | 'load_testing'
   | 'data_exports'
-  | 'custom_integrations';
+  | 'custom_integrations'
+  | 'external_integrations';
 
 export interface Feature {
   id: string;
@@ -207,6 +208,78 @@ export const FEATURE_DEFINITIONS: Record<string, Feature> = {
     category: 'data_exports',
     minimumTier: 'professional',
     enabled: true
+  },
+
+  // External System Integrations
+  'whatsapp_integration': {
+    id: 'whatsapp_integration',
+    name: 'WhatsApp Integration',
+    description: 'Send appointment confirmations and reminders via WhatsApp',
+    category: 'external_integrations',
+    minimumTier: 'basic',
+    enabled: true
+  },
+  'email_integration': {
+    id: 'email_integration',
+    name: 'Email Integration',
+    description: 'Send notifications and confirmations via email',
+    category: 'external_integrations',
+    minimumTier: 'basic',
+    enabled: false
+  },
+  'sms_integration': {
+    id: 'sms_integration',
+    name: 'SMS Integration',
+    description: 'Send SMS notifications and appointment reminders',
+    category: 'external_integrations',
+    minimumTier: 'professional',
+    enabled: true,
+    betaFeature: true
+  },
+  'google_calendar_sync': {
+    id: 'google_calendar_sync',
+    name: 'Google Calendar Sync',
+    description: 'Sync appointments with Google Calendar',
+    category: 'external_integrations',
+    minimumTier: 'professional',
+    enabled: true,
+    betaFeature: true
+  },
+  'outlook_integration': {
+    id: 'outlook_integration',
+    name: 'Outlook Integration',
+    description: 'Full Outlook calendar and email integration',
+    category: 'external_integrations',
+    minimumTier: 'enterprise',
+    enabled: false
+  },
+  'telemedicine_api': {
+    id: 'telemedicine_api',
+    name: 'Telemedicine API',
+    description: 'Video consultation integration for remote veterinary care',
+    category: 'external_integrations',
+    minimumTier: 'enterprise',
+    enabled: false,
+    betaFeature: true,
+    requiresConfiguration: true
+  },
+  'payment_gateways': {
+    id: 'payment_gateways',
+    name: 'Payment Gateways',
+    description: 'Stripe, PayPal, and other payment processor integrations',
+    category: 'external_integrations',
+    minimumTier: 'professional',
+    enabled: true
+  },
+  'lab_integration': {
+    id: 'lab_integration',
+    name: 'Lab Results Integration',
+    description: 'Connect with veterinary lab systems for automated results',
+    category: 'external_integrations',
+    minimumTier: 'enterprise',
+    enabled: false,
+    betaFeature: true,
+    requiresConfiguration: true
   },
 
   // Custom Integrations (Enterprise)
