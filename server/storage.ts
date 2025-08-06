@@ -133,6 +133,9 @@ import {
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
 
+// Set database session timezone to CST-1 (UTC-6) on module load
+db.execute(sql`SET timezone = 'CST6CDT'`);
+
 // Interface for storage operations
 export interface IStorage {
   // User operations (IMPORTANT: mandatory for Replit Auth)
