@@ -109,7 +109,7 @@ export default function Inventory() {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory-fast"] });
       toast({
         title: "Importación completada",
-        description: `Se han importado ${data?.imported || 0} productos correctamente.`,
+        description: `Se han importado ${(data as any)?.imported || 0} productos correctamente.`,
       });
       setShowMassImport(false);
       setImportText("");
@@ -177,15 +177,15 @@ export default function Inventory() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const quantity = parseInt(formData.get("quantity") as string);
-    const unitPrice = parseFloat(formData.get("unitPrice") as string) || selectedItem?.unitPrice || 0;
+    const quantity = parseInt(formData.get("quantity") as string) || 0;
+    const unitPrice = parseFloat(formData.get("unitPrice") as string) || (selectedItem?.unitPrice || 0);
     
     const data = {
       itemId: selectedItem?.id,
       type: formData.get("type"),
       quantity: formData.get("type") === "sale" || formData.get("type") === "expired" ? -Math.abs(quantity) : Math.abs(quantity),
       unitPrice: unitPrice,
-      totalAmount: Math.abs(quantity) * unitPrice,
+      totalAmount: Math.abs(Number(quantity)) * Number(unitPrice || 0),
       reference: formData.get("reference"),
       notes: formData.get("notes"),
     };
@@ -194,9 +194,13 @@ export default function Inventory() {
   };
 
   const getStockStatus = (item: InventoryItem) => {
-    if (item.currentStock <= 0) return { status: "out", color: "bg-red-100 text-red-800 border-red-200", text: "Agotado" };
-    if (item.currentStock <= item.minStockLevel) return { status: "low", color: "bg-yellow-100 text-yellow-800 border-yellow-200", text: "Stock Bajo" };
-    if (item.currentStock >= item.maxStockLevel) return { status: "high", color: "bg-blue-100 text-blue-800 border-blue-200", text: "Stock Alto" };
+    const currentStock = item.currentStock || 0;
+    const minStock = item.minStockLevel || 0;
+    const maxStock = item.maxStockLevel || 0;
+    
+    if (currentStock <= 0) return { status: "out", color: "bg-red-100 text-red-800 border-red-200", text: "Agotado" };
+    if (currentStock <= minStock) return { status: "low", color: "bg-yellow-100 text-yellow-800 border-yellow-200", text: "Stock Bajo" };
+    if (maxStock > 0 && currentStock >= maxStock) return { status: "high", color: "bg-blue-100 text-blue-800 border-blue-200", text: "Stock Alto" };
     return { status: "normal", color: "bg-green-100 text-green-800 border-green-200", text: "Stock Normal" };
   };
 
@@ -217,8 +221,17 @@ export default function Inventory() {
     return matchesSearch && matchesCategory;
   }) || [];
 
-  const lowStockItems = inventoryItems?.filter(item => item.currentStock <= item.minStockLevel) || [];
-  const totalInventoryValue = inventoryItems?.reduce((sum, item) => sum + (item.currentStock * (item.unitPrice || 0)), 0) || 0;
+  const lowStockItems = inventoryItems?.filter(item => {
+    const currentStock = item.currentStock ?? 0;
+    const minStock = item.minStockLevel ?? 0;
+    return currentStock <= minStock;
+  }) || [];
+  
+  const totalInventoryValue = inventoryItems?.reduce((sum, item) => {
+    const currentStock = Number(item.currentStock ?? 0);
+    const unitPrice = Number(item.unitPrice ?? 0);
+    return sum + (currentStock * unitPrice);
+  }, 0) || 0;
 
   return (
     <div className="min-h-screen bg-background dark:bg-gray-900">
@@ -343,7 +356,7 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
                 <p className="text-sm text-gray-600 dark:text-gray-400">Transacciones Hoy</p>
                 <p className="text-2xl font-bold text-purple-600">
                   {transactions?.filter(t => 
-                    new Date(t.createdAt).toDateString() === new Date().toDateString()
+                    t.createdAt && new Date(t.createdAt).toDateString() === new Date().toDateString()
                   ).length || 0}
                 </p>
               </div>
@@ -601,7 +614,7 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
                           </div>
                           <div>
                             <span className="text-gray-600">Valor Total:</span>
-                            <p className="font-medium">${((item.currentStock * (item.unitPrice || 0))).toLocaleString()}</p>
+                            <p className="font-medium">${((Number(item.currentStock ?? 0) * Number(item.unitPrice ?? 0))).toLocaleString()}</p>
                           </div>
                           <div>
                             <span className="text-gray-600">Stock Min/Max:</span>
@@ -712,27 +725,27 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className={`w-3 h-3 rounded-full ${
-                        transaction.type === 'purchase' ? 'bg-green-500' :
-                        transaction.type === 'sale' ? 'bg-blue-500' :
-                        transaction.type === 'expired' ? 'bg-red-500' : 'bg-yellow-500'
+                        transaction.transactionType === 'purchase' ? 'bg-green-500' :
+                        transaction.transactionType === 'sale' ? 'bg-blue-500' :
+                        transaction.transactionType === 'expired' ? 'bg-red-500' : 'bg-yellow-500'
                       }`} />
                       <div>
                         <p className="font-medium">
                           {inventoryItems?.find(item => item.id === transaction.itemId)?.name}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {transaction.type === 'purchase' && 'Compra'}
-                          {transaction.type === 'sale' && 'Venta'}
-                          {transaction.type === 'expired' && 'Expirado'}
-                          {transaction.type === 'adjustment' && 'Ajuste'}
+                          {transaction.transactionType === 'purchase' && 'Compra'}
+                          {transaction.transactionType === 'sale' && 'Venta'}
+                          {transaction.transactionType === 'expired' && 'Expirado'}
+                          {transaction.transactionType === 'adjustment' && 'Ajuste'}
                           {' '} - {Math.abs(transaction.quantity)} unidades
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">${transaction.totalAmount?.toLocaleString()}</p>
+                      <p className="font-medium">${transaction.totalCost?.toLocaleString() || '0'}</p>
                       <p className="text-sm text-gray-600">
-                        {new Date(transaction.createdAt).toLocaleDateString()}
+                        {transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : 'N/A'}
                       </p>
                     </div>
                   </div>
@@ -878,6 +891,7 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

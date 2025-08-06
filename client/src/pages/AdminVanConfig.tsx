@@ -328,5 +328,6 @@ export default function AdminVanConfig() {
         </Card>
       )}
     </div>
+    </div>
   );
 }

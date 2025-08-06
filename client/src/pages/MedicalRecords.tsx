@@ -519,7 +519,7 @@ function MedicalRecords() {
                 <div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Signos Vitales</p>
                   <div className="grid grid-cols-2 gap-4 p-3 bg-yellow-50 dark:bg-yellow-900 rounded-lg text-gray-900 dark:text-gray-100">
-                    {(() => {
+{(selectedRecord.vitals as Record<string, any>) && (() => {
                       const vitals = selectedRecord.vitals as Record<string, any>;
                       return (
                         <>
@@ -564,6 +564,7 @@ function MedicalRecords() {
           </DialogContent>
         </Dialog>
       )}
+      </div>
     </div>
   );
 }
