@@ -6,7 +6,7 @@ import { useLocation } from "wouter";
 // Removed SimpleSlotBookingDialog - using existing booking page instead
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
-import { getTodayCST1, addDaysCST1, formatCST1Date, getCurrentTimeCST1 } from "@shared/timeUtils";
+import { getTodayCST1, addDaysCST1, formatCST1Date, getCurrentTimeCST1, getCurrentTimeInUserTimezone, getTodayInUserTimezone } from "@shared/timeUtils";
 
 interface FastCalendarProps {
   appointments: Appointment[];
@@ -18,7 +18,7 @@ interface FastCalendarProps {
 
 export function FastCalendar({ appointments, className, selectedDate, onDateChange, tenantId }: FastCalendarProps) {
   const [, setLocation] = useLocation();
-  const [currentTime, setCurrentTime] = useState(getCurrentTimeCST1());
+  const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone());
   const [isScrolling, setIsScrolling] = useState(false);
   const [displayDate, setDisplayDate] = useState(getTodayCST1()); // Always start with today
   
@@ -60,10 +60,10 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
 
   // Booking completion handled by booking page navigation
 
-  // Update current time every minute using CST-1 timezone
+  // Update current time every minute using user's selected timezone
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(getCurrentTimeCST1());
+      setCurrentTime(getCurrentTimeInUserTimezone());
     }, 60000);
     return () => clearInterval(timer);
   }, []);
@@ -121,17 +121,16 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     });
   };
 
-  // Fixed marker doesn't need position calculation - it's always centered
+  // Get current time slot info using user's timezone (same as header clock)
   const getCurrentTimeSlotInfo = () => {
-    const now = getCurrentTimeCST1();
+    const now = getCurrentTimeInUserTimezone();
     
-    // Extract time from CST-1 ISO string (format: 2025-08-05T21:41:15.700Z)
-    const cstTimeStr = now.toISOString();
-    const timePart = cstTimeStr.split('T')[1]; // Get "21:41:15.700Z"
-    const [hours, minutes] = timePart.split(':').map(Number); // Extract hours and minutes
+    // Extract hours and minutes from user timezone (same as header)
+    const hours = now.getUTCHours();
+    const minutes = now.getUTCMinutes();
     
-    console.log(`getCurrentTimeSlotInfo: CST-1 time ${cstTimeStr} -> ${hours}:${minutes.toString().padStart(2, '0')}`);
-    console.log(`Display date: ${displayDate}, Today: ${getTodayCST1()}`);
+    console.log(`getCurrentTimeSlotInfo: User timezone time -> ${hours}:${minutes.toString().padStart(2, '0')}`);
+    console.log(`Display date: ${displayDate}, Today: ${getTodayInUserTimezone()}`);
     
     // Always show time info during business hours (6 AM - 10 PM)
     if (hours < 6 || hours >= 22) {
@@ -144,12 +143,12 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
 
   // Determine if an appointment is currently ongoing
   const isOngoing = (appointment: Appointment) => {
-    const now = getCurrentTimeCST1();
+    const now = getCurrentTimeInUserTimezone();
     const appointmentTime = appointment.scheduledTime; // Using correct property name from schema
     if (!appointmentTime) return false;
     
-    // Create date objects for comparison
-    const todayStr = now.toISOString().split('T')[0];
+    // Create date objects for comparison using user timezone
+    const todayStr = getTodayInUserTimezone();
     const appStart = new Date(`${todayStr}T${appointmentTime}`);
     const duration = appointment.duration || 60; // Use appointment duration or default 60 minutes
     const appEnd = new Date(appStart.getTime() + duration * 60 * 1000);
@@ -158,7 +157,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   };
 
   const isTimeMarkerInOccupiedSlot = () => {
-    const now = getCurrentTimeCST1();
+    const now = getCurrentTimeInUserTimezone();
     
     // Check all appointments to see if current time falls within an in-progress appointment
     const currentlyActiveAppointments = appointments.filter(appointment => {
@@ -170,7 +169,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
       
       const [appointmentHour, appointmentMinute] = appointmentTime.split(':').map(Number);
       const appointmentStart = new Date(now);
-      appointmentStart.setHours(appointmentHour, appointmentMinute, 0, 0);
+      appointmentStart.setUTCHours(appointmentHour, appointmentMinute, 0, 0);
       
       const duration = appointment.duration || 30; // Use appointment duration or default 30 minutes
       const appointmentEnd = new Date(appointmentStart.getTime() + duration * 60 * 1000);
@@ -178,7 +177,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
       return now >= appointmentStart && now < appointmentEnd;
     });
     
-    console.log(`Current time ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}: ${currentlyActiveAppointments.length} currently active appointments found`);
+    console.log(`Current time ${now.getUTCHours()}:${now.getUTCMinutes().toString().padStart(2, '0')}: ${currentlyActiveAppointments.length} currently active appointments found`);
     
     return currentlyActiveAppointments.length > 0;
   };
@@ -200,8 +199,8 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const scrollToCurrentTime = () => {
     if (!scrollContainerRef.current) return;
     
-    const now = getCurrentTimeCST1();
-    const hours = now.getHours();
+    const now = getCurrentTimeInUserTimezone();
+    const hours = now.getUTCHours();
     
     if (hours < 6 || hours >= 22) return;
     
@@ -209,7 +208,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     const currentSlotIndex = visibleTimeSlots.findIndex(slot => {
       const slotHour = parseInt(slot.split(':')[0]);
       const slotMinute = parseInt(slot.split(':')[1]);
-      return hours === slotHour && now.getMinutes() >= slotMinute && now.getMinutes() < slotMinute + 30;
+      return hours === slotHour && now.getUTCMinutes() >= slotMinute && now.getUTCMinutes() < slotMinute + 30;
     });
     
     if (currentSlotIndex !== -1) {
@@ -263,7 +262,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   };
 
   const goToToday = () => {
-    const today = getTodayCST1();
+    const today = getTodayInUserTimezone();
     setDisplayDate(today);
     if (onDateChange) {
       onDateChange(today);
@@ -284,7 +283,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   
   // Calculate precise position of red line based on current time within the slot
   const calculateRedLinePosition = () => {
-    if (!currentTimeInfo || displayDate !== getTodayCST1()) {
+    if (!currentTimeInfo || displayDate !== getTodayInUserTimezone()) {
       console.log('Red line hidden: no currentTimeInfo or not today');
       return { display: 'none' };
     }
@@ -335,7 +334,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
             {formatCST1Date(displayDate)} - {getAppointmentCount()} citas
           </h2>
           <div className="flex gap-2">
-            {displayDate !== getTodayCST1() && (
+            {displayDate !== getTodayInUserTimezone() && (
               <button
                 onClick={goToToday}
                 className="px-3 py-1 bg-blue-200 text-blue-800 rounded-lg shadow hover:bg-blue-300 transition duration-300 text-sm"
@@ -364,7 +363,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
           >
             
             {/* Current time indicator - subtle and elegant */}
-            {currentTimeInfo && displayDate === getTodayCST1() && (
+            {currentTimeInfo && displayDate === getTodayInUserTimezone() && (
               <div
                 className="absolute z-20 pointer-events-none left-0 right-0"
                 style={{ 
@@ -390,9 +389,9 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
           
           {visibleTimeSlots.map((slot, index) => {
             const slotAppointments = getAppointmentsForSlot(slot);
-            const isCurrentSlot = currentTime.getHours() === parseInt(slot.split(':')[0]) &&
-                                  currentTime.getMinutes() >= parseInt(slot.split(':')[1]) &&
-                                  currentTime.getMinutes() < parseInt(slot.split(':')[1]) + 30;
+            const isCurrentSlot = currentTime.getUTCHours() === parseInt(slot.split(':')[0]) &&
+                                  currentTime.getUTCMinutes() >= parseInt(slot.split(':')[1]) &&
+                                  currentTime.getUTCMinutes() < parseInt(slot.split(':')[1]) + 30;
             
             const isFirstSlot = index === 0;
             const isLastSlot = index === visibleTimeSlots.length - 1;
