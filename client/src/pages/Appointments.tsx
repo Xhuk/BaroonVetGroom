@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Calendar, Clock, User, Phone, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Appointment, Client, Pet, Room, Staff, Service } from "@shared/schema";
 import { apiRequest } from '@/lib/queryClient';
-import { getTodayCST1, addDaysCST1, formatCST1Date } from "@shared/timeUtils";
+import { getTodayCST1, addDaysCST1, formatCST1Date, getTodayInUserTimezone, addDaysInUserTimezone, formatUserDate } from "@shared/timeUtils";
 import { CalendarTimeIndicator } from "@/components/CalendarTimeIndicator";
 import { useWebSocketAppointments } from "@/hooks/useWebSocketAppointments";
 import { ScalabilityDemo } from "@/components/ScalabilityDemo";
@@ -28,8 +28,12 @@ interface AppointmentData {
 const INSTANT_SKELETON = <InstantAppointmentsSkeleton />;
 
 const Appointments = memo(function Appointments() {
-  // Use CST-1 timezone for reliable date calculations
-  const [selectedDate, setSelectedDate] = useState(getTodayCST1());
+  // CRITICAL: Always initialize with today's date in user's configured timezone
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = getTodayInUserTimezone();
+    console.log(`Appointments page initialized with today in user timezone: ${today}`);
+    return today;
+  });
 
   // Use WebSocket for real-time appointment updates
   const { 
@@ -66,11 +70,13 @@ const Appointments = memo(function Appointments() {
 
   const navigateDay = (direction: 'prev' | 'next') => {
     const days = direction === 'next' ? 1 : -1;
-    setSelectedDate(addDaysCST1(selectedDate, days));
+    setSelectedDate(addDaysInUserTimezone(selectedDate, days));
   };
 
   const goToToday = () => {
-    setSelectedDate(getTodayCST1());
+    const today = getTodayInUserTimezone();
+    console.log(`Going to today in user timezone: ${today}`);
+    setSelectedDate(today);
   };
 
   const getStatusColor = (status: string) => {
@@ -130,14 +136,14 @@ const Appointments = memo(function Appointments() {
           <div className="flex items-center gap-4">
             <div className="text-center">
               <div className="text-lg font-semibold text-gray-900">
-                {formatCST1Date(selectedDate)}
+                {formatUserDate(selectedDate)}
               </div>
               <div className="text-sm text-gray-500">
                 {data?.appointments?.length || 0} citas programadas
               </div>
             </div>
             
-            {selectedDate !== new Date().toISOString().split('T')[0] && (
+            {selectedDate !== getTodayInUserTimezone() && (
               <Button 
                 variant="outline" 
                 size="sm" 

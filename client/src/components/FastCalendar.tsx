@@ -20,31 +20,37 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const [, setLocation] = useLocation();
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone());
   const [isScrolling, setIsScrolling] = useState(false);
-  const [displayDate, setDisplayDate] = useState(getTodayCST1()); // Always start with today
+  const [displayDate, setDisplayDate] = useState(() => {
+    // Always start with today in user's timezone
+    const today = getTodayInUserTimezone();
+    console.log(`FastCalendar initialized with today: ${today}`);
+    return today;
+  });
   
-  // Force display date to be correct on load and keep it updated
+  // Force display date to be correct on load and keep it updated (using user timezone)
   useEffect(() => {
-    const todayCST1 = getTodayCST1();
-    if (displayDate !== todayCST1 && !selectedDate) {
-      console.log(`Forcing displayDate from ${displayDate} to ${todayCST1}`);
-      setDisplayDate(todayCST1);
+    const todayUserTZ = getTodayInUserTimezone();
+    if (displayDate !== todayUserTZ && !selectedDate) {
+      console.log(`Forcing displayDate from ${displayDate} to ${todayUserTZ} (user timezone)`);
+      setDisplayDate(todayUserTZ);
     }
   }, [displayDate, selectedDate]);
+  
   // Removed booking dialog state - using navigation instead
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Always prioritize today's date on load, then respect selectedDate changes
+  // Always prioritize today's date on load, then respect selectedDate changes (using user timezone)
   useEffect(() => {
-    const todayCST1 = getTodayCST1();
-    console.log(`Calendar useEffect: selectedDate=${selectedDate}, displayDate=${displayDate}, todayCST1=${todayCST1}`);
+    const todayUserTZ = getTodayInUserTimezone();
+    console.log(`Calendar useEffect: selectedDate=${selectedDate}, displayDate=${displayDate}, todayUserTZ=${todayUserTZ}`);
     
     if (selectedDate && selectedDate !== displayDate) {
       console.log(`Setting display date to selectedDate: ${selectedDate}`);
       setDisplayDate(selectedDate);
-    } else if (!selectedDate && displayDate !== todayCST1) {
-      console.log(`Setting display date to today: ${todayCST1}`);
-      setDisplayDate(todayCST1);
+    } else if (!selectedDate && displayDate !== todayUserTZ) {
+      console.log(`Setting display date to today: ${todayUserTZ} (user timezone)`);
+      setDisplayDate(todayUserTZ);
     }
   }, [selectedDate, displayDate]);
 

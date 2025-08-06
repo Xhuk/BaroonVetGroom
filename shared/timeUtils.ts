@@ -88,6 +88,28 @@ export function getTodayInUserTimezone(timezone?: TimezoneKey): string {
   return dateStr;
 }
 
+/**
+ * Add days to a date in user's timezone
+ */
+export function addDaysInUserTimezone(dateStr: string, days: number, timezone?: TimezoneKey): string {
+  const date = new Date(dateStr + 'T12:00:00'); // Use noon to avoid timezone issues
+  date.setDate(date.getDate() + days);
+  return date.toISOString().split('T')[0];
+}
+
+/**
+ * Format date for display in user's timezone
+ */
+export function formatUserDate(dateStr: string, timezone?: TimezoneKey): string {
+  const date = new Date(dateStr + 'T12:00:00');
+  return date.toLocaleDateString('es-MX', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
 // UTC STORAGE CONVERSION FUNCTIONS
 
 /**
@@ -136,22 +158,54 @@ export function convertUTCToUserDateTime(utcDate: string, utcTime: string, timez
 } {
   const tz = timezone || getUserTimezone();
   
-  // Create UTC datetime from database values
-  const utcDateTime = new Date(`${utcDate}T${utcTime}:00Z`);
+  // Validate input data before conversion
+  if (!utcDate || !utcTime) {
+    console.warn(`convertUTCToUserDateTime: Invalid input - utcDate: ${utcDate}, utcTime: ${utcTime}`);
+    const now = new Date();
+    return {
+      localDate: now.toISOString().split('T')[0],
+      localTime: now.toISOString().split('T')[1].substring(0, 5),
+      localISO: now.toISOString()
+    };
+  }
   
-  // Convert to user's timezone for display
-  const localDateTime = convertUTCToUserTimezone(utcDateTime, tz);
-  
-  const localDate = localDateTime.toISOString().split('T')[0];
-  const localTime = localDateTime.toISOString().split('T')[1].substring(0, 5); // HH:MM format
-  
-  console.log(`convertUTCToUserDateTime: UTC ${utcDate} ${utcTime} → ${localDate} ${localTime} (${tz})`);
-  
-  return {
-    localDate,
-    localTime,
-    localISO: localDateTime.toISOString()
-  };
+  try {
+    // Create UTC datetime from database values
+    const utcDateTime = new Date(`${utcDate}T${utcTime}:00Z`);
+    
+    // Check if the date is valid
+    if (isNaN(utcDateTime.getTime())) {
+      console.warn(`convertUTCToUserDateTime: Invalid date created from ${utcDate} ${utcTime}`);
+      const now = new Date();
+      return {
+        localDate: now.toISOString().split('T')[0],
+        localTime: now.toISOString().split('T')[1].substring(0, 5),
+        localISO: now.toISOString()
+      };
+    }
+    
+    // Convert to user's timezone for display
+    const localDateTime = convertUTCToUserTimezone(utcDateTime, tz);
+    
+    const localDate = localDateTime.toISOString().split('T')[0];
+    const localTime = localDateTime.toISOString().split('T')[1].substring(0, 5); // HH:MM format
+    
+    console.log(`convertUTCToUserDateTime: UTC ${utcDate} ${utcTime} → ${localDate} ${localTime} (${tz})`);
+    
+    return {
+      localDate,
+      localTime,
+      localISO: localDateTime.toISOString()
+    };
+  } catch (error) {
+    console.error(`convertUTCToUserDateTime error:`, error);
+    const now = new Date();
+    return {
+      localDate: now.toISOString().split('T')[0],
+      localTime: now.toISOString().split('T')[1].substring(0, 5),
+      localISO: now.toISOString()
+    };
+  }
 }
 
 /**
