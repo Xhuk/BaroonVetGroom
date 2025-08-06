@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
 import { getTodayCST1, addDaysCST1, formatCST1Date, getCurrentTimeCST1, getCurrentTimeInUserTimezone, getTodayInUserTimezone, addDaysInUserTimezone } from "@shared/timeUtils";
+import { useTimezone } from "@/contexts/TimezoneContext";
 
 interface FastCalendarProps {
   appointments: Appointment[];
@@ -18,7 +19,8 @@ interface FastCalendarProps {
 
 export function FastCalendar({ appointments, className, selectedDate, onDateChange, tenantId }: FastCalendarProps) {
   const [, setLocation] = useLocation();
-  const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone());
+  const { timezone } = useTimezone();
+  const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone(timezone));
   const [isScrolling, setIsScrolling] = useState(false);
   const [displayDate, setDisplayDate] = useState(() => {
     // Always start with today in user's timezone
@@ -73,13 +75,16 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
 
   // Booking completion handled by booking page navigation
 
-  // Update current time every minute using user's selected timezone
+  // Update current time every minute and immediately when timezone changes
   useEffect(() => {
+    // Immediate update when timezone changes
+    setCurrentTime(getCurrentTimeInUserTimezone(timezone));
+    
     const timer = setInterval(() => {
-      setCurrentTime(getCurrentTimeInUserTimezone());
+      setCurrentTime(getCurrentTimeInUserTimezone(timezone));
     }, 60000);
     return () => clearInterval(timer);
-  }, []);
+  }, [timezone]);
 
   // Get display day (could be different from today)
   const todayStr = displayDate;
@@ -136,7 +141,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
 
   // Get current time slot info using user's timezone (same as header clock)
   const getCurrentTimeSlotInfo = () => {
-    const now = getCurrentTimeInUserTimezone();
+    const now = getCurrentTimeInUserTimezone(timezone);
     
     // Extract hours and minutes from user timezone (same as header)
     const hours = now.getUTCHours();
@@ -156,7 +161,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
 
   // Determine if an appointment is currently ongoing
   const isOngoing = (appointment: Appointment) => {
-    const now = getCurrentTimeInUserTimezone();
+    const now = getCurrentTimeInUserTimezone(timezone);
     const appointmentTime = appointment.scheduledTime; // Using correct property name from schema
     if (!appointmentTime) return false;
     
@@ -170,7 +175,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   };
 
   const isTimeMarkerInOccupiedSlot = () => {
-    const now = getCurrentTimeInUserTimezone();
+    const now = getCurrentTimeInUserTimezone(timezone);
     
     // Check all appointments to see if current time falls within an in-progress appointment
     const currentlyActiveAppointments = appointments.filter(appointment => {
@@ -195,7 +200,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     return currentlyActiveAppointments.length > 0;
   };
 
-  // Auto-scroll to current time after 30 seconds of inactivity
+  // Auto-scroll to current time after 10 seconds of inactivity (reduced from 30s)
   const handleScroll = () => {
     setIsScrolling(true);
     
@@ -206,13 +211,13 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     scrollTimeoutRef.current = setTimeout(() => {
       setIsScrolling(false);
       scrollToCurrentTime();
-    }, 30000); // 30 seconds
+    }, 10000); // Reduced to 10 seconds for faster timezone adjustments
   };
 
   const scrollToCurrentTime = () => {
     if (!scrollContainerRef.current) return;
     
-    const now = getCurrentTimeInUserTimezone();
+    const now = getCurrentTimeInUserTimezone(timezone);
     const hours = now.getUTCHours();
     
     if (hours < 6 || hours >= 22) return;
@@ -241,11 +246,12 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     }
   };
 
-  // Initial scroll to current time and periodic updates
+  // Initial scroll to current time and periodic updates (instant timezone response)
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // Immediate scroll when timezone changes (no delay)
+    const immediateTimer = setTimeout(() => {
       scrollToCurrentTime();
-    }, 500); // Small delay to ensure DOM is ready
+    }, 100); // Minimal delay for DOM readiness
     
     // Also scroll to current time every minute to keep marker visible
     const intervalTimer = setInterval(() => {
@@ -255,10 +261,10 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     }, 60000); // Every minute
     
     return () => {
-      clearTimeout(timer);
+      clearTimeout(immediateTimer);
       clearInterval(intervalTimer);
     };
-  }, [currentTime, isScrolling]);
+  }, [currentTime, isScrolling, timezone]); // Added timezone dependency for instant updates
 
   // Navigation functions - using user timezone
   const handlePreviousDay = () => {
