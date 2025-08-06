@@ -12,9 +12,11 @@ const CST_MINUS_1_OFFSET = -6 * 60; // minutes from UTC
 export function getCurrentTimeCST1(): Date {
   const now = new Date();
   
-  // Calculate CST-1 time (UTC-6) directly from UTC
-  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const cstMinus1Time = new Date(utcTime + (CST_MINUS_1_OFFSET * 60000));
+  // Create a new date in CST-1 timezone (UTC-6)
+  // Add the offset to get CST-1 time (subtract 6 hours from UTC)
+  const cstMinus1Time = new Date(now.getTime() + (CST_MINUS_1_OFFSET * 60000));
+  
+  console.log(`getCurrentTimeCST1: UTC time: ${now.toISOString()}, CST-1 time: ${cstMinus1Time.toISOString()}`);
   
   return cstMinus1Time;
 }
@@ -32,10 +34,17 @@ export function toCST1String(date?: Date): string {
 }
 
 /**
- * Get current date in CST-1 for appointment queries
+ * Get today's date in CST-1 timezone as YYYY-MM-DD string
  */
 export function getTodayCST1(): string {
-  return toCST1String(getCurrentTimeCST1());
+  const cstTime = getCurrentTimeCST1();
+  const year = cstTime.getFullYear();
+  const month = String(cstTime.getMonth() + 1).padStart(2, '0');
+  const day = String(cstTime.getDate()).padStart(2, '0');
+  
+  console.log(`getTodayCST1: CST time is ${cstTime.toISOString()}, returning ${year}-${month}-${day}`);
+  
+  return `${year}-${month}-${day}`;
 }
 
 /**

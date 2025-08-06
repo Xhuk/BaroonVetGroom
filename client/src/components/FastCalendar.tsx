@@ -291,12 +291,12 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     const topPosition = (currentSlotIndex * slotHeight) + positionWithinSlot;
     
     return {
-      position: 'absolute',
+      position: 'absolute' as const,
       top: `${topPosition}px`,
       left: 0,
       right: 0,
       zIndex: 20,
-      pointerEvents: 'none'
+      pointerEvents: 'none' as const
     };
   };
   
