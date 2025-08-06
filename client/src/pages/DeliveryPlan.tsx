@@ -137,6 +137,27 @@ export default function DeliveryPlan() {
     createRouteMutation.mutate(data);
   };
 
+  // Generate mobile driver link for route
+  const generateDriverLink = (route: any) => {
+    const baseUrl = window.location.origin;
+    const driverLink = `${baseUrl}/driver-route/${route.id}`;
+    
+    // Copy to clipboard and show toast
+    navigator.clipboard.writeText(driverLink).then(() => {
+      toast({
+        title: "Enlace copiado",
+        description: `Enlace para conductor: ${driverLink}`,
+        duration: 5000,
+      });
+    }).catch(() => {
+      toast({
+        title: "Enlace generado",
+        description: `Envía este enlace al conductor: ${driverLink}`,
+        duration: 8000,
+      });
+    });
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed": return "bg-green-100 text-green-800 border-green-200";
@@ -411,26 +432,52 @@ export default function DeliveryPlan() {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setLocation("/route-map")}
+                        data-testid="button-view-map"
+                      >
+                        <Map className="w-4 h-4 mr-1" />
                         Ver Mapa
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          toast({
+                            title: "Función en desarrollo",
+                            description: "La edición de rutas estará disponible próximamente.",
+                          });
+                        }}
+                        data-testid="button-edit-route"
+                      >
                         Editar
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => generateDriverLink(route)}
+                        className="bg-green-50 text-green-700 hover:bg-green-100"
+                        data-testid="button-share-route"
+                      >
+                        <User className="w-4 h-4 mr-1" />
+                        Conductor
                       </Button>
                     </div>
                   </div>
 
                   {/* Route Timeline */}
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <h4 className="font-medium mb-3">Paradas de la Ruta</h4>
+                  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <h4 className="font-medium mb-3 text-gray-900 dark:text-gray-100">Paradas de la Ruta</h4>
                     <div className="space-y-2">
                       {/* Mock stops for demonstration */}
                       {["Fraccionamiento A", "Fraccionamiento B", "Fraccionamiento C"].map((stop, index) => (
                         <div key={index} className="flex items-center gap-3 text-sm">
-                          <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium">
+                          <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center text-xs font-medium">
                             {index + 1}
                           </div>
-                          <span>{stop}</span>
+                          <span className="text-gray-900 dark:text-gray-100">{stop}</span>
                           <Badge variant="secondary" className="ml-auto">Pendiente</Badge>
                         </div>
                       ))}

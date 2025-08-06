@@ -39,6 +39,7 @@ import AdminExternalServices from "@/pages/AdminExternalServices";
 import WebhookIntegrations from "@/pages/WebhookIntegrations";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
 import TempLinkHandler from "@/pages/TempLinkHandler";
+import DriverRoute from "@/pages/DriverRoute";
 import { InstantNavigation } from "@/components/InstantNavigation";
 import { DebugBanner } from "@/components/DebugBanner";
 
@@ -56,6 +57,7 @@ function Router() {
       <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
       <Route path="/plans" component={SubscriptionLanding} />
       <Route path="/temp/:token" component={TempLinkHandler} />
+      <Route path="/driver-route/:routeId" component={DriverRoute} />
       <Route path="/appointments" component={Appointments} />
       {isAuthenticated && (
         <>
