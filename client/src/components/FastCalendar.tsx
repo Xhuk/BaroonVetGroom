@@ -107,7 +107,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
 
   // Fixed marker doesn't need position calculation - it's always centered
   const getCurrentTimeSlotInfo = () => {
-    const now = getCurrentTimeInUserTimezone();
+    const now = getCurrentTimeCST1();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     
