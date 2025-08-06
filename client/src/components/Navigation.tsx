@@ -95,7 +95,7 @@ export function Navigation({ className }: NavigationProps) {
     <nav className={cn(
       "fixed left-0 w-72 bg-card shadow-lg z-30 transform -translate-x-full lg:translate-x-0 transition-transform border-r border-border",
       className
-    )} style={{ top: '140px', bottom: 'calc(10px + 96px)' }}>
+    )} style={{ top: '80px', bottom: 'calc(10px + 96px)' }}>
       <div className="p-4 h-full flex flex-col">
         <h3 className="text-lg font-semibold text-foreground mb-4">Módulos</h3>
         <ul className="space-y-2 flex-1">
