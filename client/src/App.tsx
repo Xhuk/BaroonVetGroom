@@ -40,6 +40,7 @@ import WebhookIntegrations from "@/pages/WebhookIntegrations";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
 import TempLinkHandler from "@/pages/TempLinkHandler";
 import { InstantNavigation } from "@/components/InstantNavigation";
+import { DebugBanner } from "@/components/DebugBanner";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -48,7 +49,9 @@ function Router() {
   // Only show auth loading on initial app load when no route is detected
 
   return (
-    <Switch>
+    <>
+      <DebugBanner />
+      <Switch>
       {/* INSTANT ROUTING - All routes available immediately, no auth blocking */}
       <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
       <Route path="/plans" component={SubscriptionLanding} />
@@ -85,7 +88,8 @@ function Router() {
       )}
       <Route path="/temp/:token" component={TempLinkHandler} />
       <Route component={NotFound} />
-    </Switch>
+      </Switch>
+    </>
   );
 }
 
