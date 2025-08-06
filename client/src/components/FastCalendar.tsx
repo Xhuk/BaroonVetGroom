@@ -228,16 +228,16 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
       const slotHeight = 80; // Each slot is 80px
       const containerHeight = scrollContainerRef.current.clientHeight;
       
-      // Position current slot at 50% (center) of container
-      const slotCenterPosition = (currentSlotIndex * slotHeight) + (slotHeight / 2);
-      const scrollPosition = slotCenterPosition - (containerHeight / 2);
+      // Position current slot at exact 50% of card container height
+      const slotTopPosition = currentSlotIndex * slotHeight;
+      const scrollPosition = slotTopPosition - (containerHeight / 2) + (slotHeight / 2);
       
       scrollContainerRef.current.scrollTo({
         top: Math.max(0, scrollPosition),
         behavior: 'smooth'
       });
       
-      console.log(`Auto-scrolled to center current time slot at index ${currentSlotIndex}, centered at 50% of container`);
+      console.log(`Auto-scrolled to position current time slot at 50% of card container height`);
     }
   };
 
