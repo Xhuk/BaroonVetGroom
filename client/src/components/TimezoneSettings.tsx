@@ -75,14 +75,10 @@ export function TimezoneSettings({ onTimezoneChange }: TimezoneSettingsProps) {
             <span className="font-medium text-blue-800 dark:text-blue-200">Hora Actual</span>
           </div>
           <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-            {currentTime.toLocaleTimeString('es-ES', { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              second: '2-digit'
-            })}
+            {currentTime.getUTCHours().toString().padStart(2, '0')}:{currentTime.getUTCMinutes().toString().padStart(2, '0')}:{currentTime.getUTCSeconds().toString().padStart(2, '0')}
           </div>
           <div className="text-sm text-blue-700 dark:text-blue-300">
-            {currentTime.toLocaleDateString('es-ES', { 
+            {new Date(currentTime.getUTCFullYear(), currentTime.getUTCMonth(), currentTime.getUTCDate()).toLocaleDateString('es-ES', { 
               weekday: 'long', 
               year: 'numeric', 
               month: 'long', 

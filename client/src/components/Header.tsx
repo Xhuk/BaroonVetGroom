@@ -6,7 +6,7 @@ import { Calendar, Phone, Mail, LogOut, Moon, Sun, Settings, Clock } from "lucid
 import { VetGroomLogo } from "./VetGroomLogo";
 import { DebugControls } from "./DebugControls";
 import { TimezoneSettings } from "./TimezoneSettings";
-import { getCurrentTimeCST1, getTodayCST1 } from "@shared/timeUtils";
+import { getCurrentTimeCST1, getTodayCST1, getCurrentTimeInUserTimezone } from "@shared/timeUtils";
 import { useState, useEffect } from "react";
 import { 
   Popover,
@@ -18,33 +18,32 @@ export function Header() {
   const { user } = useAuth();
   const { currentTenant, isDebugMode } = useTenant();
   const { theme, toggleTheme } = useTheme();
-  const [currentTime, setCurrentTime] = useState(getCurrentTimeCST1());
+  const [currentTime, setCurrentTime] = useState('');
+  const [currentDate, setCurrentDate] = useState('');
 
-  // Use CST-1 timezone for accurate date and time display
-  const cstTime = getCurrentTimeCST1();
-  
-  // Extract date and time from CST-1 ISO string for accuracy
-  const cstISOString = cstTime.toISOString();
-  const [datePart, timePart] = cstISOString.split('T');
-  const [year, month, day] = datePart.split('-').map(Number);
-  const [hours, minutes] = timePart.split(':').map(Number);
-  
-  // Create proper date object for formatting
-  const displayDate = new Date(year, month - 1, day);
-  const dateOptions: Intl.DateTimeFormatOptions = {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long', 
-    year: 'numeric'
-  };
-  const formattedDate = displayDate.toLocaleDateString('es-ES', dateOptions);
-  const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-  
-  // Update time every minute
+  // Update time and date display
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(getCurrentTimeCST1());
-    }, 60000);
+    const updateTimeAndDate = () => {
+      const userTime = getCurrentTimeInUserTimezone();
+      
+      // Professional time display (just hours:minutes)
+      const hours = userTime.getUTCHours().toString().padStart(2, '0');
+      const minutes = userTime.getUTCMinutes().toString().padStart(2, '0');
+      setCurrentTime(`${hours}:${minutes}`);
+      
+      // Date display
+      const displayDate = new Date(userTime.getUTCFullYear(), userTime.getUTCMonth(), userTime.getUTCDate());
+      const dateOptions: Intl.DateTimeFormatOptions = {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long', 
+        year: 'numeric'
+      };
+      setCurrentDate(displayDate.toLocaleDateString('es-ES', dateOptions));
+    };
+    
+    updateTimeAndDate(); // Initial call
+    const timer = setInterval(updateTimeAndDate, 60000); // Update every minute
     return () => clearInterval(timer);
   }, []);
 
@@ -70,11 +69,11 @@ export function Header() {
           <div className="text-sm text-gray-600 dark:text-slate-300">
             <div className="flex items-center mb-1">
               <Calendar className="inline w-4 h-4 mr-2" />
-              {formattedDate}
+              {currentDate}
             </div>
             <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium">
               <Clock className="inline w-4 h-4 mr-2" />
-              {formattedTime} CST-1
+              {currentTime}
             </div>
           </div>
         </div>
