@@ -2057,21 +2057,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/seed-grooming-today/:tenantId", isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;
+      const { days = 1 } = req.body;
       
       // Import and run the seeding function
       const { seedGroomingAppointmentsToday } = await import('./seedGroomingToday');
-      await seedGroomingAppointmentsToday(tenantId);
+      await seedGroomingAppointmentsToday(tenantId, days);
       
       res.json({ 
         success: true, 
-        message: "Successfully created 30 grooming appointments for today",
-        tenantId 
+        message: `Successfully created grooming appointments for ${days} day(s)`,
+        tenantId,
+        days
       });
     } catch (error) {
       console.error("Error seeding grooming appointments:", error);
       res.status(500).json({ 
         success: false, 
         error: "Failed to create grooming appointments",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Demo data seeding endpoint
+  app.post("/api/seed-demo-data", isAuthenticated, async (req, res) => {
+    try {
+      // Check if user has system admin access
+      const hasSystemAccess = await isSystemAdmin(req);
+      if (!hasSystemAccess) {
+        return res.status(403).json({ message: "System admin access required" });
+      }
+
+      const { days = 45 } = req.body;
+      
+      // Import and run the demo data seeding function
+      const { runDemoDataSeeder } = await import('./seedDemoData');
+      const result = await runDemoDataSeeder(days);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error seeding demo data:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to seed demo data",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }

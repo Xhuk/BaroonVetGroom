@@ -67,12 +67,14 @@ const appointmentSeeds: AppointmentSeed[] = [
   { clientName: "Enrique Medina", petName: "Firulais", petBreed: "Mestizo", address: "Blvd. Toscana 654, Stanza Toscana", fraccionamiento: "Stanza Toscana", phone: "+52 667 123 4567", services: ["Baño básico", "Corte de uñas"], totalAmount: 300, time: "17:30" }
 ];
 
-export async function seedGroomingAppointmentsToday(tenantId: string): Promise<void> {
-  console.log(`Creating 30 grooming appointments for today for tenant ${tenantId}...`);
+export async function seedGroomingAppointmentsToday(tenantId: string, days: number = 1): Promise<void> {
+  console.log(`Creating grooming appointments for ${days} day(s) for tenant ${tenantId}...`);
   
-  // Get today's date in the format YYYY-MM-DD
+  // Get date range based on days parameter
   const today = new Date();
-  const todayString = today.toISOString().split('T')[0];
+  const startDate = new Date(today);
+  const endDate = new Date(today);
+  endDate.setDate(startDate.getDate() + (days - 1));
   
   try {
     // Get existing services for this tenant
@@ -124,7 +126,18 @@ export async function seedGroomingAppointmentsToday(tenantId: string): Promise<v
     
     let createdCount = 0;
     
-    for (const appointmentSeed of appointmentSeeds) {
+    // Distribute appointments across the date range
+    for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
+      const dateString = currentDate.toISOString().split('T')[0];
+      
+      // For each day, create appointments from our seed data
+      // Divide the appointments evenly across the days
+      const appointmentsPerDay = Math.ceil(appointmentSeeds.length / days);
+      const startIndex = Math.floor((currentDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)) * appointmentsPerDay;
+      const endIndex = Math.min(startIndex + appointmentsPerDay, appointmentSeeds.length);
+      const dayAppointments = appointmentSeeds.slice(startIndex, endIndex);
+      
+      for (const appointmentSeed of dayAppointments) {
       try {
         // Create or get client
         let client = await storage.getClientByPhone(tenantId, appointmentSeed.phone);
@@ -181,9 +194,9 @@ export async function seedGroomingAppointmentsToday(tenantId: string): Promise<v
         // Calculate total duration
         const totalDuration = appointmentServices.reduce((sum, service) => sum + (service?.duration || 60), 0);
         
-        // Create appointment time for today
+        // Create appointment time for current date
         const [hours, minutes] = appointmentSeed.time.split(':').map(Number);
-        const appointmentDateTime = new Date(today);
+        const appointmentDateTime = new Date(currentDate);
         appointmentDateTime.setHours(hours, minutes, 0, 0);
         
         // Create appointment using correct schema
@@ -192,7 +205,7 @@ export async function seedGroomingAppointmentsToday(tenantId: string): Promise<v
           type: "grooming",
           clientId: client.id,
           petId: pet.id,
-          scheduledDate: todayString,
+          scheduledDate: dateString,
           scheduledTime: appointmentSeed.time,
           logistics: "entrega_domicilio", // Mark for home delivery
           status: "completed", // Mark as completed so it's ready for delivery
@@ -210,14 +223,15 @@ export async function seedGroomingAppointmentsToday(tenantId: string): Promise<v
         const appointment = await storage.createAppointment(appointmentData);
         createdCount++;
         
-        console.log(`Created appointment ${createdCount}/30: ${appointmentSeed.petName} (${appointmentSeed.clientName}) - ${appointmentSeed.fraccionamiento} - $${appointmentSeed.totalAmount}`);
+        console.log(`Created appointment ${createdCount}: ${appointmentSeed.petName} (${appointmentSeed.clientName}) - ${appointmentSeed.fraccionamiento} - $${appointmentSeed.totalAmount} - ${dateString}`);
         
       } catch (error) {
         console.error(`Error creating appointment for ${appointmentSeed.petName}:`, error);
       }
     }
+    }
     
-    console.log(`Successfully created ${createdCount} grooming appointments for today (${todayString})`);
+    console.log(`Successfully created ${createdCount} grooming appointments for ${days} day(s)`);
     console.log("All appointments are marked as 'completed' and 'paid' - ready for delivery planning");
     
   } catch (error) {

@@ -25,21 +25,26 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function SuperAdmin() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const [showNewCompanyDialog, setShowNewCompanyDialog] = useState(false);
+  const [demoDays, setDemoDays] = useState(45);
+  const [groomingDays, setGroomingDays] = useState(1);
 
   // Demo data seeding mutation
   const seedDemoDataMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (days: number) => {
       const response = await fetch('/api/seed-demo-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
+        body: JSON.stringify({ days }),
       });
       
       if (!response.ok) {
@@ -66,13 +71,14 @@ export default function SuperAdmin() {
 
   // Grooming appointments seeding mutation
   const seedGroomingTodayMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (days: number) => {
       const response = await fetch('/api/seed-grooming-today/demo-grooming-1', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
+        body: JSON.stringify({ days }),
       });
       
       if (!response.ok) {
@@ -85,7 +91,7 @@ export default function SuperAdmin() {
     onSuccess: (data) => {
       toast({
         title: "Grooming Appointments Created Successfully",
-        description: data.message || "30 grooming appointments have been created for today with completed payment status.",
+        description: data.message || `Grooming appointments have been created for ${groomingDays} day(s) with completed payment status.`,
       });
     },
     onError: (error: any) => {
@@ -468,22 +474,58 @@ export default function SuperAdmin() {
                     <h4 className="font-medium text-blue-900 mb-2">Comprehensive Demo Data Creation</h4>
                     <p className="text-sm text-blue-700 mb-3">
                       Creates "Compañía Demo" with full organizational structure including tenants, 
-                      staff, clients, pets, services, rooms, and generates 45 days of realistic appointment data 
+                      staff, clients, pets, services, rooms, and generates configurable days of realistic appointment data 
                       for deployment demonstrations.
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-blue-600 mb-4">
                       <div>• 3 Demo Tenants</div>
                       <div>• 7+ Staff Members</div>
                       <div>• 8+ Clients & Pets</div>
-                      <div>• 45 Days of Appointments</div>
+                      <div>• Configurable Days</div>
                     </div>
                     <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-3">
-                      <h5 className="font-medium text-purple-900 text-sm mb-1">Grooming Today Seeder</h5>
+                      <h5 className="font-medium text-purple-900 text-sm mb-1">Grooming Data Seeder</h5>
                       <p className="text-xs text-purple-700">
-                        Adds 30 completed grooming appointments for today in demo-grooming-1 tenant. 
+                        Adds 30 completed grooming appointments per day in demo-grooming-1 tenant. 
                         Distributed across 8 fraccionamientos with realistic services, pricing, and payment status. 
                         Ready for VRP delivery route optimization testing.
                       </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="demo-days" className="text-sm font-medium text-blue-900">
+                          Demo Data Days
+                        </Label>
+                        <Input
+                          id="demo-days"
+                          type="number"
+                          min="1"
+                          max="365"
+                          value={demoDays}
+                          onChange={(e) => setDemoDays(Math.max(1, Math.min(365, parseInt(e.target.value) || 1)))}
+                          className="w-full"
+                          data-testid="input-demo-days"
+                        />
+                        <p className="text-xs text-blue-600">Generate {demoDays} days of appointment data</p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="grooming-days" className="text-sm font-medium text-purple-900">
+                          Grooming Data Days
+                        </Label>
+                        <Input
+                          id="grooming-days"
+                          type="number"
+                          min="1"
+                          max="30"
+                          value={groomingDays}
+                          onChange={(e) => setGroomingDays(Math.max(1, Math.min(30, parseInt(e.target.value) || 1)))}
+                          className="w-full"
+                          data-testid="input-grooming-days"
+                        />
+                        <p className="text-xs text-purple-600">Generate grooming data for {groomingDays} day(s)</p>
+                      </div>
                     </div>
                   </div>
                   
@@ -498,7 +540,7 @@ export default function SuperAdmin() {
                     </div>
                     <div className="flex flex-wrap gap-3">
                       <Button
-                        onClick={() => seedDemoDataMutation.mutate()}
+                        onClick={() => seedDemoDataMutation.mutate(demoDays)}
                         disabled={seedDemoDataMutation.isPending}
                         className="bg-green-600 hover:bg-green-700 text-white"
                         data-testid="button-seed-demo-data"
@@ -506,31 +548,31 @@ export default function SuperAdmin() {
                         {seedDemoDataMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Seeding...
+                            Seeding {demoDays} days...
                           </>
                         ) : (
                           <>
                             <Database className="mr-2 h-4 w-4" />
-                            Seed Demo Data
+                            Seed {demoDays} Days Demo Data
                           </>
                         )}
                       </Button>
                       
                       <Button
-                        onClick={() => seedGroomingTodayMutation.mutate()}
+                        onClick={() => seedGroomingTodayMutation.mutate(groomingDays)}
                         disabled={seedGroomingTodayMutation.isPending}
                         className="bg-purple-600 hover:bg-purple-700 text-white"
-                        data-testid="button-seed-grooming-today"
+                        data-testid="button-seed-grooming-data"
                       >
                         {seedGroomingTodayMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Creating...
+                            Creating {groomingDays} day(s)...
                           </>
                         ) : (
                           <>
                             <Clock className="mr-2 h-4 w-4" />
-                            Seed 30 Grooming Today
+                            Seed {groomingDays} Day(s) Grooming
                           </>
                         )}
                       </Button>

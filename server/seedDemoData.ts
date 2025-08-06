@@ -145,8 +145,8 @@ const INVENTORY_ITEMS = [
   { name: "Alimento Gato Adulto", category: "food", sku: "ALM-002", unitPrice: 350, currentStock: 18, minStockLevel: 4, maxStockLevel: 35, unit: "saco" }
 ];
 
-export async function seedDemoData() {
-  console.log("🌱 Starting demo data seeding...");
+export async function seedDemoData(days: number = 45) {
+  console.log(`🌱 Starting demo data seeding for ${days} days...`);
 
   try {
     // 1. Create demo company using storage
@@ -315,12 +315,12 @@ export async function seedDemoData() {
     console.log(`✅ Created/verified ${clientsCreated} clients and ${petsCreated} pets`);
 
     // 7. Generate appointments for the next 45 days
-    console.log("📅 Generating appointments for next 45 days...");
+    console.log(`📅 Generating appointments for next ${days} days...`);
     let appointmentsCreated = 0;
     
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setDate(startDate.getDate() + 45);
+    endDate.setDate(startDate.getDate() + days);
     
     for (const tenant of createdTenants) {
       const tenantServices = await storage.getServices(tenant.id);
@@ -398,7 +398,7 @@ export async function seedDemoData() {
     console.log(`✅ Created ${appointmentsCreated} appointments`);
     console.log("🎉 Demo data seeding completed successfully!");
     
-    return { success: true, message: `Demo data created successfully! Created ${appointmentsCreated} appointments for ${createdTenants.length} tenants over the next 45 days.` };
+    return { success: true, message: `Demo data created successfully! Created ${appointmentsCreated} appointments for ${createdTenants.length} tenants over the next ${days} days.` };
     
   } catch (error) {
     console.error("❌ Error seeding demo data:", error);
@@ -409,9 +409,9 @@ export async function seedDemoData() {
 // Removed the complex appointment generation function - now handled in main seedDemoData function
 
 // Export function for API endpoint
-export async function runDemoDataSeeder() {
+export async function runDemoDataSeeder(days: number = 45) {
   try {
-    const result = await seedDemoData();
+    const result = await seedDemoData(days);
     return result;
   } catch (error) {
     console.error("Demo data seeding failed:", error);
