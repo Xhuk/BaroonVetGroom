@@ -7,6 +7,7 @@ import { VetGroomLogo } from "./VetGroomLogo";
 import { DebugControls } from "./DebugControls";
 import { TimezoneSettings } from "./TimezoneSettings";
 import { getCurrentTimeCST1, getTodayCST1, getCurrentTimeInUserTimezone } from "@shared/timeUtils";
+import { useTimezone } from "@/contexts/TimezoneContext";
 import { useState, useEffect } from "react";
 import { 
   Popover,
@@ -18,13 +19,14 @@ export function Header() {
   const { user } = useAuth();
   const { currentTenant, isDebugMode } = useTenant();
   const { theme, toggleTheme } = useTheme();
+  const { timezone } = useTimezone();
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
 
-  // Update time and date display
+  // Update time and date display (re-run when timezone changes)
   useEffect(() => {
     const updateTimeAndDate = () => {
-      const userTime = getCurrentTimeInUserTimezone();
+      const userTime = getCurrentTimeInUserTimezone(timezone);
       
       // Professional time display (just hours:minutes)
       const hours = userTime.getUTCHours().toString().padStart(2, '0');
@@ -40,12 +42,15 @@ export function Header() {
         year: 'numeric'
       };
       setCurrentDate(displayDate.toLocaleDateString('es-ES', dateOptions));
+      
+      // Log timezone change for debugging
+      console.log(`Timezone changed to ${timezone}, new time: ${userTime.toISOString()}`);
     };
     
     updateTimeAndDate(); // Initial call
     const timer = setInterval(updateTimeAndDate, 60000); // Update every minute
     return () => clearInterval(timer);
-  }, []);
+  }, [timezone]); // Re-run when timezone changes
 
   const handleLogout = () => {
     // Clear debug mode on logout
