@@ -5,7 +5,7 @@ import type { Tenant, UserTenant } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Building2, Crown, Settings } from "lucide-react";
+import { MapPin, Building2, Crown, Settings, X } from "lucide-react";
 import { CompanyTenantSelector } from "@/components/CompanyTenantSelector";
 
 interface TenantContextType {
@@ -214,16 +214,20 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
               <Settings className="w-3 h-3 mr-1" />
               Cambiar Tenant
             </Button>
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={exitDebugMode}
-              className="border-black text-black hover:bg-black hover:text-yellow-400"
-            >
-              Salir Debug
-            </Button>
           </div>
         </div>
+      )}
+      
+      {/* Debug Exit Button - Always visible and prominent */}
+      {isDebugMode && isDebugUser && (
+        <Button 
+          onClick={exitDebugMode}
+          size="sm"
+          className="fixed top-20 right-6 z-50 bg-red-600 hover:bg-red-700 text-white shadow-lg border-2 border-red-800"
+        >
+          <X className="w-4 h-4 mr-1" />
+          Salir Debug
+        </Button>
       )}
       
       {/* Debug Tenant Selector */}
