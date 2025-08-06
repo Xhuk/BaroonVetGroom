@@ -7,13 +7,14 @@
 const CST_MINUS_1_OFFSET = -6 * 60; // minutes from UTC
 
 /**
- * Get current time in CST-1 timezone based on navigator
+ * Get current time in CST-1 timezone (UTC-6, no daylight saving)
  */
 export function getCurrentTimeCST1(): Date {
   const now = new Date();
   
   // Calculate CST-1 time (UTC-6) directly from UTC
-  const cstMinus1Time = new Date(now.getTime() + CST_MINUS_1_OFFSET * 60000);
+  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const cstMinus1Time = new Date(utcTime + (CST_MINUS_1_OFFSET * 60000));
   
   return cstMinus1Time;
 }
@@ -21,8 +22,8 @@ export function getCurrentTimeCST1(): Date {
 /**
  * Convert any date to CST-1 timezone string for database storage
  */
-export function toCST1String(date: Date): string {
-  const cstTime = getCurrentTimeCST1();
+export function toCST1String(date?: Date): string {
+  const cstTime = date ? date : getCurrentTimeCST1();
   const year = cstTime.getFullYear();
   const month = String(cstTime.getMonth() + 1).padStart(2, '0');
   const day = String(cstTime.getDate()).padStart(2, '0');
