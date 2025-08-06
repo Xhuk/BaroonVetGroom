@@ -296,11 +296,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const appointmentVetIds = new Set(medicalAppointments.map(apt => apt.veterinarianId));
       const appointmentRoomIds = new Set(medicalAppointments.map(apt => apt.roomId).filter(Boolean));
       
+      // Debug logging to see what IDs we're looking for
+      console.log(`Medical appointments debug - Found ${medicalAppointments.length} appointments, ${pets.length} total pets`);
+      console.log('Sample appointment petIds:', Array.from(appointmentPetIds).slice(0, 3));
+      console.log('Sample pet IDs:', pets.slice(0, 3).map(p => p.id));
+      
       // Only include relevant data
       const relevantClients = clients.filter(client => appointmentClientIds.has(client.id));
       const relevantPets = pets.filter(pet => appointmentPetIds.has(pet.id));
       const relevantVets = veterinarians.filter(vet => appointmentVetIds.has(vet.id));
       const relevantRooms = rooms.filter(room => appointmentRoomIds.has(room.id));
+      
+      console.log(`Filtered results: ${relevantPets.length} pets, ${relevantClients.length} clients`);
       
       res.json({
         medicalAppointments: medicalAppointments.map(apt => ({
