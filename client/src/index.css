@@ -5,6 +5,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Force dark mode styling for textarea elements */
+.dark textarea {
+  background-color: rgb(31 41 55) !important; /* gray-800 */
+  color: rgb(243 244 246) !important; /* gray-100 */
+  border-color: rgb(75 85 99) !important; /* gray-600 */
+}
+
 /* Custom animation for time container glow effect behind all elements */
 @keyframes time-container-glow {
   0%, 100% {

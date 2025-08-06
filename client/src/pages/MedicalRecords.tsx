@@ -411,10 +411,10 @@ function MedicalRecords() {
                         </div>
                         <div>
                           <h3 className="font-semibold text-lg">
-                            {pet?.name} - {getVisitTypeLabel(record.visitType)}
+                            {pet?.name || 'Mascota desconocida'} - {getVisitTypeLabel(record.visitType)}
                           </h3>
-                          <p className="text-sm text-gray-600">
-                            Dr. {vet?.name} • {format(new Date(record.visitDate), "dd 'de' MMMM, yyyy", { locale: es })}
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Dr. {vet?.name || 'Veterinario desconocido'} • {format(new Date(record.visitDate), "dd 'de' MMMM, yyyy", { locale: es })}
                           </p>
                         </div>
                       </div>
@@ -433,7 +433,7 @@ function MedicalRecords() {
                       </div>
 
                       <div className="flex items-center space-x-4">
-                        <Badge className={cn("px-2 py-1", getStatusColor(record.status))}>
+                        <Badge className={cn("px-2 py-1", getStatusColor(record.status || 'active'))}>
                           {record.status === 'active' ? 'Activo' : 
                            record.status === 'resolved' ? 'Resuelto' : 'En Progreso'}
                         </Badge>
@@ -468,7 +468,7 @@ function MedicalRecords() {
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-2">
                 <Stethoscope className="w-5 h-5 text-blue-600" />
-                <span>Expediente Médico - {pets.find(p => p.id === selectedRecord.petId)?.name}</span>
+                <span>Expediente Médico - {pets.find(p => p.id === selectedRecord.petId)?.name || 'Mascota desconocida'}</span>
               </DialogTitle>
             </DialogHeader>
             
@@ -484,11 +484,11 @@ function MedicalRecords() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Veterinario</p>
-                  <p className="text-gray-900 dark:text-gray-100">Dr. {veterinarians.find(v => v.id === selectedRecord.veterinarianId)?.name}</p>
+                  <p className="text-gray-900 dark:text-gray-100">Dr. {veterinarians.find(v => v.id === selectedRecord.veterinarianId)?.name || 'Veterinario desconocido'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Estado</p>
-                  <Badge className={cn("px-2 py-1", getStatusColor(selectedRecord.status))}>
+                  <Badge className={cn("px-2 py-1", getStatusColor(selectedRecord.status || 'active'))}>
                     {selectedRecord.status === 'active' ? 'Activo' : 
                      selectedRecord.status === 'resolved' ? 'Resuelto' : 'En Progreso'}
                   </Badge>
@@ -518,18 +518,25 @@ function MedicalRecords() {
                 <div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Signos Vitales</p>
                   <div className="grid grid-cols-2 gap-4 p-3 bg-yellow-50 dark:bg-yellow-900 rounded-lg text-gray-900 dark:text-gray-100">
-                    {(selectedRecord.vitals as any).temperature && (
-                      <div>
-                        <span className="text-sm font-medium">Temperatura:</span>
-                        <span className="ml-2">{(selectedRecord.vitals as any).temperature}°C</span>
-                      </div>
-                    )}
-                    {(selectedRecord.vitals as any).weight && (
-                      <div>
-                        <span className="text-sm font-medium">Peso:</span>
-                        <span className="ml-2">{(selectedRecord.vitals as any).weight} kg</span>
-                      </div>
-                    )}
+                    {(() => {
+                      const vitals = selectedRecord.vitals as Record<string, any>;
+                      return (
+                        <>
+                          {vitals.temperature && (
+                            <div>
+                              <span className="text-sm font-medium">Temperatura:</span>
+                              <span className="ml-2">{vitals.temperature}°C</span>
+                            </div>
+                          )}
+                          {vitals.weight && (
+                            <div>
+                              <span className="text-sm font-medium">Peso:</span>
+                              <span className="ml-2">{vitals.weight} kg</span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               )}
