@@ -290,15 +290,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getRooms(tenantId)
       ]);
 
-      // If pets is empty, let's get ALL pets to see what's available
-      if (pets.length === 0) {
-        console.log('No pets found for tenant, checking if pets exist in database...');
-        try {
-          const allPets = await storage.getAllPets();
-          console.log(`Total pets in database: ${allPets.length}, sample IDs:`, allPets.slice(0, 3).map(p => p.id));
-        } catch (error) {
-          console.log('Error getting all pets:', error);
-        }
+      // Debug logging to see what IDs we're looking for
+      console.log(`Medical appointments debug - Found ${medicalAppointments.length} appointments, ${pets.length} total pets`);
+      if (medicalAppointments.length > 0) {
+        console.log('Sample appointment petIds:', Array.from(appointmentPetIds).slice(0, 3));
+      }
+      if (pets.length > 0) {
+        console.log('Sample pet IDs:', pets.slice(0, 3).map(p => p.id));
       }
       
       // Create lookup maps for efficient filtering

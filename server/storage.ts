@@ -512,25 +512,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPetsByTenant(tenantId: string): Promise<Pet[]> {
-    const results = await db.select({
-      id: pets.id,
-      name: pets.name,
-      species: pets.species,
-      breed: pets.breed,
-      clientId: pets.clientId,
-      tenantId: pets.tenantId,
-      age: pets.age,
-      registeredAge: pets.registeredAge,
-      birthDate: pets.birthDate,
-      isActive: pets.isActive,
-      createdAt: pets.createdAt,
-      updatedAt: pets.updatedAt
-    })
-    .from(pets)
-    .leftJoin(clients, eq(pets.clientId, clients.id))
-    .where(eq(clients.tenantId, tenantId));
+    const results = await db.select()
+      .from(pets)
+      .innerJoin(clients, eq(pets.clientId, clients.id))
+      .where(eq(clients.tenantId, tenantId));
     
-    return results;
+    // Extract just the pets data from the joined results
+    return results.map(result => result.pets);
   }
 
   async createPet(pet: InsertPet): Promise<Pet> {
