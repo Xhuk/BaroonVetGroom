@@ -56,22 +56,22 @@ export function Header() {
   };
 
   return (
-    <header className={`bg-white dark:bg-slate-900 shadow-sm border-b border-gray-200 dark:border-slate-700 px-6 py-4 ${isDebugMode ? 'mt-14' : ''}`}>
+    <header className={`bg-card shadow-sm border-b border-border px-6 py-4 ${isDebugMode ? 'mt-14' : ''}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-3">
             <VetGroomLogo className="w-10 h-10" />
             <div>
-              <h1 className="text-2xl font-semibold text-blue-600 dark:text-blue-400">VetGroom</h1>
-              <span className="text-sm text-gray-500 dark:text-slate-400">Gestión Veterinaria</span>
+              <h1 className="text-2xl font-semibold text-primary">VetGroom</h1>
+              <span className="text-sm text-muted-foreground">Gestión Veterinaria</span>
             </div>
           </div>
-          <div className="text-sm text-gray-600 dark:text-slate-300">
+          <div className="text-sm text-muted-foreground">
             <div className="flex items-center mb-1">
               <Calendar className="inline w-4 h-4 mr-2" />
               {currentDate}
             </div>
-            <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium">
+            <div className="flex items-center text-primary font-medium">
               <Clock className="inline w-4 h-4 mr-2" />
               {currentTime}
             </div>
@@ -80,11 +80,11 @@ export function Header() {
         
         <div className="flex items-center space-x-6">
           <div className="text-sm">
-            <div className="text-gray-600 dark:text-slate-300">
-              Usuario: <span className="font-medium text-gray-900 dark:text-slate-100">{user?.email}</span>
+            <div className="text-muted-foreground">
+              Usuario: <span className="font-medium text-foreground">{user?.email}</span>
             </div>
-            <div className="text-gray-600 dark:text-slate-300">
-              Tenant: <span className="font-medium text-blue-600 dark:text-blue-400">{currentTenant?.subdomain}</span>
+            <div className="text-muted-foreground">
+              Tenant: <span className="font-medium text-primary">{currentTenant?.subdomain}</span>
             </div>
           </div>
 
@@ -92,7 +92,7 @@ export function Header() {
             {/* Debug Controls */}
             <DebugControls />
             
-            <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
+            <button className="text-sm text-primary hover:text-primary/80 font-medium">
               English
             </button>
             <div className="flex space-x-2">

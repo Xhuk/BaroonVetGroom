@@ -69,8 +69,8 @@ export default function Dashboard() {
   // Render layout immediately instead of waiting for loading
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -84,11 +84,11 @@ export default function Dashboard() {
     if (tenantLoading) {
       // Show layout with loading state
       return (
-        <div className="min-h-screen bg-gray-50 font-sans">
+        <div className="min-h-screen bg-background font-sans">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Cargando tenant...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Cargando tenant...</p>
             </div>
           </div>
         </div>
@@ -96,12 +96,12 @@ export default function Dashboard() {
     } else {
       // No tenant assigned and not loading
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               No hay tenant asignado
             </h2>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Contacta al administrador para obtener acceso a un tenant.
             </p>
           </div>
@@ -111,7 +111,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-background font-sans">
       <Header />
       <Navigation />
       
@@ -120,13 +120,13 @@ export default function Dashboard() {
         {/* Action Buttons - Positioned to align with card container */}
         <div className="fixed flex gap-4" style={{ top: '95px', left: '298px', right: '24px' }}>
           <Link href="/booking">
-            <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md">
+            <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
               <Phone className="w-4 h-4 mr-2" />
               Nueva Cita por Teléfono
             </Button>
           </Link>
           <Link href="/appointments">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 shadow-md">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 shadow-md dark:bg-blue-700 dark:hover:bg-blue-800">
               <CalendarIcon className="w-4 h-4 mr-2" />
               Gestionar Citas
             </Button>
@@ -143,8 +143,8 @@ export default function Dashboard() {
             tenantId={currentTenant?.id}
           />
         ) : (
-          <div className="bg-white rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed" style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
-            <div className="text-gray-500">Cargando calendario...</div>
+          <div className="bg-card rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed" style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
+            <div className="text-muted-foreground">Cargando calendario...</div>
           </div>
         )}
       </main>

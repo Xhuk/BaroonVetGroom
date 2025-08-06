@@ -156,26 +156,32 @@
 }
 
 .dark {
-  --background: hsl(240, 10%, 3.9%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 10%, 3.9%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 3.9%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 15.9%);
-  --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(207, 90%, 54%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(240, 3.7%, 15.9%);
-  --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(240, 3.7%, 15.9%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
+  --background: hsl(224, 71%, 4%);
+  --foreground: hsl(213, 31%, 91%);
+  --muted: hsl(223, 47%, 11%);
+  --muted-foreground: hsl(215, 20%, 65%);
+  --popover: hsl(224, 71%, 4%);
+  --popover-foreground: hsl(213, 31%, 91%);
+  --card: hsl(224, 71%, 4%);
+  --card-foreground: hsl(213, 31%, 91%);
+  --border: hsl(216, 34%, 17%);
+  --input: hsl(216, 34%, 17%);
+  --primary: hsl(210, 40%, 98%);
+  --primary-foreground: hsl(222, 84%, 5%);
+  --secondary: hsl(222, 47%, 11%);
+  --secondary-foreground: hsl(213, 31%, 91%);
+  --accent: hsl(216, 34%, 17%);
+  --accent-foreground: hsl(213, 31%, 91%);
+  --destructive: hsl(359, 51%, 48%);
+  --destructive-foreground: hsl(213, 31%, 91%);
+  --ring: hsl(216, 34%, 17%);
   --radius: 0.5rem;
+
+  /* Veterinary theme colors for dark mode */
+  --vet-blue: hsl(207, 90%, 64%);
+  --vet-green: hsl(142, 71%, 55%);
+  --vet-orange: hsl(25, 95%, 63%);
+  --vet-gray: hsl(215, 20%, 65%);
 }
 
 @layer base {
@@ -196,15 +202,15 @@
   }
   
   .time-slot {
-    @apply border-r border-b border-gray-200 flex items-center justify-center text-xs text-gray-500 bg-gray-50;
+    @apply border-r border-b border-border flex items-center justify-center text-xs text-muted-foreground bg-muted;
   }
   
   .day-header {
-    @apply border-r border-b-2 border-blue-600 flex items-center justify-center font-medium bg-gray-50;
+    @apply border-r border-b-2 border-primary flex items-center justify-center font-medium bg-muted;
   }
   
   .calendar-cell {
-    @apply border-r border-b border-gray-200 relative bg-white cursor-pointer hover:bg-gray-50;
+    @apply border-r border-b border-border relative bg-card cursor-pointer hover:bg-muted;
     min-height: 60px;
   }
   
@@ -217,7 +223,7 @@
   }
   
   .bottom-ribbon {
-    @apply fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 z-20;
+    @apply fixed bottom-0 left-0 right-0 bg-card border-t-2 border-border z-20;
   }
 }
 

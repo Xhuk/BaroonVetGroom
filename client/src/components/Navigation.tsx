@@ -93,17 +93,17 @@ export function Navigation({ className }: NavigationProps) {
 
   return (
     <nav className={cn(
-      "fixed left-0 top-20 w-72 bg-white shadow-lg z-30 transform -translate-x-full lg:translate-x-0 transition-transform",
+      "fixed left-0 top-20 w-72 bg-card shadow-lg z-30 transform -translate-x-full lg:translate-x-0 transition-transform border-r border-border",
       className
     )} style={{ bottom: 'calc(10px + 96px)' }}>
       <div className="p-4 h-full flex flex-col">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Módulos</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Módulos</h3>
         <ul className="space-y-2 flex-1">
           {navigationItems.map((item) => (
             <li key={item.href}>
               <a
                 href={item.href}
-                className="flex items-center space-x-3 px-3 py-2 rounded-lg font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                className="flex items-center space-x-3 px-3 py-2 rounded-lg font-medium text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
               >
                 {item.label === "Seguimientos" ? (
                   <div className="relative flex items-center">
@@ -128,12 +128,12 @@ export function Navigation({ className }: NavigationProps) {
           ))}
           
           {adminItems.length > 0 && (
-            <li className="border-t pt-2 mt-4">
+            <li className="border-t border-border pt-2 mt-4">
               {adminItems.map((item) => (
                 <a
                   key={item.href}
                   href={item.href}
-                  className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 hover:bg-gray-50 px-3 py-2 rounded-lg mb-2"
+                  className="flex items-center space-x-3 text-muted-foreground hover:text-primary hover:bg-muted px-3 py-2 rounded-lg mb-2 transition-colors"
                 >
                   <item.icon className="w-5 h-5" />
                   <span>{item.label}</span>

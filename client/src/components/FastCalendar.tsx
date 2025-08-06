@@ -322,25 +322,25 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
         <div className="flex justify-between items-center mb-2">
           <button
             onClick={handlePreviousDay}
-            className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition duration-300 text-sm"
+            className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
           >
             ← Día Anterior
           </button>
-          <h2 className="text-xl font-semibold text-gray-800 flex-1 text-center mx-2">
+          <h2 className="text-xl font-semibold text-foreground flex-1 text-center mx-2">
             {formatCST1Date(displayDate)} - {getAppointmentCount()} citas
           </h2>
           <div className="flex gap-2">
             {displayDate !== getTodayInUserTimezone() && (
               <button
                 onClick={goToToday}
-                className="px-3 py-1 bg-blue-200 text-blue-800 rounded-lg shadow hover:bg-blue-300 transition duration-300 text-sm"
+                className="px-3 py-1 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 transition duration-300 text-sm"
               >
                 Hoy
               </button>
             )}
             <button
               onClick={handleNextDay}
-              className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition duration-300 text-sm"
+              className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
             >
               Día Siguiente →
             </button>
@@ -393,14 +393,14 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
               <div 
                 key={slot} 
                 className={cn(
-                  "flex items-center border-b border-gray-100 last:border-b-0 relative",
+                  "flex items-center border-b border-border last:border-b-0 relative",
                   "h-[80px]" // Bigger container height for all slots to end at same pixel
                 )}
               >
 
                 
                 {/* Time label */}
-                <div className="w-20 text-right pr-4 text-sm text-gray-500 font-medium z-10 relative">
+                <div className="w-20 text-right pr-4 text-sm text-muted-foreground font-medium z-10 relative">
                   {new Date(`2000-01-01T${slot}`).toLocaleTimeString('es-ES', { 
                     hour: '2-digit', 
                     minute: '2-digit', 
@@ -425,10 +425,10 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                               {appointment.type === 'grooming' ? '🐾' : '🩺'}
                             </span>
                             <div>
-                              <p className="font-semibold text-sm">
+                              <p className="font-semibold text-sm text-card-foreground">
                                 Cliente - {appointment.type}
                               </p>
-                              <p className="text-xs text-gray-600">
+                              <p className="text-xs text-muted-foreground">
                                 Mascota #{appointment.petId}
                                 {isOngoing(appointment) && <span className="ml-2 text-red-600 font-bold">🔴 EN CURSO</span>}
                               </p>
@@ -436,9 +436,9 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                           </div>
                           <span className={cn(
                             "px-2 py-1 rounded-full text-xs font-medium",
-                            appointment.status === 'confirmed' && "bg-green-100 text-green-800",
-                            appointment.status === 'pending' && "bg-yellow-100 text-yellow-800",
-                            appointment.status === 'scheduled' && "bg-blue-100 text-blue-800"
+                            appointment.status === 'confirmed' && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+                            appointment.status === 'pending' && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+                            appointment.status === 'scheduled' && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
                           )}>
                             {appointment.status || 'Programada'}
                           </span>
@@ -448,7 +448,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                   ) : (
                     <button
                       onClick={() => handleSlotClick(slot)}
-                      className="text-gray-400 text-sm italic hover:text-blue-600 hover:bg-blue-50 p-2 rounded transition-colors w-full text-left"
+                      className="text-muted-foreground text-sm italic hover:text-primary hover:bg-muted/50 p-2 rounded transition-colors w-full text-left"
                       data-testid={`button-book-slot-${slot.replace(':', '-')}`}
                     >
                       Libre - Click para reservar
