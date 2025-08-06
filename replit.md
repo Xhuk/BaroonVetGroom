@@ -75,7 +75,7 @@ The system is built on a modern stack emphasizing speed, scalability, and mainta
 - **Reusable DebugBanner Component**: Created standalone component for consistent debug mode UI across all pages
 - **Automatic Spacing Management**: DebugBanner includes built-in spacer to prevent content overlap
 - **Global Implementation**: Integrated DebugBanner at app level for universal debug mode support
-- **Prominent Exit Button**: Always-visible red exit button positioned at top-right for easy debug mode exit
+- **Integrated Exit Button**: Moved exit button inside debug ribbon next to "Cambiar Tenant" for better UX
 - **UI Overlap Resolution**: Eliminated all debug mode overlap issues across Dashboard, Header, and FastCalendar
 - **Clean Architecture**: Removed debug-specific spacing logic from individual components
 

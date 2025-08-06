@@ -41,18 +41,16 @@ export function DebugBanner() {
             <Settings className="w-3 h-3 mr-1" />
             Cambiar Tenant
           </Button>
+          <Button 
+            onClick={exitDebugMode}
+            size="sm"
+            className="bg-red-600 hover:bg-red-700 text-white border-2 border-red-800"
+          >
+            <X className="w-4 h-4 mr-1" />
+            Salir Debug
+          </Button>
         </div>
       </div>
-      
-      {/* Debug Exit Button - Always visible and prominent */}
-      <Button 
-        onClick={exitDebugMode}
-        size="sm"
-        className="fixed top-20 right-6 z-50 bg-red-600 hover:bg-red-700 text-white shadow-lg border-2 border-red-800"
-      >
-        <X className="w-4 h-4 mr-1" />
-        Salir Debug
-      </Button>
       
       {/* Debug Mode Spacer - Pushes content down */}
       <div className="h-16" />
