@@ -4485,6 +4485,127 @@ This password expires in 24 hours.
     }
   });
 
+  // Deployment Configuration Management API Endpoints
+  app.get("/api/superadmin/deployment-config", isSuperAdmin, async (req, res) => {
+    try {
+      // For now, return development tier configuration
+      // In production, this would read from environment variables or database
+      const deploymentTier = process.env.DEPLOYMENT_TIER || 'development';
+      const { FeatureManager, DEPLOYMENT_CONFIGS } = await import('../shared/deploymentFeatures');
+      
+      const featureManager = new FeatureManager(deploymentTier as any);
+      const config = featureManager.getCurrentTierInfo();
+      
+      res.json({
+        success: true,
+        config,
+        availableFeatures: featureManager.getAvailableFeatures(),
+        betaFeatures: featureManager.getBetaFeatures(),
+        featuresRequiringConfig: featureManager.getFeaturesRequiringConfiguration()
+      });
+    } catch (error) {
+      console.error("Error fetching deployment config:", error);
+      res.status(500).json({ error: "Failed to fetch deployment configuration" });
+    }
+  });
+
+  app.patch("/api/superadmin/deployment-tier", isSuperAdmin, async (req, res) => {
+    try {
+      const { tier } = req.body;
+      
+      if (!['basic', 'professional', 'enterprise', 'development'].includes(tier)) {
+        return res.status(400).json({ error: "Invalid deployment tier" });
+      }
+
+      // In a real implementation, this would update environment variables
+      // or a configuration database. For now, we'll simulate the change
+      const { FeatureManager } = await import('../shared/deploymentFeatures');
+      const featureManager = new FeatureManager(tier);
+      const config = featureManager.getCurrentTierInfo();
+      
+      res.json({
+        success: true,
+        message: `Deployment tier updated to ${tier}`,
+        config,
+        availableFeatures: featureManager.getAvailableFeatures()
+      });
+    } catch (error) {
+      console.error("Error updating deployment tier:", error);
+      res.status(500).json({ error: "Failed to update deployment tier" });
+    }
+  });
+
+  app.get("/api/superadmin/feature-availability/:featureId", isSuperAdmin, async (req, res) => {
+    try {
+      const { featureId } = req.params;
+      const deploymentTier = process.env.DEPLOYMENT_TIER || 'development';
+      
+      const { FeatureManager } = await import('../shared/deploymentFeatures');
+      const featureManager = new FeatureManager(deploymentTier as any);
+      
+      const isEnabled = featureManager.isFeatureEnabled(featureId);
+      const features = featureManager.getAvailableFeatures();
+      const feature = features.find(f => f.id === featureId);
+      
+      res.json({
+        success: true,
+        featureId,
+        enabled: isEnabled,
+        feature: feature || null,
+        currentTier: deploymentTier
+      });
+    } catch (error) {
+      console.error("Error checking feature availability:", error);
+      res.status(500).json({ error: "Failed to check feature availability" });
+    }
+  });
+
+  app.get("/api/superadmin/deployment-insights", isSuperAdmin, async (req, res) => {
+    try {
+      const deploymentTier = process.env.DEPLOYMENT_TIER || 'development';
+      const { FeatureManager } = await import('../shared/deploymentFeatures');
+      const featureManager = new FeatureManager(deploymentTier as any);
+      
+      const config = featureManager.getCurrentTierInfo();
+      const recommendations = featureManager.getUpgradeRecommendations();
+      
+      // Get deployment statistics
+      const stats = await storage.getSuperAdminDashboardStats();
+      
+      const insights = {
+        currentTier: deploymentTier,
+        version: config.version,
+        totalFeatures: config.features.length,
+        enabledFeatures: config.features.filter(f => f.enabled).length,
+        betaFeatures: config.features.filter(f => f.betaFeature).length,
+        resourceUsage: {
+          tenants: stats.overview.totalCompanies,
+          maxTenants: config.maxTenants === -1 ? 'Unlimited' : config.maxTenants,
+          utilizationPercentage: config.maxTenants === -1 ? 0 : 
+            Math.round((stats.overview.totalCompanies / config.maxTenants) * 100)
+        },
+        recommendations,
+        featuresByCategory: {}
+      };
+
+      // Group features by category
+      config.features.forEach(feature => {
+        if (!insights.featuresByCategory[feature.category]) {
+          insights.featuresByCategory[feature.category] = [];
+        }
+        insights.featuresByCategory[feature.category].push(feature);
+      });
+      
+      res.json({
+        success: true,
+        insights
+      });
+    } catch (error) {
+      console.error("Error fetching deployment insights:", error);
+      res.status(500).json({ error: "Failed to fetch deployment insights" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -440,6 +440,13 @@ export default function SuperAdmin() {
                     <span className="text-sm font-medium text-emerald-700">Billing</span>
                   </Button>
                 </Link>
+
+                <Link href="/superadmin/deployment" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-indigo-50 hover:bg-indigo-100 border-indigo-300">
+                    <Settings className="w-5 h-5 text-indigo-600" />
+                    <span className="text-sm font-medium text-indigo-700">Features</span>
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -451,9 +458,9 @@ export default function SuperAdmin() {
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <CreditCard className="h-5 w-5 text-blue-600" />
-                    <span>Billing Overview - {billingData.billing.currentMonth}</span>
+                    <span>Billing Overview - {billingData.billing?.currentMonth || 'Current Month'}</span>
                   </div>
-                  {billingData.billing.alerts.isNear75 && (
+                  {billingData.billing?.alerts?.isNear75 && (
                     <AlertTriangle className="h-5 w-5 text-amber-500" />
                   )}
                 </CardTitle>
@@ -461,40 +468,40 @@ export default function SuperAdmin() {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div className="text-center p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="text-2xl font-bold text-green-700">${billingData.billing.totalSpent.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-green-700">${billingData.billing?.totalSpent?.toFixed(2) || '0.00'}</div>
                     <div className="text-sm text-green-600">Total Spent</div>
                   </div>
                   <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-700">${billingData.billing.remainingBudget.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-blue-700">${billingData.billing?.remainingBudget?.toFixed(2) || '0.00'}</div>
                     <div className="text-sm text-blue-600">Budget Left</div>
                   </div>
                   <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-700">{billingData.billing.usagePercentage.toFixed(1)}%</div>
+                    <div className="text-2xl font-bold text-purple-700">{billingData.billing?.usagePercentage?.toFixed(1) || '0.0'}%</div>
                     <div className="text-sm text-purple-600">Usage</div>
                   </div>
                   <div className="text-center p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <div className="text-2xl font-bold text-amber-700">${billingData.billing.projectedMonthEnd.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-amber-700">${billingData.billing?.projectedMonthEnd?.toFixed(2) || '0.00'}</div>
                     <div className="text-sm text-amber-600">Projected</div>
                   </div>
                 </div>
                 
-                {billingData.billing.alerts.isNear75 && (
+                {billingData.billing?.alerts?.isNear75 && (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
                       <span className="text-sm font-medium text-amber-800">
-                        Warning: You've used {billingData.billing.usagePercentage.toFixed(1)}% of your monthly budget
+                        Warning: You've used {billingData.billing?.usagePercentage?.toFixed(1) || '0.0'}% of your monthly budget
                       </span>
                     </div>
                   </div>
                 )}
                 
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-                  <div>Deployments: ${billingData.billing.services.deployments}</div>
-                  <div>Database: ${billingData.billing.services.database}</div>
-                  <div>Storage: ${billingData.billing.services.storage}</div>
-                  <div>AI: ${billingData.billing.services.ai}</div>
-                  <div>Other: ${billingData.billing.services.other}</div>
+                  <div>Deployments: ${billingData.billing?.services?.deployments || '0.00'}</div>
+                  <div>Database: ${billingData.billing?.services?.database || '0.00'}</div>
+                  <div>Storage: ${billingData.billing?.services?.storage || '0.00'}</div>
+                  <div>AI: ${billingData.billing?.services?.ai || '0.00'}</div>
+                  <div>Other: ${billingData.billing?.services?.other || '0.00'}</div>
                 </div>
               </CardContent>
             </Card>

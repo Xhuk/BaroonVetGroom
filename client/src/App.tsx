@@ -36,6 +36,7 @@ import AdminPaymentGateways from "@/pages/AdminPaymentGateways";
 import AdminFollowUpConfig from "@/pages/AdminFollowUpConfig";
 import AdminExternalServices from "@/pages/AdminExternalServices";
 import BillingManagement from "@/pages/BillingManagement";
+import { VersionedSuperAdminDashboard } from "@/components/VersionedSuperAdminDashboard";
 
 import WebhookIntegrations from "@/pages/WebhookIntegrations";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
@@ -88,6 +89,7 @@ function Router() {
           <Route path="/superadmin/rbac" component={SuperAdminRBAC} />
           <Route path="/superadmin/webhook-integrations" component={WebhookIntegrations} />
           <Route path="/superadmin/billing" component={BillingManagement} />
+          <Route path="/superadmin/deployment" component={() => <VersionedSuperAdminDashboard />} />
         </>
       )}
       <Route path="/temp/:token" component={TempLinkHandler} />
