@@ -21,8 +21,25 @@ import {
   Heart,
   Webhook,
   Clock,
-  Loader2
+  Loader2,
+  UserPlus,
+  Smartphone,
+  Copy
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +51,18 @@ export default function SuperAdmin() {
   const [showNewCompanyDialog, setShowNewCompanyDialog] = useState(false);
   const [demoDays, setDemoDays] = useState(45);
   const [groomingDays, setGroomingDays] = useState(1);
+  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
+  const [onboardingForm, setOnboardingForm] = useState({
+    companyName: '',
+    adminEmail: '',
+    adminFirstName: '',
+    adminLastName: '',
+    planId: '',
+    trialDays: 14,
+    maxTenants: 1,
+    maxStaff: 5
+  });
+  const [sharedCredentials, setSharedCredentials] = useState<any>(null);
 
   // Demo data seeding mutation
   const seedDemoDataMutation = useMutation({
@@ -110,11 +139,93 @@ export default function SuperAdmin() {
     enabled: isAuthenticated,
   });
 
-  const overview = dashboardStats?.overview || {};
-  const companies = dashboardStats?.companies || [];
-  const growth = dashboardStats?.growth || {};
-  const health = dashboardStats?.health || {};
-  const resources = dashboardStats?.resources || {};
+  // Fetch subscription plans for mobile onboarding
+  const { data: subscriptionPlans = [] } = useQuery({
+    queryKey: ['/api/mobile/subscription-plans'],
+    enabled: isAuthenticated,
+  });
+
+  // Mobile client onboarding mutation
+  const onboardClientMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch('/api/mobile/onboard-client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setSharedCredentials(data);
+      toast({
+        title: "Client Onboarded Successfully! 🎉",
+        description: `${data.company.name} has been set up with a ${data.subscription.trialDaysRemaining}-day trial.`,
+      });
+      setOnboardingForm({
+        companyName: '',
+        adminEmail: '',
+        adminFirstName: '',
+        adminLastName: '',
+        planId: '',
+        trialDays: 14,
+        maxTenants: 1,
+        maxStaff: 5
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Onboarding Failed",
+        description: error?.message || "Failed to onboard client. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Share credentials mutation for mobile
+  const shareCredentialsMutation = useMutation({
+    mutationFn: async (data: { companyId: string; adminEmail: string; method: string }) => {
+      const response = await fetch('/api/mobile/share-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      navigator.clipboard.writeText(data.shareableText);
+      toast({
+        title: "Credentials Copied! 📋",
+        description: "Initial login credentials have been copied to clipboard for sharing.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Share Failed",
+        description: error?.message || "Failed to prepare credentials for sharing.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const overview = dashboardStats?.overview || { totalCompanies: 0, totalUsers: 0, totalTenants: 0, totalRevenue: 0 };
+  const companies = dashboardStats?.companies || { recent: [], topByRevenue: [] };
+  const growth = dashboardStats?.growth || { newCompanies: 0, newUsers: 0, revenueGrowth: 0 };
+  const health = dashboardStats?.health || { totalRecords: 0, avgResponseTime: 0, errorRate: 0 };
+  const resources = dashboardStats?.resources || { cpuUsagePercent: 0, memoryUsagePercent: 0, diskUsagePercent: 0 };
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -147,23 +258,32 @@ export default function SuperAdmin() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="p-6">
+      <main className="p-2 sm:p-4 lg:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Super-Admin Dashboard</h1>
-            <p className="text-gray-600">Gestión a nivel de plataforma: empresas, infraestructura y configuraciones globales</p>
+          <div className="mb-4 sm:mb-6 lg:mb-8">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Super-Admin Dashboard</h1>
+            <p className="text-sm sm:text-base text-gray-600">Gestión a nivel de plataforma: empresas, infraestructura y configuraciones globales</p>
           </div>
 
           {/* Quick Access Ribbon */}
-          <Card className="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-gray-900">Acciones Rápidas</CardTitle>
+          <Card className="mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg text-gray-900">Acciones Rápidas</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
-                <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
-                  <Database className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-medium">Backup BD</span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
+                <Button variant="outline" className="h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white">
+                  <Database className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                  <span className="text-xs sm:text-sm font-medium text-center">Backup BD</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                  onClick={() => setShowOnboardingDialog(true)}
+                >
+                  <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                  <span className="text-xs sm:text-sm font-medium text-center">Onboard Client</span>
                 </Button>
                 
                 <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
@@ -213,7 +333,7 @@ export default function SuperAdmin() {
           </Card>
 
           {/* Platform Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Empresas</CardTitle>
@@ -292,7 +412,7 @@ export default function SuperAdmin() {
           </div>
 
           {/* Management Sections */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Company Management */}
             <Card>
               <CardHeader>
@@ -424,7 +544,7 @@ export default function SuperAdmin() {
           </div>
 
           {/* Platform Analytics */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-4 sm:mt-6 lg:mt-8">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Crecimiento Mensual</CardTitle>
@@ -737,6 +857,196 @@ export default function SuperAdmin() {
         open={showNewCompanyDialog} 
         onOpenChange={setShowNewCompanyDialog} 
       />
+
+      {/* Mobile Client Onboarding Dialog */}
+      <Dialog open={showOnboardingDialog} onOpenChange={setShowOnboardingDialog}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-green-600" />
+              Mobile Client Onboarding
+            </DialogTitle>
+            <DialogDescription>
+              Set up a new client with trial subscription and generate initial credentials for sharing.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>First Name</Label>
+                <Input
+                  value={onboardingForm.adminFirstName}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, adminFirstName: e.target.value }))}
+                  placeholder="John"
+                />
+              </div>
+              <div>
+                <Label>Last Name</Label>
+                <Input
+                  value={onboardingForm.adminLastName}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, adminLastName: e.target.value }))}
+                  placeholder="Smith"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label>Company Name</Label>
+              <Input
+                value={onboardingForm.companyName}
+                onChange={(e) => setOnboardingForm(prev => ({ ...prev, companyName: e.target.value }))}
+                placeholder="Pet Clinic Name"
+              />
+            </div>
+            
+            <div>
+              <Label>Admin Email</Label>
+              <Input
+                type="email"
+                value={onboardingForm.adminEmail}
+                onChange={(e) => setOnboardingForm(prev => ({ ...prev, adminEmail: e.target.value }))}
+                placeholder="admin@petclinic.com"
+              />
+            </div>
+            
+            <div>
+              <Label>Subscription Plan</Label>
+              <Select
+                value={onboardingForm.planId}
+                onValueChange={(value) => setOnboardingForm(prev => ({ ...prev, planId: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subscriptionPlans.map((plan: any) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.displayName} - ${plan.monthlyPrice}/month ({plan.maxTenants} tenants)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label>Trial Days</Label>
+                <Input
+                  type="number"
+                  value={onboardingForm.trialDays}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, trialDays: parseInt(e.target.value) }))}
+                  min="1"
+                  max="90"
+                />
+              </div>
+              <div>
+                <Label>Max Tenants</Label>
+                <Input
+                  type="number"
+                  value={onboardingForm.maxTenants}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, maxTenants: parseInt(e.target.value) }))}
+                  min="1"
+                  max="50"
+                />
+              </div>
+              <div>
+                <Label>Max Staff</Label>
+                <Input
+                  type="number"
+                  value={onboardingForm.maxStaff}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, maxStaff: parseInt(e.target.value) }))}
+                  min="1"
+                  max="100"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowOnboardingDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => onboardClientMutation.mutate(onboardingForm)}
+                disabled={onboardClientMutation.isPending || !onboardingForm.companyName || !onboardingForm.adminEmail || !onboardingForm.planId}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                {onboardClientMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Onboard Client
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credentials Sharing Dialog */}
+      {sharedCredentials && (
+        <Dialog open={!!sharedCredentials} onOpenChange={() => setSharedCredentials(null)}>
+          <DialogContent className="max-w-md mx-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Copy className="w-5 h-5 text-blue-600" />
+                Client Credentials Ready
+              </DialogTitle>
+              <DialogDescription>
+                Share these credentials with your new client to get them started.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h4 className="font-medium text-green-800 mb-2">Success!</h4>
+                <p className="text-sm text-green-700">
+                  {sharedCredentials.company.name} has been set up with a {sharedCredentials.subscription.trialDaysRemaining}-day trial.
+                </p>
+              </div>
+              
+              <div className="p-3 bg-gray-50 border rounded-lg text-sm font-mono">
+                <div><strong>Company:</strong> {sharedCredentials.company.name}</div>
+                <div><strong>Email:</strong> {sharedCredentials.admin.email}</div>
+                <div><strong>Password:</strong> {sharedCredentials.admin.tempPassword}</div>
+                <div><strong>Login:</strong> {sharedCredentials.admin.loginUrl}</div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => 
+                    shareCredentialsMutation.mutate({
+                      companyId: sharedCredentials.company.id,
+                      adminEmail: sharedCredentials.admin.email,
+                      method: 'copy'
+                    })
+                  }
+                  className="flex-1"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy for Sharing
+                </Button>
+                <Button
+                  onClick={() => setSharedCredentials(null)}
+                  className="flex-1"
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

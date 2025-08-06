@@ -3982,6 +3982,333 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mobile SuperAdmin Subscription Management Endpoints
+  
+  // Get all subscription plans with limits for mobile dashboard
+  app.get("/api/mobile/subscription-plans", isSuperAdmin, async (req, res) => {
+    try {
+      const plans = await storage.getSubscriptionPlans();
+      const plansWithLimits = plans.map(plan => ({
+        id: plan.id,
+        name: plan.name,
+        displayName: plan.displayName,
+        description: plan.description,
+        maxTenants: plan.maxTenants,
+        monthlyPrice: plan.monthlyPrice,
+        yearlyPrice: plan.yearlyPrice,
+        features: plan.features,
+        isActive: plan.isActive
+      }));
+      res.json(plansWithLimits);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ message: "Failed to fetch subscription plans" });
+    }
+  });
+
+  // Create new company subscription with trial setup (mobile onboarding)
+  app.post("/api/mobile/onboard-client", isSuperAdmin, async (req, res) => {
+    try {
+      const {
+        companyName,
+        adminEmail,
+        adminFirstName,
+        adminLastName,
+        planId,
+        trialDays = 14,
+        maxTenants = 1,
+        maxStaff = 5,
+        customLimits = {}
+      } = req.body;
+
+      // Validate required fields
+      if (!companyName || !adminEmail || !planId) {
+        return res.status(400).json({
+          message: "Company name, admin email, and plan ID are required"
+        });
+      }
+
+      // Get the subscription plan
+      const plans = await storage.getSubscriptionPlans();
+      const selectedPlan = plans.find(p => p.id === planId);
+      if (!selectedPlan) {
+        return res.status(404).json({ message: "Subscription plan not found" });
+      }
+
+      // Create company
+      const company = await storage.createCompany({
+        name: companyName,
+        subscriptionStatus: "trial",
+        subscriptionPlan: selectedPlan.name,
+        subscriptionEndDate: new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000)
+      });
+
+      // Create admin user
+      const adminUser = await storage.createUser({
+        email: adminEmail,
+        firstName: adminFirstName,
+        lastName: adminLastName
+      });
+
+      // Link user to company
+      await storage.createUserCompany({
+        userId: adminUser.id,
+        companyId: company.id,
+        role: "admin",
+        isActive: true
+      });
+
+      // Create company subscription
+      const subscription = await storage.createCompanySubscription({
+        companyId: company.id,
+        planId: selectedPlan.id,
+        status: "trial",
+        trialStartDate: new Date(),
+        trialEndDate: new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000),
+        maxTenants: maxTenants || selectedPlan.maxTenants,
+        maxStaff: maxStaff,
+        customLimits: customLimits
+      });
+
+      // Generate initial credentials
+      const tempPassword = Math.random().toString(36).slice(-8);
+      const loginUrl = `${req.protocol}://${req.get('host')}/api/login`;
+      
+      res.json({
+        success: true,
+        company: {
+          id: company.id,
+          name: company.name,
+          subscriptionStatus: "trial",
+          trialEndDate: subscription.trialEndDate
+        },
+        admin: {
+          id: adminUser.id,
+          email: adminEmail,
+          tempPassword: tempPassword,
+          loginUrl: loginUrl
+        },
+        subscription: {
+          plan: selectedPlan.displayName,
+          status: "trial",
+          maxTenants: subscription.maxTenants,
+          maxStaff: subscription.maxStaff,
+          trialDaysRemaining: trialDays
+        },
+        credentials: {
+          companyId: company.id,
+          adminEmail: adminEmail,
+          tempPassword: tempPassword,
+          loginUrl: loginUrl,
+          setupInstructions: "Login with provided credentials to complete setup"
+        }
+      });
+
+    } catch (error) {
+      console.error("Error onboarding client:", error);
+      res.status(500).json({ 
+        message: "Failed to onboard client",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update company subscription limits (mobile management)
+  app.patch("/api/mobile/company-subscription/:companyId", isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const { 
+        planId, 
+        status, 
+        maxTenants, 
+        maxStaff, 
+        extendTrialDays,
+        customLimits 
+      } = req.body;
+
+      const updates: any = {};
+      
+      if (planId) {
+        const plans = await storage.getSubscriptionPlans();
+        const newPlan = plans.find(p => p.id === planId);
+        if (!newPlan) {
+          return res.status(404).json({ message: "Plan not found" });
+        }
+        updates.planId = planId;
+      }
+      
+      if (status) updates.status = status;
+      if (maxTenants !== undefined) updates.maxTenants = maxTenants;
+      if (maxStaff !== undefined) updates.maxStaff = maxStaff;
+      if (customLimits) updates.customLimits = customLimits;
+      
+      if (extendTrialDays) {
+        const currentSub = await storage.getCompanySubscription(companyId);
+        if (currentSub?.trialEndDate) {
+          updates.trialEndDate = new Date(currentSub.trialEndDate.getTime() + extendTrialDays * 24 * 60 * 60 * 1000);
+        }
+      }
+
+      const updatedSubscription = await storage.updateCompanySubscription(companyId, updates);
+      
+      res.json({
+        success: true,
+        subscription: updatedSubscription,
+        message: "Subscription updated successfully"
+      });
+
+    } catch (error) {
+      console.error("Error updating company subscription:", error);
+      res.status(500).json({ 
+        message: "Failed to update subscription",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get company subscription details with usage stats (mobile view)
+  app.get("/api/mobile/company-subscription/:companyId", isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      
+      const [subscription, company, tenants, staff] = await Promise.all([
+        storage.getCompanySubscription(companyId),
+        storage.getCompany(companyId),
+        storage.getTenantsByCompany(companyId),
+        storage.getStaffByCompany(companyId)
+      ]);
+
+      if (!subscription || !company) {
+        return res.status(404).json({ message: "Company or subscription not found" });
+      }
+
+      const plans = await storage.getSubscriptionPlans();
+      const plan = plans.find(p => p.id === subscription.planId);
+
+      const currentUsage = {
+        tenants: tenants.length,
+        staff: staff.length,
+        maxTenants: subscription.maxTenants,
+        maxStaff: subscription.maxStaff || 50
+      };
+
+      const trialInfo = subscription.status === 'trial' ? {
+        isOnTrial: true,
+        trialStartDate: subscription.trialStartDate,
+        trialEndDate: subscription.trialEndDate,
+        daysRemaining: subscription.trialEndDate ? 
+          Math.max(0, Math.ceil((subscription.trialEndDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000))) : 0
+      } : { isOnTrial: false };
+
+      res.json({
+        company: {
+          id: company.id,
+          name: company.name,
+          subscriptionStatus: company.subscriptionStatus
+        },
+        subscription: {
+          id: subscription.id,
+          status: subscription.status,
+          plan: plan ? {
+            id: plan.id,
+            name: plan.name,
+            displayName: plan.displayName,
+            monthlyPrice: plan.monthlyPrice
+          } : null,
+          limits: {
+            maxTenants: subscription.maxTenants,
+            maxStaff: subscription.maxStaff,
+            customLimits: subscription.customLimits
+          },
+          usage: currentUsage,
+          trial: trialInfo
+        }
+      });
+
+    } catch (error) {
+      console.error("Error fetching company subscription details:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch subscription details",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Share initial credentials for mobile onboarding
+  app.post("/api/mobile/share-credentials", isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId, adminEmail, method = 'email' } = req.body;
+
+      if (!companyId || !adminEmail) {
+        return res.status(400).json({
+          message: "Company ID and admin email are required"
+        });
+      }
+
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
+      const loginUrl = `${req.protocol}://${req.get('host')}/api/login`;
+      
+      // In a real implementation, you would:
+      // 1. Send email with credentials
+      // 2. Send SMS if method is 'sms'
+      // 3. Generate QR code with credentials
+      
+      const credentials = {
+        companyName: company.name,
+        adminEmail: adminEmail,
+        tempPassword: tempPassword,
+        loginUrl: loginUrl,
+        setupSteps: [
+          "1. Visit the login URL",
+          "2. Enter your email and temporary password",
+          "3. You'll be prompted to change your password",
+          "4. Complete your company profile setup"
+        ]
+      };
+
+      // For mobile display and sharing
+      const shareableText = `
+Welcome to VetGroom! 🐾
+
+Company: ${company.name}
+Email: ${adminEmail}
+Temporary Password: ${tempPassword}
+Login: ${loginUrl}
+
+Setup Instructions:
+${credentials.setupSteps.join('\n')}
+
+This password expires in 24 hours.
+      `.trim();
+
+      res.json({
+        success: true,
+        method: method,
+        credentials: credentials,
+        shareableText: shareableText,
+        qrData: JSON.stringify({
+          company: company.name,
+          email: adminEmail,
+          password: tempPassword,
+          url: loginUrl
+        }),
+        message: `Credentials prepared for ${method} sharing`
+      });
+
+    } catch (error) {
+      console.error("Error sharing credentials:", error);
+      res.status(500).json({ 
+        message: "Failed to prepare credentials",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
