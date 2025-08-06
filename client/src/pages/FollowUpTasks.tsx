@@ -221,7 +221,7 @@ export default function FollowUpTasks() {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="px-3 py-2 border border-input bg-background dark:bg-gray-800 text-foreground dark:text-gray-100 rounded-md text-sm dark:border-gray-600"
               data-testid="select-priority-filter"
             >
               <option value="all">Todas las prioridades</option>
@@ -233,7 +233,7 @@ export default function FollowUpTasks() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="px-3 py-2 border border-input bg-background dark:bg-gray-800 text-foreground dark:text-gray-100 rounded-md text-sm dark:border-gray-600"
               data-testid="select-status-filter"
             >
               <option value="pending">Pendientes</option>

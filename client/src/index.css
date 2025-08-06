@@ -32,23 +32,61 @@
   border-color: rgb(75 85 99) !important; /* gray-600 */
 }
 
-/* Ultra-aggressive textarea dark mode override */
+/* Ultra-aggressive textarea and input dark mode override */
 .dark textarea,
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark input[type="search"],
+.dark select,
 .dark .lucide-textarea,
 html.dark textarea,
+html.dark input,
+html.dark select,
 .dark textarea:focus,
 .dark textarea:hover,
+.dark input:focus,
+.dark input:hover,
+.dark select:focus,
+.dark select:hover,
 textarea.dark,
-[data-theme="dark"] textarea {
+input.dark,
+select.dark,
+[data-theme="dark"] textarea,
+[data-theme="dark"] input,
+[data-theme="dark"] select {
   background-color: rgb(31 41 55) !important; /* gray-800 */
   color: rgb(243 244 246) !important; /* gray-100 */
   border-color: rgb(75 85 99) !important; /* gray-600 */
 }
 
 /* Override any possible conflicting styles */
-.dark textarea[style] {
+.dark textarea[style],
+.dark input[style],
+.dark select[style] {
   background-color: rgb(31 41 55) !important; /* gray-800 */
   color: rgb(243 244 246) !important; /* gray-100 */
+}
+
+/* Force dark mode for option elements */
+.dark option,
+.dark select option,
+html.dark option,
+html.dark select option {
+  background-color: rgb(31 41 55) !important; /* gray-800 */
+  color: rgb(243 244 246) !important; /* gray-100 */
+}
+
+/* Additional dark mode styling for labels */
+.dark label {
+  color: rgb(243 244 246) !important; /* gray-100 */
+}
+
+/* Global dark mode text override */
+.dark .text-gray-700 {
+  color: rgb(156 163 175) !important; /* gray-400 */
 }
 
 /* Custom animation for time container glow effect behind all elements */

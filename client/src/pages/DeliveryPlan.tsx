@@ -183,11 +183,11 @@ export default function DeliveryPlan() {
         <div className="flex gap-3 items-center">
           <DebugControls />
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Fecha:</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha:</label>
             <select
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+              className="px-3 py-2 border border-input bg-background dark:bg-gray-800 text-foreground dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48 dark:border-gray-600"
               data-testid="select-delivery-date"
             >
               <option value="2025-08-25">25 Ago 2025 (Con datos)</option>
