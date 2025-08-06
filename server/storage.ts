@@ -45,6 +45,8 @@ import {
   pendingInvoices,
   invoiceLineItems,
   deliveryConfig,
+  inventoryItems,
+  inventoryTransactions,
   type User,
   type UpsertUser,
   type Company,
@@ -126,6 +128,10 @@ import {
   type InsertInvoiceLineItem,
   type DeliveryConfig,
   type InsertDeliveryConfig,
+  type InventoryItem,
+  type InsertInventoryItem,
+  type InventoryTransaction,
+  type InsertInventoryTransaction,
   webhookIntegrations,
   type WebhookIntegration,
   type InsertWebhookIntegration,
@@ -160,6 +166,13 @@ export interface IStorage {
   getVan(vanId: string): Promise<Van | undefined>;
   getVansByTenant(tenantId: string): Promise<Van[]>;
   createTenant(tenant: InsertTenant): Promise<Tenant>;
+  
+  // Inventory operations
+  getInventoryItems(tenantId: string): Promise<InventoryItem[]>;
+  getInventoryItemsByCategory(tenantId: string, category: string): Promise<InventoryItem[]>;
+  createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem>;
+  updateInventoryItem(itemId: string, updates: Partial<InsertInventoryItem>): Promise<InventoryItem>;
+  deleteInventoryItem(itemId: string): Promise<void>;
   
   // Room operations
   getRooms(tenantId: string): Promise<Room[]>;
@@ -1170,6 +1183,58 @@ export class DatabaseStorage implements IStorage {
   async getVansByTenant(tenantId: string): Promise<Van[]> {
     const vansData = await db.select().from(vans).where(eq(vans.tenantId, tenantId));
     return vansData;
+  }
+
+  // Inventory operations
+  async getInventoryItems(tenantId: string): Promise<InventoryItem[]> {
+    const items = await db
+      .select()
+      .from(inventoryItems)
+      .where(eq(inventoryItems.tenantId, tenantId))
+      .orderBy(inventoryItems.name);
+    return items;
+  }
+
+  async getInventoryItemsByCategory(tenantId: string, category: string): Promise<InventoryItem[]> {
+    const items = await db
+      .select()
+      .from(inventoryItems)
+      .where(and(
+        eq(inventoryItems.tenantId, tenantId),
+        eq(inventoryItems.category, category),
+        eq(inventoryItems.isActive, true)
+      ))
+      .orderBy(inventoryItems.name);
+    return items;
+  }
+
+  async createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem> {
+    const [newItem] = await db
+      .insert(inventoryItems)
+      .values({
+        ...item,
+        id: undefined, // Let DB generate ID
+      })
+      .returning();
+    return newItem;
+  }
+
+  async updateInventoryItem(itemId: string, updates: Partial<InsertInventoryItem>): Promise<InventoryItem> {
+    const [updatedItem] = await db
+      .update(inventoryItems)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(inventoryItems.id, itemId))
+      .returning();
+    return updatedItem;
+  }
+
+  async deleteInventoryItem(itemId: string): Promise<void> {
+    await db
+      .delete(inventoryItems)
+      .where(eq(inventoryItems.id, itemId));
   }
 
   // Route optimization caching
