@@ -97,6 +97,16 @@ The system is built on a modern stack emphasizing speed, scalability, and mainta
 - **Enhanced UI Integration**: Added "Optimizar VRP" button with real-time optimization feedback and route statistics
 - **API Endpoint**: New `/api/delivery-routes/optimize/:tenantId` endpoint for VRP-based route optimization
 
+### Flexible Delivery Scheduling System (August 6, 2025) - COMPLETED ✅
+- **Dual Delivery Modes**: Toggle between "Wave-based" (fixed 1PM-5PM slots) and "Free Selection" (any hour 8AM-8PM)
+- **Admin Configuration Support**: Built-in UI toggle for businesses to choose their preferred delivery scheduling approach
+- **Intelligent Fraccionamiento Suggestions**: Free mode displays top 6 neighborhoods sorted by weight priority for optimal routing
+- **Flexible Time Selection**: Custom hour picker allowing delivery scheduling at any time during business hours
+- **Smart Route Naming**: Automatic route naming based on delivery mode (Wave 1, Wave 2 vs Libre 14:00, Libre 16:30)
+- **Cross-Fraccionamiento Delivery**: Dogs can be assigned to any delivery wave regardless of their pickup neighborhood
+- **Priority Override System**: Manual mascot assignment to specific delivery times for business flexibility
+- **Enhanced User Experience**: Visual mode selection with color-coded delivery type indicators and dynamic form adaptation
+
 ## External Dependencies
 - **PostgreSQL:** Primary database for all application data.
 - **Express.js:** Web application framework for backend APIs.

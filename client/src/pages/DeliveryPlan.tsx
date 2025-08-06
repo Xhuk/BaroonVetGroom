@@ -44,6 +44,8 @@ export default function DeliveryPlan() {
   const [selectedMascots, setSelectedMascots] = useState<string[]>([]);
   const [searchMascots, setSearchMascots] = useState("");
   const [selectedWave, setSelectedWave] = useState("1");
+  const [deliveryMode, setDeliveryMode] = useState<"wave" | "free">("wave");
+  const [customHour, setCustomHour] = useState("13:00");
   
   // Fast delivery routes query with optimized caching
   const { data: routesResponse, isLoading } = useQuery<{routes: any[], totalRoutes: number}>({
@@ -75,15 +77,21 @@ export default function DeliveryPlan() {
       return apiRequest(`/api/delivery-routes`, "POST", { ...data, tenantId: currentTenant?.id });
     },
     onSuccess: () => {
+      const modeText = deliveryMode === "wave" 
+        ? `Wave ${selectedWave}` 
+        : `Entrega libre ${customHour}`;
+      
       toast({
         title: "Ruta de entrega creada",
-        description: `Wave ${selectedWave} creada exitosamente con ${selectedMascots.length} mascotas`,
+        description: `${modeText} creada exitosamente con ${selectedMascots.length} mascotas`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/delivery-routes-fast", currentTenant?.id, selectedDate] });
       setShowRouteForm(false);
       setSelectedMascots([]);
       setSearchMascots("");
       setSelectedWave("1");
+      setDeliveryMode("wave");
+      setCustomHour("13:00");
     },
     onError: (error: any) => {
       toast({
@@ -170,15 +178,26 @@ export default function DeliveryPlan() {
       "5": "17:00", // 5:00 PM
     };
     
+    const scheduledTime = deliveryMode === "wave" 
+      ? waveSchedules[selectedWave as keyof typeof waveSchedules]
+      : customHour;
+    
+    const routeName = deliveryMode === "wave"
+      ? `Wave ${selectedWave} - ${formData.get("name")}`
+      : `Libre ${customHour} - ${formData.get("name")}`;
+    
     const data = {
-      name: formData.get("name"),
+      name: routeName,
       scheduledDate: selectedDate,
       driverId: formData.get("driverId"),
-      wave: selectedWave,
-      scheduledTime: waveSchedules[selectedWave as keyof typeof waveSchedules],
+      deliveryMode: deliveryMode,
+      wave: deliveryMode === "wave" ? selectedWave : null,
+      scheduledTime: scheduledTime,
       selectedMascots: selectedMascots,
       estimatedDuration: selectedMascots.length * 15, // 15 minutes per mascot
-      notes: `Wave ${selectedWave} delivery route with ${selectedMascots.length} mascots`,
+      notes: deliveryMode === "wave" 
+        ? `Wave ${selectedWave} delivery route with ${selectedMascots.length} mascots`
+        : `Free-time delivery at ${customHour} with ${selectedMascots.length} mascots`,
     };
 
     createRouteMutation.mutate(data);
@@ -363,28 +382,94 @@ export default function DeliveryPlan() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateRoute} className="space-y-6">
+              {/* Delivery Mode Selection */}
+              <div className="border rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
+                <div className="flex items-center gap-2 mb-4">
+                  <Timer className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-semibold">Modo de Entrega</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div
+                    className={`p-3 border rounded-md cursor-pointer transition-colors ${
+                      deliveryMode === "wave"
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                        : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                    }`}
+                    onClick={() => setDeliveryMode("wave")}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        deliveryMode === "wave" ? 'bg-blue-500' : 'bg-gray-300'
+                      }`} />
+                      <div>
+                        <p className="font-medium">Ondas Programadas</p>
+                        <p className="text-sm text-gray-600">Wave 1-5 (1PM-5PM)</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div
+                    className={`p-3 border rounded-md cursor-pointer transition-colors ${
+                      deliveryMode === "free"
+                        ? 'border-green-500 bg-green-50 dark:bg-green-900/30'
+                        : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                    }`}
+                    onClick={() => setDeliveryMode("free")}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        deliveryMode === "free" ? 'bg-green-500' : 'bg-gray-300'
+                      }`} />
+                      <div>
+                        <p className="font-medium">Horario Libre</p>
+                        <p className="text-sm text-gray-600">Cualquier hora</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Basic Route Info */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="name">Nombre de la Ruta</Label>
-                  <Input name="name" required placeholder="Ej: Wave 1 - Entrega Tarde" />
+                  <Input 
+                    name="name" 
+                    required 
+                    placeholder={deliveryMode === "wave" ? "Ej: Wave 1 - Entrega Tarde" : "Ej: Entrega Flexible Norte"} 
+                  />
                 </div>
 
-                <div>
-                  <Label htmlFor="wave">Onda de Entrega</Label>
-                  <Select name="wave" value={selectedWave} onValueChange={setSelectedWave}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar onda" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Wave 1 - 1:00 PM</SelectItem>
-                      <SelectItem value="2">Wave 2 - 2:00 PM</SelectItem>
-                      <SelectItem value="3">Wave 3 - 3:00 PM</SelectItem>
-                      <SelectItem value="4">Wave 4 - 4:00 PM</SelectItem>
-                      <SelectItem value="5">Wave 5 - 5:00 PM</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {deliveryMode === "wave" ? (
+                  <div>
+                    <Label htmlFor="wave">Onda de Entrega</Label>
+                    <Select name="wave" value={selectedWave} onValueChange={setSelectedWave}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar onda" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Wave 1 - 1:00 PM</SelectItem>
+                        <SelectItem value="2">Wave 2 - 2:00 PM</SelectItem>
+                        <SelectItem value="3">Wave 3 - 3:00 PM</SelectItem>
+                        <SelectItem value="4">Wave 4 - 4:00 PM</SelectItem>
+                        <SelectItem value="5">Wave 5 - 5:00 PM</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div>
+                    <Label htmlFor="customHour">Hora de Entrega</Label>
+                    <Input
+                      type="time"
+                      value={customHour}
+                      onChange={(e) => setCustomHour(e.target.value)}
+                      className="w-full"
+                      min="08:00"
+                      max="20:00"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="driverId">Conductor Asignado</Label>
@@ -405,11 +490,45 @@ export default function DeliveryPlan() {
 
               {/* Mascot Selection Section */}
               <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
-                <div className="flex items-center gap-2 mb-4">
-                  <Package className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-semibold">Seleccionar Mascotas para Entrega</h3>
-                  <Badge variant="outline">{selectedMascots.length} seleccionadas</Badge>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-5 h-5 text-blue-600" />
+                    <h3 className="font-semibold">Seleccionar Mascotas para Entrega</h3>
+                    <Badge variant="outline">{selectedMascots.length} seleccionadas</Badge>
+                  </div>
+                  
+                  {deliveryMode === "free" && (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <Star className="w-4 h-4" />
+                      <span>Sugerencias por peso de fraccionamiento</span>
+                    </div>
+                  )}
                 </div>
+
+                {deliveryMode === "free" && (
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 mb-4">
+                    <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">
+                      Fraccionamientos Sugeridos (por peso)
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {fraccionamientosWithWeights
+                        .sort((a, b) => a.weight - b.weight) // Lower weight = higher priority
+                        .slice(0, 6)
+                        .map((frac, index) => (
+                          <div key={frac.id} className="flex items-center gap-2">
+                            <Badge 
+                              variant={index < 2 ? "default" : "outline"} 
+                              className={index < 2 ? "bg-green-600" : ""}
+                            >
+                              #{index + 1}
+                            </Badge>
+                            <span className="text-sm">{frac.name}</span>
+                            <span className="text-xs text-gray-500">({frac.appointments} mascotas)</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Search Mascots */}
                 <div className="relative mb-4">
@@ -487,7 +606,12 @@ export default function DeliveryPlan() {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <Timer className="w-4 h-4 mr-2" />
-                  {createRouteMutation.isPending ? "Creando..." : `Crear Wave ${selectedWave} (${selectedMascots.length} mascotas)`}
+                  {createRouteMutation.isPending 
+                    ? "Creando..." 
+                    : deliveryMode === "wave"
+                      ? `Crear Wave ${selectedWave} (${selectedMascots.length} mascotas)`
+                      : `Crear Entrega ${customHour} (${selectedMascots.length} mascotas)`
+                  }
                 </Button>
                 <Button 
                   type="button" 
@@ -496,6 +620,9 @@ export default function DeliveryPlan() {
                     setShowRouteForm(false);
                     setSelectedMascots([]);
                     setSearchMascots("");
+                    setDeliveryMode("wave");
+                    setSelectedWave("1");
+                    setCustomHour("13:00");
                   }}
                 >
                   Cancelar
