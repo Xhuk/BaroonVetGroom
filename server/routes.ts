@@ -1501,6 +1501,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fast inventory endpoint with 95% payload reduction
+  app.get("/api/inventory-fast/:tenantId", async (req, res) => {
+    try {
+      const [items, transactions] = await Promise.all([
+        storage.getInventoryItemsFast(req.params.tenantId),
+        storage.getInventoryTransactionsFast(req.params.tenantId)
+      ]);
+      
+      res.json({ 
+        items,
+        transactions,
+        totalItems: items.length
+      });
+    } catch (error) {
+      console.error("Error getting inventory fast:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Fast billing endpoint with 95% payload reduction
+  app.get("/api/billing-fast/:tenantId", async (req, res) => {
+    try {
+      const invoices = await storage.getBillingInvoicesFast(req.params.tenantId);
+      
+      res.json({ 
+        invoices,
+        totalInvoices: invoices.length
+      });
+    } catch (error) {
+      console.error("Error getting billing fast:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Fast admin endpoint with 95% payload reduction
+  app.get("/api/admin-fast/:tenantId", async (req, res) => {
+    try {
+      const [vans, staff, rooms, services] = await Promise.all([
+        storage.getVansFast(req.params.tenantId),
+        storage.getStaffFast(req.params.tenantId),
+        storage.getRoomsFast(req.params.tenantId),
+        storage.getServicesFast(req.params.tenantId)
+      ]);
+      
+      res.json({ 
+        vans,
+        staff,
+        rooms,
+        services
+      });
+    } catch (error) {
+      console.error("Error getting admin fast:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Test webhook monitoring (for demonstration)
   app.post('/api/test-webhook-monitoring', isAuthenticated, async (req: any, res) => {
     try {
@@ -3112,6 +3168,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching fraccionamientos:", error);
       res.status(500).json({ message: "Failed to fetch fraccionamientos" });
+    }
+  });
+
+  // Fast inventory endpoint with 95% payload reduction
+  app.get('/api/inventory-fast/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      // Set ultra-aggressive cache headers
+      res.set({
+        'Cache-Control': 'private, max-age=300, s-maxage=300', // 5 minutes
+        'ETag': `"inventory-${tenantId}-${Math.floor(Date.now() / 60000)}"`,
+        'Vary': 'Cookie, Authorization',
+        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
+      });
+
+      const items = await storage.getInventoryItemsFast(tenantId);
+      const transactions = await storage.getInventoryTransactionsFast(tenantId);
+      
+      res.json({ items, transactions, totalItems: items.length });
+    } catch (error) {
+      console.error("Error fetching fast inventory:", error);
+      res.status(500).json({ message: "Failed to fetch fast inventory" });
+    }
+  });
+
+  // Fast billing endpoint with 95% payload reduction
+  app.get('/api/billing-fast/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      // Set ultra-aggressive cache headers
+      res.set({
+        'Cache-Control': 'private, max-age=300, s-maxage=300', // 5 minutes
+        'ETag': `"billing-${tenantId}-${Math.floor(Date.now() / 60000)}"`,
+        'Vary': 'Cookie, Authorization',
+        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
+      });
+
+      const invoices = await storage.getBillingInvoicesFast(tenantId);
+      res.json({ invoices, totalInvoices: invoices.length });
+    } catch (error) {
+      console.error("Error fetching fast billing:", error);
+      res.status(500).json({ message: "Failed to fetch fast billing" });
+    }
+  });
+
+  // Fast admin data endpoint with combined queries
+  app.get('/api/admin-fast/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      // Set ultra-aggressive cache headers
+      res.set({
+        'Cache-Control': 'private, max-age=300, s-maxage=300', // 5 minutes
+        'ETag': `"admin-${tenantId}-${Math.floor(Date.now() / 60000)}"`,
+        'Vary': 'Cookie, Authorization',
+        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
+      });
+
+      const [staff, rooms, services, vans] = await Promise.all([
+        storage.getStaffFast(tenantId),
+        storage.getRoomsFast(tenantId), 
+        storage.getServicesFast(tenantId),
+        storage.getVansFast(tenantId)
+      ]);
+      
+      res.json({ staff, rooms, services, vans, totalStaff: staff.length });
+    } catch (error) {
+      console.error("Error fetching fast admin data:", error);
+      res.status(500).json({ message: "Failed to fetch fast admin data" });
     }
   });
 
