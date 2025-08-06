@@ -217,7 +217,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     
     if (hours < 6 || hours >= 22) return;
     
-    // Find current time slot in visible slots and scroll to it
+    // Find current time slot in visible slots and scroll to center it at 50%
     const currentSlotIndex = visibleTimeSlots.findIndex(slot => {
       const slotHour = parseInt(slot.split(':')[0]);
       const slotMinute = parseInt(slot.split(':')[1]);
@@ -225,16 +225,19 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     });
     
     if (currentSlotIndex !== -1) {
-      const slotHeight = 80; // Each slot is now 80px
+      const slotHeight = 80; // Each slot is 80px
       const containerHeight = scrollContainerRef.current.clientHeight;
-      const scrollPosition = (currentSlotIndex * slotHeight) - (containerHeight / 2) + (slotHeight / 2);
+      
+      // Position current slot at 50% (center) of container
+      const slotCenterPosition = (currentSlotIndex * slotHeight) + (slotHeight / 2);
+      const scrollPosition = slotCenterPosition - (containerHeight / 2);
       
       scrollContainerRef.current.scrollTo({
         top: Math.max(0, scrollPosition),
         behavior: 'smooth'
       });
       
-      console.log(`Auto-scrolled to current time slot at index ${currentSlotIndex}, position ${scrollPosition}px`);
+      console.log(`Auto-scrolled to center current time slot at index ${currentSlotIndex}, centered at 50% of container`);
     }
   };
 
@@ -294,7 +297,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const currentTimeInfo = getCurrentTimeSlotInfo();
   const isMarkerInOccupiedSlot = isTimeMarkerInOccupiedSlot();
   
-  // Calculate precise position of red line based on current time within the slot
+  // Calculate red line position - centered at 50% of slot container
   const calculateRedLinePosition = () => {
     if (!currentTimeInfo || displayDate !== getTodayInUserTimezone()) {
       console.log('Red line hidden: no currentTimeInfo or not today');
@@ -313,13 +316,9 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
       return { display: 'none' };
     }
     
-    // Calculate exact position within the slot (each slot is 80px high)
+    // Position red line at center (50%) of the current slot container
     const slotHeight = 80;
-    const slotStartTime = parseInt(visibleTimeSlots[currentSlotIndex].split(':')[1]);
-    const minutesIntoSlot = minutes - slotStartTime;
-    const positionWithinSlot = (minutesIntoSlot / 30) * slotHeight; // 30 minutes per slot
-    
-    const topPosition = (currentSlotIndex * slotHeight) + positionWithinSlot;
+    const topPosition = (currentSlotIndex * slotHeight) + (slotHeight / 2); // Center of slot
     
     return {
       position: 'absolute' as const,
@@ -375,26 +374,23 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
             style={{ maxHeight: 'calc(100vh - 200px)' }}
           >
             
-            {/* Current time indicator - subtle and elegant */}
+            {/* Current time indicator - centered at 50% of slot container */}
             {currentTimeInfo && displayDate === getTodayInUserTimezone() && (
               <div
                 className="absolute z-20 pointer-events-none left-0 right-0"
-                style={{ 
-                  ...redLineStyle,
-                  transform: 'translateY(-50%)',
-                }}
+                style={redLineStyle}
               >
-                {/* Subtle gradient line */}
+                {/* Prominent red line centered in slot */}
                 <div 
-                  className="w-full h-[1px] opacity-70"
+                  className="w-full h-[2px] opacity-90"
                   style={{
-                    background: 'linear-gradient(90deg, transparent 0%, rgba(239, 68, 68, 0.8) 20%, rgba(239, 68, 68, 0.9) 50%, rgba(239, 68, 68, 0.8) 80%, transparent 100%)',
-                    boxShadow: '0 0 3px rgba(239, 68, 68, 0.3)',
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(239, 68, 68, 0.9) 10%, rgba(239, 68, 68, 1) 50%, rgba(239, 68, 68, 0.9) 90%, transparent 100%)',
+                    boxShadow: '0 0 4px rgba(239, 68, 68, 0.5)',
                   }}
                 />
-                {/* Minimal time indicator dots */}
-                <div className="absolute top-1/2 left-3 transform -translate-y-1/2 w-1.5 h-1.5 bg-red-500/60 rounded-full"></div>
-                <div className="absolute top-1/2 right-3 transform -translate-y-1/2 w-1.5 h-1.5 bg-red-500/60 rounded-full"></div>
+                {/* Time indicator dots at center */}
+                <div className="absolute top-1/2 left-2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full shadow-sm"></div>
+                <div className="absolute top-1/2 right-2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full shadow-sm"></div>
               </div>
             )}
           
