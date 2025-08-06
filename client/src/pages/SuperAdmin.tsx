@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NewCompanyDialog } from "@/components/NewCompanyDialog";
 import { SuperAdminPetAgePanel } from "@/components/SuperAdminPetAgePanel";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Building, 
   Globe, 
@@ -18,7 +20,8 @@ import {
   Activity,
   Heart,
   Webhook,
-  Clock
+  Clock,
+  Loader2
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -27,6 +30,39 @@ export default function SuperAdmin() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const [showNewCompanyDialog, setShowNewCompanyDialog] = useState(false);
+
+  // Demo data seeding mutation
+  const seedDemoDataMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/seed-demo-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Demo Data Created Successfully",
+        description: data.message || "Demo data has been seeded successfully for deployment demonstrations.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Demo Data Seeding Failed",
+        description: error?.message || "Failed to seed demo data. Please check logs and try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -376,6 +412,67 @@ export default function SuperAdmin() {
                       <p className="text-sm font-medium text-blue-800">Nueva versión desplegada</p>
                       <p className="text-xs text-blue-600">Hace 6 horas</p>
                     </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Demo Data Seeding Panel */}
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Database className="h-5 w-5 text-green-600" />
+                    <span>Demo Data Seeder</span>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-900 mb-2">Comprehensive Demo Data Creation</h4>
+                    <p className="text-sm text-blue-700 mb-3">
+                      Creates "Compañía Demo" with full organizational structure including tenants, 
+                      staff, clients, pets, services, rooms, and generates 45 days of realistic appointment data 
+                      for deployment demonstrations.
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-blue-600">
+                      <div>• 3 Demo Tenants</div>
+                      <div>• 7+ Staff Members</div>
+                      <div>• 8+ Clients & Pets</div>
+                      <div>• 45 Days of Appointments</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">
+                        Use this to populate the system with comprehensive demo data for presentations and testing.
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        ⚠️ This will create or update demo company data. Safe to run multiple times.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => seedDemoDataMutation.mutate()}
+                      disabled={seedDemoDataMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      data-testid="button-seed-demo-data"
+                    >
+                      {seedDemoDataMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Seeding...
+                        </>
+                      ) : (
+                        <>
+                          <Database className="mr-2 h-4 w-4" />
+                          Seed Demo Data
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
               </CardContent>

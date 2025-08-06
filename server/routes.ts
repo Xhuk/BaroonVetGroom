@@ -2117,6 +2117,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Demo Data Seeder endpoint
+  app.post("/api/seed-demo-data", isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      console.log("🌱 Demo data seeding requested by user:", req.user?.claims?.sub);
+      
+      const { runDemoDataSeeder } = await import('./seedDemoData');
+      const result = await runDemoDataSeeder();
+      
+      if (result.success) {
+        res.json({ 
+          success: true, 
+          message: result.message,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          message: result.message || "Demo data seeding failed"
+        });
+      }
+    } catch (error) {
+      console.error("Error seeding demo data:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: error instanceof Error ? error.message : "Unknown error during demo data seeding"
+      });
+    }
+  });
+
   // Driver check-in endpoint
   app.post("/api/driver-checkin", isAuthenticated, async (req, res) => {
     try {

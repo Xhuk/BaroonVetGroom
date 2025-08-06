@@ -44,6 +44,8 @@ import {
   taxConfiguration,
   pendingInvoices,
   invoiceLineItems,
+  inventoryItems,
+  inventoryTransactions,
   type User,
   type UpsertUser,
   type Company,
@@ -1879,7 +1881,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(inventoryTransactions)
       .where(eq(inventoryTransactions.tenantId, tenantId))
-      .orderBy(desc(inventoryTransactions.createdAt))
+      .orderBy(sql`${inventoryTransactions.createdAt} DESC`)
       .limit(100); // Last 100 transactions only
 
     return result;
