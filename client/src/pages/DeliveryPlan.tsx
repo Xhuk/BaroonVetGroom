@@ -24,7 +24,12 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  ArrowLeft
+  ArrowLeft,
+  Search,
+  Star,
+  Package,
+  Target,
+  Timer
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Staff, Appointment } from "@shared/schema";
@@ -36,6 +41,9 @@ export default function DeliveryPlan() {
   const [, setLocation] = useLocation();
   const [showRouteForm, setShowRouteForm] = useState(false);
   const [selectedDate, setSelectedDate] = useState("2025-08-25"); // Date with pickup appointments
+  const [selectedMascots, setSelectedMascots] = useState<string[]>([]);
+  const [searchMascots, setSearchMascots] = useState("");
+  const [selectedWave, setSelectedWave] = useState("1");
   
   // Fast delivery routes query with optimized caching
   const { data: routesResponse, isLoading } = useQuery<{routes: any[], totalRoutes: number}>({
@@ -68,11 +76,14 @@ export default function DeliveryPlan() {
     },
     onSuccess: () => {
       toast({
-        title: "Ruta creada",
-        description: "La ruta de entrega se ha creada exitosamente.",
+        title: "Ruta de entrega creada",
+        description: `Wave ${selectedWave} creada exitosamente con ${selectedMascots.length} mascotas`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/delivery-routes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/delivery-routes-fast", currentTenant?.id, selectedDate] });
       setShowRouteForm(false);
+      setSelectedMascots([]);
+      setSearchMascots("");
+      setSelectedWave("1");
     },
     onError: (error: any) => {
       toast({
@@ -151,11 +162,23 @@ export default function DeliveryPlan() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    const waveSchedules = {
+      "1": "13:00", // 1:00 PM
+      "2": "14:00", // 2:00 PM
+      "3": "15:00", // 3:00 PM
+      "4": "16:00", // 4:00 PM
+      "5": "17:00", // 5:00 PM
+    };
+    
     const data = {
       name: formData.get("name"),
-      scheduledDate: formData.get("scheduledDate"),
+      scheduledDate: selectedDate,
       driverId: formData.get("driverId"),
-      estimatedDuration: parseInt(formData.get("estimatedDuration") as string) || null,
+      wave: selectedWave,
+      scheduledTime: waveSchedules[selectedWave as keyof typeof waveSchedules],
+      selectedMascots: selectedMascots,
+      estimatedDuration: selectedMascots.length * 15, // 15 minutes per mascot
+      notes: `Wave ${selectedWave} delivery route with ${selectedMascots.length} mascots`,
     };
 
     createRouteMutation.mutate(data);
@@ -329,62 +352,151 @@ export default function DeliveryPlan() {
         </Card>
       </div>
 
-      {/* New Route Form */}
+      {/* Enhanced Wave-Based Route Form */}
       {showRouteForm && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Crear Nueva Ruta de Entrega</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5" />
+              Crear Ruta de Entrega con Mascotas
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleCreateRoute} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Nombre de la Ruta</Label>
-                <Input name="name" required placeholder="Ej: Ruta Norte Matutina" />
+            <form onSubmit={handleCreateRoute} className="space-y-6">
+              {/* Basic Route Info */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="name">Nombre de la Ruta</Label>
+                  <Input name="name" required placeholder="Ej: Wave 1 - Entrega Tarde" />
+                </div>
+
+                <div>
+                  <Label htmlFor="wave">Onda de Entrega</Label>
+                  <Select name="wave" value={selectedWave} onValueChange={setSelectedWave}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar onda" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Wave 1 - 1:00 PM</SelectItem>
+                      <SelectItem value="2">Wave 2 - 2:00 PM</SelectItem>
+                      <SelectItem value="3">Wave 3 - 3:00 PM</SelectItem>
+                      <SelectItem value="4">Wave 4 - 4:00 PM</SelectItem>
+                      <SelectItem value="5">Wave 5 - 5:00 PM</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="driverId">Conductor Asignado</Label>
+                  <Select name="driverId">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar conductor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staff?.filter(s => s.role === "driver" || s.role === "technician").map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name} ({member.role})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="scheduledDate">Fecha Programada</Label>
-                <Input 
-                  name="scheduledDate" 
-                  type="date" 
-                  required 
-                  defaultValue={selectedDate}
-                />
-              </div>
+              {/* Mascot Selection Section */}
+              <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+                <div className="flex items-center gap-2 mb-4">
+                  <Package className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-semibold">Seleccionar Mascotas para Entrega</h3>
+                  <Badge variant="outline">{selectedMascots.length} seleccionadas</Badge>
+                </div>
 
-              <div>
-                <Label htmlFor="driverId">Conductor Asignado</Label>
-                <Select name="driverId">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar conductor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {staff?.filter(s => s.role === "driver" || s.role === "technician").map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name} ({member.role})
-                      </SelectItem>
+                {/* Search Mascots */}
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="Buscar mascotas por nombre, cliente o fraccionamiento..."
+                    value={searchMascots}
+                    onChange={(e) => setSearchMascots(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                {/* Available Mascots List */}
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {appointments
+                    ?.filter(apt => 
+                      apt.status === 'completed' && 
+                      apt.logistics === 'pickup' &&
+                      (searchMascots === '' || 
+                       apt.petId?.toLowerCase().includes(searchMascots.toLowerCase()) ||
+                       apt.clientId?.toLowerCase().includes(searchMascots.toLowerCase()))
+                    )
+                    .map(apt => (
+                      <div
+                        key={apt.id}
+                        className={`flex items-center justify-between p-3 border rounded-md cursor-pointer transition-colors ${
+                          selectedMascots.includes(apt.id)
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                        }`}
+                        onClick={() => {
+                          setSelectedMascots(prev => 
+                            prev.includes(apt.id)
+                              ? prev.filter(id => id !== apt.id)
+                              : [...prev, apt.id]
+                          );
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            selectedMascots.includes(apt.id) ? 'bg-blue-500' : 'bg-gray-300'
+                          }`} />
+                          <div>
+                            <p className="font-medium">Mascota ID: {apt.petId}</p>
+                            <p className="text-sm text-gray-600">Cliente: {apt.clientId}</p>
+                            <p className="text-sm text-gray-500">Completado: {apt.scheduledDate}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {selectedMascots.includes(apt.id) && (
+                            <Star className="w-4 h-4 text-blue-500 fill-blue-500" />
+                          )}
+                          <Badge variant="outline" className="text-xs">
+                            Pickup
+                          </Badge>
+                        </div>
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
+                </div>
+
+                {selectedMascots.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <Package className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                    <p>No hay mascotas seleccionadas</p>
+                    <p className="text-sm">Selecciona mascotas completadas para añadir a esta ruta de entrega</p>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <Label htmlFor="estimatedDuration">Duración Estimada (minutos)</Label>
-                <Input name="estimatedDuration" type="number" min="0" placeholder="240" />
-              </div>
-
-              <div className="md:col-span-2 flex gap-3">
+              {/* Form Actions */}
+              <div className="flex gap-3">
                 <Button 
                   type="submit" 
-                  disabled={createRouteMutation.isPending}
+                  disabled={createRouteMutation.isPending || selectedMascots.length === 0}
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  {createRouteMutation.isPending ? "Creando..." : "Crear Ruta"}
+                  <Timer className="w-4 h-4 mr-2" />
+                  {createRouteMutation.isPending ? "Creando..." : `Crear Wave ${selectedWave} (${selectedMascots.length} mascotas)`}
                 </Button>
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => setShowRouteForm(false)}
+                  onClick={() => {
+                    setShowRouteForm(false);
+                    setSelectedMascots([]);
+                    setSearchMascots("");
+                  }}
                 >
                   Cancelar
                 </Button>
