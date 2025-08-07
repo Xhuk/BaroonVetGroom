@@ -214,20 +214,20 @@ export default function SuperAdmin() {
   });
 
   // Fetch dashboard statistics from the database cube
-  const { data: dashboardStats, isLoading: isLoadingStats, error: statsError } = useQuery({
+  const { data: dashboardStats, isLoading: isLoadingStats, error: statsError } = useQuery<any>({
     queryKey: ['/api/superadmin/dashboard-stats'],
     refetchInterval: 30000, // Refresh every 30 seconds
     enabled: isAuthenticated,
   });
 
   // Fetch subscription plans for mobile onboarding
-  const { data: subscriptionPlans = [] } = useQuery({
+  const { data: subscriptionPlans = [] } = useQuery<any[]>({
     queryKey: ['/api/mobile/subscription-plans'],
     enabled: isAuthenticated,
   });
 
   // Fetch billing usage and expenses
-  const { data: billingData, isLoading: isLoadingBilling } = useQuery({
+  const { data: billingData, isLoading: isLoadingBilling } = useQuery<any>({
     queryKey: ['/api/superadmin/billing-usage'],
     refetchInterval: 60000, // Refresh every minute
     enabled: isAuthenticated,
