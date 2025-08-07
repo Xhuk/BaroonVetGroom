@@ -41,7 +41,7 @@ export function ResponsiveNavigation() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Auto-collapse on small tablets
+  // Auto-collapse on small tablets (8-10 inches) 
   const shouldCollapse = isSmallTablet || isCollapsed;
   
   // Mobile overlay menu for very small screens

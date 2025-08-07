@@ -117,25 +117,25 @@ export default function Dashboard() {
         <div className="flex h-16 items-center px-6">
           <h1 className="text-xl font-semibold">Dashboard General</h1>
           
-          {/* Top-right buttons */}
-          <div className="ml-auto flex items-center space-x-4">
+          {/* Top-right buttons - responsive layout */}
+          <div className="ml-auto flex items-center space-x-2 sm:space-x-4">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setLocation('/clients')}
-              className="text-sm"
+              className="text-xs sm:text-sm px-2 sm:px-3"
             >
-              <Users className="mr-2 h-4 w-4" />
-              Gestionar Clientes
+              <Users className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Gestionar </span>Clientes
             </Button>
             
             <Button
               variant="outline"
               size="sm"
               onClick={() => setLocation('/booking')}
-              className="text-sm"
+              className="text-xs sm:text-sm px-2 sm:px-3"
             >
-              <Calendar className="mr-2 h-4 w-4" />
+              <Calendar className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Nueva Cita
             </Button>
             
@@ -143,9 +143,9 @@ export default function Dashboard() {
               variant="outline"
               size="sm"
               onClick={() => setLocation('/cashier')}
-              className="text-sm"
+              className="text-xs sm:text-sm px-2 sm:px-3"
             >
-              <Package className="mr-2 h-4 w-4" />
+              <Package className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Caja
             </Button>
           </div>

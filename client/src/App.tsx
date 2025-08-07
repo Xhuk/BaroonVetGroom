@@ -49,6 +49,7 @@ import { DebugBanner } from "@/components/DebugBanner";
 import { DeviceBlocker } from "@/components/DeviceBlocker";
 import { ResponsiveNavigation } from "@/components/ResponsiveNavigation";
 import { useScreenSize } from "@/hooks/useScreenSize";
+import { cn } from "@/lib/utils";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -124,7 +125,6 @@ function Router() {
 }
 
 import { TimezoneProvider } from "@/contexts/TimezoneContext";
-import { cn } from "@/lib/utils";
 
 function App() {
   return (

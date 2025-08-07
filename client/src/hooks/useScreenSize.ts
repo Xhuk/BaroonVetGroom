@@ -18,11 +18,11 @@ export function useScreenSize(): ScreenSize {
     return {
       width,
       height,
-      isPhone: width < 768, // Less than 8 inches (assuming ~96 DPI)
-      isSmallTablet: width >= 768 && width < 1024, // 8-10 inches
+      isPhone: width < 640, // Less than 7 inches
+      isSmallTablet: width >= 640 && width < 1024, // 7-10 inches (includes 8-inch tablets)
       isTablet: width >= 1024 && width < 1440, // 10-13 inches
       isDesktop: width >= 1440, // 13+ inches and desktop
-      deviceType: width < 768 ? 'phone' : width < 1024 ? 'small-tablet' : width < 1440 ? 'tablet' : 'desktop'
+      deviceType: width < 640 ? 'phone' : width < 1024 ? 'small-tablet' : width < 1440 ? 'tablet' : 'desktop'
     };
   });
 
@@ -34,11 +34,11 @@ export function useScreenSize(): ScreenSize {
       setScreenSize({
         width,
         height,
-        isPhone: width < 768,
-        isSmallTablet: width >= 768 && width < 1024,
+        isPhone: width < 640,
+        isSmallTablet: width >= 640 && width < 1024,
         isTablet: width >= 1024 && width < 1440,
         isDesktop: width >= 1440,
-        deviceType: width < 768 ? 'phone' : width < 1024 ? 'small-tablet' : width < 1440 ? 'tablet' : 'desktop'
+        deviceType: width < 640 ? 'phone' : width < 1024 ? 'small-tablet' : width < 1440 ? 'tablet' : 'desktop'
       });
     };
 
