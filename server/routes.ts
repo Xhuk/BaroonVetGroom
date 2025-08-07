@@ -5595,6 +5595,16 @@ This password expires in 24 hours.
 
       if (error) {
         console.error("Resend email error details:", error);
+        
+        // Parse specific error types
+        let errorMessage = error.message || "Unknown email provider error";
+        let helpText = "";
+        
+        if (error.name === 'validation_error' && error.error?.includes('domain is not verified')) {
+          errorMessage = "Domain verification required";
+          helpText = "Please verify your domain at https://resend.com/domains or use a verified domain like your-domain@resend.dev";
+        }
+        
         await storage.createEmailLog({
           emailType: 'test_email',
           recipientEmail,
@@ -5603,9 +5613,12 @@ This password expires in 24 hours.
           sentAt: new Date(),
           errorMessage: JSON.stringify(error)
         });
+        
         return res.status(500).json({ 
           error: "Failed to send test email", 
-          details: error.message || "Unknown email provider error"
+          details: errorMessage,
+          help: helpText,
+          resendError: error
         });
       }
 

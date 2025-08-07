@@ -177,9 +177,25 @@ function EmailConfigurationAdmin() {
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/email-logs'] });
     },
     onError: (error: any) => {
+      // Parse error details for better user feedback
+      let errorMessage = error.message || "Failed to send test email";
+      let errorDescription = "";
+      
+      try {
+        const errorData = JSON.parse(error.message);
+        if (errorData.details) {
+          errorMessage = errorData.details;
+          if (errorData.help) {
+            errorDescription = errorData.help;
+          }
+        }
+      } catch {
+        // If not JSON, use the raw message
+      }
+      
       toast({
-        title: "Error",
-        description: error.message || "Failed to send test email",
+        title: "Email Test Failed",
+        description: errorDescription ? `${errorMessage}. ${errorDescription}` : errorMessage,
         variant: "destructive",
       });
     },
@@ -305,6 +321,32 @@ function EmailConfigurationAdmin() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Troubleshooting Card - Show when there are failed email logs */}
+        {emailLogs.some(log => log.status === 'failed') && (
+          <Card className="bg-red-900/20 border-red-700" data-testid="troubleshooting-card">
+            <CardHeader>
+              <CardTitle className="text-red-300 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                Email Issues Detected
+              </CardTitle>
+              <CardDescription className="text-red-200">
+                Recent email sending failures detected. Check the solutions below:
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="bg-red-900/30 p-4 rounded-lg">
+                <h4 className="font-semibold text-red-200 mb-2">Common Issues & Solutions:</h4>
+                <ul className="space-y-2 text-sm text-red-100">
+                  <li><strong>Domain not verified:</strong> Go to <a href="https://resend.com/domains" target="_blank" className="text-blue-300 hover:underline">Resend Domains</a> and verify your domain</li>
+                  <li><strong>Alternative:</strong> Use a verified domain like <code className="bg-gray-800 px-1 rounded">yourname@resend.dev</code> for testing</li>
+                  <li><strong>Invalid API key:</strong> Generate a new API key from your Resend dashboard</li>
+                  <li><strong>Rate limiting:</strong> Wait a few minutes and try again</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Email Configuration Form */}
