@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useScreenSize } from "@/hooks/useScreenSize";
 import { cn } from "@/lib/utils";
@@ -37,11 +37,17 @@ const navigationItems: NavigationItem[] = [
 
 export function ResponsiveNavigation() {
   const [location] = useLocation();
-  const { isSmallTablet, isTablet, isDesktop } = useScreenSize();
+  const { isSmallTablet, isTablet, isDesktop, isActualTablet, userAgent, deviceType } = useScreenSize();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Auto-collapse on small tablets (8-10 inches) 
+  // Debug: Log device detection for Xiaomi Tab 8
+  useEffect(() => {
+    console.log(`Device Detection: ${deviceType}, UserAgent: ${userAgent.substring(0, 50)}...`);
+    console.log(`isActualTablet: ${isActualTablet}, isSmallTablet: ${isSmallTablet}`);
+  }, [deviceType, userAgent, isActualTablet, isSmallTablet]);
+
+  // Auto-collapse on actual small tablets (8-10 inches) like Xiaomi Tab 8
   const shouldCollapse = isSmallTablet || isCollapsed;
   
   // Mobile overlay menu for very small screens
