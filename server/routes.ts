@@ -5593,22 +5593,34 @@ This password expires in 24 hours.
         text: `VetGroom Test Email\n\nThis is a test email to verify your email configuration is working correctly.\n\nProvider: ${config.provider}\nFrom Email: ${config.fromEmail}\nFrom Name: ${config.fromName}\n\nIf you received this email, your email configuration is working properly!`,
       });
 
-      const success = !error;
-
-      if (success) {
-        // Log the test email
+      if (error) {
+        console.error("Resend email error details:", error);
         await storage.createEmailLog({
           emailType: 'test_email',
           recipientEmail,
           subject: 'Test Email - VetGroom',
-          status: 'sent',
-          sentAt: new Date()
+          status: 'failed',
+          sentAt: new Date(),
+          errorMessage: JSON.stringify(error)
         });
-
-        res.json({ success: true, message: "Test email sent successfully" });
-      } else {
-        res.status(500).json({ error: "Failed to send test email" });
+        return res.status(500).json({ 
+          error: "Failed to send test email", 
+          details: error.message || "Unknown email provider error"
+        });
       }
+
+      console.log("Test email sent successfully:", data);
+      
+      // Log the successful test email
+      await storage.createEmailLog({
+        emailType: 'test_email',
+        recipientEmail,
+        subject: 'Test Email - VetGroom',
+        status: 'sent',
+        sentAt: new Date()
+      });
+
+      res.json({ success: true, message: "Test email sent successfully", emailId: data?.id });
     } catch (error) {
       console.error("Error sending test email:", error);
       res.status(500).json({ error: "Failed to send test email" });
