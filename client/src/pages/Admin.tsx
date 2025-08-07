@@ -860,13 +860,60 @@ function Admin() {
     }
   };
 
-  // Helper function for room type colors
+  // Helper function for service type colors
   const getRoomTypeColor = (type: string) => {
     switch (type) {
       case 'medical': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case 'grooming': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
       case 'vaccination': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'general': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'other': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    }
+  };
+
+  // Helper functions for service categorization
+  const getServiceIcon = (type: string) => {
+    switch (type) {
+      case 'medical': return '🩺';
+      case 'grooming': return '✂️';
+      case 'vaccination': return '💉';
+      case 'general': return '👥';
+      case 'other': return '🔧';
+      default: return '📋';
+    }
+  };
+
+  const getServiceTypeName = (type: string) => {
+    switch (type) {
+      case 'medical': return 'Médico';
+      case 'grooming': return 'Estética';
+      case 'vaccination': return 'Vacunación';
+      case 'general': return 'Personal General';
+      case 'other': return 'Otros';
+      default: return 'Sin categoría';
+    }
+  };
+
+  const getCategoryHeaderColor = (type: string) => {
+    switch (type) {
+      case 'medical': return 'border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30';
+      case 'grooming': return 'border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-950/30';
+      case 'vaccination': return 'border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 bg-green-50/50 dark:bg-green-950/30';
+      case 'general': return 'border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400 bg-yellow-50/50 dark:bg-yellow-950/30';
+      case 'other': return 'border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-950/30';
+      default: return 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-400 bg-gray-50/50 dark:bg-gray-950/30';
+    }
+  };
+
+  const getServiceBorderColor = (type: string) => {
+    switch (type) {
+      case 'medical': return 'border-l-4 border-blue-400';
+      case 'grooming': return 'border-l-4 border-purple-400';
+      case 'vaccination': return 'border-l-4 border-green-400';
+      case 'general': return 'border-l-4 border-yellow-400';
+      case 'other': return 'border-l-4 border-orange-400';
+      default: return 'border-l-4 border-gray-400';
     }
   };
 
@@ -1679,12 +1726,14 @@ function Admin() {
                         <Label htmlFor="type">Tipo de Servicio *</Label>
                         <Select name="type" required>
                           <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar tipo" />
+                            <SelectValue placeholder="Seleccionar categoría" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="grooming">Estética/Grooming</SelectItem>
                             <SelectItem value="medical">Médico</SelectItem>
-                            <SelectItem value="grooming">Estética</SelectItem>
                             <SelectItem value="vaccination">Vacunación</SelectItem>
+                            <SelectItem value="general">Personal General</SelectItem>
+                            <SelectItem value="other">Otros</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1721,52 +1770,77 @@ function Admin() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Servicios Configurados</CardTitle>
+                  <CardTitle>Servicios Configurados por Categoría</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {services.map((service) => (
-                      <div key={service.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <span className="text-lg">
-                            {service.type === 'medical' && '🩺'}
-                            {service.type === 'grooming' && '🐾'}
-                            {service.type === 'vaccination' && '💉'}
-                          </span>
-                          <div>
-                            <h4 className="font-semibold text-gray-900 dark:text-gray-100">{service.name}</h4>
-                            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                              <span>⏱️ {service.duration} min</span>
-                              <span>💰 ${service.price} MXN</span>
-                              <Badge className={getRoomTypeColor(service.type)}>
-                                {service.type === 'medical' && 'Médico'}
-                                {service.type === 'grooming' && 'Estética'}
-                                {service.type === 'vaccination' && 'Vacunación'}
-                              </Badge>
-                            </div>
+                  <div className="space-y-8">
+                    {/* Group services by category */}
+                    {(['grooming', 'medical', 'vaccination', 'general', 'other'] as const).map(categoryType => {
+                      const categoryServices = services.filter(s => s.type === categoryType);
+                      if (categoryServices.length === 0) return null;
+
+                      return (
+                        <div key={categoryType} className="space-y-4">
+                          {/* Category Header */}
+                          <div className={`flex items-center gap-3 pb-3 border-b ${getCategoryHeaderColor(categoryType)}`}>
+                            <span className="text-2xl">{getServiceIcon(categoryType)}</span>
+                            <h3 className="text-lg font-bold">{getServiceTypeName(categoryType)}</h3>
+                            <Badge variant="secondary" className={getRoomTypeColor(categoryType)}>
+                              {categoryServices.length} servicio{categoryServices.length !== 1 ? 's' : ''}
+                            </Badge>
+                          </div>
+
+                          {/* Services in this category */}
+                          <div className="grid gap-4">
+                            {categoryServices.map((service) => (
+                              <div key={service.id} className={`flex items-center justify-between p-4 ${getServiceBorderColor(categoryType)} ${getCategoryHeaderColor(categoryType)} rounded-lg`}>
+                                <div className="flex items-center gap-4">
+                                  <span className="text-lg">{getServiceIcon(service.type)}</span>
+                                  <div>
+                                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">{service.name}</h4>
+                                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                      <span>⏱️ {service.duration} min</span>
+                                      <span>💰 ${service.price} MXN</span>
+                                      <Badge className={getRoomTypeColor(service.type)}>
+                                        {getServiceTypeName(service.type)}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => handleEditService(service)}
+                                  >
+                                    <Edit className="w-3 h-3 mr-1" />
+                                    Editar
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="text-red-600 hover:text-red-700"
+                                    onClick={() => handleDeleteService(service.id, service.name)}
+                                    disabled={deleteServiceMutation.isPending}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleEditService(service)}
-                          >
-                            <Edit className="w-3 h-3 mr-1" />
-                            Editar
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => handleDeleteService(service.id, service.name)}
-                            disabled={deleteServiceMutation.isPending}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
+                      );
+                    })}
+
+                    {/* Show message if no services */}
+                    {(!services || services.length === 0) && (
+                      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                        <div className="text-4xl mb-4">📋</div>
+                        <p className="text-lg font-medium mb-2">No hay servicios configurados</p>
+                        <p className="text-sm">Agregue su primer servicio usando el botón "Nuevo Servicio"</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1787,18 +1861,20 @@ function Admin() {
                       />
                     </div>
                     <div>
-                      <Label>Tipo de Servicio</Label>
+                      <Label>Categoría de Servicio</Label>
                       <Select 
                         value={editServiceData.type}
                         onValueChange={(value) => setEditServiceData(prev => ({...prev, type: value}))}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar tipo" />
+                          <SelectValue placeholder="Seleccionar categoría" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="grooming">Estética/Grooming</SelectItem>
                           <SelectItem value="medical">Médico</SelectItem>
-                          <SelectItem value="grooming">Estética</SelectItem>
                           <SelectItem value="vaccination">Vacunación</SelectItem>
+                          <SelectItem value="general">Personal General</SelectItem>
+                          <SelectItem value="other">Otros</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
