@@ -85,6 +85,7 @@ export function ResponsiveNavigation({ className }: ResponsiveNavigationProps) {
     { icon: Users, label: "Clientes", href: "/clients" },
     { icon: Stethoscope, label: "Medical", href: "/medical-appointments" },
     { icon: Scissors, label: "Estética", href: "/grooming-services" },
+    { icon: Package, label: "Inventario", href: "/inventory" },
     { icon: Heart, label: "Seguimientos", href: "/follow-up-tasks" },
     { icon: Truck, label: "Plan de Entregas", href: "/delivery-plan" },
     { icon: CreditCard, label: "Caja", href: "/cashier" },
