@@ -39,10 +39,12 @@ import {
   Package,
   Zap,
   MousePointer,
-  CloudUpload
+  CloudUpload,
+  ChevronLeft
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
 
 interface ReceiptTemplate {
   id: string;
@@ -383,6 +385,14 @@ export default function ReceiptTemplatesAdmin() {
       
       <main className="p-6">
         <div className="max-w-7xl mx-auto">
+          {/* Back Button */}
+          <div className="mb-6">
+            <Link href="/superadmin" className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors">
+              <ChevronLeft className="w-4 h-4" />
+              <span>Volver al Panel de Administración</span>
+            </Link>
+          </div>
+          
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Administración de Plantillas de Recibo
