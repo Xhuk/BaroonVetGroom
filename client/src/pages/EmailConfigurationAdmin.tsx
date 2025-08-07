@@ -111,11 +111,22 @@ function EmailConfigurationAdmin() {
 
   // Save email configuration
   const saveConfigMutation = useMutation({
-    mutationFn: (data: EmailConfigForm) => 
-      apiRequest('/api/superadmin/email-config', {
+    mutationFn: async (data: EmailConfigForm) => {
+      const response = await fetch('/api/superadmin/email-config', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(data),
-      }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save email configuration');
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Configuration Saved",
@@ -134,11 +145,22 @@ function EmailConfigurationAdmin() {
 
   // Send test email
   const testEmailMutation = useMutation({
-    mutationFn: (recipientEmail: string) => 
-      apiRequest('/api/superadmin/test-email', {
+    mutationFn: async (recipientEmail: string) => {
+      const response = await fetch('/api/superadmin/test-email', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ recipientEmail }),
-      }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send test email');
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Test Email Sent",
