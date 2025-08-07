@@ -761,10 +761,11 @@ export default function ReceiptTemplatesAdmin() {
                             <div className="mb-4">
                               <div className="w-full h-32 bg-white border border-gray-200 rounded-lg overflow-hidden mb-3 relative group">
                                 <div 
-                                  className="w-full h-full transform scale-75 origin-top-left"
-                                  dangerouslySetInnerHTML={{ __html: template.htmlPreview }}
-                                  style={{ transform: 'scale(0.35) translate(-45%, -45%)', transformOrigin: 'top left' }}
-                                />
+                                  className="w-full h-full flex items-center justify-center"
+                                  style={{ transform: 'scale(0.18)', transformOrigin: 'center center' }}
+                                >
+                                  <div dangerouslySetInnerHTML={{ __html: template.htmlPreview }} />
+                                </div>
                                 <div 
                                   className="absolute inset-0 bg-blue-500/0 group-hover:bg-blue-500/10 transition-colors duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer"
                                   onClick={(e) => {
