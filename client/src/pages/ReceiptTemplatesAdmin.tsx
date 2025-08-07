@@ -223,7 +223,7 @@ export default function ReceiptTemplatesAdmin() {
               <div>
                 ${logoUrl ? 
                   `<img src="${logoUrl}" alt="Logo" style="width: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; height: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; object-fit: ${templateConfig.preserveLogoTransparency ? 'contain' : 'cover'}; margin-bottom: 12px; opacity: ${templateConfig.logoOpacity / 100}; border-radius: 4px;" />` :
-                  `<div style="width: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; height: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; background: white; color: ${getColorValue(templateConfig.colorScheme)}; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 12px; opacity: ${templateConfig.logoOpacity / 100};">LOGO</div>`
+                  '' // No logo placeholder when no logo is uploaded
                 }
                 <h1 style="margin: 0; font-size: 20px; font-weight: bold;">${hardcodedData.empresaNombre}</h1>
                 <p style="margin: 4px 0 0; font-size: 14px; opacity: 0.9;">${hardcodedData.empresaEslogan}</p>
@@ -239,7 +239,7 @@ export default function ReceiptTemplatesAdmin() {
                 <p style="margin: 4px 0 0; font-size: 14px; opacity: 0.9;">${hardcodedData.empresaEslogan}</p>
                 ${logoUrl ? 
                   `<img src="${logoUrl}" alt="Logo" style="width: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; height: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; object-fit: ${templateConfig.preserveLogoTransparency ? 'contain' : 'cover'}; margin: 12px auto; opacity: ${templateConfig.logoOpacity / 100}; border-radius: 4px; display: block;" />` :
-                  `<div style="width: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; height: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; background: white; color: ${getColorValue(templateConfig.colorScheme)}; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 12px auto; opacity: ${templateConfig.logoOpacity / 100};">LOGO</div>`
+                  '' // No logo placeholder when no logo is uploaded
                 }
               </div>
               <div style="text-align: right;">
@@ -410,10 +410,10 @@ export default function ReceiptTemplatesAdmin() {
   };
 
   const handleCreateTemplate = async () => {
-    if (!templateName || !selectedTemplate) {
+    if (!templateName || !selectedTemplate || !logoUrl) {
       toast({
         title: "Error",
-        description: "Por favor completa todos los campos requeridos",
+        description: "Por favor completa todos los campos requeridos, incluyendo el logo",
         variant: "destructive",
       });
       return;
@@ -745,6 +745,23 @@ export default function ReceiptTemplatesAdmin() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-6">
+                          {/* Logo Required Warning */}
+                          {!logoUrl && (
+                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                              <div className="flex items-center space-x-3">
+                                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                                <div>
+                                  <p className="text-amber-800 dark:text-amber-200 font-medium text-sm">
+                                    <strong>Logo Requerido:</strong> Debes subir un logo para continuar.
+                                  </p>
+                                  <p className="text-amber-700 dark:text-amber-300 text-xs mt-1">
+                                    Sin el logo, solo podrás seleccionar el esquema de colores. Las demás opciones se habilitarán una vez que subas tu logo.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
                           {/* Logo Upload Area */}
                           <div className="space-y-4">
                             <div
@@ -757,7 +774,9 @@ export default function ReceiptTemplatesAdmin() {
                               className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
                                 dragActive
                                   ? 'border-blue-400 bg-blue-50 dark:bg-blue-950/20 scale-102'
-                                  : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/30'
+                                  : !logoUrl 
+                                    ? 'border-amber-300 dark:border-amber-600 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/10'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/30'
                               }`}
                               onClick={() => document.getElementById('logo-upload')?.click()}
                             >
@@ -950,6 +969,8 @@ export default function ReceiptTemplatesAdmin() {
                       </Button>
                       <Button
                         onClick={() => setWizardStep(3)}
+                        disabled={!logoUrl}
+                        className={`${!logoUrl ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
                         data-testid="button-next-step"
                       >
                         Seleccionar Plantilla
