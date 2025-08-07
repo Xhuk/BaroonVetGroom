@@ -912,9 +912,8 @@ function Admin() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans">
       <Header />
-      <Navigation />
       
-      <main className="lg:ml-64 p-6 pb-40">
+      <main className="p-6 pb-40">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <BackButton className="mb-4" />
