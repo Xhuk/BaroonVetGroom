@@ -282,7 +282,53 @@ export function optimizeDeliveryRouteWithCompletedMascots(
  * Simple weight-based routing algorithm
  */
 function simpleWeightBasedRouting(options: RouteOptimizationOptions): OptimizedRoute {
-  return optimizeDeliveryRoute(options);
+  // Solve using VRP algorithm
+  const vrpSolution = solveVRP(options);
+  
+  if (vrpSolution.routes.length === 0) {
+    return {
+      points: [],
+      totalDistance: 0,
+      estimatedTime: 0,
+      efficiency: 0,
+      routeSequence: [],
+      fraccionamientoOrder: []
+    };
+  }
+  
+  // Combine all routes into single optimized sequence
+  const optimizedPoints: RoutePoint[] = [];
+  const routeSequence: string[] = [];
+  const fraccionamientoStats: Record<string, { weight: number; stopCount: number }> = {};
+  
+  for (const route of vrpSolution.routes) {
+    for (const point of route) {
+      optimizedPoints.push(point);
+      routeSequence.push(`${point.clientName} - ${point.petName} (${point.fraccionamiento})`);
+      
+      const frac = point.fraccionamiento || 'unknown';
+      if (!fraccionamientoStats[frac]) {
+        fraccionamientoStats[frac] = {
+          weight: options.fraccionamientoWeights[frac] || 5.0,
+          stopCount: 0
+        };
+      }
+      fraccionamientoStats[frac].stopCount++;
+    }
+  }
+  
+  const fraccionamientoOrder = Object.entries(fraccionamientoStats)
+    .map(([name, stats]) => ({ name, weight: stats.weight, stopCount: stats.stopCount }))
+    .sort((a, b) => a.weight - b.weight);
+  
+  return {
+    points: optimizedPoints,
+    totalDistance: vrpSolution.totalDistance,
+    estimatedTime: Math.round(vrpSolution.totalDistance * 3 + optimizedPoints.length * 5), // 3 min/km + 5 min/stop
+    efficiency: vrpSolution.efficiency,
+    routeSequence,
+    fraccionamientoOrder
+  };
 }
 
 /**
