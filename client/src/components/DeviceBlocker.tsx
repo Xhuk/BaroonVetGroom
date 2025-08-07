@@ -16,7 +16,7 @@ export function DeviceBlocker({ children }: DeviceBlockerProps) {
     enabled: isPhone // Only check when on phone
   });
   
-  const isSuperAdmin = accessInfo?.accessLevel === 'system_admin';
+  const isSuperAdmin = accessInfo && 'accessLevel' in accessInfo && accessInfo.accessLevel === 'system_admin';
   
   if (isPhone && !isSuperAdmin) {
     return (

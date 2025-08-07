@@ -43,7 +43,7 @@ function detectDevice(): DeviceInfo {
     } else {
       deviceName = 'Samsung Galaxy Tab';
     }
-  } else if (ua.includes('xiaomi') || ua.includes('mi pad')) {
+  } else if (ua.includes('xiaomi') || ua.includes('mi pad') || ua.includes('miuibrowser')) {
     deviceName = 'Xiaomi Tablet';
   } else if (ua.includes('ipad')) {
     if (ua.includes('ipad air')) {
@@ -72,12 +72,12 @@ function detectDevice(): DeviceInfo {
   if (isPhoneUA || (width < 640 && !isTabletUA)) {
     deviceType = 'phone';
     isPhone = true;
-  } else if (isTabletUA || (width >= 640 && width < 1024)) {
-    // 8-10 inch tablets (like Xiaomi Tab 8)
+  } else if (isTabletUA && width < 1200) {
+    // Most tablets including 8-10 inch tablets (like Xiaomi Tab 8)
     deviceType = 'small-tablet';
     isSmallTablet = true;
-  } else if (width >= 1024 && width < 1440) {
-    // 10-13 inch tablets
+  } else if (isTabletUA || (width >= 1200 && width < 1440)) {
+    // Large tablets 12+ inch
     deviceType = 'tablet';
     isTablet = true;
   } else {
@@ -86,7 +86,9 @@ function detectDevice(): DeviceInfo {
     isDesktop = true;
   }
   
-  console.log(`Device detected: ${deviceName} (${deviceType}) - ${width}x${height}, UA: ${ua.substring(0, 100)}...`);
+  console.log(`Device detected: ${deviceName} (${deviceType}) - ${width}x${height}`);
+  console.log(`isAndroidTablet: ${isAndroidTablet}, isTabletUA: ${isTabletUA}, isPhoneUA: ${isPhoneUA}`);
+  console.log(`UA: ${ua.substring(0, 150)}...`);
   
   return {
     width,

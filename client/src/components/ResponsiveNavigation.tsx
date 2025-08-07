@@ -50,6 +50,9 @@ export function ResponsiveNavigation() {
   // Auto-collapse on actual small tablets (8-10 inches) like Xiaomi Tab 8
   const shouldCollapse = isSmallTablet || isCollapsed;
   
+  // Force debug log current state
+  console.log(`Navigation: shouldCollapse=${shouldCollapse}, isSmallTablet=${isSmallTablet}, deviceType=${deviceType}`);
+  
   // Mobile overlay menu for very small screens
   const showMobileMenu = !isTablet && !isDesktop;
 
