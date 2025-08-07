@@ -54,9 +54,10 @@ The system is built on a modern stack emphasizing speed, scalability, and mainta
 
 **Feature Specifications:**
 - **Appointment Management:** Redesigned for rescheduling focus, with a dedicated `/api/appointments/:id/reschedule` endpoint.
+- **Calendar System:** Integrated calendar navigation with monthly view that leverages the existing booking wizard for appointment creation. Dashboard provides daily calendar view with real-time updates.
 - **User Management:** Enhanced client management as a header admin tool.
 - **Pet Age Management:** Tracks `registeredAge` and `birthDate` with automatic current age calculation.
-- **Navigation:** Streamlined navigation focusing on core veterinary modules, with appointment management accessible via a dedicated button.
+- **Navigation:** Streamlined navigation focusing on core veterinary modules, with calendar and appointment management accessible via dedicated interface. Calendar page integrates with booking wizard to maintain existing workflows.
 
 ## External Dependencies
 - **PostgreSQL:** Primary database.

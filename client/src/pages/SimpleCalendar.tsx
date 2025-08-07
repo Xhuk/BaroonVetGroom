@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, CalendarIcon } from "lucide-react";
 import { Link } from "wouter";
 import { format, addMonths, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
@@ -46,10 +46,10 @@ export default function SimpleCalendar() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Calendario Completo</h1>
-          <p className="text-muted-foreground">Vista avanzada del calendario con todas las citas</p>
+          <p className="text-muted-foreground">Vista mensual integrada con el asistente de reservas</p>
         </div>
         
-        <Link href="/appointments/new">
+        <Link href="/booking-wizard">
           <Button className="gap-2" data-testid="button-new-appointment">
             <Plus className="h-4 w-4" />
             Nueva Cita
@@ -95,12 +95,37 @@ export default function SimpleCalendar() {
             <h3 className="text-lg font-semibold text-foreground mb-2">
               Vista de Calendario Avanzada
             </h3>
-            <p className="text-muted-foreground mb-4">
-              Esta página mostrará una vista completa del calendario con todas las citas programadas.
+            <p className="text-muted-foreground mb-6">
+              Vista mensual del calendario con integración completa del sistema de citas.
             </p>
-            <p className="text-sm text-muted-foreground">
-              Por ahora, puedes usar el <Link href="/dashboard" className="text-primary hover:underline">calendario del dashboard</Link> para ver las citas del día.
-            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/booking-wizard">
+                <Button className="gap-2 w-full sm:w-auto">
+                  <Plus className="h-4 w-4" />
+                  Crear Nueva Cita
+                </Button>
+              </Link>
+              
+              <Link href="/dashboard">
+                <Button variant="outline" className="gap-2 w-full sm:w-auto">
+                  <CalendarIcon className="h-4 w-4" />
+                  Ver Calendario Diario
+                </Button>
+              </Link>
+              
+              <Link href="/appointments">
+                <Button variant="outline" className="gap-2 w-full sm:w-auto">
+                  Gestionar Citas
+                </Button>
+              </Link>
+            </div>
+            
+            <div className="mt-6 text-sm text-muted-foreground">
+              <p>• Usa el <strong>asistente de reservas</strong> para crear citas con búsqueda inteligente</p>
+              <p>• El <strong>calendario diario</strong> muestra citas del día actual con navegación rápida</p>
+              <p>• La <strong>gestión de citas</strong> permite editar y reprogramar citas existentes</p>
+            </div>
           </div>
         </CardContent>
       </Card>
