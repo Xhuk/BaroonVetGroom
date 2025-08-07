@@ -1297,14 +1297,6 @@ export default function ReceiptTemplatesAdmin() {
               <Eye className="w-5 h-5" />
               <span>Vista Previa de la Plantilla</span>
             </DialogTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPreview(false)}
-              className="absolute right-4 top-4 w-6 h-6 p-0"
-            >
-              <X className="w-4 h-4" />
-            </Button>
           </DialogHeader>
           <div className="overflow-auto max-h-[75vh] bg-gray-50 rounded-lg p-4">
             <div className="bg-white shadow-lg rounded-lg overflow-hidden mx-auto" style={{ maxWidth: '650px' }}>
