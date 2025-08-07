@@ -13,7 +13,10 @@ import {
   Package,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  Stethoscope,
+  Heart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -28,11 +31,13 @@ const navigationItems: NavigationItem[] = [
   { path: "/", label: "Dashboard", icon: BarChart3, shortLabel: "Dash" },
   { path: "/calendar", label: "Calendario", icon: Calendar, shortLabel: "Cal" },
   { path: "/clients", label: "Clientes", icon: Users, shortLabel: "Cli" },
-  { path: "/pets", label: "Mascotas", icon: PawPrint, shortLabel: "Pet" },
-  { path: "/medical", label: "Médico", icon: FileText, shortLabel: "Med" },
-  { path: "/delivery", label: "Entregas", icon: Truck, shortLabel: "Ent" },
+  { path: "/booking-wizard", label: "Nueva Cita", icon: Plus, shortLabel: "Cit" },
+  { path: "/medical-appointments", label: "Citas Médicas", icon: Stethoscope, shortLabel: "Med" },
+  { path: "/grooming-services", label: "Estética", icon: PawPrint, shortLabel: "Est" },
+  { path: "/follow-up-tasks", label: "Seguimientos", icon: Heart, shortLabel: "Seg" },
+  { path: "/delivery-plan", label: "Plan Entregas", icon: Truck, shortLabel: "Ent" },
+  { path: "/inventory", label: "Inventario", icon: Package, shortLabel: "Inv" },
   { path: "/cashier", label: "Caja", icon: Package, shortLabel: "Caj" },
-  { path: "/settings", label: "Configuración", icon: Settings, shortLabel: "Cfg" },
 ];
 
 export function ResponsiveNavigation() {
