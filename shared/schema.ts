@@ -981,6 +981,90 @@ export const emailLogs = pgTable("email_logs", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// Subscription Transactions (Payment records)
+export const subscriptionTransactions = pgTable("subscription_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  subscriptionPlanId: varchar("subscription_plan_id").notNull().references(() => subscriptionPlans.id),
+  paymentProvider: varchar("payment_provider").notNull(), // stripe, paypal, mercado_pago
+  externalTransactionId: varchar("external_transaction_id"), // Provider's transaction ID
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency").default("MXN"),
+  status: varchar("status").notNull(), // pending, completed, failed, refunded
+  billingCycle: varchar("billing_cycle").notNull(), // monthly, yearly
+  subscriptionStartDate: timestamp("subscription_start_date").notNull(),
+  subscriptionEndDate: timestamp("subscription_end_date").notNull(),
+  paymentDate: timestamp("payment_date"),
+  webhookData: jsonb("webhook_data"), // Raw webhook payload
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Company Onboarding Process
+export const companyOnboarding = pgTable("company_onboarding", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  transactionId: varchar("transaction_id").references(() => subscriptionTransactions.id),
+  // Company Information
+  legalName: varchar("legal_name").notNull(),
+  businessType: varchar("business_type"), // clinic, hospital, grooming_salon, mixed
+  taxId: varchar("tax_id"), // RFC in Mexico
+  phone: varchar("phone"),
+  email: varchar("email").notNull(),
+  website: varchar("website"),
+  // Main Address
+  mainAddress: text("main_address").notNull(),
+  city: varchar("city").notNull(),
+  state: varchar("state").notNull(),
+  postalCode: varchar("postal_code").notNull(),
+  country: varchar("country").default("MX"),
+  latitude: varchar("latitude"),
+  longitude: varchar("longitude"),
+  // Contact Person
+  contactPersonName: varchar("contact_person_name").notNull(),
+  contactPersonEmail: varchar("contact_person_email").notNull(),
+  contactPersonPhone: varchar("contact_person_phone"),
+  contactPersonRole: varchar("contact_person_role"), // owner, manager, admin
+  // Onboarding Status
+  status: varchar("status").default("payment_confirmed"), // payment_confirmed, info_collected, sites_setup, completed
+  currentStep: integer("current_step").default(1), // 1=info, 2=sites, 3=activation, 4=complete
+  sitesRequested: integer("sites_requested").notNull(), // How many sites they want to set up
+  welcomeEmailSent: boolean("welcome_email_sent").default(false),
+  loginGuideSent: boolean("login_guide_sent").default(false),
+  accountActivated: boolean("account_activated").default(false),
+  activatedAt: timestamp("activated_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Onboarding Site Setup (For setting up multiple clinic locations)
+export const onboardingSites = pgTable("onboarding_sites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  onboardingId: varchar("onboarding_id").notNull().references(() => companyOnboarding.id),
+  tenantId: varchar("tenant_id").references(() => tenants.id), // Created after setup
+  // Site Information
+  siteName: varchar("site_name").notNull(),
+  siteType: varchar("site_type"), // main, branch, mobile
+  address: text("address").notNull(),
+  city: varchar("city").notNull(),
+  state: varchar("state").notNull(),
+  postalCode: varchar("postal_code").notNull(),
+  latitude: varchar("latitude"),
+  longitude: varchar("longitude"),
+  phone: varchar("phone"),
+  email: varchar("email"),
+  // Operating Hours
+  openTime: time("open_time").default("08:00"),
+  closeTime: time("close_time").default("18:00"),
+  timeSlotDuration: integer("time_slot_duration").default(30),
+  // Setup Status
+  isMainSite: boolean("is_main_site").default(false),
+  setupCompleted: boolean("setup_completed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Type exports for new payment and subscription tables
 export type PaymentGatewayConfig = typeof paymentGatewayConfig.$inferSelect;
 export type InsertPaymentGatewayConfig = typeof paymentGatewayConfig.$inferInsert;
@@ -1006,6 +1090,15 @@ export type DeliveryAlert = typeof deliveryAlerts.$inferSelect;
 export type InsertDeliveryAlert = typeof deliveryAlerts.$inferInsert;  
 export type DriverCheckIn = typeof driverCheckIns.$inferSelect;
 export type InsertDriverCheckIn = typeof driverCheckIns.$inferInsert;
+
+export type SubscriptionTransaction = typeof subscriptionTransactions.$inferSelect;
+export type InsertSubscriptionTransaction = typeof subscriptionTransactions.$inferInsert;
+
+export type CompanyOnboarding = typeof companyOnboarding.$inferSelect;
+export type InsertCompanyOnboarding = typeof companyOnboarding.$inferInsert;
+
+export type OnboardingSite = typeof onboardingSites.$inferSelect;
+export type InsertOnboardingSite = typeof onboardingSites.$inferInsert;
 
 // Tax configuration per company/tenant for international support
 export const taxConfiguration = pgTable("tax_configuration", {

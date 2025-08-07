@@ -13,6 +13,7 @@ import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
 import { pets, companies, tempLinks } from "@shared/schema";
 import { gt } from "drizzle-orm";
+import { subscriptionService } from "./subscriptionService";
 // Removed autoStatusService import - now using database functions
 
 // Extended request type for authenticated requests
@@ -2718,6 +2719,171 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error assigning system role:", error);
       res.status(500).json({ message: "Failed to assign system role" });
+    }
+  });
+
+  // Subscription and Payment API Endpoints
+  
+  // Get available subscription plans
+  app.get('/api/subscription-plans', async (req, res) => {
+    try {
+      const plans = await subscriptionService.getSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ message: "Failed to fetch subscription plans" });
+    }
+  });
+
+  // Process company onboarding
+  app.post('/api/company-onboarding', async (req, res) => {
+    try {
+      const onboardingData = req.body;
+      
+      // Validate required fields
+      if (!onboardingData.legalName || !onboardingData.contactPersonEmail) {
+        return res.status(400).json({ message: "Missing required company information" });
+      }
+
+      // For demo purposes, create a transaction record
+      const mockTransactionId = `tx_${Date.now()}`;
+      const subscriptionEndDate = new Date();
+      subscriptionEndDate.setFullYear(subscriptionEndDate.getFullYear() + 1);
+
+      const transactionData = {
+        id: mockTransactionId,
+        amount: onboardingData.sitesRequested <= 3 ? 2999 : 4999,
+        currency: "MXN",
+        status: "completed",
+        paymentProvider: "demo",
+        externalTransactionId: `demo_${Date.now()}`,
+        subscriptionPlan: onboardingData.sitesRequested <= 3 ? "medium" : "large",
+        subscriptionEndDate,
+        paymentDate: new Date(),
+      };
+
+      const transaction = await subscriptionService.createSubscriptionTransaction(transactionData);
+      
+      // Process onboarding
+      const { company, onboarding } = await subscriptionService.processCompanyOnboarding(
+        transaction.id, 
+        onboardingData
+      );
+
+      // Auto-activate for demo
+      await subscriptionService.activateCompanyAccount(onboarding.id);
+
+      res.json({ 
+        success: true, 
+        company, 
+        onboarding, 
+        transaction 
+      });
+    } catch (error) {
+      console.error("Error processing company onboarding:", error);
+      res.status(500).json({ message: "Failed to process onboarding" });
+    }
+  });
+
+  // Get onboarding status
+  app.get('/api/onboarding-status/:onboardingId', async (req, res) => {
+    try {
+      const { onboardingId } = req.params;
+      const status = await subscriptionService.getOnboardingStatus(onboardingId);
+      res.json(status);
+    } catch (error) {
+      console.error("Error fetching onboarding status:", error);
+      res.status(500).json({ message: "Failed to fetch onboarding status" });
+    }
+  });
+
+  // Stripe payment processing
+  app.post("/api/create-payment-intent", async (req, res) => {
+    try {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(500).json({ message: "Stripe not configured" });
+      }
+
+      const { amount, planId, billingCycle } = req.body;
+      
+      // Here you would integrate with Stripe
+      // For now, return a mock response
+      res.json({ 
+        clientSecret: `pi_mock_${Date.now()}_secret_mock`,
+        paymentIntentId: `pi_mock_${Date.now()}`
+      });
+    } catch (error) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ message: "Failed to create payment intent" });
+    }
+  });
+
+  // PayPal setup endpoint
+  app.get("/api/paypal/setup", async (req, res) => {
+    try {
+      if (!process.env.PAYPAL_CLIENT_ID) {
+        return res.status(500).json({ message: "PayPal not configured" });
+      }
+
+      // Here you would get PayPal client token
+      res.json({
+        clientToken: `mock_paypal_token_${Date.now()}`
+      });
+    } catch (error) {
+      console.error("Error setting up PayPal:", error);
+      res.status(500).json({ message: "Failed to setup PayPal" });
+    }
+  });
+
+  // PayPal order creation
+  app.post("/api/paypal/order", async (req, res) => {
+    try {
+      const { amount, currency, intent } = req.body;
+      
+      // Here you would create PayPal order
+      res.json({
+        id: `ORDER_${Date.now()}`,
+        status: "CREATED"
+      });
+    } catch (error) {
+      console.error("Error creating PayPal order:", error);
+      res.status(500).json({ message: "Failed to create PayPal order" });
+    }
+  });
+
+  // PayPal order capture
+  app.post("/api/paypal/order/:orderID/capture", async (req, res) => {
+    try {
+      const { orderID } = req.params;
+      
+      // Here you would capture PayPal order
+      res.json({
+        id: orderID,
+        status: "COMPLETED",
+        purchase_units: []
+      });
+    } catch (error) {
+      console.error("Error capturing PayPal order:", error);
+      res.status(500).json({ message: "Failed to capture PayPal order" });
+    }
+  });
+
+  // Webhook endpoint for payment providers
+  app.post("/api/webhooks/payment", async (req, res) => {
+    try {
+      const { provider, transactionId, status, webhookData } = req.body;
+      
+      // Update transaction status
+      const transaction = await subscriptionService.updateTransactionStatus(
+        transactionId,
+        status,
+        webhookData
+      );
+
+      res.json({ success: true, transaction });
+    } catch (error) {
+      console.error("Error processing payment webhook:", error);
+      res.status(500).json({ message: "Failed to process webhook" });
     }
   });
 

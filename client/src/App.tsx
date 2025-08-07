@@ -39,6 +39,8 @@ import AdminExternalServices from "@/pages/AdminExternalServices";
 import BillingManagement from "@/pages/BillingManagement";
 import { VersionedSuperAdminDashboard } from "@/components/VersionedSuperAdminDashboard";
 import EmailConfigurationAdmin from "@/pages/EmailConfigurationAdmin";
+import SubscriptionCheckout from "@/pages/SubscriptionCheckout";
+import CompanyOnboarding from "@/pages/CompanyOnboarding";
 
 import WebhookIntegrations from "@/pages/WebhookIntegrations";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
@@ -63,6 +65,8 @@ function Router() {
       {/* INSTANT ROUTING - All routes available immediately, no auth blocking */}
       <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
       <Route path="/plans" component={SubscriptionLanding} />
+      <Route path="/checkout" component={SubscriptionCheckout} />
+      <Route path="/onboarding" component={CompanyOnboarding} />
       <Route path="/temp/:token" component={TempLinkHandler} />
       <Route path="/driver-route/:routeId" component={DriverRoute} />
       <Route path="/appointments" component={Appointments} />
