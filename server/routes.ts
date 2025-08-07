@@ -1875,6 +1875,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all inventory items for a tenant (for cashier product search)
+  app.get('/api/inventory/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      if (typeof storage.getInventoryItems === 'function') {
+        const inventoryItems = await storage.getInventoryItems(tenantId);
+        res.json(inventoryItems.filter(item => item.isActive));
+      } else {
+        res.json([]);
+      }
+    } catch (error) {
+      console.error("Error fetching inventory items:", error);
+      res.json([]);
+    }
+  });
+
   // Inventory API for retrieving vehicles
   app.get('/api/inventory/:tenantId/:category', isAuthenticated, async (req, res) => {
     try {

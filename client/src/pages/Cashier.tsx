@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,9 @@ import {
   Syringe,
   Shield,
   Heart,
-  ShoppingCart
+  ShoppingCart,
+  X,
+  DollarSign
 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import { apiRequest } from "@/lib/queryClient";
@@ -52,6 +54,19 @@ interface Sale {
   notes?: string;
 }
 
+interface InventoryItem {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  sku?: string;
+  barcode?: string;
+  unitPrice: string | number;
+  currentStock: number;
+  unit: string;
+  isActive: boolean;
+}
+
 export default function Cashier() {
   const { currentTenant } = useTenant();
   const { toast } = useToast();
@@ -69,6 +84,34 @@ export default function Cashier() {
   const [newSalePhone, setNewSalePhone] = useState("");
   const [showNewSale, setShowNewSale] = useState(false);
   const [currentSaleItems, setCurrentSaleItems] = useState<SaleItem[]>([]);
+  
+  // Product search states
+  const [productSearchQuery, setProductSearchQuery] = useState("");
+  const [showProductSearch, setShowProductSearch] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to close search dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowProductSearch(false);
+      }
+    }
+
+    function handleEscapeKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setShowProductSearch(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, []);
 
   // Fetch sales/orders for the tenant
   const { data: sales, isLoading } = useQuery<Sale[]>({
@@ -76,6 +119,54 @@ export default function Cashier() {
     queryFn: () => fetch(`/api/sales/${currentTenant?.id}`).then(res => res.json()),
     enabled: !!currentTenant?.id,
   });
+
+  // Fetch inventory items for product search (cached for session)
+  const { data: inventoryItems, isLoading: isLoadingInventory } = useQuery<InventoryItem[]>({
+    queryKey: ["/api/inventory", currentTenant?.id],
+    queryFn: () => fetch(`/api/inventory/${currentTenant?.id}`).then(res => res.json()),
+    enabled: !!currentTenant?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 10 * 60 * 1000, // 10 minutes in cache (TanStack Query v5)
+  });
+
+  // Smart product search with fuzzy matching
+  const filteredProducts = useMemo(() => {
+    if (!inventoryItems || !productSearchQuery.trim()) return [];
+    
+    const query = productSearchQuery.toLowerCase().trim();
+    return (inventoryItems as InventoryItem[])
+      .filter((item: InventoryItem) => item.isActive && item.currentStock > 0)
+      .filter((item: InventoryItem) => 
+        item.name.toLowerCase().includes(query) ||
+        item.category.toLowerCase().includes(query) ||
+        (item.sku && item.sku.toLowerCase().includes(query))
+      )
+      .slice(0, 8); // Limit to 8 results for performance
+  }, [inventoryItems, productSearchQuery]);
+
+  // Add product from search to current sale
+  const addProductFromSearch = useCallback((product: InventoryItem, quantity: number = 1) => {
+    const unitPrice = typeof product.unitPrice === 'string' ? parseFloat(product.unitPrice) : product.unitPrice;
+    const newItem: SaleItem = {
+      id: `product-${Date.now()}`,
+      name: product.name,
+      quantity,
+      unitPrice,
+      total: quantity * unitPrice,
+      delivered: false,
+      category: product.category
+    };
+
+    setCurrentSaleItems(prev => [...prev, newItem]);
+    setProductSearchQuery("");
+    setShowProductSearch(false);
+    setSelectedProduct(null);
+    
+    toast({
+      title: "Producto Agregado",
+      description: `${product.name} (${quantity} ${product.unit}) agregado a la venta`,
+    });
+  }, [toast]);
 
   // Search for specific sale by receipt ID or customer
   const handleSearch = () => {
@@ -621,12 +712,77 @@ export default function Cashier() {
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium">Nombre del Producto *</label>
+                    <label className="text-sm font-medium">Buscar Producto *</label>
+                    <div className="relative" ref={searchRef}>
+                      <Input
+                        value={productSearchQuery}
+                        onChange={(e) => {
+                          setProductSearchQuery(e.target.value);
+                          setShowProductSearch(true);
+                        }}
+                        onFocus={() => setShowProductSearch(true)}
+                        placeholder="Buscar por nombre, categoría, SKU..."
+                        data-testid="input-product-search"
+                      />
+                      <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
+                      
+                      {/* Product Search Results */}
+                      {showProductSearch && productSearchQuery.trim() && filteredProducts.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                          {filteredProducts.map((product) => (
+                            <div
+                              key={product.id}
+                              className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                              onClick={() => {
+                                setNewItemName(product.name);
+                                setNewItemPrice(product.unitPrice.toString());
+                                setNewItemCategory(product.category);
+                                setProductSearchQuery(product.name);
+                                setShowProductSearch(false);
+                              }}
+                              data-testid={`product-option-${product.id}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">{product.name}</div>
+                                  <div className="text-xs text-gray-500">
+                                    {product.category} • Stock: {product.currentStock} {product.unit}
+                                    {product.sku && ` • SKU: ${product.sku}`}
+                                  </div>
+                                </div>
+                                <div className="text-sm font-medium text-green-600">
+                                  ${typeof product.unitPrice === 'string' ? parseFloat(product.unitPrice).toFixed(2) : product.unitPrice.toFixed(2)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Loading indicator */}
+                      {isLoadingInventory && productSearchQuery.trim() && (
+                        <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 p-3 text-center text-sm text-gray-500">
+                          Cargando productos...
+                        </div>
+                      )}
+                      
+                      {/* No results */}
+                      {showProductSearch && productSearchQuery.trim() && filteredProducts.length === 0 && !isLoadingInventory && (
+                        <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 p-3 text-center text-sm text-gray-500">
+                          No se encontraron productos
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Manual product name input (fallback) */}
+                  <div>
+                    <label className="text-sm font-medium">O escribir nombre manualmente</label>
                     <Input
                       value={newItemName}
                       onChange={(e) => setNewItemName(e.target.value)}
-                      placeholder="Ej: Medicina para Perros"
-                      data-testid="input-item-name"
+                      placeholder="Ej: Producto personalizado"
+                      data-testid="input-item-name-manual"
                     />
                   </div>
                   

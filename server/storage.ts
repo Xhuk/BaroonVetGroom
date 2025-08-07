@@ -1221,7 +1221,18 @@ export class DatabaseStorage implements IStorage {
   // Inventory operations
   async getInventoryItems(tenantId: string): Promise<InventoryItem[]> {
     const items = await db
-      .select()
+      .select({
+        id: inventoryItems.id,
+        tenantId: inventoryItems.tenantId,
+        name: inventoryItems.name,
+        description: inventoryItems.description,
+        category: inventoryItems.category,
+        sku: inventoryItems.sku,
+        unitPrice: inventoryItems.unitPrice,
+        currentStock: inventoryItems.currentStock,
+        unit: inventoryItems.unit,
+        isActive: inventoryItems.isActive,
+      })
       .from(inventoryItems)
       .where(eq(inventoryItems.tenantId, tenantId))
       .orderBy(inventoryItems.name);
