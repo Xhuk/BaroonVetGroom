@@ -5806,6 +5806,131 @@ This password expires in 24 hours.
     }
   });
 
+  // Receipt Templates routes
+  app.get('/api/admin/receipt-templates', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId, tenantId } = req.query;
+      const templates = await storage.getReceiptTemplates(
+        companyId as string,
+        tenantId as string
+      );
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching receipt templates:', error);
+      res.status(500).json({ error: 'Failed to fetch receipt templates' });
+    }
+  });
+
+  app.get('/api/admin/receipt-templates/:templateId', isAuthenticated, async (req, res) => {
+    try {
+      const { templateId } = req.params;
+      const template = await storage.getReceiptTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error('Error fetching receipt template:', error);
+      res.status(500).json({ error: 'Failed to fetch receipt template' });
+    }
+  });
+
+  app.post('/api/admin/receipt-templates', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const templateData = {
+        ...req.body,
+        uploadedBy: userId,
+      };
+
+      const template = await storage.createReceiptTemplate(templateData);
+      res.json(template);
+    } catch (error) {
+      console.error('Error creating receipt template:', error);
+      res.status(500).json({ error: 'Failed to create receipt template' });
+    }
+  });
+
+  app.put('/api/admin/receipt-templates/:templateId', isAuthenticated, async (req, res) => {
+    try {
+      const { templateId } = req.params;
+      const template = await storage.updateReceiptTemplate(templateId, req.body);
+      res.json(template);
+    } catch (error) {
+      console.error('Error updating receipt template:', error);
+      res.status(500).json({ error: 'Failed to update receipt template' });
+    }
+  });
+
+  app.delete('/api/admin/receipt-templates/:templateId', isAuthenticated, async (req, res) => {
+    try {
+      const { templateId } = req.params;
+      await storage.deleteReceiptTemplate(templateId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting receipt template:', error);
+      res.status(500).json({ error: 'Failed to delete receipt template' });
+    }
+  });
+
+  app.get('/api/admin/receipt-templates/active/current', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId, tenantId } = req.query;
+      const template = await storage.getActiveReceiptTemplate(
+        companyId as string,
+        tenantId as string
+      );
+      res.json(template || null);
+    } catch (error) {
+      console.error('Error fetching active receipt template:', error);
+      res.status(500).json({ error: 'Failed to fetch active receipt template' });
+    }
+  });
+
+  // Upload URL for receipt templates
+  app.post('/api/admin/receipt-templates/upload-url', isAuthenticated, async (req, res) => {
+    try {
+      const { ObjectStorageService } = await import('./objectStorage');
+      const objectStorageService = new ObjectStorageService();
+      const { fileName } = req.body;
+      const uploadURL = await objectStorageService.getReceiptTemplateUploadURL(fileName);
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error('Error generating upload URL:', error);
+      res.status(500).json({ error: 'Failed to generate upload URL' });
+    }
+  });
+
+  // Download receipt template
+  app.get('/api/admin/receipt-templates/:templateId/download', isAuthenticated, async (req, res) => {
+    try {
+      const { templateId } = req.params;
+      const template = await storage.getReceiptTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+
+      const { ObjectStorageService } = await import('./objectStorage');
+      const objectStorageService = new ObjectStorageService();
+      const file = await objectStorageService.getReceiptTemplateFile(template.fileUrl);
+      
+      // Set download headers
+      res.set({
+        'Content-Disposition': `attachment; filename="${template.fileName}"`,
+        'Content-Type': 'application/zip'
+      });
+      
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error('Error downloading receipt template:', error);
+      res.status(500).json({ error: 'Failed to download receipt template' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

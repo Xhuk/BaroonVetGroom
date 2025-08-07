@@ -156,6 +156,9 @@ import {
   type InsertEmailConfig,
   type EmailLog,
   type InsertEmailLog,
+  receiptTemplates,
+  type ReceiptTemplate,
+  type InsertReceiptTemplate,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
@@ -388,6 +391,14 @@ export interface IStorage {
   getCompany(companyId: string): Promise<Company | undefined>;
   getTenantsByCompany(companyId: string): Promise<Tenant[]>;
   getStaffByCompany(companyId: string): Promise<Staff[]>;
+  
+  // Receipt Templates operations
+  getReceiptTemplates(companyId?: string, tenantId?: string): Promise<ReceiptTemplate[]>;
+  getReceiptTemplate(templateId: string): Promise<ReceiptTemplate | undefined>;
+  createReceiptTemplate(template: InsertReceiptTemplate): Promise<ReceiptTemplate>;
+  updateReceiptTemplate(templateId: string, template: Partial<InsertReceiptTemplate>): Promise<ReceiptTemplate>;
+  deleteReceiptTemplate(templateId: string): Promise<void>;
+  getActiveReceiptTemplate(companyId?: string, tenantId?: string): Promise<ReceiptTemplate | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2825,6 +2836,79 @@ export class DatabaseStorage implements IStorage {
     if (tenantIds.length === 0) return [];
     
     return await db.select().from(staff).where(inArray(staff.tenantId, tenantIds));
+  }
+
+  // Receipt Templates operations
+  async getReceiptTemplates(companyId?: string, tenantId?: string): Promise<ReceiptTemplate[]> {
+    let query = db.select().from(receiptTemplates);
+    
+    if (tenantId) {
+      query = query.where(eq(receiptTemplates.tenantId, tenantId));
+    } else if (companyId) {
+      query = query.where(and(
+        eq(receiptTemplates.companyId, companyId),
+        isNull(receiptTemplates.tenantId)
+      ));
+    }
+    
+    return query.then(results => results.filter(template => template.isActive));
+  }
+
+  async getReceiptTemplate(templateId: string): Promise<ReceiptTemplate | undefined> {
+    const [template] = await db.select().from(receiptTemplates).where(eq(receiptTemplates.id, templateId));
+    return template;
+  }
+
+  async createReceiptTemplate(template: InsertReceiptTemplate): Promise<ReceiptTemplate> {
+    const [newTemplate] = await db.insert(receiptTemplates).values(template).returning();
+    return newTemplate;
+  }
+
+  async updateReceiptTemplate(templateId: string, template: Partial<InsertReceiptTemplate>): Promise<ReceiptTemplate> {
+    const [updatedTemplate] = await db
+      .update(receiptTemplates)
+      .set({
+        ...template,
+        updatedAt: new Date(),
+      })
+      .where(eq(receiptTemplates.id, templateId))
+      .returning();
+    return updatedTemplate;
+  }
+
+  async deleteReceiptTemplate(templateId: string): Promise<void> {
+    await db.delete(receiptTemplates).where(eq(receiptTemplates.id, templateId));
+  }
+
+  async getActiveReceiptTemplate(companyId?: string, tenantId?: string): Promise<ReceiptTemplate | undefined> {
+    // First try to get tenant-specific template
+    if (tenantId) {
+      const [tenantTemplate] = await db
+        .select()
+        .from(receiptTemplates)
+        .where(and(
+          eq(receiptTemplates.tenantId, tenantId),
+          eq(receiptTemplates.isActive, true)
+        ))
+        .limit(1);
+      if (tenantTemplate) return tenantTemplate;
+    }
+    
+    // Fall back to company-wide template
+    if (companyId) {
+      const [companyTemplate] = await db
+        .select()
+        .from(receiptTemplates)
+        .where(and(
+          eq(receiptTemplates.companyId, companyId),
+          isNull(receiptTemplates.tenantId),
+          eq(receiptTemplates.isActive, true)
+        ))
+        .limit(1);
+      return companyTemplate;
+    }
+    
+    return undefined;
   }
 
 }

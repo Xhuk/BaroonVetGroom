@@ -1506,10 +1506,49 @@ export const externalServiceSubscriptionsRelations = relations(externalServiceSu
   }),
 }));
 
+// Receipt Templates - store receipt templates per company/tenant
+export const receiptTemplates = pgTable("receipt_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").references(() => companies.id), // null for global templates
+  tenantId: varchar("tenant_id").references(() => tenants.id), // null for company-wide templates
+  name: varchar("name").notNull(),
+  description: text("description"),
+  templateType: varchar("template_type").notNull().default("receipt"), // receipt, invoice, estimate
+  fileUrl: varchar("file_url").notNull(), // Object storage path to ZIP file
+  fileName: varchar("file_name").notNull(), // Original ZIP file name
+  fileSize: integer("file_size"), // File size in bytes
+  version: varchar("version").default("1.0"),
+  isActive: boolean("is_active").default(true),
+  uploadedBy: varchar("uploaded_by").references(() => users.id),
+  metadata: jsonb("metadata"), // Additional template configuration
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  uniqueCompanyTenant: index("unique_company_tenant_template").on(table.companyId, table.tenantId, table.name),
+}));
+
+export const receiptTemplatesRelations = relations(receiptTemplates, ({ one }) => ({
+  company: one(companies, {
+    fields: [receiptTemplates.companyId],
+    references: [companies.id],
+  }),
+  tenant: one(tenants, {
+    fields: [receiptTemplates.tenantId],
+    references: [tenants.id],
+  }),
+  uploadedByUser: one(users, {
+    fields: [receiptTemplates.uploadedBy],
+    references: [users.id],
+  }),
+}));
+
 // Type exports for external services
 export type WhatsappMessageUsage = typeof whatsappMessageUsage.$inferSelect;
 export type InsertWhatsappMessageUsage = typeof whatsappMessageUsage.$inferInsert;
 
 export type ExternalServiceSubscription = typeof externalServiceSubscriptions.$inferSelect;
 export type InsertExternalServiceSubscription = typeof externalServiceSubscriptions.$inferInsert;
+
+export type ReceiptTemplate = typeof receiptTemplates.$inferSelect;
+export type InsertReceiptTemplate = typeof receiptTemplates.$inferInsert;
 

@@ -278,6 +278,58 @@ export class ObjectStorageService {
       requestedPermission: requestedPermission ?? ObjectPermission.READ,
     });
   }
+
+  // Gets the upload URL for receipt templates
+  async getReceiptTemplateUploadURL(fileName: string = "receipt-template.zip"): Promise<string> {
+    const privateObjectDir = this.getPrivateObjectDir();
+    if (!privateObjectDir) {
+      throw new Error(
+        "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' " +
+          "tool and set PRIVATE_OBJECT_DIR env var."
+      );
+    }
+
+    const objectId = randomUUID();
+    const cleanFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fullPath = `${privateObjectDir}/receipt-templates/${objectId}-${cleanFileName}`;
+
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+
+    // Sign URL for PUT method with TTL
+    return signObjectURL({
+      bucketName,
+      objectName,
+      method: "PUT",
+      ttlSec: 900, // 15 minutes
+    });
+  }
+
+  // Gets the receipt template file from the object path.
+  async getReceiptTemplateFile(objectPath: string): Promise<File> {
+    if (!objectPath.startsWith("/")) {
+      objectPath = `/${objectPath}`;
+    }
+
+    const { bucketName, objectName } = parseObjectPath(objectPath);
+    const bucket = objectStorageClient.bucket(bucketName);
+    const objectFile = bucket.file(objectName);
+    const [exists] = await objectFile.exists();
+    if (!exists) {
+      throw new ObjectNotFoundError();
+    }
+    return objectFile;
+  }
+
+  // Normalize the upload URL to a storage path
+  normalizeReceiptTemplatePath(uploadUrl: string): string {
+    if (!uploadUrl.startsWith("https://storage.googleapis.com/")) {
+      return uploadUrl;
+    }
+  
+    // Extract the path from the URL by removing query parameters and domain
+    const url = new URL(uploadUrl);
+    return url.pathname; // This will be like /bucket-name/path/to/file.zip
+  }
 }
 
 function parseObjectPath(path: string): {
