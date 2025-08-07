@@ -34,7 +34,12 @@ import {
   XCircle,
   Truck,
   MapPin,
-  AlertTriangle
+  AlertTriangle,
+  Search,
+  Filter,
+  Grid3X3,
+  List,
+  X
 } from "lucide-react";
 
 // Helper function to get room type icons
@@ -143,6 +148,11 @@ function Admin() {
     duration: 0,
     price: 0
   });
+
+  // Filter states for services
+  const [serviceFilter, setServiceFilter] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   const [editingRole, setEditingRole] = useState(null);
   const [editRoleData, setEditRoleData] = useState({
@@ -916,6 +926,26 @@ function Admin() {
       default: return 'border-l-4 border-gray-400';
     }
   };
+
+  // Filter services based on search term and selected category
+  const filteredServices = services?.filter(service => {
+    const matchesSearch = service.name.toLowerCase().includes(serviceFilter.toLowerCase()) ||
+                         getServiceTypeName(service.type).toLowerCase().includes(serviceFilter.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || service.type === selectedCategory;
+    return matchesSearch && matchesCategory;
+  }) || [];
+
+  // Group filtered services by category
+  const groupedServices = (['grooming', 'medical', 'vaccination', 'general', 'other'] as const).reduce((acc, categoryType) => {
+    const categoryServices = filteredServices.filter(s => s.type === categoryType);
+    if (categoryServices.length > 0) {
+      acc[categoryType] = categoryServices;
+    }
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  const totalFilteredServices = filteredServices.length;
+  const hasActiveFilters = serviceFilter !== '' || selectedCategory !== 'all';
 
   // Helper function for department colors
   const getDepartmentColor = (department: string) => {
@@ -1700,13 +1730,38 @@ function Admin() {
 
             {/* Services Management Tab */}
             <TabsContent value="services" className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Configuración de Servicios</h2>
-                <Dialog open={isServiceDialogOpen} onOpenChange={setIsServiceDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-blue-600 hover:bg-blue-700">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Nuevo Servicio
+              <div className="flex flex-col lg:flex-row gap-4 lg:justify-between lg:items-center">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Configuración de Servicios</h2>
+                  {totalFilteredServices !== services?.length && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Mostrando {totalFilteredServices} de {services?.length || 0} servicios
+                      {hasActiveFilters && ' (filtrado)'}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="px-3"
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="px-3"
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                  <Dialog open={isServiceDialogOpen} onOpenChange={setIsServiceDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-blue-600 hover:bg-blue-700">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Nuevo Servicio
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -1766,75 +1821,184 @@ function Admin() {
                     </form>
                   </DialogContent>
                 </Dialog>
+                </div>
               </div>
+
+              {/* Filter Controls */}
+              <Card className="bg-gray-50/50 dark:bg-gray-900/50">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {/* Search Input */}
+                    <div className="flex-1">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          placeholder="Buscar servicios por nombre o tipo..."
+                          value={serviceFilter}
+                          onChange={(e) => setServiceFilter(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Category Filter */}
+                    <div className="w-full sm:w-48">
+                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <SelectTrigger>
+                          <Filter className="w-4 h-4 mr-2" />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas las categorías</SelectItem>
+                          <SelectItem value="grooming">Estética/Grooming</SelectItem>
+                          <SelectItem value="medical">Médico</SelectItem>
+                          <SelectItem value="vaccination">Vacunación</SelectItem>
+                          <SelectItem value="general">Personal General</SelectItem>
+                          <SelectItem value="other">Otros</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Clear Filters */}
+                    {hasActiveFilters && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setServiceFilter('');
+                          setSelectedCategory('all');
+                        }}
+                        className="whitespace-nowrap"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Limpiar
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
               <Card>
                 <CardHeader>
                   <CardTitle>Servicios Configurados por Categoría</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-8">
-                    {/* Group services by category */}
-                    {(['grooming', 'medical', 'vaccination', 'general', 'other'] as const).map(categoryType => {
-                      const categoryServices = services.filter(s => s.type === categoryType);
-                      if (categoryServices.length === 0) return null;
-
-                      return (
-                        <div key={categoryType} className="space-y-4">
-                          {/* Category Header */}
-                          <div className={`flex items-center gap-3 pb-3 border-b ${getCategoryHeaderColor(categoryType)}`}>
-                            <span className="text-2xl">{getServiceIcon(categoryType)}</span>
-                            <h3 className="text-lg font-bold">{getServiceTypeName(categoryType)}</h3>
-                            <Badge variant="secondary" className={getRoomTypeColor(categoryType)}>
-                              {categoryServices.length} servicio{categoryServices.length !== 1 ? 's' : ''}
-                            </Badge>
-                          </div>
-
-                          {/* Services in this category */}
-                          <div className="grid gap-4">
-                            {categoryServices.map((service) => (
-                              <div key={service.id} className={`flex items-center justify-between p-4 ${getServiceBorderColor(categoryType)} ${getCategoryHeaderColor(categoryType)} rounded-lg`}>
-                                <div className="flex items-center gap-4">
-                                  <span className="text-lg">{getServiceIcon(service.type)}</span>
-                                  <div>
-                                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">{service.name}</h4>
-                                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                      <span>⏱️ {service.duration} min</span>
-                                      <span>💰 ${service.price} MXN</span>
-                                      <Badge className={getRoomTypeColor(service.type)}>
-                                        {getServiceTypeName(service.type)}
-                                      </Badge>
+                  <div className="space-y-6">
+                    {/* Show filtered results or all services */}
+                    {viewMode === 'list' ? (
+                      /* List View - Categorized */
+                      <div className="space-y-8">
+                        {Object.entries(groupedServices).map(([categoryType, categoryServices]) => (
+                          <div key={categoryType} className="space-y-4">
+                            {/* Category Header */}
+                            <div className={`flex items-center gap-3 pb-3 border-b ${getCategoryHeaderColor(categoryType)}`}>
+                              <span className="text-2xl">{getServiceIcon(categoryType)}</span>
+                              <h3 className="text-lg font-bold">{getServiceTypeName(categoryType)}</h3>
+                              <Badge variant="secondary" className={getRoomTypeColor(categoryType)}>
+                                {categoryServices.length} servicio{categoryServices.length !== 1 ? 's' : ''}
+                              </Badge>
+                            </div>
+                            
+                            {/* Services in this category */}
+                            <div className="grid gap-4">
+                              {categoryServices.map((service) => (
+                                <div key={service.id} className={`flex items-center justify-between p-4 ${getServiceBorderColor(categoryType)} ${getCategoryHeaderColor(categoryType)} rounded-lg`}>
+                                  <div className="flex items-center gap-4">
+                                    <span className="text-lg">{getServiceIcon(service.type)}</span>
+                                    <div>
+                                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">{service.name}</h4>
+                                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                        <span>⏱️ {service.duration} min</span>
+                                        <span>💰 ${service.price} MXN</span>
+                                        <Badge className={getRoomTypeColor(service.type)}>
+                                          {getServiceTypeName(service.type)}
+                                        </Badge>
+                                      </div>
                                     </div>
                                   </div>
+                                  <div className="flex gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => handleEditService(service)}>
+                                      <Edit className="w-3 h-3 mr-1" />
+                                      Editar
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="text-red-600 hover:text-red-700"
+                                      onClick={() => handleDeleteService(service.id, service.name)}
+                                      disabled={deleteServiceMutation.isPending}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
                                 </div>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleEditService(service)}
-                                  >
-                                    <Edit className="w-3 h-3 mr-1" />
-                                    Editar
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="text-red-600 hover:text-red-700"
-                                    onClick={() => handleDeleteService(service.id, service.name)}
-                                    disabled={deleteServiceMutation.isPending}
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      /* Grid View - File Explorer Style */
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredServices.map((service) => (
+                          <div key={service.id} className={`p-4 ${getServiceBorderColor(service.type)} ${getCategoryHeaderColor(service.type)} rounded-lg hover:shadow-md transition-shadow group`}>
+                            {/* Service Header */}
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <span className="text-3xl">{getServiceIcon(service.type)}</span>
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{service.name}</h4>
+                                  <Badge size="sm" className={getRoomTypeColor(service.type)}>
+                                    {getServiceTypeName(service.type)}
+                                  </Badge>
                                 </div>
                               </div>
-                            ))}
+                            </div>
+                            
+                            {/* Service Details */}
+                            <div className="space-y-2 mb-4">
+                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <Clock className="w-4 h-4" />
+                                <span>{service.duration} minutos</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <span className="text-green-600 font-semibold">${service.price} MXN</span>
+                              </div>
+                            </div>
+                            
+                            {/* Actions */}
+                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEditService(service)}>
+                                <Edit className="w-3 h-3 mr-1" />
+                                Editar
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-red-600 hover:text-red-700"
+                                onClick={() => handleDeleteService(service.id, service.name)}
+                                disabled={deleteServiceMutation.isPending}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        ))}
+                      </div>
+                    )}
 
-                    {/* Show message if no services */}
-                    {(!services || services.length === 0) && (
+                    {/* Empty States */}
+                    {totalFilteredServices === 0 && hasActiveFilters && (
+                      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                        <div className="text-4xl mb-4">🔍</div>
+                        <p className="text-lg font-medium mb-2">No se encontraron servicios</p>
+                        <p className="text-sm mb-4">Intenta ajustar los filtros de búsqueda</p>
+                        <Button variant="outline" onClick={() => { setServiceFilter(''); setSelectedCategory('all'); }}>
+                          Limpiar filtros
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {(!services || services.length === 0) && !hasActiveFilters && (
                       <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                         <div className="text-4xl mb-4">📋</div>
                         <p className="text-lg font-medium mb-2">No hay servicios configurados</p>
