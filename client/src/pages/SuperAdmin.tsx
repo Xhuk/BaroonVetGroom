@@ -397,10 +397,12 @@ export default function SuperAdmin() {
                   <span className="text-sm font-medium">Config Global</span>
                 </Button>
                 
-                <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                  <span className="text-sm font-medium">Reportes</span>
-                </Button>
+                <Link href="/superadmin/reports" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-green-50 hover:bg-green-100 border-green-300">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                    <span className="text-sm font-medium text-green-700">Reportes</span>
+                  </Button>
+                </Link>
                 
                 <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
                   <Shield className="w-5 h-5 text-red-600" />
