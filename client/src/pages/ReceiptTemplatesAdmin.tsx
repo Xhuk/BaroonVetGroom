@@ -164,56 +164,88 @@ export default function ReceiptTemplatesAdmin() {
       preview: "/assets/template-preview-1.png",
       features: ["Logo personalizable", "Tabla de servicios", "Cálculos automáticos", "Firma digital"],
       htmlPreview: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 2px solid #3b82f6; border-radius: 8px; overflow: hidden;">
-          <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 20px;">
-            <div style="display: flex; justify-content: between; align-items: center;">
-              <div style="flex: 1;">
-                <h1 style="margin: 0; font-size: 24px; font-weight: bold;">CLINICA VETERINARIA</h1>
-                <p style="margin: 5px 0 0; opacity: 0.9;">Cuidando a tus mascotas con amor</p>
+        <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; border: 1px solid #3b82f6; border-radius: 8px; overflow: hidden; background: white;">
+          <!-- Professional Header Style with Blue Color Scheme -->
+          <div style="background: #3b82f6; color: white; padding: 24px;">
+            <!-- Logo Left Position -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="width: 50px; height: 50px; background: white; color: #3b82f6; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 12px;">LOGO</div>
+                <h1 style="margin: 0; font-size: 20px; font-weight: bold;">{{ empresa_nombre }}</h1>
+                <p style="margin: 4px 0 0; font-size: 14px; opacity: 0.9;">{{ empresa_eslogan }}</p>
               </div>
-              <div style="background: white; color: #3b82f6; padding: 8px 16px; border-radius: 4px; font-weight: bold;">RECIBO</div>
+              <div style="text-align: right;">
+                <div style="background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 4px; margin-bottom: 8px;">
+                  <span style="font-size: 18px; font-weight: bold;">RECIBO</span>
+                </div>
+                <p style="margin: 0; font-size: 14px;"># {{ numero_recibo }}</p>
+              </div>
             </div>
           </div>
-          <div style="padding: 20px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+          
+          <div style="padding: 24px;">
+            <!-- Client and Service Info -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
               <div>
-                <h3 style="color: #3b82f6; margin: 0 0 10px; font-size: 16px;">Datos del Cliente</h3>
-                <p style="margin: 2px 0;"><strong>Nombre:</strong> María González</p>
-                <p style="margin: 2px 0;"><strong>Teléfono:</strong> (555) 123-4567</p>
-                <p style="margin: 2px 0;"><strong>Mascota:</strong> Max (Perro)</p>
+                <h3 style="color: #3b82f6; margin: 0 0 12px; font-size: 16px; font-weight: 600;">Cliente</h3>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Nombre:</strong> {{ cliente_nombre }}</p>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Teléfono:</strong> {{ cliente_telefono }}</p>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Mascota:</strong> {{ mascota_nombre }}</p>
               </div>
               <div>
-                <h3 style="color: #3b82f6; margin: 0 0 10px; font-size: 16px;">Información</h3>
-                <p style="margin: 2px 0;"><strong>Fecha:</strong> 07/08/2025</p>
-                <p style="margin: 2px 0;"><strong>Recibo #:</strong> R-2025-001</p>
-                <p style="margin: 2px 0;"><strong>Doctor:</strong> Dr. Luis Morales</p>
+                <h3 style="color: #3b82f6; margin: 0 0 12px; font-size: 16px; font-weight: 600;">Información</h3>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Fecha:</strong> {{ fecha }}</p>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Hora:</strong> {{ hora }}</p>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Veterinario:</strong> {{ veterinario }}</p>
               </div>
             </div>
-            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+
+            <!-- Services Table -->
+            <table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb;">
               <thead>
-                <tr style="background: #eff6ff; color: #3b82f6;">
-                  <th style="padding: 10px; text-align: left; border-bottom: 2px solid #3b82f6;">Servicio</th>
-                  <th style="padding: 10px; text-align: right; border-bottom: 2px solid #3b82f6;">Precio</th>
+                <tr style="background: #3b82f6; color: white;">
+                  <th style="padding: 12px; text-align: left; font-weight: 600;">Servicio</th>
+                  <th style="padding: 12px; text-align: center; font-weight: 600;">Cant.</th>
+                  <th style="padding: 12px; text-align: right; font-weight: 600;">Precio</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Consulta General</td>
-                  <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$350.00</td>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                  <td style="padding: 10px;">{{ servicio_1 }}</td>
+                  <td style="padding: 10px; text-align: center;">1</td>
+                  <td style="padding: 10px; text-align: right;">{{ precio_1 }}</td>
                 </tr>
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Vacuna Antirrábica</td>
-                  <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$200.00</td>
+                <tr style="border-bottom: 1px solid #e5e7eb; background: #f9fafb;">
+                  <td style="padding: 10px;">{{ servicio_2 }}</td>
+                  <td style="padding: 10px; text-align: center;">1</td>
+                  <td style="padding: 10px; text-align: right;">{{ precio_2 }}</td>
                 </tr>
-                <tr style="background: #eff6ff;">
-                  <td style="padding: 10px; font-weight: bold; color: #3b82f6;">TOTAL</td>
-                  <td style="padding: 10px; font-weight: bold; text-align: right; color: #3b82f6;">$550.00</td>
+                <tr style="background: #eff6ff; border: 2px solid #3b82f6;">
+                  <td style="padding: 12px; font-weight: bold; color: #3b82f6;">TOTAL</td>
+                  <td style="padding: 12px;"></td>
+                  <td style="padding: 12px; font-weight: bold; text-align: right; color: #3b82f6; font-size: 18px;">{{ total }}</td>
                 </tr>
               </tbody>
             </table>
-            <div style="text-align: center; margin-top: 30px; color: #6b7280;">
-              <p style="margin: 5px 0;">Gracias por confiar en nosotros</p>
-              <p style="margin: 5px 0; font-size: 12px;">www.clinicaveterinaria.com | info@clinicaveterinaria.com</p>
+
+            <!-- Signature Area (configurable) -->
+            <div style="margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 24px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                <div style="text-align: center;">
+                  <div style="border-bottom: 1px solid #9ca3af; margin-bottom: 8px; height: 40px;"></div>
+                  <p style="margin: 0; font-size: 12px; color: #6b7280;">Firma del Cliente</p>
+                </div>
+                <div style="text-align: center;">
+                  <div style="border-bottom: 1px solid #9ca3af; margin-bottom: 8px; height: 40px;"></div>
+                  <p style="margin: 0; font-size: 12px; color: #6b7280;">Firma del Veterinario</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280;">
+              <p style="margin: 4px 0; font-size: 13px;">{{ empresa_web }} | {{ empresa_telefono }}</p>
+              <p style="margin: 4px 0; font-size: 12px;">{{ empresa_direccion }}</p>
             </div>
           </div>
         </div>
