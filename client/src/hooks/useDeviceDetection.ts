@@ -51,9 +51,21 @@ function detectDevice(): DeviceInfo {
       isTabletDevice = true;
     }
   } else {
-    // Desktop/laptop
-    detectedDeviceType = 'desktop';
-    isDesktopDevice = true;
+    // Fallback: If mobile-device-detect fails (like in development), use screen size
+    if (width < 640) {
+      detectedDeviceType = 'phone';
+      isPhone = true;
+    } else if (width >= 640 && width < 1024) {
+      // For Xiaomi Tab 8 and similar - force small tablet classification
+      detectedDeviceType = 'small-tablet';
+      isSmallTablet = true;
+    } else if (width >= 1024 && width < 1440) {
+      detectedDeviceType = 'tablet';
+      isTabletDevice = true;
+    } else {
+      detectedDeviceType = 'desktop';
+      isDesktopDevice = true;
+    }
   }
   
   // Generate device name
@@ -75,6 +87,7 @@ function detectDevice(): DeviceInfo {
   console.log(`- Screen: ${width}x${height} (${screenDensity}x density)`);
   console.log(`- Library detection: isMobile=${isMobile}, isTablet=${isTablet}, isDesktop=${isDesktop}`);
   console.log(`- Browser: ${browserName} on ${osName}`);
+  console.log(`- Final classification: isSmallTablet=${isSmallTablet} (should collapse navigation)`);
   
   return {
     width,
