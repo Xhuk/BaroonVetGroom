@@ -53,8 +53,12 @@ export default function SuperAdminReports() {
   };
 
   const generateBrochurePDF = () => {
-    // Instructions for PDF generation
-    window.open('http://localhost:3001', '_blank');
+    // Open brochure for PDF generation using current domain
+    const brochureUrl = `${window.location.origin}/marketing/brochure.html`;
+    window.open(brochureUrl, '_blank');
+    
+    // Show instructions for PDF generation
+    alert('Para generar PDF:\n1. Presiona Ctrl+P (o Cmd+P en Mac)\n2. Selecciona "Guardar como PDF"\n3. Ajusta márgenes a "Mínimo" para mejor resultado');
   };
 
   if (isLoading) {
