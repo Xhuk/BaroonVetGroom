@@ -96,7 +96,6 @@ function Router() {
           <Route path="/admin/follow-up-config" component={AdminFollowUpConfig} />
           <Route path="/admin/van-config" component={AdminVanConfig} />
           <Route path="/admin/external-services" component={AdminExternalServices} />
-          <Route path="/admin/services" component={GroomingServices} />
           <Route path="/admin/receipt-templates" component={ReceiptTemplatesAdmin} />
           <Route path="/superadmin" component={SuperAdmin} />
           <Route path="/superadmin/monitoring" component={SuperAdminMonitoring} />

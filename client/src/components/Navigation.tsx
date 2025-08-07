@@ -86,7 +86,6 @@ export function Navigation({ className }: NavigationProps) {
   const adminItems = [
     ...(canAccessAdmin ? [
       { icon: Settings, label: "Admin Dashboard", href: "/admin" },
-      { icon: Scissors, label: "Gestión de Servicios", href: "/admin/services" },
       { icon: Receipt, label: "Plantillas de Recibo", href: "/admin/receipt-templates" }
     ] : []),
     ...(canAccessSuperAdmin ? [
