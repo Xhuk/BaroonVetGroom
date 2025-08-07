@@ -11,6 +11,11 @@ A high-performance Software-as-a-Service (SaaS) platform for veterinary clinic m
 - Day-by-day navigation instead of loading all appointments at once
 - Professional dark theme across all pages
 - Fast loading for all major pages
+- Responsive design for 8+ inch tablets through desktop computers
+- Collapsible navigation showing only icons on smaller screens
+- Block phone access except for SuperAdmin role for administrative tasks
+- Spanish localization support with "Caja" instead of "Facturación"
+- Ethereal pulse effect for current time red line with adjustable transparency and thickness
 
 ## System Architecture
 The system is built on a modern stack emphasizing speed, scalability, and maintainability.
@@ -45,6 +50,7 @@ The system is built on a modern stack emphasizing speed, scalability, and mainta
 - **Flexible Delivery Scheduling:** Toggle between "Wave-based" (fixed slots) and "Free Selection" (any hour) modes. Includes intelligent neighborhood suggestions and flexible time selection.
 - **Mobile SuperAdmin Dashboard:** Optimized for mobile devices (e.g., Samsung Galaxy S25 Ultra) with touch-friendly navigation, database-driven analytics, and mobile client onboarding/subscription management endpoints.
 - **Comprehensive Pickup & Delivery System:** Redesigned interface with separate Inbound (Pickup) and Outbound (Delivery) tabs for distinct pet transportation workflows. Includes route type selection, mobile driver dashboard at `/driver-mobile` with real-time GPS tracking, navigation app export (Waze/Google Maps), appointment completion workflow, and location-based progress monitoring.
+- **Responsive Design System:** Adaptive layout for 8+ inch tablets through desktop computers with device detection hooks (`useScreenSize`). Features collapsible navigation (`ResponsiveNavigation`) showing only icons on smaller screens, and device blocking (`DeviceBlocker`) to restrict phone access except for SuperAdmin users. External app links remain phone-accessible as designed.
 
 **Feature Specifications:**
 - **Appointment Management:** Redesigned for rescheduling focus, with a dedicated `/api/appointments/:id/reschedule` endpoint.

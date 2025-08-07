@@ -46,17 +46,34 @@ import DriverRoute from "@/pages/DriverRoute";
 import DriverMobile from "@/pages/DriverMobile";
 import { InstantNavigation } from "@/components/InstantNavigation";
 import { DebugBanner } from "@/components/DebugBanner";
+import { DeviceBlocker } from "@/components/DeviceBlocker";
+import { ResponsiveNavigation } from "@/components/ResponsiveNavigation";
+import { useScreenSize } from "@/hooks/useScreenSize";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { isPhone, isSmallTablet, isTablet, isDesktop } = useScreenSize();
 
   // NEVER show loading spinner on route changes - always render instantly
   // Only show auth loading on initial app load when no route is detected
 
   return (
-    <>
-      <DebugBanner />
-      <Switch>
+    <DeviceBlocker>
+      <div className="flex min-h-screen">
+        {/* Responsive Navigation - only show for authenticated users on larger screens */}
+        {isAuthenticated && !isPhone && <ResponsiveNavigation />}
+        
+        {/* Main content area with responsive margins */}
+        <main 
+          className={cn(
+            "flex-1 transition-all duration-300",
+            isAuthenticated && !isPhone ? (
+              isSmallTablet ? "ml-16" : "ml-72"
+            ) : "ml-0"
+          )}
+        >
+          <DebugBanner />
+          <Switch>
       {/* INSTANT ROUTING - All routes available immediately, no auth blocking */}
       <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
       <Route path="/plans" component={SubscriptionLanding} />
@@ -100,11 +117,14 @@ function Router() {
       <Route path="/temp/:token" component={TempLinkHandler} />
       <Route component={NotFound} />
       </Switch>
-    </>
+        </main>
+      </div>
+    </DeviceBlocker>
   );
 }
 
 import { TimezoneProvider } from "@/contexts/TimezoneContext";
+import { cn } from "@/lib/utils";
 
 function App() {
   return (

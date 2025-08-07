@@ -352,7 +352,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const redLineStyle = getRedLineStyle();
 
   return (
-    <Card className={cn("fixed flex flex-col", className)} style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
+    <Card className={cn("flex flex-col h-full", className)}>
       <CardHeader className="flex-shrink-0">
         <div className="flex justify-between items-center mb-2">
           <button
