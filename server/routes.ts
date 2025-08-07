@@ -5536,10 +5536,7 @@ This password expires in 24 hours.
         });
       }
 
-      // Initialize email service with new configuration
-      const { emailService } = require('./emailService');
-      await emailService.initialize(config);
-
+      // Email service initialization will be handled by the email scheduler
       const { apiKey: _, ...safeConfig } = config;
       res.json({ ...safeConfig, isConfigured: true });
     } catch (error) {
@@ -5573,18 +5570,30 @@ This password expires in 24 hours.
         return res.status(400).json({ error: "Email configuration not found or inactive" });
       }
 
-      // Initialize email service
-      const { emailService } = require('./emailService');
-      await emailService.initialize(config);
+      // Send test email using direct Resend provider
+      const { Resend } = await import('resend');
+      const resend = new Resend(config.apiKey);
+      
+      const { data, error } = await resend.emails.send({
+        from: `${config.fromName} <${config.fromEmail}>`,
+        to: recipientEmail,
+        subject: 'Test Email - VetGroom Configuration',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2563eb;">VetGroom Test Email</h2>
+            <p>This is a test email to verify your email configuration is working correctly.</p>
+            <p><strong>Provider:</strong> ${config.provider}</p>
+            <p><strong>From Email:</strong> ${config.fromEmail}</p>
+            <p><strong>From Name:</strong> ${config.fromName}</p>
+            <p>If you received this email, your email configuration is working properly!</p>
+            <hr style="margin: 20px 0;">
+            <p style="color: #666; font-size: 12px;">This email was sent from the VetGroom platform.</p>
+          </div>
+        `,
+        text: `VetGroom Test Email\n\nThis is a test email to verify your email configuration is working correctly.\n\nProvider: ${config.provider}\nFrom Email: ${config.fromEmail}\nFrom Name: ${config.fromName}\n\nIf you received this email, your email configuration is working properly!`,
+      });
 
-      // Send test email
-      const success = await emailService.sendSubscriptionExpiryReminder(
-        recipientEmail,
-        "Test Company",
-        7,
-        "Test Plan",
-        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      );
+      const success = !error;
 
       if (success) {
         // Log the test email
