@@ -2181,6 +2181,38 @@ export class DatabaseStorage implements IStorage {
     return promotion;
   }
 
+  // New billing and subscription management methods
+  async getSubscriptionPlan(planId: string): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(subscriptionPlans)
+      .where(eq(subscriptionPlans.id, planId));
+    return plan;
+  }
+
+  async updateSubscriptionPlan(planId: string, updates: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
+    const [updatedPlan] = await db
+      .update(subscriptionPlans)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(subscriptionPlans.id, planId))
+      .returning();
+    return updatedPlan;
+  }
+
+  async getAllCompaniesWithSubscriptions(): Promise<Company[]> {
+    return await db
+      .select()
+      .from(companies)
+      .orderBy(companies.createdAt);
+  }
+
+  async getCompanyTenants(companyId: string): Promise<Tenant[]> {
+    return await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.companyId, companyId));
+  }
+
   // Follow-up notification operations
   async getFollowUpCount(tenantId: string): Promise<number> {
     const result = await db

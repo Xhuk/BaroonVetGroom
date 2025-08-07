@@ -5128,6 +5128,217 @@ This password expires in 24 hours.
     }
   });
 
+  // === BILLING AND SUBSCRIPTION MANAGEMENT API ===
+  
+  // Billing Admin API for TenantVet sites - Tenant-level billing summary
+  app.get('/api/billing/summary/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { period = 'current_month' } = req.query;
+      
+      // Calculate billing summary based on sales and transactions
+      const salesData = await storage.getSales(tenantId);
+      
+      // Filter data based on period
+      const now = new Date();
+      let startDate, endDate;
+      
+      switch (period) {
+        case 'current_month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          break;
+        case 'last_month':
+          startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+          break;
+        case 'quarter':
+          const quarter = Math.floor(now.getMonth() / 3);
+          startDate = new Date(now.getFullYear(), quarter * 3, 1);
+          endDate = new Date(now.getFullYear(), quarter * 3 + 3, 0);
+          break;
+        default:
+          startDate = new Date(now.getFullYear(), 0, 1);
+          endDate = new Date(now.getFullYear(), 11, 31);
+      }
+      
+      const filteredSales = salesData.filter(sale => {
+        const saleDate = new Date(sale.createdAt);
+        return saleDate >= startDate && saleDate <= endDate;
+      });
+      
+      const totalRevenue = filteredSales.reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0);
+      const monthlyRevenue = period === 'current_month' ? totalRevenue : 
+        salesData.filter(sale => {
+          const saleDate = new Date(sale.createdAt);
+          return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
+        }).reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0);
+      
+      // Get recent transactions with client/pet details
+      const recentTransactions = await Promise.all(
+        filteredSales.slice(-10).map(async (sale) => {
+          const items = await storage.getSaleItems(sale.id);
+          const client = sale.clientId ? await storage.getClient(sale.clientId) : null;
+          const pet = sale.petId ? await storage.getPet(sale.petId) : null;
+          
+          return {
+            id: sale.id,
+            date: sale.createdAt,
+            clientName: client?.name || 'Cliente General',
+            petName: pet?.name || 'N/A',
+            service: items.map(item => item.name).join(', ') || 'Venta general',
+            amount: parseFloat(sale.totalAmount),
+            status: sale.status === 'completed' ? 'paid' : 'pending'
+          };
+        })
+      );
+      
+      res.json({
+        totalRevenue,
+        monthlyRevenue,
+        outstandingInvoices: filteredSales.filter(sale => sale.status === 'pending').length,
+        totalTransactions: filteredSales.length,
+        recentTransactions: recentTransactions.reverse()
+      });
+    } catch (error) {
+      console.error("Error fetching billing summary:", error);
+      res.status(500).json({ message: "Failed to fetch billing summary" });
+    }
+  });
+
+  // Export billing data to Excel/CSV
+  app.post('/api/billing/export/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { period, format } = req.body;
+      
+      // Get sales data based on period
+      const salesData = await storage.getSales(tenantId);
+      
+      // Create export data structure
+      const exportData = await Promise.all(
+        salesData.map(async (sale) => {
+          const items = await storage.getSaleItems(sale.id);
+          const client = sale.clientId ? await storage.getClient(sale.clientId) : null;
+          const pet = sale.petId ? await storage.getPet(sale.petId) : null;
+          
+          return {
+            Fecha: new Date(sale.createdAt).toLocaleDateString('es-MX'),
+            Cliente: client?.name || 'Cliente General',
+            Mascota: pet?.name || 'N/A',
+            Servicio: items.map(item => item.name).join(', '),
+            Subtotal: parseFloat(sale.subtotal),
+            IVA: parseFloat(sale.taxAmount),
+            Total: parseFloat(sale.totalAmount),
+            Estado: sale.status === 'completed' ? 'Pagado' : 'Pendiente',
+            'Método de Pago': sale.paymentMethod || 'Efectivo'
+          };
+        })
+      );
+      
+      const csv = [
+        Object.keys(exportData[0] || {}).join(','),
+        ...exportData.map(row => Object.values(row).map(val => `"${val}"`).join(','))
+      ].join('\n');
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=billing-${period}-${Date.now()}.csv`);
+      res.send(csv);
+    } catch (error) {
+      console.error("Error exporting billing data:", error);
+      res.status(500).json({ message: "Failed to export billing data" });
+    }
+  });
+
+  // SuperAdmin Subscription Management API
+  app.get('/api/superadmin/subscription-plans', isSuperAdmin, async (req, res) => {
+    try {
+      const plans = await storage.getSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ message: "Failed to fetch subscription plans" });
+    }
+  });
+
+  app.patch('/api/superadmin/subscription-plans/:planId', isSuperAdmin, async (req, res) => {
+    try {
+      const { planId } = req.params;
+      const updates = req.body;
+      const updatedPlan = await storage.updateSubscriptionPlan(planId, updates);
+      res.json(updatedPlan);
+    } catch (error) {
+      console.error("Error updating subscription plan:", error);
+      res.status(500).json({ message: "Failed to update subscription plan" });
+    }
+  });
+
+  // Get all TenantVet customers (companies) for enterprise management
+  app.get('/api/superadmin/tenant-customers', isSuperAdmin, async (req, res) => {
+    try {
+      const companies = await storage.getAllCompaniesWithSubscriptions();
+      
+      // Add VetSite count and revenue data
+      const customersWithStats = await Promise.all(
+        companies.map(async (company) => {
+          const tenants = await storage.getCompanyTenants(company.id);
+          const subscription = await storage.getCompanySubscription(company.id);
+          const plan = subscription ? await storage.getSubscriptionPlan(subscription.planId) : null;
+          
+          // Calculate revenue (this would be actual billing data in production)
+          const monthlyRevenue = plan ? parseFloat(plan.monthlyPrice) : 0;
+          
+          return {
+            id: company.id,
+            name: company.name,
+            email: company.email,
+            subscriptionPlan: plan?.displayName || 'Sin Plan',
+            subscriptionStatus: subscription?.status || 'inactive',
+            vetsitesUsed: tenants.length,
+            vetsitesAllowed: plan?.maxTenants || 0,
+            monthlyRevenue,
+            subscriptionStart: subscription?.currentPeriodStart || company.createdAt,
+            subscriptionEnd: subscription?.currentPeriodEnd || company.createdAt
+          };
+        })
+      );
+      
+      res.json(customersWithStats);
+    } catch (error) {
+      console.error("Error fetching tenant customers:", error);
+      res.status(500).json({ message: "Failed to fetch tenant customers" });
+    }
+  });
+
+  // Create new TenantVet customer
+  app.post('/api/superadmin/tenant-customers', isSuperAdmin, async (req, res) => {
+    try {
+      const { name, email, planId } = req.body;
+      
+      // Create company
+      const company = await storage.createCompany({
+        name,
+        email,
+        subscriptionStatus: 'trial',
+        subscriptionPlan: 'trial'
+      });
+      
+      // Create subscription
+      const subscription = await storage.createCompanySubscription({
+        companyId: company.id,
+        planId,
+        status: 'trial',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days trial
+      });
+      
+      res.json({ company, subscription });
+    } catch (error) {
+      console.error("Error creating tenant customer:", error);
+      res.status(500).json({ message: "Failed to create tenant customer" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
