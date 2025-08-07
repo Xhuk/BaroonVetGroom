@@ -298,10 +298,11 @@ export default function ReceiptTemplatesAdmin() {
 
     try {
       // Get upload URL
-      const uploadResponse = await apiRequest('/api/admin/receipt-templates/upload-url', 'POST', { fileName: selectedFile.name }) as { uploadURL: string };
+      const uploadResponse = await apiRequest('/api/admin/receipt-templates/upload-url', 'POST', { fileName: selectedFile.name });
+      const { uploadURL } = await uploadResponse.json() as { uploadURL: string };
 
       // Upload file to object storage
-      const uploadResult = await fetch(uploadResponse.uploadURL, {
+      const uploadResult = await fetch(uploadURL, {
         method: 'PUT',
         body: selectedFile,
         headers: {
@@ -318,7 +319,7 @@ export default function ReceiptTemplatesAdmin() {
         name: templateName,
         description: templateDescription,
         templateType: 'receipt',
-        fileUrl: uploadResponse.uploadURL.split('?')[0], // Remove query parameters
+        fileUrl: uploadURL.split('?')[0], // Remove query parameters
         fileName: selectedFile.name,
         fileSize: selectedFile.size,
         version: '1.0',
@@ -936,7 +937,7 @@ export default function ReceiptTemplatesAdmin() {
                     <div className="text-sm text-amber-700 space-y-2">
                       <p><strong>Estructura requerida:</strong> recibo.html, styles.css, config.json</p>
                       <p><strong>Carpetas opcionales:</strong> assets/ (logos, imágenes), fonts/ (tipografías)</p>
-                      <p><strong>Variables del sistema:</strong> Use {'{'}{'{'} empresa_nombre {'}'}{'}' para datos dinámicos</p>
+                      <p><strong>Variables del sistema:</strong> Use {'{{ empresa_nombre }}'} para datos dinámicos</p>
                       <p><strong>Tamaño máximo:</strong> 50MB</p>
                     </div>
                   </div>
