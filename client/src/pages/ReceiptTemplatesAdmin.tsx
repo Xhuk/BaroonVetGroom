@@ -1392,9 +1392,15 @@ export default function ReceiptTemplatesAdmin() {
                 const selectedTemplateData = preDesignedTemplates.find(t => t.htmlPreview === previewTemplate);
                 if (selectedTemplateData) {
                   setSelectedTemplate(selectedTemplateData.id);
+                  // Auto-configure the template based on the selected sample
+                  setTemplateConfig({
+                    ...templateConfig,
+                    headerStyle: selectedTemplateData.id.replace('header-', '')
+                  });
                   setShowPreview(false);
                   setActiveTab('wizard');
-                  setWizardStep(1);
+                  // Start from step 2 since template is already selected
+                  setWizardStep(2);
                 }
               }}
               className="bg-blue-600 hover:bg-blue-700"
