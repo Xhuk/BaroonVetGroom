@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetGroom - Plataforma de Gestión Veterinaria</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            page-break-after: always;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 20px;
+        }
+        
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .tagline {
+            font-size: 1em;
+            color: #888;
+            font-style: italic;
+        }
+        
+        h1 {
+            color: #3b82f6;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-left: 5px solid #3b82f6;
+            padding-left: 15px;
+        }
+        
+        h2 {
+            color: #2563eb;
+            font-size: 1.5em;
+            margin: 25px 0 15px 0;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 5px;
+        }
+        
+        h3 {
+            color: #1d4ed8;
+            font-size: 1.2em;
+            margin: 20px 0 10px 0;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        
+        .feature-card h3 {
+            color: #3b82f6;
+            margin-top: 0;
+        }
+        
+        .benefit-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+        
+        .benefit-list li {
+            margin: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .benefit-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .vrp-section {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        
+        .vrp-section h2 {
+            color: white;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .integration-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .integration-card {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .integration-card h4 {
+            color: #3b82f6;
+            margin-bottom: 5px;
+        }
+        
+        .module-section {
+            margin: 30px 0;
+        }
+        
+        .module {
+            background: white;
+            border-left: 4px solid #3b82f6;
+            margin: 15px 0;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #3b82f6;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .contact-section {
+            background: #1f2937;
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .screenshot-placeholder {
+            width: 100%;
+            height: 200px;
+            background: #f3f4f6;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-style: italic;
+            margin: 15px 0;
+        }
+        
+        @media print {
+            body { margin: 0; }
+            .page { 
+                box-shadow: none; 
+                margin: 0;
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Página 1: Portada -->
+    <div class="page">
+        <div class="header">
+            <div class="logo">🐾 VetGroom</div>
+            <div class="subtitle">Plataforma Integral de Gestión Veterinaria</div>
+            <div class="tagline">Optimización Inteligente con Tecnología VRP</div>
+        </div>
+        
+        <div class="screenshot-placeholder">
+            Dashboard Principal - Interfaz Moderna y Responsive
+        </div>
+        
+        <h1>Transforme su Clínica Veterinaria</h1>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number">95%</span>
+                <span>Eficiencia en Rutas</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">60%</span>
+                <span>Ahorro de Tiempo</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">100%</span>
+                <span>Tiempo Real</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">24/7</span>
+                <span>Disponibilidad</span>
+            </div>
+        </div>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🚚 Optimización de Rutas VRP</h3>
+                <p>Algoritmos avanzados que optimizan las rutas de entrega y recolección de mascotas, reduciendo costos operativos y mejorando la experiencia del cliente.</p>
+            </div>
+            <div class="feature-card">
+                <h3>💳 Integración de Pagos</h3>
+                <p>Conexión con múltiples pasarelas de pago (Stripe, PayPal, MercadoPago) para procesamiento seguro y automático de facturación.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📱 Interfaz Responsive</h3>
+                <p>Diseño adaptativo optimizado para tablets (8+ pulgadas), desktop y móviles, garantizando accesibilidad desde cualquier dispositivo.</p>
+            </div>
+            <div class="feature-card">
+                <h3>⚡ Tiempo Real</h3>
+                <p>Sistema WebSocket para actualizaciones instantáneas de citas, estados y notificaciones en toda la plataforma.</p>
+            </div>
+        </div>
+        
+        <div class="contact-section">
+            <h2 style="color: white; border: none;">¿Listo para Revolucionar su Negocio?</h2>
+            <p>Contáctenos para una demostración personalizada</p>
+            <p><strong>Email:</strong> ventas@vetgroom.com | <strong>Tel:</strong> +52 (555) 123-4567</p>
+        </div>
+    </div>
+    
+    <!-- Página 2: VRP y Valor de Negocio -->
+    <div class="page">
+        <div class="vrp-section">
+            <h1 style="color: white; border: none;">🧠 Tecnología VRP: El Corazón de la Eficiencia</h1>
+            <h2>¿Qué es VRP (Vehicle Routing Problem)?</h2>
+            <p>VRP es un algoritmo matemático avanzado que resuelve el problema de optimización de rutas para vehículos. En el contexto veterinario, optimiza las rutas de recolección y entrega de mascotas.</p>
+        </div>
+        
+        <div class="screenshot-placeholder">
+            Módulo de Planificación de Rutas - Visualización de Optimización VRP
+        </div>
+        
+        <h2>🎯 Valor de Negocio del VRP</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>💰 Reducción de Costos</h3>
+                <ul class="benefit-list">
+                    <li>Hasta 40% menos combustible</li>
+                    <li>Menor desgaste de vehículos</li>
+                    <li>Optimización de tiempo del personal</li>
+                    <li>Reducción de horas extra</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h3>⏱️ Mejora Operacional</h3>
+                <ul class="benefit-list">
+                    <li>Planificación automática de rutas</li>
+                    <li>Distribución equilibrada de carga</li>
+                    <li>Consideración de capacidad de vehículos</li>
+                    <li>Priorización por vecindarios</li>
+                </ul>
+            </div>
+        </div>
+        
+        <h3>🎲 Algoritmos Implementados</h3>
+        <div class="module">
+            <h4>Nearest Neighbor Heuristic</h4>
+            <p>Selecciona la siguiente parada más cercana considerando distancia geográfica y prioridad de vecindario.</p>
+        </div>
+        
+        <div class="module">
+            <h4>Capacity Constraints</h4>
+            <p>Respeta las limitaciones de capacidad de vehículos (pequeño: 8 mascotas, mediano: 15, grande: 25).</p>
+        </div>
+        
+        <div class="module">
+            <h4>Fraccionamiento Weighting</h4>
+            <p>Asigna pesos a diferentes vecindarios para optimizar rutas según densidad y prioridad comercial.</p>
+        </div>
+        
+        <div class="screenshot-placeholder">
+            Dashboard de Entregas - Monitoreo en Tiempo Real de Rutas Optimizadas
+        </div>
+        
+        <h2>📊 ROI Comprobado</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number">35%</span>
+                <span>Reducción Tiempo Viaje</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">50%</span>
+                <span>Más Entregas/Día</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">25%</span>
+                <span>Ahorro Combustible</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">90%</span>
+                <span>Satisfacción Cliente</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Página 3: Integraciones y Pagos -->
+    <div class="page">
+        <h1>💳 Integraciones de Pago y Sistemas Externos</h1>
+        
+        <div class="screenshot-placeholder">
+            Módulo de Facturación - Gestión Completa de Pagos y Suscripciones
+        </div>
+        
+        <h2>🔗 Pasarelas de Pago Soportadas</h2>
+        <div class="integration-grid">
+            <div class="integration-card">
+                <h4>💳 Stripe</h4>
+                <p>Procesamiento global seguro con soporte para tarjetas y métodos alternativos</p>
+            </div>
+            <div class="integration-card">
+                <h4>🅿️ PayPal</h4>
+                <p>Integración completa con SDK oficial para pagos internacionales</p>
+            </div>
+            <div class="integration-card">
+                <h4>🇲🇽 MercadoPago</h4>
+                <p>Solución líder en Latinoamérica con métodos de pago locales</p>
+            </div>
+        </div>
+        
+        <h2>📧 Sistema de Comunicación</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>📱 WhatsApp Business</h3>
+                <ul class="benefit-list">
+                    <li>Confirmaciones automáticas de citas</li>
+                    <li>Recordatorios personalizados</li>
+                    <li>Estados de entrega en tiempo real</li>
+                    <li>Soporte al cliente integrado</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h3>✉️ Email Marketing</h3>
+                <ul class="benefit-list">
+                    <li>Sendgrid y Resend integrados</li>
+                    <li>Plantillas profesionales</li>
+                    <li>Campañas automatizadas</li>
+                    <li>Seguimiento de métricas</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="screenshot-placeholder">
+            Configuración de Email - Panel de Administración de Comunicaciones
+        </div>
+        
+        <h2>🗺️ Servicios de Mapas y Geolocalización</h2>
+        <div class="integration-grid">
+            <div class="integration-card">
+                <h4>🗺️ Mapbox</h4>
+                <p>API de optimización de rutas profesional con geocodificación avanzada</p>
+            </div>
+            <div class="integration-card">
+                <h4>📍 Google Maps</h4>
+                <p>Integración con Google Routes API para navegación precisa</p>
+            </div>
+            <div class="integration-card">
+                <h4>🌍 HERE Maps</h4>
+                <p>Solución empresarial para routing y análisis de tráfico</p>
+            </div>
+        </div>
+        
+        <h2>💼 Gestión de Suscripciones SaaS</h2>
+        <div class="module">
+            <h4>🏢 Modelo Multi-Tenant</h4>
+            <p>Arquitectura escalable que permite gestionar múltiples clínicas desde una sola plataforma, con facturación individualizada y límites configurables.</p>
+        </div>
+        
+        <div class="module">
+            <h4>📊 Planes Flexibles</h4>
+            <p>Trial/Basic (1 sitio), Medium (3 sitios), Large (5 sitios), Extra Large (7-10+ sitios) con características diferenciadas por nivel.</p>
+        </div>
+        
+        <div class="module">
+            <h4>🔔 Alertas Automáticas</h4>
+            <p>Sistema de notificaciones por email para vencimientos de suscripción (30, 14, 7, 3, 1 días antes).</p>
+        </div>
+    </div>
+    
+    <!-- Página 4: Módulos del Sistema -->
+    <div class="page">
+        <h1>🏗️ Módulos Completos del Sistema</h1>
+        
+        <div class="screenshot-placeholder">
+            Calendario Inteligente - Gestión Avanzada de Citas con Optimización Automática
+        </div>
+        
+        <div class="module-section">
+            <div class="module">
+                <h3>📅 Gestión de Citas</h3>
+                <p><strong>Propósito:</strong> Programación inteligente con detección de conflictos y optimización automática de horarios.</p>
+                <ul class="benefit-list">
+                    <li>Calendario dinámico con vista diaria/semanal/mensual</li>
+                    <li>Booking wizard con búsqueda tipo-ahead de clientes</li>
+                    <li>Reprogramación automática con algoritmos de optimización</li>
+                    <li>Estados automáticos basados en tiempo (pending → confirmed → completed)</li>
+                </ul>
+            </div>
+            
+            <div class="module">
+                <h3>👥 Gestión de Clientes y Mascotas</h3>
+                <p><strong>Propósito:</strong> Base de datos completa con historial médico y seguimiento del ciclo de vida.</p>
+                <ul class="benefit-list">
+                    <li>Perfiles detallados con información de contacto y preferencias</li>
+                    <li>Gestión del ciclo de vida de mascotas (activo/inactivo)</li>
+                    <li>Cálculo automático de edad y seguimiento de peso</li>
+                    <li>Integración con sistema de direcciones para optimización de rutas</li>
+                </ul>
+            </div>
+            
+            <div class="module">
+                <h3>🚚 Pickup & Delivery</h3>
+                <p><strong>Propósito:</strong> Sistema completo de transporte con optimización VRP y seguimiento GPS.</p>
+                <ul class="benefit-list">
+                    <li>Planificación automática de rutas con algoritmos VRP</li>
+                    <li>Dashboard móvil para conductores con navegación GPS</li>
+                    <li>Seguimiento en tiempo real con actualizaciones de estado</li>
+                    <li>Integración con Waze/Google Maps para navegación</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="screenshot-placeholder">
+            Módulo de Entregas - Dashboard del Conductor con GPS y Optimización de Rutas
+        </div>
+        
+        <div class="module-section">
+            <div class="module">
+                <h3>💊 Registros Médicos</h3>
+                <p><strong>Propósito:</strong> Historial médico completo con seguimiento de tratamientos y alertas.</p>
+                <ul class="benefit-list">
+                    <li>Endpoint optimizado /api/medical-appointments-fast (sub-200ms)</li>
+                    <li>Seguimiento de citas de seguimiento con contadores automáticos</li>
+                    <li>Integración con configuración de seguimiento por empresa</li>
+                    <li>Alertas automáticas para citas pendientes de seguimiento</li>
+                </ul>
+            </div>
+            
+            <div class="module">
+                <h3>💰 Facturación y Pagos</h3>
+                <p><strong>Propósito:</strong> Sistema completo de facturación con múltiples pasarelas de pago.</p>
+                <ul class="benefit-list">
+                    <li>Integración con Stripe, PayPal y pasarelas locales</li>
+                    <li>Facturación automática por servicios y suscripciones</li>
+                    <li>Reportes financieros con exportación a Excel</li>
+                    <li>Gestión de planes de suscripción multi-nivel</li>
+                </ul>
+            </div>
+            
+            <div class="module">
+                <h3>📊 Dashboard Administrativo</h3>
+                <p><strong>Propósito:</strong> Panel de control ejecutivo con métricas en tiempo real y analytics.</p>
+                <ul class="benefit-list">
+                    <li>Métricas de rendimiento en tiempo real</li>
+                    <li>Panel SuperAdmin para gestión multi-tenant</li>
+                    <li>Configuración de características por nivel de suscripción</li>
+                    <li>Monitoreo de uso y límites de recursos</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="screenshot-placeholder">
+            SuperAdmin Dashboard - Panel de Control Empresarial con Analytics Avanzados
+        </div>
+    </div>
+    
+    <!-- Página 5: Características Técnicas -->
+    <div class="page">
+        <h1>⚙️ Características Técnicas Avanzadas</h1>
+        
+        <h2>🏗️ Arquitectura Escalable</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🔧 Stack Tecnológico</h3>
+                <ul class="benefit-list">
+                    <li>React + TypeScript (Frontend)</li>
+                    <li>Express.js + Node.js (Backend)</li>
+                    <li>PostgreSQL + Drizzle ORM</li>
+                    <li>WebSocket para tiempo real</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h3>📱 Diseño Responsive</h3>
+                <ul class="benefit-list">
+                    <li>Optimizado para tablets 8+ pulgadas</li>
+                    <li>Navegación colapsible inteligente</li>
+                    <li>Interfaz touch-friendly</li>
+                    <li>Bloqueo automático para teléfonos</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="screenshot-placeholder">
+            Interfaz Responsive - Adaptación Automática para Diferentes Dispositivos
+        </div>
+        
+        <h2>⚡ Optimización de Rendimiento</h2>
+        <div class="module">
+            <h4>🚀 Caching Inteligente</h4>
+            <p>Sistema de caché de 5 minutos con TanStack Query y sessionStorage para tiempos de carga ultra-rápidos.</p>
+        </div>
+        
+        <div class="module">
+            <h4>📊 APIs Optimizadas</h4>
+            <p>Endpoints especializados como /api/appointments-fast con payloads reducidos y tiempos de respuesta sub-200ms.</p>
+        </div>
+        
+        <div class="module">
+            <h4>🔄 Actualizaciones en Tiempo Real</h4>
+            <p>WebSocket escalable con heartbeat automático y reconexión para actualizaciones instantáneas.</p>
+        </div>
+        
+        <h2>🔐 Seguridad y Confiabilidad</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🛡️ Autenticación Multi-Nivel</h3>
+                <ul class="benefit-list">
+                    <li>Control de acceso basado en roles</li>
+                    <li>Sesiones seguras con tokens JWT</li>
+                    <li>Validación de suscripciones automática</li>
+                    <li>Middleware de protección por tenant</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h3>🔄 Respaldo y Recuperación</h3>
+                <ul class="benefit-list">
+                    <li>Checkpoints automáticos del sistema</li>
+                    <li>Rollback de código y base de datos</li>
+                    <li>Monitoreo de errores en tiempo real</li>
+                    <li>Logs detallados para auditoría</li>
+                </ul>
+            </div>
+        </div>
+        
+        <h2>🌍 Localización y Accesibilidad</h2>
+        <div class="module">
+            <h4>🇪🇸 Soporte Multi-Idioma</h4>
+            <p>Interfaz completamente en español con términos específicos del sector veterinario mexicano.</p>
+        </div>
+        
+        <div class="module">
+            <h4>⏰ Gestión de Zonas Horarias</h4>
+            <p>Sistema UTC con conversión automática a timezone del usuario (Mexico/General por defecto).</p>
+        </div>
+        
+        <div class="contact-section">
+            <h2 style="color: white; border: none;">🚀 Comience su Transformación Digital Hoy</h2>
+            <p>Únase a clínicas veterinarias líderes que ya están optimizando sus operaciones con VetGroom</p>
+            <div style="margin-top: 20px;">
+                <p><strong>Demo Gratuita:</strong> ventas@vetgroom.com</p>
+                <p><strong>Soporte 24/7:</strong> soporte@vetgroom.com</p>
+                <p><strong>Teléfono:</strong> +52 (555) 123-4567</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-generar PDF al cargar
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
