@@ -70,6 +70,86 @@ select.dark,
   color: rgb(243 244 246) !important; /* gray-100 */
 }
 
+/* Ethereal Pulse Effect for Current Time Indicator when slot is empty */
+.ethereal-pulse-line {
+  position: relative;
+  border-radius: 3px;
+  
+  /* Vibrant gradient for the line itself */
+  background: linear-gradient(
+    90deg,
+    rgba(239, 68, 68, 0.1) 0%,     /* Red, very transparent */
+    rgba(239, 68, 68, 0.8) 10%,    /* Red, more opaque */
+    rgba(220, 38, 127, 1) 25%,     /* Pink-red, fully opaque */
+    rgba(220, 38, 127, 1) 35%,     /* Keep pink-red opaque */
+    rgba(239, 68, 68, 0.8) 50%,    /* Red, more opaque */
+    rgba(239, 68, 68, 0.1) 60%     /* Red, very transparent */
+  );
+  background-size: 200% 100%;
+  background-position: 0% 0%;
+
+  /* Initial blur for the base line */
+  filter: blur(1px); 
+  
+  /* Soft glow effect */
+  box-shadow: 0 0 10px rgba(220, 38, 127, 0.7), 
+              0 0 20px rgba(239, 68, 68, 0.5);
+
+  /* Animation properties */
+  animation: 
+    ethereal-pulse 4s infinite alternate ease-in-out,
+    glow-pulse 4s infinite alternate ease-in-out;
+}
+
+@keyframes ethereal-pulse {
+  0% {
+    height: 4px;
+    filter: blur(1px);
+    background-size: 200% 100%;
+    background-position: 0% 0%;
+  }
+  25% {
+    height: 6px;
+    filter: blur(2px);
+    background-size: 180% 100%;
+    background-position: 20% 0%;
+  }
+  50% {
+    height: 8px;
+    filter: blur(3px);
+    background-size: 150% 100%;
+    background-position: 50% 0%;
+  }
+  75% {
+    height: 6px;
+    filter: blur(2px);
+    background-size: 180% 100%;
+    background-position: 80% 0%;
+  }
+  100% {
+    height: 4px;
+    filter: blur(1px);
+    background-size: 200% 100%;
+    background-position: 100% 0%;
+  }
+}
+
+@keyframes glow-pulse {
+  0% {
+    box-shadow: 0 0 10px rgba(220, 38, 127, 0.7), 
+                0 0 20px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(220, 38, 127, 1), 
+                0 0 30px rgba(239, 68, 68, 0.8),
+                0 0 40px rgba(220, 38, 127, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(220, 38, 127, 0.7), 
+                0 0 20px rgba(239, 68, 68, 0.5);
+  }
+}
+
 /* Force dark mode for option elements */
 .dark option,
 .dark select option,

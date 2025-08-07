@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethereal Pulse Line</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); /* Dark, subtle gradient background */
+            overflow: hidden;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            color: #e0e0e0; /* Light text color for any potential text */
+        }
+
+        .ethereal-pulse-line {
+            width: 80%; /* Slightly narrower for better framing */
+            max-width: 800px; /* Max width to prevent it from getting too wide on large screens */
+            height: 5px; /* Base thickness */
+            border-radius: 3px; /* More rounded corners */
+            position: relative; /* Needed for potential pseudo-elements or more complex effects */
+            
+            /* Vibrant gradient for the line itself */
+            background: linear-gradient(
+                90deg,
+                rgba(135, 206, 250, 0.1) 0%,     /* Light blue, very transparent */
+                rgba(135, 206, 250, 0.8) 10%,    /* Light blue, more opaque */
+                rgba(147, 112, 219, 1) 25%,      /* Medium purple, fully opaque */
+                rgba(147, 112, 219, 1) 35%,      /* Keep purple opaque */
+                rgba(135, 206, 250, 0.8) 50%,    /* Light blue, more opaque */
+                rgba(135, 206, 250, 0.1) 60%     /* Light blue, very transparent */
+            );
+            background-size: 200% 100%; /* Initial size for the repeating gradient */
+            background-position: 0% 0%; /* Start position for animation */
+
+            /* Initial blur for the base line */
+            filter: blur(1px); 
+            
+            /* Soft glow effect */
+            box-shadow: 0 0 10px rgba(147, 112, 219, 0.7), 
+                        0 0 20px rgba(135, 206, 250, 0.5);
+
+            /* Animation properties */
+            animation: 
+                ethereal-pulse 4s infinite alternate ease-in-out,
+                glow-pulse 4s infinite alternate ease-in-out; /* Separate animation for glow */
+        }
+
+        @keyframes ethereal-pulse {
+            0% {
+                height: 5px;
+                filter: blur(1px);
+                background-size: 200% 100%;
+                background-position: 0% 0%;
+            }
+            25% {
+                height: 10px; /* Expand slightly */
+                filter: blur(3px);
+                background-size: 180% 100%; /* Slightly compress the pattern */
+                background-position: 20% 0%; /* Move the pattern */
+            }
+            50% {
+                height: 15px; /* Max expansion */
+                filter: blur(6px);
+                background-size: 150% 100%; /* More compression */
+                background-position: 50% 0%; /* Move the pattern further */
+            }
+            75% {
+                height: 10px; /* Contract slightly */
+                filter: blur(3px);
+                background-size: 180% 100%;
+                background-position: 80% 0%;
+            }
+            100% {
+                height: 5px; /* Return to base */
+                filter: blur(1px);
+                background-size: 200% 100%;
+                background-position: 100% 0%; /* Pattern moves across the line */
+            }
+        }
+
+        @keyframes glow-pulse {
+            0% {
+                box-shadow: 0 0 10px rgba(147, 112, 219, 0.7), 
+                            0 0 20px rgba(135, 206, 250, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 15px rgba(147, 112, 219, 1), 
+                            0 0 30px rgba(135, 206, 250, 0.8),
+                            0 0 40px rgba(147, 112, 219, 0.3); /* Stronger glow at peak */
+            }
+            100% {
+                box-shadow: 0 0 10px rgba(147, 112, 219, 0.7), 
+                            0 0 20px rgba(135, 206, 250, 0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ethereal-pulse-line"></div>
+
+</body>
+</html>

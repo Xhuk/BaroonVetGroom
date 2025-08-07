@@ -304,6 +304,34 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   const currentTimeInfo = getCurrentTimeSlotInfo();
   const isMarkerInOccupiedSlot = isTimeMarkerInOccupiedSlot();
   
+  // Check if current time slot is empty for ethereal pulse effect
+  const getCurrentTimeSlotAppointments = () => {
+    if (!currentTimeInfo || displayDate !== getTodayInUserTimezone()) {
+      return [];
+    }
+    
+    const now = getCurrentTimeInUserTimezone(timezone);
+    const currentHour = now.getUTCHours();
+    const currentMinute = now.getUTCMinutes();
+    
+    // Find appointments in the current time slot (30-minute intervals)
+    const slotStart = Math.floor(currentMinute / 30) * 30;
+    const currentSlot = `${String(currentHour).padStart(2, '0')}:${String(slotStart).padStart(2, '0')}`;
+    
+    return appointments.filter(appointment => {
+      if (!appointment.scheduledDate || !appointment.scheduledTime) return false;
+      
+      const appointmentDate = appointment.scheduledDate.split('T')[0];
+      if (appointmentDate !== displayDate) return false;
+      
+      const appointmentTime = appointment.scheduledTime;
+      return appointmentTime === currentSlot;
+    });
+  };
+  
+  const currentSlotAppointments = getCurrentTimeSlotAppointments();
+  const isCurrentSlotEmpty = currentSlotAppointments.length === 0;
+  
   // Red line is fixed at 50% of card container - always visible
   const getRedLineStyle = () => {
     if (!currentTimeInfo || displayDate !== getTodayInUserTimezone()) {
@@ -363,10 +391,13 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
               className="absolute z-20 pointer-events-none left-0 right-0"
               style={redLineStyle}
             >
-              {/* Prominent red line fixed at center */}
+              {/* Prominent red line fixed at center - with ethereal pulse when slot is empty */}
               <div 
-                className="w-full h-[2px] opacity-90"
-                style={{
+                className={cn(
+                  "w-full opacity-90",
+                  isCurrentSlotEmpty ? "ethereal-pulse-line h-[4px]" : "h-[2px]"
+                )}
+                style={isCurrentSlotEmpty ? {} : {
                   background: 'linear-gradient(90deg, transparent 0%, rgba(239, 68, 68, 0.9) 10%, rgba(239, 68, 68, 1) 50%, rgba(239, 68, 68, 0.9) 90%, transparent 100%)',
                   boxShadow: '0 0 4px rgba(239, 68, 68, 0.5)',
                 }}
