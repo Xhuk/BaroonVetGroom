@@ -1,4 +1,14 @@
 import { useState, useEffect } from 'react';
+import { 
+  isMobile, 
+  isTablet, 
+  isDesktop,
+  deviceType,
+  browserName,
+  osName,
+  mobileVendor,
+  mobileModel
+} from 'mobile-device-detect';
 
 interface DeviceInfo {
   width: number;
@@ -10,8 +20,8 @@ interface DeviceInfo {
   deviceType: 'phone' | 'small-tablet' | 'tablet' | 'desktop';
   userAgent: string;
   deviceName: string;
-  isAndroidTablet: boolean;
-  isIPad: boolean;
+  browserName: string;
+  osName: string;
   screenDensity: number;
 }
 
@@ -19,89 +29,65 @@ function detectDevice(): DeviceInfo {
   const width = window.innerWidth;
   const height = window.innerHeight;
   const userAgent = navigator.userAgent;
-  const ua = userAgent.toLowerCase();
   const screenDensity = window.devicePixelRatio || 1;
   
-  // Advanced device detection using navigator
-  const isAndroidTablet = ua.includes('android') && !ua.includes('mobile');
-  const isIPad = ua.includes('ipad') || (ua.includes('macintosh') && 'ontouchend' in document);
-  const isTabletUA = isAndroidTablet || isIPad || ua.includes('tablet');
-  const isPhoneUA = (ua.includes('android') && ua.includes('mobile')) || 
-                    ua.includes('iphone') || ua.includes('ipod') ||
-                    ua.includes('blackberry') || ua.includes('windows phone');
+  // Use mobile-device-detect for reliable detection
+  let detectedDeviceType: 'phone' | 'small-tablet' | 'tablet' | 'desktop';
+  let isPhone = false, isSmallTablet = false, isTabletDevice = false, isDesktopDevice = false;
   
-  // Device name detection
-  let deviceName = 'Unknown Device';
-  if (ua.includes('sm-x')) {
-    // Samsung Galaxy Tab series
-    if (ua.includes('sm-x200') || ua.includes('sm-x205')) {
-      deviceName = 'Samsung Galaxy Tab A7 Lite';
-    } else if (ua.includes('sm-x700') || ua.includes('sm-x706')) {
-      deviceName = 'Samsung Galaxy Tab S7';
-    } else if (ua.includes('sm-x800') || ua.includes('sm-x806')) {
-      deviceName = 'Samsung Galaxy Tab S8';
-    } else {
-      deviceName = 'Samsung Galaxy Tab';
-    }
-  } else if (ua.includes('xiaomi') || ua.includes('mi pad') || ua.includes('miuibrowser')) {
-    deviceName = 'Xiaomi Tablet';
-  } else if (ua.includes('ipad')) {
-    if (ua.includes('ipad air')) {
-      deviceName = 'iPad Air';
-    } else if (ua.includes('ipad pro')) {
-      deviceName = 'iPad Pro';
-    } else if (ua.includes('ipad mini')) {
-      deviceName = 'iPad Mini';
-    } else {
-      deviceName = 'iPad';
-    }
-  } else if (ua.includes('iphone')) {
-    deviceName = 'iPhone';
-  } else if (ua.includes('android')) {
-    deviceName = isTabletUA ? 'Android Tablet' : 'Android Phone';
-  } else if (ua.includes('macintosh')) {
-    deviceName = 'Mac';
-  } else if (ua.includes('windows')) {
-    deviceName = 'Windows PC';
-  }
-  
-  // Intelligent device classification combining UA and screen metrics
-  let deviceType: 'phone' | 'small-tablet' | 'tablet' | 'desktop';
-  let isPhone = false, isSmallTablet = false, isTablet = false, isDesktop = false;
-  
-  if (isPhoneUA || (width < 640 && !isTabletUA)) {
-    deviceType = 'phone';
+  if (isMobile && !isTablet) {
+    // Phone
+    detectedDeviceType = 'phone';
     isPhone = true;
-  } else if (isTabletUA && width < 1200) {
-    // Most tablets including 8-10 inch tablets (like Xiaomi Tab 8)
-    deviceType = 'small-tablet';
-    isSmallTablet = true;
-  } else if (isTabletUA || (width >= 1200 && width < 1440)) {
-    // Large tablets 12+ inch
-    deviceType = 'tablet';
-    isTablet = true;
+  } else if (isTablet) {
+    // Tablet - determine size based on screen width
+    if (width < 1024) {
+      // Small tablets (8-10 inch) like iPad Mini, Android 8" tablets
+      detectedDeviceType = 'small-tablet';
+      isSmallTablet = true;
+    } else {
+      // Large tablets (10+ inch) like iPad Pro, large Android tablets
+      detectedDeviceType = 'tablet';
+      isTabletDevice = true;
+    }
   } else {
     // Desktop/laptop
-    deviceType = 'desktop';
-    isDesktop = true;
+    detectedDeviceType = 'desktop';
+    isDesktopDevice = true;
   }
   
-  console.log(`Device detected: ${deviceName} (${deviceType}) - ${width}x${height}`);
-  console.log(`isAndroidTablet: ${isAndroidTablet}, isTabletUA: ${isTabletUA}, isPhoneUA: ${isPhoneUA}`);
-  console.log(`UA: ${ua.substring(0, 150)}...`);
+  // Generate device name
+  let deviceName = 'Unknown Device';
+  if (mobileVendor && mobileModel) {
+    deviceName = `${mobileVendor} ${mobileModel}`;
+  } else if (mobileVendor) {
+    deviceName = `${mobileVendor} Device`;
+  } else if (isTablet) {
+    deviceName = `${osName} Tablet`;
+  } else if (isMobile) {
+    deviceName = `${osName} Phone`;
+  } else {
+    deviceName = `${osName} Computer`;
+  }
+  
+  console.log(`Device detected by mobile-device-detect:`);
+  console.log(`- Device: ${deviceName} (${detectedDeviceType})`);
+  console.log(`- Screen: ${width}x${height} (${screenDensity}x density)`);
+  console.log(`- Library detection: isMobile=${isMobile}, isTablet=${isTablet}, isDesktop=${isDesktop}`);
+  console.log(`- Browser: ${browserName} on ${osName}`);
   
   return {
     width,
     height,
     isPhone,
     isSmallTablet,
-    isTablet,
-    isDesktop,
-    deviceType,
+    isTablet: isTabletDevice,
+    isDesktop: isDesktopDevice,
+    deviceType: detectedDeviceType,
     userAgent,
     deviceName,
-    isAndroidTablet,
-    isIPad,
+    browserName,
+    osName,
     screenDensity
   };
 }

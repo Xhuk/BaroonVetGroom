@@ -43,15 +43,12 @@ export function ResponsiveNavigation() {
 
   // Debug: Log device detection for Xiaomi Tab 8
   useEffect(() => {
-    console.log(`Device Detection: ${deviceName} (${deviceType}), UserAgent: ${userAgent.substring(0, 50)}...`);
-    console.log(`isSmallTablet: ${isSmallTablet}, Auto-collapse: ${isSmallTablet}`);
-  }, [deviceType, userAgent, deviceName, isSmallTablet]);
+    console.log(`Navigation Detection: ${deviceName} (${deviceType})`);
+    console.log(`Auto-collapse for small tablets: ${isSmallTablet}`);
+  }, [deviceType, deviceName, isSmallTablet]);
 
   // Auto-collapse on actual small tablets (8-10 inches) like Xiaomi Tab 8
   const shouldCollapse = isSmallTablet || isCollapsed;
-  
-  // Force debug log current state
-  console.log(`Navigation: shouldCollapse=${shouldCollapse}, isSmallTablet=${isSmallTablet}, deviceType=${deviceType}`);
   
   // Mobile overlay menu for very small screens
   const showMobileMenu = !isTablet && !isDesktop;
