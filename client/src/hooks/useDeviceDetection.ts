@@ -82,12 +82,13 @@ function detectDevice(): DeviceInfo {
     deviceName = `${osName} Computer`;
   }
   
-  console.log(`Device detected by react-device-detect:`);
-  console.log(`- Device: ${deviceName} (${detectedDeviceType})`);
-  console.log(`- Screen: ${width}x${height} (${screenDensity}x density)`);
-  console.log(`- Library detection: isMobile=${isMobile}, isTablet=${isTablet}, isDesktop=${isDesktop}`);
-  console.log(`- Browser: ${browserName} on ${osName}`);
-  console.log(`- Final classification: isSmallTablet=${isSmallTablet} (should collapse navigation)`);
+  console.log(`🔍 DEVICE DETECTION BY REACT-DEVICE-DETECT:`);
+  console.log(`📱 Device: ${deviceName} (${detectedDeviceType})`);
+  console.log(`📐 Screen: ${width}x${height} (${screenDensity}x density)`);
+  console.log(`📚 Library detection: isMobile=${isMobile}, isTablet=${isTablet}, isDesktop=${isDesktop}`);
+  console.log(`🌐 Browser: ${browserName} on ${osName}`);
+  console.log(`✅ Final classification: isSmallTablet=${isSmallTablet} (should collapse navigation)`);
+  console.log(`====================================`);
   
   return {
     width,

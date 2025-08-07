@@ -37,7 +37,11 @@ const navigationItems: NavigationItem[] = [
 
 export function ResponsiveNavigation() {
   const [location] = useLocation();
+  
+  // Force device detection to run and log immediately
+  console.log(`📱 ResponsiveNavigation: Starting device detection...`);
   const { isSmallTablet, isTablet, isDesktop, deviceName, userAgent, deviceType } = useDeviceDetection();
+  console.log(`📱 ResponsiveNavigation: Got device info - ${deviceType}, isSmallTablet: ${isSmallTablet}`);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
