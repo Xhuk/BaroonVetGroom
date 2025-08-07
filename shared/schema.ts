@@ -1130,8 +1130,52 @@ export type InsertPendingInvoice = typeof pendingInvoices.$inferInsert;
 export type InvoiceLineItem = typeof invoiceLineItems.$inferSelect;
 export type InsertInvoiceLineItem = typeof invoiceLineItems.$inferInsert;
 
+// Sales Order Types
+export type SalesOrder = typeof salesOrders.$inferSelect;
+export type InsertSalesOrder = typeof salesOrders.$inferInsert;
+
+export type SalesOrderItem = typeof salesOrderItems.$inferSelect;
+export type InsertSalesOrderItem = typeof salesOrderItems.$inferInsert;
+
+
+
 export type DeliveryConfig = typeof deliveryConfig.$inferSelect;
 export type InsertDeliveryConfig = typeof deliveryConfig.$inferInsert;
+
+// Sales Orders Management System
+export const salesOrders = pgTable("sales_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  customerName: varchar("customer_name").notNull(),
+  customerPhone: varchar("customer_phone"),
+  customerEmail: varchar("customer_email"),
+  customerAddress: text("customer_address"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  paymentStatus: varchar("payment_status").notNull().default("pending"), // pending, confirmed, failed
+  paymentMethod: varchar("payment_method"), // credit, cash, gateway
+  paymentLink: text("payment_link"),
+  receiptLink: text("receipt_link"),
+  paymentGatewayTransactionId: varchar("payment_gateway_transaction_id"),
+  deliveryStatus: varchar("delivery_status").notNull().default("pending"), // pending, in_transit, delivered, confirmed
+  deliveryNotes: text("delivery_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const salesOrderItems = pgTable("sales_order_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salesOrderId: varchar("sales_order_id").notNull().references(() => salesOrders.id, { onDelete: "cascade" }),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  quantity: integer("quantity").notNull().default(1),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  itemType: varchar("item_type").notNull(), // product, medicine, service
+  inventoryItemId: varchar("inventory_item_id"), // Reference to inventory if applicable
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+
 
 // Inventory Management System
 export const inventoryItems = pgTable("inventory_items", {

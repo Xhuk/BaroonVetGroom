@@ -44,6 +44,7 @@ import SubscriptionLanding from "@/pages/SubscriptionLanding";
 import TempLinkHandler from "@/pages/TempLinkHandler";
 import DriverRoute from "@/pages/DriverRoute";
 import DriverMobile from "@/pages/DriverMobile";
+import SalesDelivery from "@/pages/SalesDelivery";
 import { InstantNavigation } from "@/components/InstantNavigation";
 import { DebugBanner } from "@/components/DebugBanner";
 import { DeviceBlocker } from "@/components/DeviceBlocker";
@@ -77,6 +78,7 @@ function Router() {
           <Route path="/inventory" component={Inventory} />
           <Route path="/delivery-plan" component={DeliveryPlan} />
           <Route path="/route-map" component={RoutePlanMap} />
+          <Route path="/sales-delivery" component={SalesDelivery} />
           <Route path="/billing" component={Billing} />
           <Route path="/cashier" component={Cashier} />
           <Route path="/admin" component={Admin} />

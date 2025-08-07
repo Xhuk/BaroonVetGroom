@@ -49,6 +49,8 @@ import {
   inventoryTransactions,
   sales,
   saleItems,
+  salesOrders,
+  salesOrderItems,
   type User,
   type UpsertUser,
   type Company,
@@ -138,6 +140,10 @@ import {
   type InsertSale,
   type SaleItem,
   type InsertSaleItem,
+  type SalesOrder,
+  type InsertSalesOrder,
+  type SalesOrderItem,
+  type InsertSalesOrderItem,
   webhookIntegrations,
   type WebhookIntegration,
   type InsertWebhookIntegration,
@@ -2630,6 +2636,14 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updatedConfig;
+  }
+
+  // Payment Gateway Configuration
+  async getPaymentGatewayConfig(tenantId: string): Promise<PaymentGatewayConfig | undefined> {
+    const [config] = await db.select()
+      .from(paymentGatewayConfig)
+      .where(eq(paymentGatewayConfig.tenantId, tenantId));
+    return config;
   }
 }
 

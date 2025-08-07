@@ -4933,6 +4933,142 @@ This password expires in 24 hours.
     }
   });
 
+  // Sales Delivery Management API Routes
+  // Get sales orders for a tenant
+  app.get('/api/sales-orders/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      // For now, return sample data since we need to implement storage methods
+      const sampleOrders = [
+        {
+          id: "order-1",
+          customerName: "María González",
+          customerPhone: "+525512345678",
+          customerAddress: "Av. Insurgentes 123, Col. Roma Norte, CDMX",
+          items: [
+            { name: "Medicina para Perros", quantity: 2, price: 150.00, type: "medicine" },
+            { name: "Alimento Premium", quantity: 1, price: 450.00, type: "product" }
+          ],
+          totalAmount: 600.00,
+          paymentStatus: "pending",
+          deliveryStatus: "pending",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: "order-2",
+          customerName: "Carlos Ramírez",
+          customerPhone: "+525587654321",
+          customerAddress: "Calle Madero 456, Col. Centro, CDMX",
+          items: [
+            { name: "Vacuna Anual", quantity: 1, price: 380.00, type: "medicine" }
+          ],
+          totalAmount: 380.00,
+          paymentStatus: "confirmed",
+          paymentMethod: "credit",
+          receiptLink: "https://example.com/receipt/order-2",
+          deliveryStatus: "delivered",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
+      res.json(sampleOrders);
+    } catch (error) {
+      console.error("Error fetching sales orders:", error);
+      res.status(500).json({ message: "Failed to fetch sales orders" });
+    }
+  });
+
+  // Get payment gateway configuration for tenant
+  app.get('/api/payment-gateway/config/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      // Check if tenant has payment gateway configured
+      const gatewayConfig = await storage.getPaymentGatewayConfig(tenantId);
+      
+      if (!gatewayConfig || !gatewayConfig.isActive) {
+        return res.json({ enabled: false });
+      }
+
+      // Return sanitized config (no secret keys)
+      res.json({
+        enabled: true,
+        provider: gatewayConfig.gatewayType,
+        publicKey: gatewayConfig.config?.publicKey || null
+      });
+    } catch (error) {
+      console.error("Error fetching payment gateway config:", error);
+      res.status(500).json({ message: "Failed to fetch payment gateway config" });
+    }
+  });
+
+  // Create payment link for sales order
+  app.post('/api/sales-orders/:orderId/payment-link', isAuthenticated, async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      
+      // For demo purposes, generate a mock payment link
+      const paymentLink = `https://payments.example.com/pay/${orderId}?amount=600.00`;
+      
+      // In a real implementation, you would:
+      // 1. Retrieve the order from database
+      // 2. Get payment gateway config for the tenant
+      // 3. Create payment intent/session with the payment provider
+      // 4. Update the order with the payment link
+      
+      res.json({
+        paymentLink,
+        message: "Payment link created successfully"
+      });
+    } catch (error) {
+      console.error("Error creating payment link:", error);
+      res.status(500).json({ message: "Failed to create payment link" });
+    }
+  });
+
+  // Confirm payment for sales order
+  app.post('/api/sales-orders/:orderId/confirm-payment', isAuthenticated, async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      const { paymentMethod } = req.body;
+      
+      // In a real implementation, you would:
+      // 1. Retrieve the order from database
+      // 2. Update payment status to confirmed
+      // 3. Generate receipt
+      // 4. Trigger any post-payment workflows
+      
+      res.json({
+        message: "Payment confirmed successfully",
+        receiptLink: `https://receipts.example.com/receipt/${orderId}`
+      });
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      res.status(500).json({ message: "Failed to confirm payment" });
+    }
+  });
+
+  // Confirm delivery for sales order
+  app.post('/api/sales-orders/:orderId/confirm-delivery', isAuthenticated, async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      const { deliveryNotes } = req.body;
+      
+      // In a real implementation, you would:
+      // 1. Retrieve the order from database
+      // 2. Update delivery status to confirmed
+      // 3. Record delivery notes and timestamp
+      // 4. Trigger any post-delivery workflows
+      
+      res.json({
+        message: "Delivery confirmed successfully"
+      });
+    } catch (error) {
+      console.error("Error confirming delivery:", error);
+      res.status(500).json({ message: "Failed to confirm delivery" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
