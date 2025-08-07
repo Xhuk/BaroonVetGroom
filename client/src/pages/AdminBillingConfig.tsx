@@ -30,6 +30,10 @@ interface BillingConfig {
   groomingFollowUpDays: number;
   groomingFollowUpVariance: number;
   enableGroomingFollowUp: boolean;
+  // Clinical Intervention Pricing
+  clinicalInterventionPricing: 'operation_plus_items' | 'flat_price';
+  enableItemizedCharges: boolean;
+  allowCashierAddItems: boolean;
   deliverySchedulingRules?: any;
   billingRules?: any;
 }
@@ -47,7 +51,10 @@ export default function AdminBillingConfig() {
     autoScheduleDelivery: false,
     groomingFollowUpDays: 30,
     groomingFollowUpVariance: 7,
-    enableGroomingFollowUp: true
+    enableGroomingFollowUp: true,
+    clinicalInterventionPricing: 'operation_plus_items',
+    enableItemizedCharges: true,
+    allowCashierAddItems: true
   });
 
   const { data: billingConfig, isLoading } = useQuery({
@@ -98,6 +105,9 @@ export default function AdminBillingConfig() {
         groomingFollowUpDays: (billingConfig as any).groomingFollowUpDays || 30,
         groomingFollowUpVariance: (billingConfig as any).groomingFollowUpVariance || 7,
         enableGroomingFollowUp: (billingConfig as any).enableGroomingFollowUp ?? true,
+        clinicalInterventionPricing: (billingConfig as any).clinicalInterventionPricing || 'operation_plus_items',
+        enableItemizedCharges: (billingConfig as any).enableItemizedCharges ?? true,
+        allowCashierAddItems: (billingConfig as any).allowCashierAddItems ?? true,
         deliverySchedulingRules: (billingConfig as any).deliverySchedulingRules,
         billingRules: (billingConfig as any).billingRules
       });
@@ -217,6 +227,88 @@ export default function AdminBillingConfig() {
               </div>
               <p className="text-sm text-muted-foreground">
                 Se generará una factura automáticamente al completar cada sesión de grooming.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Clinical Intervention Pricing */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Precios de Intervenciones Clínicas
+              </CardTitle>
+              <CardDescription>
+                Configuración del modelo de precios para intervenciones médicas
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <Label>Modelo de Precios</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="operation-plus-items"
+                      name="pricing-model"
+                      value="operation_plus_items"
+                      checked={config.clinicalInterventionPricing === 'operation_plus_items'}
+                      onChange={(e) => updateField('clinicalInterventionPricing', e.target.value)}
+                      data-testid="radio-operation-plus-items"
+                    />
+                    <Label htmlFor="operation-plus-items" className="cursor-pointer">
+                      Operación + Ítems Utilizados
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground ml-6">
+                    Cobrar el precio de la operación más cada medicamento, material o ítem utilizado
+                  </p>
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="flat-price"
+                      name="pricing-model"
+                      value="flat_price"
+                      checked={config.clinicalInterventionPricing === 'flat_price'}
+                      onChange={(e) => updateField('clinicalInterventionPricing', e.target.value)}
+                      data-testid="radio-flat-price"
+                    />
+                    <Label htmlFor="flat-price" className="cursor-pointer">
+                      Precio Fijo por Intervención
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground ml-6">
+                    Cobrar un precio fijo que incluye toda la intervención y materiales utilizados
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="enable-itemized-charges"
+                  checked={config.enableItemizedCharges}
+                  onCheckedChange={(checked) => updateField('enableItemizedCharges', checked)}
+                  data-testid="switch-enable-itemized-charges"
+                />
+                <Label htmlFor="enable-itemized-charges">
+                  Permitir cargos detallados en la caja
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="allow-cashier-add-items"
+                  checked={config.allowCashierAddItems}
+                  onCheckedChange={(checked) => updateField('allowCashierAddItems', checked)}
+                  data-testid="switch-allow-cashier-add-items"
+                />
+                <Label htmlFor="allow-cashier-add-items">
+                  Permitir al cajero agregar productos adicionales
+                </Label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Esta configuración afecta cómo la caja puede manejar medicamentos, accesorios, vacunas y desparasitantes
               </p>
             </CardContent>
           </Card>

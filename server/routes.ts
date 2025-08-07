@@ -2063,6 +2063,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Company billing configuration endpoints
+  app.get('/api/company-billing-config/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const config = await storage.getCompanyBillingConfig(companyId);
+      res.json(config || {
+        companyId,
+        autoGenerateMedicalInvoices: false,
+        autoGenerateGroomingInvoices: false,
+        allowAdvanceScheduling: true,
+        autoScheduleDelivery: false,
+        groomingFollowUpDays: 30,
+        groomingFollowUpVariance: 7,
+        enableGroomingFollowUp: true,
+        clinicalInterventionPricing: 'operation_plus_items',
+        enableItemizedCharges: true,
+        allowCashierAddItems: true
+      });
+    } catch (error) {
+      console.error("Error fetching billing config:", error);
+      res.status(500).json({ message: "Failed to fetch billing configuration" });
+    }
+  });
+
+  app.put('/api/company-billing-config/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const configData = req.body;
+      
+      // Validate clinical intervention pricing value
+      if (configData.clinicalInterventionPricing && 
+          !['operation_plus_items', 'flat_price'].includes(configData.clinicalInterventionPricing)) {
+        return res.status(400).json({ 
+          message: "Invalid clinical intervention pricing model" 
+        });
+      }
+      
+      const config = await storage.upsertCompanyBillingConfig(companyId, configData);
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating billing config:", error);
+      res.status(500).json({ message: "Failed to update billing configuration" });
+    }
+  });
+
   // Delivery tracking routes
   app.get("/api/delivery-tracking/:tenantId", isAuthenticated, async (req, res) => {
     try {

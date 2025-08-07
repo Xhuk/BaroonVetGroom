@@ -304,6 +304,12 @@ export const companyBillingConfig = pgTable("company_billing_config", {
   groomingFollowUpDays: integer("grooming_follow_up_days").default(30), // Default days for next grooming appointment
   groomingFollowUpVariance: integer("grooming_follow_up_variance").default(7), // ± days for follow-up reminders
   enableGroomingFollowUp: boolean("enable_grooming_follow_up").default(true),
+  // Clinical Intervention Pricing Configuration
+  clinicalInterventionPricing: varchar("clinical_intervention_pricing", { 
+    enum: ["operation_plus_items", "flat_price"] 
+  }).default("operation_plus_items"),
+  enableItemizedCharges: boolean("enable_itemized_charges").default(true),
+  allowCashierAddItems: boolean("allow_cashier_add_items").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({

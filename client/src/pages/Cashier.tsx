@@ -17,7 +17,12 @@ import {
   User,
   CreditCard,
   Truck,
-  Edit3
+  Edit3,
+  Pill,
+  Syringe,
+  Shield,
+  Heart,
+  ShoppingCart
 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import { apiRequest } from "@/lib/queryClient";
@@ -59,6 +64,11 @@ export default function Cashier() {
   const [newItemName, setNewItemName] = useState("");
   const [newItemPrice, setNewItemPrice] = useState("");
   const [newItemQuantity, setNewItemQuantity] = useState("1");
+  const [newItemCategory, setNewItemCategory] = useState("medicine");
+  const [newSaleCustomer, setNewSaleCustomer] = useState("");
+  const [newSalePhone, setNewSalePhone] = useState("");
+  const [showNewSale, setShowNewSale] = useState(false);
+  const [currentSaleItems, setCurrentSaleItems] = useState<SaleItem[]>([]);
 
   // Fetch sales/orders for the tenant
   const { data: sales, isLoading } = useQuery<Sale[]>({
@@ -169,12 +179,98 @@ export default function Cashier() {
 
   const pendingSales = sales?.filter(sale => sale.deliveryStatus !== 'delivered') || [];
 
+  // Create new sale
+  const createSaleMutation = useMutation({
+    mutationFn: async () => {
+      const totalAmount = currentSaleItems.reduce((sum, item) => 
+        sum + (parseFloat(item.unitPrice.toString()) * item.quantity), 0
+      );
+
+      return apiRequest(`/api/sales/${currentTenant?.id}`, "POST", {
+        customerName: newSaleCustomer,
+        customerPhone: newSalePhone,
+        items: currentSaleItems,
+        totalAmount,
+        paymentStatus: 'pending',
+        deliveryStatus: 'pending'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      setNewSaleCustomer("");
+      setNewSalePhone("");
+      setCurrentSaleItems([]);
+      setShowNewSale(false);
+      toast({
+        title: "Venta Creada",
+        description: "La nueva venta ha sido registrada exitosamente",
+      });
+    },
+  });
+
+  // Add item to current sale
+  const addItemToCurrentSale = () => {
+    if (!newItemName || !newItemPrice || !newItemQuantity) return;
+
+    const newItem: SaleItem = {
+      id: `temp-${Date.now()}`,
+      name: newItemName,
+      quantity: parseInt(newItemQuantity),
+      unitPrice: parseFloat(newItemPrice),
+      total: parseInt(newItemQuantity) * parseFloat(newItemPrice),
+      delivered: false,
+      category: newItemCategory
+    };
+
+    setCurrentSaleItems([...currentSaleItems, newItem]);
+    setNewItemName("");
+    setNewItemPrice("");
+    setNewItemQuantity("1");
+    setNewItemCategory("medicine");
+  };
+
+  const removeItemFromCurrentSale = (index: number) => {
+    setCurrentSaleItems(currentSaleItems.filter((_, i) => i !== index));
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'medicine': return <Pill className="h-4 w-4" />;
+      case 'vaccine': return <Syringe className="h-4 w-4" />;
+      case 'deworming': return <Shield className="h-4 w-4" />;
+      case 'accessory': return <Package className="h-4 w-4" />;
+      case 'service': return <Heart className="h-4 w-4" />;
+      default: return <Package className="h-4 w-4" />;
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'medicine': return 'bg-blue-100 text-blue-800';
+      case 'vaccine': return 'bg-green-100 text-green-800';
+      case 'deworming': return 'bg-purple-100 text-purple-800';
+      case 'accessory': return 'bg-orange-100 text-orange-800';
+      case 'service': return 'bg-pink-100 text-pink-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Caja y Entrega</h1>
-        <div className="text-sm text-gray-600">
-          {pendingSales.length} entregas pendientes
+        <div className="flex items-center gap-4">
+          <Button 
+            onClick={() => setShowNewSale(true)}
+            className="flex items-center gap-2"
+            data-testid="button-new-sale"
+          >
+            <ShoppingCart className="h-4 w-4" />
+            Nueva Venta
+          </Button>
+          <div className="text-sm text-gray-600">
+            {pendingSales.length} entregas pendientes
+          </div>
         </div>
       </div>
 
@@ -356,6 +452,24 @@ export default function Cashier() {
 
                   {showAddItems && (
                     <div className="p-4 border rounded-lg space-y-3">
+                      <div>
+                        <label className="text-sm font-medium">Categoría</label>
+                        <select
+                          value={newItemCategory}
+                          onChange={(e) => setNewItemCategory(e.target.value)}
+                          className="w-full p-2 border rounded-md"
+                          data-testid="select-add-item-category"
+                        >
+                          <option value="medicine">Medicina</option>
+                          <option value="vaccine">Vacuna</option>
+                          <option value="deworming">Desparasitante</option>
+                          <option value="accessory">Accesorio</option>
+                          <option value="service">Servicio</option>
+                          <option value="supply">Insumo</option>
+                          <option value="equipment">Equipo</option>
+                          <option value="food">Alimento</option>
+                        </select>
+                      </div>
                       <Input
                         placeholder="Nombre del producto"
                         value={newItemName}
@@ -385,6 +499,7 @@ export default function Cashier() {
                         data-testid="button-confirm-add-item"
                         className="w-full"
                       >
+                        <Plus className="h-4 w-4 mr-2" />
                         Agregar Producto
                       </Button>
                     </div>
@@ -442,6 +557,176 @@ export default function Cashier() {
           </CardContent>
         </Card>
       </div>
+
+      {/* New Sale Modal */}
+      {showNewSale && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="modal-new-sale">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Nueva Venta</h2>
+              <Button variant="ghost" onClick={() => setShowNewSale(false)} data-testid="button-close-modal">×</Button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Customer Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Información del Cliente</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Nombre del Cliente *</label>
+                    <Input
+                      value={newSaleCustomer}
+                      onChange={(e) => setNewSaleCustomer(e.target.value)}
+                      placeholder="Ej: María González"
+                      data-testid="input-customer-name"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Teléfono</label>
+                    <Input
+                      value={newSalePhone}
+                      onChange={(e) => setNewSalePhone(e.target.value)}
+                      placeholder="Ej: +525512345678"
+                      data-testid="input-customer-phone"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Add Items */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Agregar Productos</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Categoría</label>
+                    <select
+                      value={newItemCategory}
+                      onChange={(e) => setNewItemCategory(e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                      data-testid="select-item-category"
+                    >
+                      <option value="medicine">Medicina</option>
+                      <option value="vaccine">Vacuna</option>
+                      <option value="deworming">Desparasitante</option>
+                      <option value="accessory">Accesorio</option>
+                      <option value="service">Servicio</option>
+                      <option value="supply">Insumo</option>
+                      <option value="equipment">Equipo</option>
+                      <option value="food">Alimento</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium">Nombre del Producto *</label>
+                    <Input
+                      value={newItemName}
+                      onChange={(e) => setNewItemName(e.target.value)}
+                      placeholder="Ej: Medicina para Perros"
+                      data-testid="input-item-name"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-medium">Cantidad</label>
+                      <Input
+                        type="number"
+                        value={newItemQuantity}
+                        onChange={(e) => setNewItemQuantity(e.target.value)}
+                        placeholder="1"
+                        min="1"
+                        data-testid="input-item-quantity"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Precio Unitario</label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={newItemPrice}
+                        onChange={(e) => setNewItemPrice(e.target.value)}
+                        placeholder="150.00"
+                        data-testid="input-item-price"
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button
+                    onClick={addItemToCurrentSale}
+                    disabled={!newItemName || !newItemPrice || !newItemQuantity}
+                    className="w-full"
+                    data-testid="button-add-item-to-sale"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar Producto
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Current Sale Items */}
+            {currentSaleItems.length > 0 && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Productos en la Venta</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {currentSaleItems.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className={`p-2 rounded-lg ${getCategoryColor(item.category)}`}>
+                            {getCategoryIcon(item.category)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium">{item.name}</div>
+                            <div className="text-sm text-gray-600">
+                              {item.quantity} × ${parseFloat(item.unitPrice.toString()).toFixed(2)} = ${parseFloat(item.total.toString()).toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeItemFromCurrentSale(index)}
+                          data-testid={`button-remove-item-${index}`}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <Separator className="my-4" />
+                  
+                  <div className="flex items-center justify-between text-lg font-bold">
+                    <span>Total de la Venta:</span>
+                    <span>${currentSaleItems.reduce((sum, item) => sum + parseFloat(item.total.toString()), 0).toFixed(2)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="outline" onClick={() => setShowNewSale(false)} data-testid="button-cancel-sale">
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => createSaleMutation.mutate()}
+                disabled={!newSaleCustomer || currentSaleItems.length === 0 || createSaleMutation.isPending}
+                data-testid="button-create-sale"
+              >
+                {createSaleMutation.isPending ? "Creando..." : "Crear Venta"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
