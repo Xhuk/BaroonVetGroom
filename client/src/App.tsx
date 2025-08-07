@@ -31,6 +31,7 @@ import Cashier from "@/pages/Cashier";
 import MedicalRecords from "@/pages/MedicalRecords";
 import MedicalAppointments from "@/pages/MedicalAppointments";
 import GroomingServices from "@/pages/GroomingServices";
+import SimpleCalendar from "@/pages/SimpleCalendar";
 import MobileUpload from "@/pages/MobileUpload";
 import FollowUpTasks from "@/pages/FollowUpTasks";
 import AdminPaymentGateways from "@/pages/AdminPaymentGateways";
@@ -85,6 +86,7 @@ function Router() {
         <>
           <Route path="/booking" component={BookingWizard} />
           <Route path="/booking-wizard" component={BookingWizard} />
+          <Route path="/calendar" component={SimpleCalendar} />
           <Route path="/clients" component={Clients} />
           <Route path="/medical-records" component={MedicalRecords} />
           <Route path="/medical-appointments" component={MedicalAppointments} />
