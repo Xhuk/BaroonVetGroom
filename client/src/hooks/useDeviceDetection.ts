@@ -8,7 +8,7 @@ import {
   osName,
   mobileVendor,
   mobileModel
-} from 'mobile-device-detect';
+} from 'react-device-detect';
 
 interface DeviceInfo {
   width: number;
@@ -82,7 +82,7 @@ function detectDevice(): DeviceInfo {
     deviceName = `${osName} Computer`;
   }
   
-  console.log(`Device detected by mobile-device-detect:`);
+  console.log(`Device detected by react-device-detect:`);
   console.log(`- Device: ${deviceName} (${detectedDeviceType})`);
   console.log(`- Screen: ${width}x${height} (${screenDensity}x density)`);
   console.log(`- Library detection: isMobile=${isMobile}, isTablet=${isTablet}, isDesktop=${isDesktop}`);
