@@ -41,6 +41,8 @@ import {
   subscriptionPlans,
   companySubscriptions,
   subscriptionPromotions,
+  emailConfig,
+  emailLogs,
   taxConfiguration,
   pendingInvoices,
   invoiceLineItems,
@@ -150,6 +152,10 @@ import {
   webhookLogs,
   type WebhookLog,
   type InsertWebhookLog,
+  type EmailConfig,
+  type InsertEmailConfig,
+  type EmailLog,
+  type InsertEmailLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
@@ -2218,6 +2224,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         companyId: companySubscriptions.companyId,
         companyName: companies.name,
+        companyEmail: companies.contactEmail,
         planId: companySubscriptions.planId,
         status: companySubscriptions.status,
         currentPeriodEnd: companySubscriptions.currentPeriodEnd,
@@ -2233,6 +2240,50 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(companySubscriptions.currentPeriodEnd);
+  }
+
+  // Email configuration management
+  async getEmailConfig(): Promise<EmailConfig | null> {
+    const results = await db
+      .select()
+      .from(emailConfig)
+      .where(eq(emailConfig.id, 'default'))
+      .limit(1);
+    return results[0] || null;
+  }
+
+  async createEmailConfig(config: InsertEmailConfig): Promise<EmailConfig> {
+    const results = await db
+      .insert(emailConfig)
+      .values(config)
+      .returning();
+    return results[0];
+  }
+
+  async updateEmailConfig(updates: Partial<InsertEmailConfig>): Promise<EmailConfig> {
+    const results = await db
+      .update(emailConfig)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(emailConfig.id, 'default'))
+      .returning();
+    return results[0];
+  }
+
+  // Email logging
+  async createEmailLog(log: InsertEmailLog): Promise<EmailLog> {
+    const results = await db
+      .insert(emailLogs)
+      .values(log)
+      .returning();
+    return results[0];
+  }
+
+  async getEmailLogs(limit: number = 50): Promise<EmailLog[]> {
+    return await db
+      .select()
+      .from(emailLogs)
+      .orderBy(desc(emailLogs.createdAt))
+      .limit(limit);
   }
 
   // Follow-up notification operations

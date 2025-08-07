@@ -88,6 +88,12 @@ app.use((req, res, next) => {
     reservationCleanup.start();
     log('Reservation cleanup service started');
 
+    // Start subscription email scheduler
+    import('./subscriptionEmailScheduler').then(({ subscriptionEmailScheduler }) => {
+      subscriptionEmailScheduler.start();
+      log('Subscription email scheduler started');
+    });
+
     // Auto status updates now handled by database functions
     log('Database auto-status functions ready');
     

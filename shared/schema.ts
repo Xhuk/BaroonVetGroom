@@ -956,12 +956,43 @@ export const subscriptionPromotions = pgTable("subscription_promotions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Email configuration for the platform
+export const emailConfig = pgTable("email_config", {
+  id: varchar("id").primaryKey().default("default"),
+  provider: varchar("provider", { enum: ["resend", "sendgrid", "ses"] }).notNull().default("resend"),
+  apiKey: text("api_key").notNull(),
+  fromEmail: text("from_email").notNull(),
+  fromName: text("from_name").notNull().default("VetGroom"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Email notification logs
+export const emailLogs = pgTable("email_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  emailType: varchar("email_type").notNull(), // 'subscription_reminder', 'subscription_expired'
+  recipientEmail: text("recipient_email").notNull(),
+  companyId: varchar("company_id").references(() => companies.id),
+  subject: text("subject").notNull(),
+  status: varchar("status", { enum: ["sent", "failed", "pending"] }).notNull(),
+  errorMessage: text("error_message"),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
 // Type exports for new payment and subscription tables
 export type PaymentGatewayConfig = typeof paymentGatewayConfig.$inferSelect;
 export type InsertPaymentGatewayConfig = typeof paymentGatewayConfig.$inferInsert;
 
 export type BillingQueue = typeof billingQueue.$inferSelect;
 export type InsertBillingQueue = typeof billingQueue.$inferInsert;
+
+export type EmailConfig = typeof emailConfig.$inferSelect;
+export type InsertEmailConfig = typeof emailConfig.$inferInsert;
+
+export type EmailLog = typeof emailLogs.$inferSelect;
+export type InsertEmailLog = typeof emailLogs.$inferInsert;
 
 export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
 export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;

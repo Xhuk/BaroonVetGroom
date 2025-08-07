@@ -28,7 +28,8 @@ import {
   CreditCard,
   AlertTriangle,
   DollarSign,
-  TrendingDown
+  TrendingDown,
+  Mail
 } from "lucide-react";
 import {
   Dialog,
@@ -438,6 +439,13 @@ export default function SuperAdmin() {
                   <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-emerald-50 hover:bg-emerald-100 border-emerald-300">
                     <CreditCard className="w-5 h-5 text-emerald-600" />
                     <span className="text-sm font-medium text-emerald-700">Billing</span>
+                  </Button>
+                </Link>
+
+                <Link href="/superadmin/email-config" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-orange-50 hover:bg-orange-100 border-orange-300">
+                    <Mail className="w-5 h-5 text-orange-600" />
+                    <span className="text-sm font-medium text-orange-700">Email Config</span>
                   </Button>
                 </Link>
 

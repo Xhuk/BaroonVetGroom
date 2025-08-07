@@ -5482,6 +5482,130 @@ This password expires in 24 hours.
     }
   });
 
+  // Email configuration management for SuperAdmin
+  app.get("/api/superadmin/email-config", isSuperAdmin, async (req, res) => {
+    try {
+      const config = await storage.getEmailConfig();
+      if (!config) {
+        return res.json({ 
+          provider: 'resend',
+          fromEmail: '',
+          fromName: 'VetGroom',
+          isActive: false,
+          isConfigured: false
+        });
+      }
+      
+      // Don't expose the API key in the response
+      const { apiKey, ...safeConfig } = config;
+      res.json({ ...safeConfig, isConfigured: !!apiKey });
+    } catch (error) {
+      console.error("Error getting email config:", error);
+      res.status(500).json({ error: "Failed to get email configuration" });
+    }
+  });
+
+  app.post("/api/superadmin/email-config", isSuperAdmin, async (req, res) => {
+    try {
+      const { provider, apiKey, fromEmail, fromName } = req.body;
+
+      if (!provider || !apiKey || !fromEmail || !fromName) {
+        return res.status(400).json({ error: "All email configuration fields are required" });
+      }
+
+      // Check if configuration exists
+      const existingConfig = await storage.getEmailConfig();
+      
+      let config;
+      if (existingConfig) {
+        config = await storage.updateEmailConfig({
+          provider,
+          apiKey,
+          fromEmail,
+          fromName,
+          isActive: true
+        });
+      } else {
+        config = await storage.createEmailConfig({
+          id: 'default',
+          provider,
+          apiKey,
+          fromEmail,
+          fromName,
+          isActive: true
+        });
+      }
+
+      // Initialize email service with new configuration
+      const { emailService } = require('./emailService');
+      await emailService.initialize(config);
+
+      const { apiKey: _, ...safeConfig } = config;
+      res.json({ ...safeConfig, isConfigured: true });
+    } catch (error) {
+      console.error("Error updating email config:", error);
+      res.status(500).json({ error: "Failed to update email configuration" });
+    }
+  });
+
+  app.get("/api/superadmin/email-logs", isSuperAdmin, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const logs = await storage.getEmailLogs(limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error getting email logs:", error);
+      res.status(500).json({ error: "Failed to get email logs" });
+    }
+  });
+
+  // Test email sending
+  app.post("/api/superadmin/test-email", isSuperAdmin, async (req, res) => {
+    try {
+      const { recipientEmail } = req.body;
+
+      if (!recipientEmail) {
+        return res.status(400).json({ error: "Recipient email is required" });
+      }
+
+      const config = await storage.getEmailConfig();
+      if (!config || !config.isActive) {
+        return res.status(400).json({ error: "Email configuration not found or inactive" });
+      }
+
+      // Initialize email service
+      const { emailService } = require('./emailService');
+      await emailService.initialize(config);
+
+      // Send test email
+      const success = await emailService.sendSubscriptionExpiryReminder(
+        recipientEmail,
+        "Test Company",
+        7,
+        "Test Plan",
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      );
+
+      if (success) {
+        // Log the test email
+        await storage.createEmailLog({
+          emailType: 'test_email',
+          recipientEmail,
+          subject: 'Test Email - VetGroom',
+          status: 'sent',
+          sentAt: new Date()
+        });
+
+        res.json({ success: true, message: "Test email sent successfully" });
+      } else {
+        res.status(500).json({ error: "Failed to send test email" });
+      }
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      res.status(500).json({ error: "Failed to send test email" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
