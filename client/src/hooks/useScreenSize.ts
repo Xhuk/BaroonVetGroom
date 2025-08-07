@@ -12,6 +12,10 @@ export interface ScreenSizeInfo {
   deviceType: 'mobile' | 'small-tablet' | 'medium-tablet' | 'large-tablet' | 'desktop';
   shouldCollapseNavigation: boolean;
   orientationLandscape: boolean;
+  isTabletLandscape: boolean; // Tablet in landscape mode
+  isTabletPortrait: boolean; // Tablet in portrait mode
+  shouldUseRibbonNavigation: boolean; // Use ribbon instead of sidebar in landscape
+  shouldHideBottomRibbon: boolean; // Hide ribbon in portrait
 }
 
 export function useScreenSize(): ScreenSizeInfo {
@@ -28,6 +32,10 @@ export function useScreenSize(): ScreenSizeInfo {
         deviceType: 'desktop',
         shouldCollapseNavigation: false,
         orientationLandscape: true,
+        isTabletLandscape: false,
+        isTabletPortrait: false,
+        shouldUseRibbonNavigation: false,
+        shouldHideBottomRibbon: false,
       };
     }
 
@@ -53,8 +61,15 @@ export function useScreenSize(): ScreenSizeInfo {
     const isDesktop = isBrowser && !isTablet && !isMobile && width > 1024;
     const isMobilePhone = isMobile && width < 768;
     
-    // Navigation should collapse on small tablets (8-10 inch)
-    const shouldCollapseNavigation = isSmallTablet;
+    // Tablet orientation logic
+    const isAnyTablet = isSmallTablet || isMediumTablet || isLargeTablet;
+    const isTabletLandscape = isAnyTablet && orientationLandscape;
+    const isTabletPortrait = isAnyTablet && !orientationLandscape;
+    
+    // Navigation logic based on orientation
+    const shouldUseRibbonNavigation = isTabletLandscape; // Use ribbon in landscape
+    const shouldHideBottomRibbon = isTabletPortrait; // Hide ribbon in portrait
+    const shouldCollapseNavigation = isTabletPortrait; // Collapse sidebar in portrait
     
     let deviceType: ScreenSizeInfo['deviceType'] = 'desktop';
     if (isMobilePhone) deviceType = 'mobile';
@@ -62,7 +77,7 @@ export function useScreenSize(): ScreenSizeInfo {
     else if (isMediumTablet) deviceType = 'medium-tablet';
     else if (isLargeTablet) deviceType = 'large-tablet';
     
-    console.log(`📱 Device Detection: ${deviceType}, width: ${width}, tablet: ${isTablet}, collapse nav: ${shouldCollapseNavigation}`);
+    console.log(`📱 Device Detection: ${deviceType}, landscape: ${orientationLandscape}, useRibbon: ${shouldUseRibbonNavigation}, hideSidebar: ${isTabletLandscape}`);
     
     return {
       screenWidth: width,
@@ -75,6 +90,10 @@ export function useScreenSize(): ScreenSizeInfo {
       deviceType,
       shouldCollapseNavigation,
       orientationLandscape,
+      isTabletLandscape,
+      isTabletPortrait,
+      shouldUseRibbonNavigation,
+      shouldHideBottomRibbon,
     };
   });
 
@@ -99,7 +118,15 @@ export function useScreenSize(): ScreenSizeInfo {
       const isDesktop = isBrowser && !isTablet && !isMobile && width > 1024;
       const isMobilePhone = isMobile && width < 768;
       
-      const shouldCollapseNavigation = isSmallTablet;
+      // Tablet orientation logic
+      const isAnyTablet = isSmallTablet || isMediumTablet || isLargeTablet;
+      const isTabletLandscape = isAnyTablet && orientationLandscape;
+      const isTabletPortrait = isAnyTablet && !orientationLandscape;
+      
+      // Navigation logic based on orientation
+      const shouldUseRibbonNavigation = isTabletLandscape;
+      const shouldHideBottomRibbon = isTabletPortrait;
+      const shouldCollapseNavigation = isTabletPortrait;
       
       let deviceType: ScreenSizeInfo['deviceType'] = 'desktop';
       if (isMobilePhone) deviceType = 'mobile';
@@ -107,7 +134,7 @@ export function useScreenSize(): ScreenSizeInfo {
       else if (isMediumTablet) deviceType = 'medium-tablet';
       else if (isLargeTablet) deviceType = 'large-tablet';
       
-      console.log(`📱 Resize Event: ${deviceType}, width: ${width}, collapse nav: ${shouldCollapseNavigation}`);
+      console.log(`📱 Resize Event: ${deviceType}, landscape: ${orientationLandscape}, useRibbon: ${shouldUseRibbonNavigation}`);
       
       setScreenInfo({
         screenWidth: width,
@@ -120,6 +147,10 @@ export function useScreenSize(): ScreenSizeInfo {
         deviceType,
         shouldCollapseNavigation,
         orientationLandscape,
+        isTabletLandscape,
+        isTabletPortrait,
+        shouldUseRibbonNavigation,
+        shouldHideBottomRibbon,
       });
     };
 

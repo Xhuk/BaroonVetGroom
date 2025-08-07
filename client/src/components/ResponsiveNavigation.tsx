@@ -26,9 +26,14 @@ interface ResponsiveNavigationProps {
 export function ResponsiveNavigation({ className }: ResponsiveNavigationProps) {
   const { canAccessAdmin, canAccessSuperAdmin } = useAccessControl();
   const { currentTenant } = useTenant();
-  const { deviceType, shouldCollapseNavigation, isSmallTablet } = useScreenSize();
+  const { deviceType, shouldCollapseNavigation, isSmallTablet, isTabletLandscape } = useScreenSize();
 
-  console.log(`📱 ResponsiveNavigation: Device ${deviceType}, shouldCollapse: ${shouldCollapseNavigation}`);
+  console.log(`📱 ResponsiveNavigation: Device ${deviceType}, shouldCollapse: ${shouldCollapseNavigation}, landscape: ${isTabletLandscape}`);
+
+  // Hide navigation in tablet landscape mode (ribbon takes over)
+  if (isTabletLandscape) {
+    return null;
+  }
 
   // Get follow-up count for heart animation
   const { data: followUpData } = useQuery<{ count: number }>({
