@@ -391,16 +391,9 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
               className="absolute z-20 pointer-events-none left-0 right-0"
               style={redLineStyle}
             >
-              {/* Prominent red line fixed at center - with ethereal pulse when slot is empty */}
+              {/* Ethereal pulse red line fixed at center - always animated */}
               <div 
-                className={cn(
-                  "w-full",
-                  isCurrentSlotEmpty ? "ethereal-pulse-line h-[1px] opacity-60" : "h-[2px] opacity-90"
-                )}
-                style={isCurrentSlotEmpty ? {} : {
-                  background: 'linear-gradient(90deg, transparent 0%, rgba(239, 68, 68, 0.9) 10%, rgba(239, 68, 68, 1) 50%, rgba(239, 68, 68, 0.9) 90%, transparent 100%)',
-                  boxShadow: '0 0 4px rgba(239, 68, 68, 0.5)',
-                }}
+                className="w-full ethereal-pulse-line h-[1px] opacity-70"
               />
               {/* Time indicator dots at center */}
               <div className="absolute top-1/2 left-2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full shadow-sm"></div>
