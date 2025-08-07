@@ -394,8 +394,8 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
               {/* Prominent red line fixed at center - with ethereal pulse when slot is empty */}
               <div 
                 className={cn(
-                  "w-full opacity-90",
-                  isCurrentSlotEmpty ? "ethereal-pulse-line h-[4px]" : "h-[2px]"
+                  "w-full",
+                  isCurrentSlotEmpty ? "ethereal-pulse-line h-[3px] opacity-60" : "h-[2px] opacity-90"
                 )}
                 style={isCurrentSlotEmpty ? {} : {
                   background: 'linear-gradient(90deg, transparent 0%, rgba(239, 68, 68, 0.9) 10%, rgba(239, 68, 68, 1) 50%, rgba(239, 68, 68, 0.9) 90%, transparent 100%)',
