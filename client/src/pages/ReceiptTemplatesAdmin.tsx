@@ -83,7 +83,28 @@ export default function ReceiptTemplatesAdmin() {
     headerStyle: "professional",
     colorScheme: "blue",
     includeSignature: true,
-    logoPosition: "left"
+    logoPosition: "left",
+    // Company Information
+    empresaNombre: "Clínica Veterinaria San Marcos",
+    empresaEslogan: "Cuidamos a tu mejor amigo",
+    empresaTelefono: "(555) 123-4567",
+    empresaWeb: "www.vetclinica.com",
+    empresaDireccion: "Av. Revolución 123, Ciudad de México",
+    // Invoice Details
+    numeroRecibo: "VET-2025-0001",
+    fecha: "07 de Agosto, 2025",
+    hora: "10:30 AM",
+    veterinario: "Dr. Ana García",
+    // Client Information
+    clienteNombre: "María González",
+    clienteTelefono: "(555) 987-6543",
+    mascotaNombre: "Max (Golden Retriever)",
+    // Articles/Services
+    articulos: [
+      { servicio: "Consulta Médica General", precio: "$400.00" },
+      { servicio: "Vacuna Triple Canina", precio: "$250.00" }
+    ],
+    total: "$650.00"
   });
   
   // Preview modal state
@@ -820,12 +841,17 @@ export default function ReceiptTemplatesAdmin() {
                           Personaliza tu Plantilla
                         </h3>
                         <p className="text-gray-600">
-                          Configura los colores, estilos y elementos de tu recibo
+                          Configura todos los aspectos de tu recibo: colores, información de empresa, artículos y más
                         </p>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Column 1: Template Settings */}
                         <div className="space-y-4">
+                          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                            <Palette className="w-4 h-4 mr-2" />
+                            Configuración de Plantilla
+                          </h4>
                           <div>
                             <Label>Esquema de Colores</Label>
                             <Select value={templateConfig.colorScheme} onValueChange={(value) => 
@@ -843,7 +869,6 @@ export default function ReceiptTemplatesAdmin() {
                             </Select>
                           </div>
                           
-                          
                           <div>
                             <Label>Posición del Logo</Label>
                             <Select value={templateConfig.logoPosition} onValueChange={(value) => 
@@ -859,9 +884,7 @@ export default function ReceiptTemplatesAdmin() {
                               </SelectContent>
                             </Select>
                           </div>
-                        </div>
-                        
-                        <div className="space-y-4">
+                          
                           <div className="flex items-center space-x-2">
                             <input 
                               type="checkbox" 
@@ -872,45 +895,262 @@ export default function ReceiptTemplatesAdmin() {
                             />
                             <Label htmlFor="includeSignature">Incluir espacio para firma</Label>
                           </div>
+                        </div>
+                        
+                        {/* Column 2: Company Information */}
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                            <Building className="w-4 h-4 mr-2" />
+                            Información de la Empresa
+                          </h4>
+                          <div>
+                            <Label>Nombre de la Empresa</Label>
+                            <Input
+                              value={templateConfig.empresaNombre}
+                              onChange={(e) => setTemplateConfig({...templateConfig, empresaNombre: e.target.value})}
+                              placeholder="Nombre de la clínica"
+                              data-testid="input-company-name"
+                            />
+                          </div>
                           
-                          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                              <Eye className="w-4 h-4 mr-2" />
-                              Vista Previa - Actualización Automática
-                            </h4>
-                            <div className="w-full h-64 bg-white border rounded-lg overflow-hidden">
-                              <div 
-                                className="w-full h-full flex items-center justify-center"
-                                style={{ transform: 'scale(0.25)', transformOrigin: 'center center' }}
-                              >
-                                {selectedTemplate && (() => {
-                                  const template = preDesignedTemplates.find(t => t.id === selectedTemplate);
-                                  if (!template) return null;
-                                  
-                                  // Create dynamic preview HTML with current config
-                                  let previewHtml = template.htmlPreview;
-                                  
-                                  // Apply color scheme changes
-                                  if (templateConfig.colorScheme === 'green') {
-                                    previewHtml = previewHtml.replace(/#3b82f6/g, '#059669').replace(/#60a5fa/g, '#10b981').replace(/#2563eb/g, '#047857').replace(/#1e40af/g, '#065f46');
-                                  } else if (templateConfig.colorScheme === 'purple') {
-                                    previewHtml = previewHtml.replace(/#3b82f6/g, '#7c3aed').replace(/#60a5fa/g, '#8b5cf6').replace(/#2563eb/g, '#6d28d9').replace(/#1e40af/g, '#5b21b6');
-                                  } else if (templateConfig.colorScheme === 'gray') {
-                                    previewHtml = previewHtml.replace(/#3b82f6/g, '#374151').replace(/#60a5fa/g, '#6b7280').replace(/#2563eb/g, '#1f2937').replace(/#1e40af/g, '#111827');
-                                  }
-                                  
-                                  // Hide signature section if disabled
-                                  if (!templateConfig.includeSignature) {
-                                    previewHtml = previewHtml.replace(/<!-- Signature Area.*?<\/div>\s*<\/div>/s, '');
-                                  }
-                                  
-                                  return <div dangerouslySetInnerHTML={{ __html: previewHtml }} />;
-                                })()}
+                          <div>
+                            <Label>Eslogan</Label>
+                            <Input
+                              value={templateConfig.empresaEslogan}
+                              onChange={(e) => setTemplateConfig({...templateConfig, empresaEslogan: e.target.value})}
+                              placeholder="Eslogan o tagline"
+                              data-testid="input-company-tagline"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label>Teléfono</Label>
+                            <Input
+                              value={templateConfig.empresaTelefono}
+                              onChange={(e) => setTemplateConfig({...templateConfig, empresaTelefono: e.target.value})}
+                              placeholder="(555) 123-4567"
+                              data-testid="input-company-phone"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label>Sitio Web</Label>
+                            <Input
+                              value={templateConfig.empresaWeb}
+                              onChange={(e) => setTemplateConfig({...templateConfig, empresaWeb: e.target.value})}
+                              placeholder="www.empresa.com"
+                              data-testid="input-company-web"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label>Dirección</Label>
+                            <Input
+                              value={templateConfig.empresaDireccion}
+                              onChange={(e) => setTemplateConfig({...templateConfig, empresaDireccion: e.target.value})}
+                              placeholder="Dirección completa"
+                              data-testid="input-company-address"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Column 3: Invoice Details and Client */}
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                            <FileText className="w-4 h-4 mr-2" />
+                            Detalles del Recibo
+                          </h4>
+                          <div>
+                            <Label>Número de Recibo</Label>
+                            <Input
+                              value={templateConfig.numeroRecibo}
+                              onChange={(e) => setTemplateConfig({...templateConfig, numeroRecibo: e.target.value})}
+                              placeholder="VET-2025-0001"
+                              data-testid="input-receipt-number"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label>Fecha</Label>
+                            <Input
+                              value={templateConfig.fecha}
+                              onChange={(e) => setTemplateConfig({...templateConfig, fecha: e.target.value})}
+                              placeholder="07 de Agosto, 2025"
+                              data-testid="input-receipt-date"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label>Veterinario</Label>
+                            <Input
+                              value={templateConfig.veterinario}
+                              onChange={(e) => setTemplateConfig({...templateConfig, veterinario: e.target.value})}
+                              placeholder="Dr. Ana García"
+                              data-testid="input-veterinarian"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label>Cliente</Label>
+                            <Input
+                              value={templateConfig.clienteNombre}
+                              onChange={(e) => setTemplateConfig({...templateConfig, clienteNombre: e.target.value})}
+                              placeholder="María González"
+                              data-testid="input-client-name"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label>Mascota</Label>
+                            <Input
+                              value={templateConfig.mascotaNombre}
+                              onChange={(e) => setTemplateConfig({...templateConfig, mascotaNombre: e.target.value})}
+                              placeholder="Max (Golden Retriever)"
+                              data-testid="input-pet-name"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label>Total</Label>
+                            <Input
+                              value={templateConfig.total}
+                              onChange={(e) => setTemplateConfig({...templateConfig, total: e.target.value})}
+                              placeholder="$650.00"
+                              data-testid="input-total"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Articles/Services Section */}
+                      <div className="space-y-4">
+                        <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                          <Package className="w-4 h-4 mr-2" />
+                          Artículos/Servicios
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {templateConfig.articulos.map((articulo, index) => (
+                            <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-2">
+                              <h5 className="font-medium text-gray-700">Servicio {index + 1}</h5>
+                              <div>
+                                <Label>Nombre del Servicio</Label>
+                                <Input
+                                  value={articulo.servicio}
+                                  onChange={(e) => {
+                                    const newArticulos = [...templateConfig.articulos];
+                                    newArticulos[index].servicio = e.target.value;
+                                    setTemplateConfig({...templateConfig, articulos: newArticulos});
+                                  }}
+                                  placeholder="Nombre del servicio"
+                                  data-testid={`input-service-${index}-name`}
+                                />
+                              </div>
+                              <div>
+                                <Label>Precio</Label>
+                                <Input
+                                  value={articulo.precio}
+                                  onChange={(e) => {
+                                    const newArticulos = [...templateConfig.articulos];
+                                    newArticulos[index].precio = e.target.value;
+                                    setTemplateConfig({...templateConfig, articulos: newArticulos});
+                                  }}
+                                  placeholder="$0.00"
+                                  data-testid={`input-service-${index}-price`}
+                                />
                               </div>
                             </div>
-                            <div className="mt-2 text-xs text-blue-600">
-                              <strong>Configuración actual:</strong> {templateConfig.colorScheme} • {preDesignedTemplates.find(t => t.id === selectedTemplate)?.name} • {templateConfig.includeSignature ? 'Con firma' : 'Sin firma'}
+                          ))}
+                        </div>
+                        
+                        <div className="flex space-x-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              const newArticulos = [...templateConfig.articulos, { servicio: 'Nuevo Servicio', precio: '$0.00' }];
+                              setTemplateConfig({...templateConfig, articulos: newArticulos});
+                            }}
+                            className="text-sm"
+                            data-testid="button-add-service"
+                          >
+                            Agregar Servicio
+                          </Button>
+                          {templateConfig.articulos.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                const newArticulos = templateConfig.articulos.slice(0, -1);
+                                setTemplateConfig({...templateConfig, articulos: newArticulos});
+                              }}
+                              className="text-sm text-red-600 hover:text-red-700"
+                              data-testid="button-remove-service"
+                            >
+                              Eliminar Último
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Live Preview Panel */}
+                      <div className="col-span-full">
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <h4 className="font-medium text-blue-800 mb-2 flex items-center">
+                            <Eye className="w-4 h-4 mr-2" />
+                            Vista Previa - Actualización en Tiempo Real
+                          </h4>
+                          <div className="w-full h-80 bg-white border rounded-lg overflow-hidden">
+                            <div 
+                              className="w-full h-full flex items-center justify-center"
+                              style={{ transform: 'scale(0.35)', transformOrigin: 'center center' }}
+                            >
+                              {selectedTemplate && (() => {
+                                const template = preDesignedTemplates.find(t => t.id === selectedTemplate);
+                                if (!template) return null;
+                                
+                                // Create dynamic preview HTML with current config
+                                let previewHtml = template.htmlPreview;
+                                
+                                // Apply color scheme changes
+                                if (templateConfig.colorScheme === 'green') {
+                                  previewHtml = previewHtml.replace(/#3b82f6/g, '#059669').replace(/#60a5fa/g, '#10b981').replace(/#2563eb/g, '#047857').replace(/#1e40af/g, '#065f46');
+                                } else if (templateConfig.colorScheme === 'purple') {
+                                  previewHtml = previewHtml.replace(/#3b82f6/g, '#7c3aed').replace(/#60a5fa/g, '#8b5cf6').replace(/#2563eb/g, '#6d28d9').replace(/#1e40af/g, '#5b21b6');
+                                } else if (templateConfig.colorScheme === 'gray') {
+                                  previewHtml = previewHtml.replace(/#3b82f6/g, '#374151').replace(/#60a5fa/g, '#6b7280').replace(/#2563eb/g, '#1f2937').replace(/#1e40af/g, '#111827');
+                                }
+                                
+                                // Replace template variables with actual values
+                                previewHtml = previewHtml
+                                  .replace(/\{\{\s*empresa_nombre\s*\}\}/g, templateConfig.empresaNombre)
+                                  .replace(/\{\{\s*empresa_eslogan\s*\}\}/g, templateConfig.empresaEslogan)
+                                  .replace(/\{\{\s*empresa_telefono\s*\}\}/g, templateConfig.empresaTelefono)
+                                  .replace(/\{\{\s*empresa_web\s*\}\}/g, templateConfig.empresaWeb)
+                                  .replace(/\{\{\s*empresa_direccion\s*\}\}/g, templateConfig.empresaDireccion)
+                                  .replace(/\{\{\s*numero_recibo\s*\}\}/g, templateConfig.numeroRecibo)
+                                  .replace(/\{\{\s*fecha\s*\}\}/g, templateConfig.fecha)
+                                  .replace(/\{\{\s*hora\s*\}\}/g, templateConfig.hora)
+                                  .replace(/\{\{\s*veterinario\s*\}\}/g, templateConfig.veterinario)
+                                  .replace(/\{\{\s*cliente_nombre\s*\}\}/g, templateConfig.clienteNombre)
+                                  .replace(/\{\{\s*cliente_telefono\s*\}\}/g, templateConfig.clienteTelefono)
+                                  .replace(/\{\{\s*mascota_nombre\s*\}\}/g, templateConfig.mascotaNombre)
+                                  .replace(/\{\{\s*servicio_1\s*\}\}/g, templateConfig.articulos[0]?.servicio || 'Servicio 1')
+                                  .replace(/\{\{\s*precio_1\s*\}\}/g, templateConfig.articulos[0]?.precio || '$0.00')
+                                  .replace(/\{\{\s*servicio_2\s*\}\}/g, templateConfig.articulos[1]?.servicio || 'Servicio 2')
+                                  .replace(/\{\{\s*precio_2\s*\}\}/g, templateConfig.articulos[1]?.precio || '$0.00')
+                                  .replace(/\{\{\s*total\s*\}\}/g, templateConfig.total);
+                                
+                                // Hide signature section if disabled
+                                if (!templateConfig.includeSignature) {
+                                  previewHtml = previewHtml.replace(/<!-- Signature Area[\s\S]*?<\/div>\s*<\/div>/, '');
+                                }
+                                
+                                return <div dangerouslySetInnerHTML={{ __html: previewHtml }} />;
+                              })()}
                             </div>
+                          </div>
+                          <div className="mt-2 text-xs text-blue-600">
+                            <strong>Configuración actual:</strong> {templateConfig.colorScheme} • {preDesignedTemplates.find(t => t.id === selectedTemplate)?.name} • {templateConfig.includeSignature ? 'Con firma' : 'Sin firma'} • {templateConfig.articulos.length} servicios
                           </div>
                         </div>
                       </div>
