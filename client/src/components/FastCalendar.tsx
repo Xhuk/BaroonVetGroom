@@ -393,7 +393,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
             >
               {/* Ethereal pulse red line fixed at center - always animated */}
               <div 
-                className="w-full ethereal-pulse-line h-[1px] opacity-70"
+                className="w-full ethereal-pulse-line h-[3px] opacity-80"
               />
               {/* Time indicator dots at center */}
               <div className="absolute top-1/2 left-2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full shadow-sm"></div>

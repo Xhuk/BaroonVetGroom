@@ -75,25 +75,25 @@ select.dark,
   position: relative;
   border-radius: 3px;
   
-  /* Vibrant gradient for the line itself - more transparent */
+  /* Vibrant gradient for the line itself - increased visibility */
   background: linear-gradient(
     90deg,
-    rgba(239, 68, 68, 0.05) 0%,    /* Red, ultra transparent */
-    rgba(239, 68, 68, 0.3) 10%,    /* Red, low opacity */
-    rgba(220, 38, 127, 0.5) 25%,   /* Pink-red, medium opacity */
-    rgba(220, 38, 127, 0.5) 35%,   /* Keep pink-red medium opacity */
-    rgba(239, 68, 68, 0.3) 50%,    /* Red, low opacity */
-    rgba(239, 68, 68, 0.05) 60%    /* Red, ultra transparent */
+    rgba(239, 68, 68, 0.1) 0%,     /* Red, slightly more visible */
+    rgba(239, 68, 68, 0.6) 10%,    /* Red, good opacity */
+    rgba(220, 38, 127, 0.8) 25%,   /* Pink-red, high opacity */
+    rgba(220, 38, 127, 0.8) 35%,   /* Keep pink-red high opacity */
+    rgba(239, 68, 68, 0.6) 50%,    /* Red, good opacity */
+    rgba(239, 68, 68, 0.1) 60%     /* Red, slightly more visible */
   );
   background-size: 200% 100%;
   background-position: 0% 0%;
 
   /* Minimal blur for readability */
-  filter: blur(0.5px); 
+  filter: blur(0.3px); 
   
   /* Very subtle glow effect */
-  box-shadow: 0 0 5px rgba(220, 38, 127, 0.3), 
-              0 0 10px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 8px rgba(220, 38, 127, 0.5), 
+              0 0 15px rgba(239, 68, 68, 0.4);
 
   /* Animation properties */
   animation: 
@@ -103,32 +103,32 @@ select.dark,
 
 @keyframes ethereal-pulse {
   0% {
-    height: 1px;
-    filter: blur(0.3px);
+    height: 3px;
+    filter: blur(0.5px);
     background-size: 200% 100%;
     background-position: 0% 0%;
   }
   25% {
-    height: 2px;
-    filter: blur(0.5px);
+    height: 4px;
+    filter: blur(0.8px);
     background-size: 180% 100%;
     background-position: 20% 0%;
   }
   50% {
-    height: 2.5px;
-    filter: blur(0.7px);
+    height: 5px;
+    filter: blur(1px);
     background-size: 150% 100%;
     background-position: 50% 0%;
   }
   75% {
-    height: 2px;
-    filter: blur(0.5px);
+    height: 4px;
+    filter: blur(0.8px);
     background-size: 180% 100%;
     background-position: 80% 0%;
   }
   100% {
-    height: 1px;
-    filter: blur(0.3px);
+    height: 3px;
+    filter: blur(0.5px);
     background-size: 200% 100%;
     background-position: 100% 0%;
   }
@@ -136,17 +136,17 @@ select.dark,
 
 @keyframes glow-pulse {
   0% {
-    box-shadow: 0 0 5px rgba(220, 38, 127, 0.3), 
-                0 0 10px rgba(239, 68, 68, 0.2);
+    box-shadow: 0 0 8px rgba(220, 38, 127, 0.5), 
+                0 0 15px rgba(239, 68, 68, 0.4);
   }
   50% {
-    box-shadow: 0 0 8px rgba(220, 38, 127, 0.4), 
-                0 0 15px rgba(239, 68, 68, 0.3),
-                0 0 20px rgba(220, 38, 127, 0.15);
+    box-shadow: 0 0 12px rgba(220, 38, 127, 0.7), 
+                0 0 20px rgba(239, 68, 68, 0.5),
+                0 0 25px rgba(220, 38, 127, 0.3);
   }
   100% {
-    box-shadow: 0 0 5px rgba(220, 38, 127, 0.3), 
-                0 0 10px rgba(239, 68, 68, 0.2);
+    box-shadow: 0 0 8px rgba(220, 38, 127, 0.5), 
+                0 0 15px rgba(239, 68, 68, 0.4);
   }
 }
 
