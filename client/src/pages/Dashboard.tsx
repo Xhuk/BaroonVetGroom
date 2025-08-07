@@ -12,11 +12,15 @@ import { Plus, Truck, Phone, CalendarIcon, Users, Package, Calendar } from "luci
 import { Link, useLocation } from "wouter";
 import type { Appointment } from "@shared/schema";
 import { getTodayInUserTimezone } from "@shared/timeUtils";
+import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const { currentTenant, isLoading: tenantLoading, isDebugMode } = useTenant();
+  
+  // Add device detection for debug
+  const deviceInfo = useDeviceDetection();
   const { isInstant, startBackgroundLoad, completeLoad } = useFastLoad();
   const [, setLocation] = useLocation();
   const [showCalendar, setShowCalendar] = useState(false);
@@ -112,6 +116,22 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background p-4">
+      {/* TEMPORARY: Device Debug Info */}
+      <div className="bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 mb-4">
+        <h3 className="font-bold text-yellow-800 dark:text-yellow-200 mb-2">🔍 DEBUG: Device Detection Info</h3>
+        <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+          <div><strong>Window Size:</strong> {deviceInfo.width}x{deviceInfo.height}</div>
+          <div><strong>Device Type:</strong> {deviceInfo.deviceType}</div>
+          <div><strong>Small Tablet:</strong> {deviceInfo.isSmallTablet ? '✅ YES (should collapse nav)' : '❌ NO'}</div>
+          <div><strong>Phone:</strong> {deviceInfo.isPhone ? '✅ YES' : '❌ NO'}</div>
+          <div><strong>Tablet:</strong> {deviceInfo.isTablet ? '✅ YES' : '❌ NO'}</div>
+          <div><strong>Desktop:</strong> {deviceInfo.isDesktop ? '✅ YES' : '❌ NO'}</div>
+          <div><strong>Device Name:</strong> {deviceInfo.deviceName}</div>
+          <div><strong>Screen Density:</strong> {deviceInfo.screenDensity}x</div>
+          <div><strong>User Agent:</strong> {deviceInfo.userAgent}</div>
+        </div>
+      </div>
+      
       {/* Header section */}
       <div className="border-b bg-card rounded-lg mb-4">
         <div className="flex h-16 items-center px-6">
