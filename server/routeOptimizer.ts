@@ -277,48 +277,6 @@ export function optimizeDeliveryRouteWithCompletedMascots(
 
   return optimizeDeliveryRoute(options);
 }
-    const sortedApps = group.appointments.sort((a, b) => b.longitude - a.longitude);
-    
-    for (const apt of sortedApps) {
-      const petCount = apt.petCount || 1;
-      
-      // Check capacity constraints
-      if (currentCapacity + petCount <= capacity.maxPets) {
-        optimizedRoute.push(apt);
-        currentCapacity += petCount;
-      } else {
-        // Van is full, would need multiple routes
-        break;
-      }
-    }
-  }
-  
-  // Calculate simple distance estimation
-  let totalDistance = 0;
-  let prevPoint = clinicPoint;
-  
-  for (const point of optimizedRoute) {
-    const distance = calculateHaversineDistance(
-      prevPoint.latitude, prevPoint.longitude,
-      point.latitude, point.longitude
-    );
-    totalDistance += distance;
-    prevPoint = point;
-  }
-  
-  // Return to clinic
-  totalDistance += calculateHaversineDistance(
-    prevPoint.latitude, prevPoint.longitude,
-    clinicPoint.latitude, clinicPoint.longitude
-  );
-  
-  return {
-    points: optimizedRoute,
-    totalDistance: Math.round(totalDistance * 100) / 100,
-    estimatedTime: Math.round(totalDistance * 3.5), // ~3.5 minutes per km in city
-    efficiency: Math.round((optimizedRoute.length / appointments.length) * 100)
-  };
-}
 
 /**
  * Advanced route optimization using external providers (Mapbox, Google, HERE)
