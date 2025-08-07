@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,12 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { apiRequest } from '@/lib/queryClient';
-import { Mail, Send, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Mail, Send, CheckCircle, XCircle, Clock, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Link } from 'wouter';
 
 const emailConfigSchema = z.object({
   provider: z.enum(['resend', 'sendgrid', 'ses']),
@@ -44,7 +47,26 @@ interface EmailLog {
   createdAt: string;
 }
 
-export default function EmailConfigurationAdmin() {
+// Memoized loading skeleton component for better performance
+const ConfigurationSkeleton = memo(() => (
+  <div className="space-y-6">
+    <Skeleton className="h-8 w-64" />
+    <Card className="bg-gray-800 border-gray-700">
+      <CardHeader>
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-96" />
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </CardContent>
+    </Card>
+  </div>
+));
+
+function EmailConfigurationAdmin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [testEmail, setTestEmail] = useState('');
@@ -59,15 +81,19 @@ export default function EmailConfigurationAdmin() {
     },
   });
 
-  // Fetch email configuration
+  // Fastload optimization: Fetch email configuration with aggressive caching
   const { data: emailConfig, isLoading: configLoading } = useQuery<EmailConfig>({
     queryKey: ['/api/superadmin/email-config'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     retry: false,
   });
 
-  // Fetch email logs
+  // Fastload optimization: Fetch email logs with stale-while-revalidate pattern
   const { data: emailLogs = [], isLoading: logsLoading } = useQuery<EmailLog[]>({
     queryKey: ['/api/superadmin/email-logs'],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
     retry: false,
   });
 
@@ -172,21 +198,38 @@ export default function EmailConfigurationAdmin() {
     }
   };
 
+  // Early return with skeleton during loading for fastload optimization
+  if (configLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white p-6">
+        <div className="max-w-6xl mx-auto">
+          <ConfigurationSkeleton />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6" data-testid="email-config-admin">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <Mail className="w-8 h-8 text-blue-400" />
-          <div>
-            <h1 className="text-3xl font-bold">Email Configuration</h1>
-            <p className="text-gray-400">Manage email providers and subscription notifications</p>
+        {/* Header with navigation */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/superadmin" className="text-gray-400 hover:text-white transition-colors">
+              <ArrowLeft className="w-6 h-6" />
+            </Link>
+            <Mail className="w-8 h-8 text-blue-400" />
+            <div>
+              <h1 className="text-3xl font-bold">Email Configuration</h1>
+              <p className="text-gray-400">Manage email providers and subscription notifications</p>
+            </div>
           </div>
         </div>
 
         {/* Configuration Status */}
         <Card className="bg-gray-800 border-gray-700" data-testid="config-status-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-blue-300">
               {emailConfig?.isConfigured ? (
                 <CheckCircle className="w-5 h-5 text-green-500" />
               ) : (
@@ -205,7 +248,7 @@ export default function EmailConfigurationAdmin() {
                 {emailConfig?.isConfigured ? 'Configured' : 'Not Configured'}
               </Badge>
               {emailConfig?.provider && (
-                <Badge variant="outline" data-testid="provider-badge">
+                <Badge variant="outline" className="border-gray-600 text-gray-300" data-testid="provider-badge">
                   Provider: {emailConfig.provider}
                 </Badge>
               )}
@@ -217,8 +260,8 @@ export default function EmailConfigurationAdmin() {
           {/* Email Configuration Form */}
           <Card className="bg-gray-800 border-gray-700" data-testid="config-form-card">
             <CardHeader>
-              <CardTitle>Provider Configuration</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-blue-300">Provider Configuration</CardTitle>
+              <CardDescription className="text-gray-400">
                 Configure your email service provider for subscription notifications
               </CardDescription>
             </CardHeader>
@@ -230,14 +273,17 @@ export default function EmailConfigurationAdmin() {
                     name="provider"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email Provider</FormLabel>
+                        <FormLabel className="text-gray-300">Email Provider</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger data-testid="provider-select">
+                            <SelectTrigger 
+                              data-testid="provider-select"
+                              className="bg-gray-700 border-gray-600 text-white"
+                            >
                               <SelectValue placeholder="Select provider" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="bg-gray-700 border-gray-600">
                             <SelectItem value="resend">Resend</SelectItem>
                             <SelectItem value="sendgrid">SendGrid</SelectItem>
                             <SelectItem value="ses">Amazon SES</SelectItem>
@@ -253,13 +299,14 @@ export default function EmailConfigurationAdmin() {
                     name="apiKey"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>API Key</FormLabel>
+                        <FormLabel className="text-gray-300">API Key</FormLabel>
                         <FormControl>
                           <Input 
                             type="password" 
                             placeholder="Enter API key" 
                             {...field}
                             data-testid="api-key-input"
+                            className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                           />
                         </FormControl>
                         <FormMessage />
@@ -272,13 +319,14 @@ export default function EmailConfigurationAdmin() {
                     name="fromEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>From Email</FormLabel>
+                        <FormLabel className="text-gray-300">From Email</FormLabel>
                         <FormControl>
                           <Input 
                             type="email" 
                             placeholder="notifications@vetgroom.com" 
                             {...field}
                             data-testid="from-email-input"
+                            className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                           />
                         </FormControl>
                         <FormMessage />
@@ -291,12 +339,13 @@ export default function EmailConfigurationAdmin() {
                     name="fromName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>From Name</FormLabel>
+                        <FormLabel className="text-gray-300">From Name</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="VetGroom" 
                             {...field}
                             data-testid="from-name-input"
+                            className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                           />
                         </FormControl>
                         <FormMessage />
@@ -306,8 +355,8 @@ export default function EmailConfigurationAdmin() {
 
                   <Button 
                     type="submit" 
-                    className="w-full"
                     disabled={saveConfigMutation.isPending}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                     data-testid="save-config-button"
                   >
                     {saveConfigMutation.isPending ? 'Saving...' : 'Save Configuration'}
@@ -317,44 +366,42 @@ export default function EmailConfigurationAdmin() {
             </CardContent>
           </Card>
 
-          {/* Test Email */}
+          {/* Test Email Section */}
           <Card className="bg-gray-800 border-gray-700" data-testid="test-email-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Send className="w-5 h-5" />
-                Test Email
-              </CardTitle>
-              <CardDescription>
-                Send a test subscription reminder email to verify configuration
+              <CardTitle className="text-blue-300">Test Email</CardTitle>
+              <CardDescription className="text-gray-400">
+                Send a test email to verify your configuration
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Recipient Email</label>
-                  <Input
-                    type="email"
-                    placeholder="test@example.com"
-                    value={testEmail}
-                    onChange={(e) => setTestEmail(e.target.value)}
-                    className="mt-1"
-                    data-testid="test-email-input"
-                  />
-                </div>
-                <Button 
-                  onClick={handleTestEmail}
-                  disabled={testEmailMutation.isPending || !emailConfig?.isConfigured}
-                  className="w-full"
-                  data-testid="send-test-email-button"
-                >
-                  {testEmailMutation.isPending ? 'Sending...' : 'Send Test Email'}
-                </Button>
-                {!emailConfig?.isConfigured && (
-                  <p className="text-sm text-yellow-500">
-                    Configure email provider first to send test emails
-                  </p>
-                )}
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="test-email" className="text-gray-300">Recipient Email</Label>
+                <Input
+                  id="test-email"
+                  type="email"
+                  placeholder="test@example.com"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  data-testid="test-email-input"
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                />
               </div>
+              <Button 
+                onClick={handleTestEmail}
+                disabled={testEmailMutation.isPending || !emailConfig?.isConfigured}
+                className="w-full bg-green-600 hover:bg-green-700"
+                data-testid="send-test-button"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                {testEmailMutation.isPending ? 'Sending...' : 'Send Test Email'}
+              </Button>
+              
+              {!emailConfig?.isConfigured && (
+                <p className="text-sm text-yellow-400">
+                  ⚠️ Configure email provider first before testing
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -362,46 +409,58 @@ export default function EmailConfigurationAdmin() {
         {/* Email Logs */}
         <Card className="bg-gray-800 border-gray-700" data-testid="email-logs-card">
           <CardHeader>
-            <CardTitle>Email Logs</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-blue-300">Email Logs</CardTitle>
+            <CardDescription className="text-gray-400">
               Recent email activity and delivery status
             </CardDescription>
           </CardHeader>
           <CardContent>
             {logsLoading ? (
-              <div className="text-center py-8">Loading email logs...</div>
-            ) : emailLogs.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                No email logs found
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full bg-gray-700" />
+                ))}
               </div>
-            ) : (
+            ) : emailLogs.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-gray-700">
-                      <TableHead>Type</TableHead>
-                      <TableHead>Recipient</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Sent At</TableHead>
+                      <TableHead className="text-gray-300">Type</TableHead>
+                      <TableHead className="text-gray-300">Recipient</TableHead>
+                      <TableHead className="text-gray-300">Subject</TableHead>
+                      <TableHead className="text-gray-300">Status</TableHead>
+                      <TableHead className="text-gray-300">Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {emailLogs.map((log) => (
-                      <TableRow key={log.id} className="border-gray-700" data-testid={`email-log-${log.id}`}>
-                        <TableCell>
-                          <Badge variant="outline">{getEmailTypeLabel(log.emailType)}</Badge>
+                      <TableRow key={log.id} className="border-gray-700">
+                        <TableCell className="text-gray-300">
+                          {getEmailTypeLabel(log.emailType)}
                         </TableCell>
-                        <TableCell className="font-mono text-sm">{log.recipientEmail}</TableCell>
-                        <TableCell className="max-w-xs truncate">{log.subject}</TableCell>
+                        <TableCell className="text-gray-300">{log.recipientEmail}</TableCell>
+                        <TableCell className="text-gray-300">{log.subject}</TableCell>
                         <TableCell>{getStatusBadge(log.status)}</TableCell>
-                        <TableCell>
-                          {log.sentAt ? new Date(log.sentAt).toLocaleString() : '-'}
+                        <TableCell className="text-gray-400">
+                          {new Date(log.sentAt || log.createdAt).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Mail className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+                <p>No email logs yet</p>
+                <p className="text-sm">Sent emails will appear here</p>
               </div>
             )}
           </CardContent>
@@ -410,3 +469,5 @@ export default function EmailConfigurationAdmin() {
     </div>
   );
 }
+
+export default memo(EmailConfigurationAdmin);
