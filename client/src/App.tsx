@@ -48,12 +48,12 @@ import { InstantNavigation } from "@/components/InstantNavigation";
 import { DebugBanner } from "@/components/DebugBanner";
 import { DeviceBlocker } from "@/components/DeviceBlocker";
 import { ResponsiveNavigation } from "@/components/ResponsiveNavigation";
-import { useScreenSize } from "@/hooks/useScreenSize";
+import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 import { cn } from "@/lib/utils";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
-  const { isPhone, isSmallTablet, isTablet, isDesktop } = useScreenSize();
+  const { isPhone, isSmallTablet, isTablet, isDesktop } = useDeviceDetection();
 
   // NEVER show loading spinner on route changes - always render instantly
   // Only show auth loading on initial app load when no route is detected

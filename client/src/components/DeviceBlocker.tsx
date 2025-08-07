@@ -1,4 +1,4 @@
-import { useScreenSize } from "@/hooks/useScreenSize";
+import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Smartphone, Tablet } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -8,7 +8,7 @@ interface DeviceBlockerProps {
 }
 
 export function DeviceBlocker({ children }: DeviceBlockerProps) {
-  const { isPhone } = useScreenSize();
+  const { isPhone, deviceName } = useDeviceDetection();
   
   // Check for SuperAdmin access
   const { data: accessInfo } = useQuery({
