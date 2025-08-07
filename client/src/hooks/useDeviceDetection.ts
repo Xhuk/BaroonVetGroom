@@ -106,10 +106,19 @@ function detectDevice(): DeviceInfo {
 }
 
 export function useDeviceDetection(): DeviceInfo {
-  const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(detectDevice);
+  const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(() => {
+    const info = detectDevice();
+    // Force immediate logging on hook initialization
+    console.log(`🔍 Hook initialized - Device detection complete`);
+    return info;
+  });
 
   useEffect(() => {
+    // Log on first mount
+    console.log(`🚀 Device detection hook mounted`);
+    
     const handleResize = () => {
+      console.log(`📱 Window resized, re-detecting device...`);
       setDeviceInfo(detectDevice());
     };
 
