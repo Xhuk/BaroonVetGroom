@@ -279,6 +279,13 @@ export function optimizeDeliveryRouteWithCompletedMascots(
 }
 
 /**
+ * Simple weight-based routing algorithm
+ */
+function simpleWeightBasedRouting(options: RouteOptimizationOptions): OptimizedRoute {
+  return optimizeDeliveryRoute(options);
+}
+
+/**
  * Advanced route optimization using external providers (Mapbox, Google, HERE)
  */
 async function advancedRouteOptimization(options: RouteOptimizationOptions): Promise<OptimizedRoute> {
@@ -309,7 +316,7 @@ async function advancedRouteOptimization(options: RouteOptimizationOptions): Pro
  * Mapbox route optimization
  */
 async function optimizeWithMapbox(options: RouteOptimizationOptions): Promise<OptimizedRoute> {
-  const { clinicLocation, appointments, config } = options;
+  const { clinicLocation, completedAppointments, config } = options;
   
   if (!config?.apiKey) {
     throw new Error('Mapbox API key not configured');
@@ -318,7 +325,7 @@ async function optimizeWithMapbox(options: RouteOptimizationOptions): Promise<Op
   // Prepare coordinates for Mapbox Optimization API
   const coordinates = [
     clinicLocation,
-    ...appointments.map(apt => [apt.longitude, apt.latitude] as [number, number])
+    ...completedAppointments.map(apt => [apt.longitude, apt.latitude] as [number, number])
   ];
   
   const url = `https://api.mapbox.com/optimized-trips/v1/mapbox/driving/${coordinates.map(coord => coord.join(',')).join(';')}`;
@@ -341,13 +348,15 @@ async function optimizeWithMapbox(options: RouteOptimizationOptions): Promise<Op
   const trip = data.trips[0];
   const optimizedPoints = trip.waypoints
     .slice(1, -1) // Remove start/end clinic points
-    .map((wp: any, index: number) => appointments[wp.waypoint_index - 1]);
+    .map((wp: any, index: number) => completedAppointments[wp.waypoint_index - 1]);
   
   return {
     points: optimizedPoints,
     totalDistance: Math.round(trip.distance / 1000 * 100) / 100, // Convert m to km
     estimatedTime: Math.round(trip.duration / 60), // Convert s to minutes
-    efficiency: 95 // Mapbox provides high efficiency
+    efficiency: 95, // Mapbox provides high efficiency
+    routeSequence: optimizedPoints.map((point: RoutePoint) => `${point.clientName} - ${point.petName} (${point.fraccionamiento})`),
+    fraccionamientoOrder: []
   };
 }
 
@@ -391,9 +400,6 @@ export {
   type OptimizedRoute,
   type RouteOptimizationOptions
 };
-
-// Export aliases for backward compatibility
-export const optimizeDeliveryRoute = advancedRouteOptimization;
 export function generateOptimizationPrompt(options: RouteOptimizationOptions): string {
-  return `Optimizing delivery route for ${options.appointments.length} appointments with ${options.vanCapacity} van capacity.`;
+  return `Optimizing delivery route for ${options.completedAppointments.length} appointments with ${options.vanCapacity} van capacity.`;
 }
