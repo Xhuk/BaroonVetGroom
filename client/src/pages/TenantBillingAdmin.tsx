@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
+import { SubscriptionStatus } from "@/components/SubscriptionStatus";
 import { useTenant } from "@/contexts/TenantContext";
 import { Download, DollarSign, FileText, Calendar } from "lucide-react";
 import { format } from "date-fns";
@@ -122,6 +123,11 @@ export default function TenantBillingAdmin() {
             </Button>
           </div>
         </div>
+
+        {/* Subscription Status */}
+        {tenant?.companyId && (
+          <SubscriptionStatus companyId={tenant.companyId} />
+        )}
 
         {/* Period Selector */}
         <div className="flex gap-2">

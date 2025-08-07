@@ -2213,6 +2213,28 @@ export class DatabaseStorage implements IStorage {
       .where(eq(tenants.companyId, companyId));
   }
 
+  async getExpiringSubscriptions(cutoffDate: Date): Promise<any[]> {
+    return await db
+      .select({
+        companyId: companySubscriptions.companyId,
+        companyName: companies.name,
+        planId: companySubscriptions.planId,
+        status: companySubscriptions.status,
+        currentPeriodEnd: companySubscriptions.currentPeriodEnd,
+        planDisplayName: subscriptionPlans.displayName
+      })
+      .from(companySubscriptions)
+      .leftJoin(companies, eq(companySubscriptions.companyId, companies.id))
+      .leftJoin(subscriptionPlans, eq(companySubscriptions.planId, subscriptionPlans.id))
+      .where(
+        and(
+          lte(companySubscriptions.currentPeriodEnd, cutoffDate),
+          eq(companySubscriptions.status, 'active')
+        )
+      )
+      .orderBy(companySubscriptions.currentPeriodEnd);
+  }
+
   // Follow-up notification operations
   async getFollowUpCount(tenantId: string): Promise<number> {
     const result = await db

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
-import { Plus, Building2, Users, DollarSign, Settings } from "lucide-react";
+import { Plus, Building2, Users, DollarSign, Settings, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -52,6 +52,11 @@ export default function EnterpriseSubscriptionAdmin() {
   // Fetch all TenantVet customers
   const { data: tenantVets, isLoading: clientsLoading } = useQuery({
     queryKey: ['/api/superadmin/tenant-customers'],
+  });
+
+  // Fetch expiring subscriptions (next 7 days)
+  const { data: expiringSubscriptions, isLoading: expiringLoading } = useQuery({
+    queryKey: ['/api/superadmin/subscriptions/expiring'],
   });
 
   // Create new TenantVet customer
@@ -272,6 +277,35 @@ export default function EnterpriseSubscriptionAdmin() {
             </Card>
           ))}
         </div>
+
+        {/* Expiring Subscriptions Alert */}
+        {expiringSubscriptions && expiringSubscriptions.length > 0 && (
+          <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20 mb-6">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-yellow-800 dark:text-yellow-200 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Suscripciones por Expirar ({expiringSubscriptions.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {expiringSubscriptions.map((sub: any) => (
+                  <div key={sub.companyId} className="flex justify-between items-center text-sm border-b border-yellow-200 dark:border-yellow-700 pb-1">
+                    <span className="font-medium">{sub.companyName}</span>
+                    <div className="text-right">
+                      <div className="text-yellow-700 dark:text-yellow-300">
+                        {new Date(sub.currentPeriodEnd).toLocaleDateString()}
+                      </div>
+                      <div className="text-xs text-yellow-600 dark:text-yellow-400">
+                        {sub.planDisplayName}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* TenantVet Customers */}
         <Card>

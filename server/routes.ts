@@ -55,6 +55,79 @@ const isSuperAdmin = async (req: any, res: any, next: any) => {
   }
 };
 
+// Middleware to check subscription validity for tenant access
+const checkSubscriptionValidity = async (req: any, res: any, next: any) => {
+  try {
+    const tenantId = req.params.tenantId || req.body.tenantId;
+    
+    if (!tenantId) {
+      return next(); // Skip check if no tenantId
+    }
+
+    // Get tenant and company information
+    const tenant = await storage.getTenant(tenantId);
+    if (!tenant) {
+      return res.status(404).json({ message: "Tenant not found" });
+    }
+
+    const subscription = await storage.getCompanySubscription(tenant.companyId);
+    if (!subscription) {
+      // No subscription found - block access except for super admins
+      if (await isSystemAdmin(req)) {
+        return next(); // Super admins can always access
+      }
+      return res.status(403).json({ 
+        message: "No active subscription found", 
+        subscriptionRequired: true 
+      });
+    }
+
+    // Check if subscription is expired
+    const now = new Date();
+    const endDate = new Date(subscription.currentPeriodEnd);
+    
+    if (endDate < now && subscription.status !== 'trial') {
+      // Subscription expired - block access except for super admins
+      if (await isSystemAdmin(req)) {
+        return next(); // Super admins can always access
+      }
+      
+      // Update subscription status to expired
+      await storage.updateCompanySubscription(tenant.companyId, { 
+        status: 'expired' 
+      });
+      
+      return res.status(403).json({ 
+        message: "Subscription expired", 
+        expiredDate: endDate.toISOString(),
+        subscriptionRequired: true 
+      });
+    }
+
+    // Check VetSite limits
+    const plan = await storage.getSubscriptionPlan(subscription.planId);
+    if (plan) {
+      const tenants = await storage.getCompanyTenants(tenant.companyId);
+      if (tenants.length > plan.maxTenants) {
+        if (await isSystemAdmin(req)) {
+          return next(); // Super admins can always access
+        }
+        return res.status(403).json({ 
+          message: "VetSite limit exceeded", 
+          currentSites: tenants.length,
+          maxAllowed: plan.maxTenants,
+          upgradeRequired: true 
+        });
+      }
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error checking subscription validity:", error);
+    next(); // Continue on error to avoid blocking legitimate requests
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -231,7 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/appointments/:tenantId', isAuthenticated, async (req: any, res) => {
+  app.get('/api/appointments/:tenantId', isAuthenticated, checkSubscriptionValidity, async (req: any, res) => {
     try {
       const { tenantId } = req.params;
       const { date } = req.query;
@@ -1913,7 +1986,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sales/Cashier API endpoints
-  app.get('/api/sales/:tenantId', async (req, res) => {
+  app.get('/api/sales/:tenantId', checkSubscriptionValidity, async (req, res) => {
     try {
       const { tenantId } = req.params;
       const salesData = await storage.getSales(tenantId);
@@ -5131,7 +5204,7 @@ This password expires in 24 hours.
   // === BILLING AND SUBSCRIPTION MANAGEMENT API ===
   
   // Billing Admin API for TenantVet sites - Tenant-level billing summary
-  app.get('/api/billing/summary/:tenantId', isAuthenticated, async (req, res) => {
+  app.get('/api/billing/summary/:tenantId', isAuthenticated, checkSubscriptionValidity, async (req, res) => {
     try {
       const { tenantId } = req.params;
       const { period = 'current_month' } = req.query;
@@ -5336,6 +5409,76 @@ This password expires in 24 hours.
     } catch (error) {
       console.error("Error creating tenant customer:", error);
       res.status(500).json({ message: "Failed to create tenant customer" });
+    }
+  });
+
+  // Subscription management endpoints
+  app.post('/api/superadmin/subscriptions/:companyId/renew', isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const { planId, months = 1 } = req.body;
+      
+      const now = new Date();
+      const endDate = new Date(now.getTime() + months * 30 * 24 * 60 * 60 * 1000);
+      
+      const subscription = await storage.updateCompanySubscription(companyId, {
+        planId,
+        status: 'active',
+        currentPeriodStart: now,
+        currentPeriodEnd: endDate
+      });
+      
+      res.json({ message: "Subscription renewed successfully", subscription });
+    } catch (error) {
+      console.error("Error renewing subscription:", error);
+      res.status(500).json({ message: "Failed to renew subscription" });
+    }
+  });
+
+  app.get('/api/superadmin/subscriptions/expiring', isSuperAdmin, async (req, res) => {
+    try {
+      const { days = 7 } = req.query;
+      const cutoffDate = new Date(Date.now() + parseInt(days as string) * 24 * 60 * 60 * 1000);
+      
+      const expiringSubscriptions = await storage.getExpiringSubscriptions(cutoffDate);
+      res.json(expiringSubscriptions);
+    } catch (error) {
+      console.error("Error fetching expiring subscriptions:", error);
+      res.status(500).json({ message: "Failed to fetch expiring subscriptions" });
+    }
+  });
+
+  // Check subscription status for a company
+  app.get('/api/subscription/status/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      
+      const subscription = await storage.getCompanySubscription(companyId);
+      if (!subscription) {
+        return res.json({ status: 'none', hasSubscription: false });
+      }
+      
+      const now = new Date();
+      const endDate = new Date(subscription.currentPeriodEnd);
+      const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      
+      const plan = await storage.getSubscriptionPlan(subscription.planId);
+      const tenants = await storage.getCompanyTenants(companyId);
+      
+      res.json({
+        status: subscription.status,
+        hasSubscription: true,
+        plan: plan?.displayName || 'Unknown',
+        daysRemaining,
+        expiresAt: endDate.toISOString(),
+        vetsitesUsed: tenants.length,
+        vetsitesAllowed: plan?.maxTenants || 0,
+        isExpired: endDate < now,
+        isNearExpiry: daysRemaining <= 7 && daysRemaining > 0
+      });
+    } catch (error) {
+      console.error("Error checking subscription status:", error);
+      res.status(500).json({ message: "Failed to check subscription status" });
     }
   });
 
