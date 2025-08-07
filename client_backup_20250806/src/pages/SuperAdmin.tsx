@@ -1,0 +1,1381 @@
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Header } from "@/components/Header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NewCompanyDialog } from "@/components/NewCompanyDialog";
+import { SuperAdminPetAgePanel } from "@/components/SuperAdminPetAgePanel";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { apiRequest } from "@/lib/queryClient";
+import { 
+  Building, 
+  Globe, 
+  Database, 
+  Shield,
+  TrendingUp,
+  Server,
+  Plus,
+  Settings,
+  Activity,
+  Heart,
+  Webhook,
+  Clock,
+  Loader2,
+  UserPlus,
+  Smartphone,
+  Copy,
+  CreditCard,
+  AlertTriangle,
+  DollarSign,
+  TrendingDown
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export default function SuperAdmin() {
+  const { toast } = useToast();
+  const { isAuthenticated, isLoading } = useAuth();
+  const [showNewCompanyDialog, setShowNewCompanyDialog] = useState(false);
+  const [demoDays, setDemoDays] = useState(45);
+  const [groomingDays, setGroomingDays] = useState(1);
+  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
+  const [onboardingForm, setOnboardingForm] = useState({
+    companyName: '',
+    adminEmail: '',
+    adminFirstName: '',
+    adminLastName: '',
+    planId: '',
+    trialDays: 14,
+    maxTenants: 1,
+    maxStaff: 5
+  });
+  const [sharedCredentials, setSharedCredentials] = useState<any>(null);
+  const [showBillingDialog, setShowBillingDialog] = useState(false);
+  const [showAddCreditsDialog, setShowAddCreditsDialog] = useState(false);
+  const [creditAmount, setCreditAmount] = useState('');
+  const [billingSettings, setBillingSettings] = useState({
+    monthlyBudget: 100,
+    alertThreshold75: 75,
+    alertThreshold90: 90,
+    enableAlerts: true
+  });
+
+  // Demo data seeding mutation
+  const seedDemoDataMutation = useMutation({
+    mutationFn: async (days: number) => {
+      const response = await fetch('/api/seed-demo-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ days }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Demo Data Created Successfully",
+        description: data.message || "Demo data has been seeded successfully for deployment demonstrations.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Demo Data Seeding Failed",
+        description: error?.message || "Failed to seed demo data. Please check logs and try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Grooming appointments seeding mutation
+  const seedGroomingTodayMutation = useMutation({
+    mutationFn: async (days: number) => {
+      const response = await fetch('/api/seed-grooming-today/demo-grooming-1', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ days }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Grooming Appointments Created Successfully",
+        description: data.message || `Grooming appointments have been created for ${groomingDays} day(s) with completed payment status.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Grooming Seeding Failed",
+        description: error?.message || "Failed to create grooming appointments. Please check logs and try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add credits mutation
+  const addCreditsMutation = useMutation({
+    mutationFn: async (data: { amount: string; description?: string }) => {
+      const response = await fetch('/api/superadmin/add-credits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Credits Added Successfully! 💳",
+        description: `$${data.transaction.amount} has been added to your account.`,
+      });
+      setCreditAmount('');
+      setShowAddCreditsDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Credit Addition Failed",
+        description: error?.message || "Failed to add credits. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update billing settings mutation
+  const updateBillingMutation = useMutation({
+    mutationFn: async (settings: any) => {
+      const response = await fetch('/api/superadmin/billing-settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(settings),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Billing Settings Updated",
+        description: "Your billing preferences have been saved successfully.",
+      });
+      setShowBillingDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error?.message || "Failed to update billing settings.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Fetch dashboard statistics from the database cube
+  const { data: dashboardStats, isLoading: isLoadingStats, error: statsError } = useQuery({
+    queryKey: ['/api/superadmin/dashboard-stats'],
+    refetchInterval: 30000, // Refresh every 30 seconds
+    enabled: isAuthenticated,
+  });
+
+  // Fetch subscription plans for mobile onboarding
+  const { data: subscriptionPlans = [] } = useQuery({
+    queryKey: ['/api/mobile/subscription-plans'],
+    enabled: isAuthenticated,
+  });
+
+  // Fetch billing usage and expenses
+  const { data: billingData, isLoading: isLoadingBilling } = useQuery({
+    queryKey: ['/api/superadmin/billing-usage'],
+    refetchInterval: 60000, // Refresh every minute
+    enabled: isAuthenticated,
+  });
+
+  // Mobile client onboarding mutation
+  const onboardClientMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch('/api/mobile/onboard-client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setSharedCredentials(data);
+      toast({
+        title: "Client Onboarded Successfully! 🎉",
+        description: `${data.company.name} has been set up with a ${data.subscription.trialDaysRemaining}-day trial.`,
+      });
+      setOnboardingForm({
+        companyName: '',
+        adminEmail: '',
+        adminFirstName: '',
+        adminLastName: '',
+        planId: '',
+        trialDays: 14,
+        maxTenants: 1,
+        maxStaff: 5
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Onboarding Failed",
+        description: error?.message || "Failed to onboard client. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Share credentials mutation for mobile
+  const shareCredentialsMutation = useMutation({
+    mutationFn: async (data: { companyId: string; adminEmail: string; method: string }) => {
+      const response = await fetch('/api/mobile/share-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      navigator.clipboard.writeText(data.shareableText);
+      toast({
+        title: "Credentials Copied! 📋",
+        description: "Initial login credentials have been copied to clipboard for sharing.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Share Failed",
+        description: error?.message || "Failed to prepare credentials for sharing.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const overview = dashboardStats?.overview || { totalCompanies: 0, totalUsers: 0, totalTenants: 0, totalRevenue: 0 };
+  const companies = dashboardStats?.companies || { recent: [], topByRevenue: [] };
+  const growth = dashboardStats?.growth || { newCompanies: 0, newUsers: 0, revenueGrowth: 0 };
+  const health = dashboardStats?.health || { totalRecords: 0, avgResponseTime: 0, errorRate: 0 };
+  const resources = dashboardStats?.resources || { cpuUsagePercent: 0, memoryUsagePercent: 0, diskUsagePercent: 0 };
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "No autorizado",
+        description: "Debes iniciar sesión para acceder al super admin",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      
+      <main className="p-2 sm:p-4 lg:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-4 sm:mb-6 lg:mb-8">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Super-Admin Dashboard</h1>
+            <p className="text-sm sm:text-base text-gray-600">Gestión a nivel de plataforma: empresas, infraestructura y configuraciones globales</p>
+          </div>
+
+          {/* Quick Access Ribbon */}
+          <Card className="mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg text-gray-900">Acciones Rápidas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
+                <Button variant="outline" className="h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white">
+                  <Database className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                  <span className="text-xs sm:text-sm font-medium text-center">Backup BD</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                  onClick={() => setShowOnboardingDialog(true)}
+                >
+                  <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                  <span className="text-xs sm:text-sm font-medium text-center">Onboard Client</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
+                  onClick={() => setShowBillingDialog(true)}
+                >
+                  <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                  <span className="text-xs sm:text-sm font-medium text-center">Billing</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200"
+                  onClick={() => setShowAddCreditsDialog(true)}
+                >
+                  <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+                  <span className="text-xs sm:text-sm font-medium text-center">Add Credits</span>
+                </Button>
+                
+                <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
+                  <Settings className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm font-medium">Config Global</span>
+                </Button>
+                
+                <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-medium">Reportes</span>
+                </Button>
+                
+                <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
+                  <Shield className="w-5 h-5 text-red-600" />
+                  <span className="text-sm font-medium">Auditoría</span>
+                </Button>
+                
+                <Link href="/admin/follow-up-config" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-red-50 hover:bg-red-100 border-red-300">
+                    <Heart className="w-5 h-5 text-red-600" />
+                    <span className="text-sm font-medium text-red-700">Seguimientos</span>
+                  </Button>
+                </Link>
+                
+                <Link href="/superadmin/monitoring" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-blue-50 hover:bg-blue-100 border-blue-300">
+                    <Activity className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-700">Monitoring</span>
+                  </Button>
+                </Link>
+                
+                <Link href="/superadmin/rbac" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-purple-50 hover:bg-purple-100 border-purple-300">
+                    <Shield className="w-5 h-5 text-purple-600" />
+                    <span className="text-sm font-medium text-purple-700">RBAC</span>
+                  </Button>
+                </Link>
+
+                <Link href="/superadmin/webhook-integrations" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-green-50 hover:bg-green-100 border-green-300">
+                    <Webhook className="w-5 h-5 text-green-600" />
+                    <span className="text-sm font-medium text-green-700">LateNode</span>
+                  </Button>
+                </Link>
+
+                <Link href="/superadmin/billing" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-emerald-50 hover:bg-emerald-100 border-emerald-300">
+                    <CreditCard className="w-5 h-5 text-emerald-600" />
+                    <span className="text-sm font-medium text-emerald-700">Billing</span>
+                  </Button>
+                </Link>
+
+                <Link href="/superadmin/deployment" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-indigo-50 hover:bg-indigo-100 border-indigo-300">
+                    <Settings className="w-5 h-5 text-indigo-600" />
+                    <span className="text-sm font-medium text-indigo-700">Features</span>
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Billing Overview Card */}
+          {billingData?.billing && (
+            <Card className="mb-6 sm:mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <CreditCard className="h-5 w-5 text-blue-600" />
+                    <span>Billing Overview - {billingData.billing?.currentMonth || 'Current Month'}</span>
+                  </div>
+                  {billingData.billing?.alerts?.isNear75 && (
+                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="text-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="text-2xl font-bold text-green-700">${billingData.billing?.totalSpent?.toFixed(2) || '0.00'}</div>
+                    <div className="text-sm text-green-600">Total Spent</div>
+                  </div>
+                  <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-700">${billingData.billing?.remainingBudget?.toFixed(2) || '0.00'}</div>
+                    <div className="text-sm text-blue-600">Budget Left</div>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-700">{billingData.billing?.usagePercentage?.toFixed(1) || '0.0'}%</div>
+                    <div className="text-sm text-purple-600">Usage</div>
+                  </div>
+                  <div className="text-center p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="text-2xl font-bold text-amber-700">${billingData.billing?.projectedMonthEnd?.toFixed(2) || '0.00'}</div>
+                    <div className="text-sm text-amber-600">Projected</div>
+                  </div>
+                </div>
+                
+                {billingData.billing?.alerts?.isNear75 && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <span className="text-sm font-medium text-amber-800">
+                        Warning: You've used {billingData.billing?.usagePercentage?.toFixed(1) || '0.0'}% of your monthly budget
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                  <div>Deployments: ${billingData.billing?.services?.deployments || '0.00'}</div>
+                  <div>Database: ${billingData.billing?.services?.database || '0.00'}</div>
+                  <div>Storage: ${billingData.billing?.services?.storage || '0.00'}</div>
+                  <div>AI: ${billingData.billing?.services?.ai || '0.00'}</div>
+                  <div>Other: ${billingData.billing?.services?.other || '0.00'}</div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Platform Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Empresas</CardTitle>
+                <Building className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    overview.totalCompanies || 0
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {growth.newCompanies || 0} nuevas este mes
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Tenants Activos</CardTitle>
+                <Globe className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    overview.totalTenants || 0
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {growth.newTenants || 0} nuevos este mes
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Usuarios Totales</CardTitle>
+                <Shield className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+                  ) : (
+                    overview.totalUsers || 0
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {growth.newUsers || 0} nuevos este mes
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Sistema Saludable</CardTitle>
+                <Server className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    health.uptime || "99.9%"
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {health.totalRecords || 0} registros totales
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Management Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+            {/* Company Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Gestión de Empresas</span>
+                  <Button 
+                    size="sm" 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => setShowNewCompanyDialog(true)}
+                    data-testid="button-new-company"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nueva Empresa
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {isLoadingStats ? (
+                    // Loading skeleton
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <div className="animate-pulse bg-gray-200 h-5 w-40 rounded mb-2"></div>
+                          <div className="animate-pulse bg-gray-200 h-4 w-32 rounded mb-1"></div>
+                          <div className="animate-pulse bg-gray-200 h-3 w-24 rounded"></div>
+                        </div>
+                        <div className="text-right">
+                          <div className="animate-pulse bg-gray-200 h-6 w-16 rounded mb-1"></div>
+                          <div className="animate-pulse bg-gray-200 h-3 w-20 rounded"></div>
+                        </div>
+                      </div>
+                    ))
+                  ) : companies.length > 0 ? (
+                    companies.map((company: any) => (
+                      <div key={company.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <h4 className="font-medium">{company.name}</h4>
+                          <p className="text-sm text-gray-600">
+                            {company.tenantCount} tenants • {company.totalUsers} usuarios
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Plan: {company.subscriptionTier || 'Básico'} • 
+                            Ingresos: ${(company.monthlyRevenue || 0).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            company.subscriptionStatus === 'active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {company.subscriptionStatus === 'active' ? 'Activa' : 'Trial'}
+                          </span>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {company.appointmentsToday || 0} citas hoy
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center p-8 text-gray-500">
+                      <Building className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p>No hay empresas registradas</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* System Health */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Salud del Sistema</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <span className="font-medium">Base de Datos</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm text-green-600">{health.databaseStatus || 'Operacional'}</span>
+                      <p className="text-xs text-gray-500">{resources.databaseSizeMB || 0} MB</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <span className="font-medium">Conexiones Activas</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm text-green-600">{health.activeConnections || 0}</span>
+                      <p className="text-xs text-gray-500">/{resources.maxConnections || 450} max</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-3 h-3 rounded-full ${
+                        (resources.cpuUsagePercent || 0) > 70 ? 'bg-red-500' :
+                        (resources.cpuUsagePercent || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                      }`}></div>
+                      <span className="font-medium">CPU / Memoria</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm text-green-600">
+                        {Math.round(resources.cpuUsagePercent || 0)}% / {Math.round(resources.memoryUsagePercent || 0)}%
+                      </span>
+                      <p className="text-xs text-gray-500">Uso actual</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <span className="font-medium">Rendimiento</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm text-green-600">{health.avgResponseTime || 0}ms</span>
+                      <p className="text-xs text-gray-500">Resp. promedio</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Platform Analytics */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-4 sm:mt-6 lg:mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Crecimiento Mensual</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Nuevas Empresas</span>
+                    <span className="font-medium text-green-600">
+                      {isLoadingStats ? '...' : `+${growth.newCompanies || 0}`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Nuevos Tenants</span>
+                    <span className="font-medium text-green-600">
+                      {isLoadingStats ? '...' : `+${growth.newTenants || 0}`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Nuevos Usuarios</span>
+                    <span className="font-medium text-green-600">
+                      {isLoadingStats ? '...' : `+${growth.newUsers || 0}`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Citas Procesadas</span>
+                    <span className="font-medium text-blue-600">
+                      {isLoadingStats ? '...' : (growth.appointmentsProcessed || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Ingresos del Mes</span>
+                    <span className="font-medium text-purple-600">
+                      {isLoadingStats ? '...' : `$${(growth.monthlyRevenue || 0).toLocaleString()}`}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Uso de Recursos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>CPU</span>
+                      <span>{isLoadingStats ? '...' : `${Math.round(resources.cpuUsagePercent || 0)}%`}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${
+                          (resources.cpuUsagePercent || 0) > 70 ? 'bg-red-500' :
+                          (resources.cpuUsagePercent || 0) > 50 ? 'bg-yellow-500' : 'bg-blue-600'
+                        }`}
+                        style={{ width: `${Math.round(resources.cpuUsagePercent || 0)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Memoria</span>
+                      <span>{isLoadingStats ? '...' : `${Math.round(resources.memoryUsagePercent || 0)}%`}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${
+                          (resources.memoryUsagePercent || 0) > 70 ? 'bg-red-500' :
+                          (resources.memoryUsagePercent || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}
+                        style={{ width: `${Math.round(resources.memoryUsagePercent || 0)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Almacenamiento</span>
+                      <span>{isLoadingStats ? '...' : `${Math.round(resources.storageUsagePercent || 0)}%`}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full"
+                        style={{ width: `${Math.round(resources.storageUsagePercent || 0)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 pt-3 border-t">
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>BD: {resources.databaseSizeMB || 0} MB</span>
+                      <span>Conexiones: {health.activeConnections || 0}/{resources.maxConnections || 450}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span>Estado del Sistema</span>
+                  {isLoadingStats && (
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {statsError ? (
+                    <div className="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-red-800">Error al cargar estadísticas</p>
+                        <p className="text-xs text-red-600">Verifica la conexión de base de datos</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* CPU Alert */}
+                      {(resources.cpuUsagePercent || 0) > 70 && (
+                        <div className="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-red-800">Alto uso de CPU: {Math.round(resources.cpuUsagePercent || 0)}%</p>
+                            <p className="text-xs text-red-600">Acción requerida</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Memory Alert */}
+                      {(resources.memoryUsagePercent || 0) > 70 && (
+                        <div className="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-yellow-800">Alto uso de memoria: {Math.round(resources.memoryUsagePercent || 0)}%</p>
+                            <p className="text-xs text-yellow-600">Monitoreo requerido</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* System Health */}
+                      {health.totalRecords > 0 && (
+                        <div className="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-green-800">Sistema operacional</p>
+                            <p className="text-xs text-green-600">{health.totalRecords.toLocaleString()} registros activos</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Default state when no specific alerts and no data */}
+                      {!isLoadingStats && 
+                       (resources.cpuUsagePercent || 0) <= 70 && 
+                       (resources.memoryUsagePercent || 0) <= 70 && (
+                        <div className="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-green-800">Sistema funcionando normalmente</p>
+                            <p className="text-xs text-green-600">Todos los servicios operacionales</p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Demo Data Seeding Panel */}
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Database className="h-5 w-5 text-green-600" />
+                    <span>Demo Data Seeder</span>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-900 mb-2">Comprehensive Demo Data Creation</h4>
+                    <p className="text-sm text-blue-700 mb-3">
+                      Creates "Compañía Demo" with full organizational structure including tenants, 
+                      staff, clients, pets, services, rooms, and generates configurable days of realistic appointment data 
+                      for deployment demonstrations.
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-blue-600 mb-4">
+                      <div>• 3 Demo Tenants</div>
+                      <div>• 7+ Staff Members</div>
+                      <div>• 8+ Clients & Pets</div>
+                      <div>• Configurable Days</div>
+                    </div>
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-3">
+                      <h5 className="font-medium text-purple-900 text-sm mb-1">Grooming Data Seeder</h5>
+                      <p className="text-xs text-purple-700">
+                        Adds 30 completed grooming appointments per day in demo-grooming-1 tenant. 
+                        Distributed across 8 fraccionamientos with realistic services, pricing, and payment status. 
+                        Ready for VRP delivery route optimization testing.
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="demo-days" className="text-sm font-medium text-blue-900">
+                          Demo Data Days
+                        </Label>
+                        <Input
+                          id="demo-days"
+                          type="number"
+                          min="1"
+                          max="365"
+                          value={demoDays}
+                          onChange={(e) => setDemoDays(Math.max(1, Math.min(365, parseInt(e.target.value) || 1)))}
+                          className="w-full"
+                          data-testid="input-demo-days"
+                        />
+                        <p className="text-xs text-blue-600">Generate {demoDays} days of appointment data</p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="grooming-days" className="text-sm font-medium text-purple-900">
+                          Grooming Data Days
+                        </Label>
+                        <Input
+                          id="grooming-days"
+                          type="number"
+                          min="1"
+                          max="30"
+                          value={groomingDays}
+                          onChange={(e) => setGroomingDays(Math.max(1, Math.min(30, parseInt(e.target.value) || 1)))}
+                          className="w-full"
+                          data-testid="input-grooming-days"
+                        />
+                        <p className="text-xs text-purple-600">Generate grooming data for {groomingDays} day(s)</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">
+                        Use this to populate the system with comprehensive demo data for presentations and testing.
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        ⚠️ This will create or update demo company data. Safe to run multiple times.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        onClick={() => seedDemoDataMutation.mutate(demoDays)}
+                        disabled={seedDemoDataMutation.isPending}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        data-testid="button-seed-demo-data"
+                      >
+                        {seedDemoDataMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Seeding {demoDays} days...
+                          </>
+                        ) : (
+                          <>
+                            <Database className="mr-2 h-4 w-4" />
+                            Seed {demoDays} Days Demo Data
+                          </>
+                        )}
+                      </Button>
+                      
+                      <Button
+                        onClick={() => seedGroomingTodayMutation.mutate(groomingDays)}
+                        disabled={seedGroomingTodayMutation.isPending}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                        data-testid="button-seed-grooming-data"
+                      >
+                        {seedGroomingTodayMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating {groomingDays} day(s)...
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="mr-2 h-4 w-4" />
+                            Seed {groomingDays} Day(s) Grooming
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Pet Age Management Panel */}
+          <div className="mt-8">
+            <SuperAdminPetAgePanel />
+          </div>
+        </div>
+      </main>
+
+      {/* New Company Dialog */}
+      <NewCompanyDialog 
+        open={showNewCompanyDialog} 
+        onOpenChange={setShowNewCompanyDialog} 
+      />
+
+      {/* Mobile Client Onboarding Dialog */}
+      <Dialog open={showOnboardingDialog} onOpenChange={setShowOnboardingDialog}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-green-600" />
+              Mobile Client Onboarding
+            </DialogTitle>
+            <DialogDescription>
+              Set up a new client with trial subscription and generate initial credentials for sharing.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>First Name</Label>
+                <Input
+                  value={onboardingForm.adminFirstName}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, adminFirstName: e.target.value }))}
+                  placeholder="John"
+                />
+              </div>
+              <div>
+                <Label>Last Name</Label>
+                <Input
+                  value={onboardingForm.adminLastName}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, adminLastName: e.target.value }))}
+                  placeholder="Smith"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label>Company Name</Label>
+              <Input
+                value={onboardingForm.companyName}
+                onChange={(e) => setOnboardingForm(prev => ({ ...prev, companyName: e.target.value }))}
+                placeholder="Pet Clinic Name"
+              />
+            </div>
+            
+            <div>
+              <Label>Admin Email</Label>
+              <Input
+                type="email"
+                value={onboardingForm.adminEmail}
+                onChange={(e) => setOnboardingForm(prev => ({ ...prev, adminEmail: e.target.value }))}
+                placeholder="admin@petclinic.com"
+              />
+            </div>
+            
+            <div>
+              <Label>Subscription Plan</Label>
+              <Select
+                value={onboardingForm.planId}
+                onValueChange={(value) => setOnboardingForm(prev => ({ ...prev, planId: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subscriptionPlans.map((plan: any) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.displayName} - ${plan.monthlyPrice}/month ({plan.maxTenants} tenants)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label>Trial Days</Label>
+                <Input
+                  type="number"
+                  value={onboardingForm.trialDays}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, trialDays: parseInt(e.target.value) }))}
+                  min="1"
+                  max="90"
+                />
+              </div>
+              <div>
+                <Label>Max Tenants</Label>
+                <Input
+                  type="number"
+                  value={onboardingForm.maxTenants}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, maxTenants: parseInt(e.target.value) }))}
+                  min="1"
+                  max="50"
+                />
+              </div>
+              <div>
+                <Label>Max Staff</Label>
+                <Input
+                  type="number"
+                  value={onboardingForm.maxStaff}
+                  onChange={(e) => setOnboardingForm(prev => ({ ...prev, maxStaff: parseInt(e.target.value) }))}
+                  min="1"
+                  max="100"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowOnboardingDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => onboardClientMutation.mutate(onboardingForm)}
+                disabled={onboardClientMutation.isPending || !onboardingForm.companyName || !onboardingForm.adminEmail || !onboardingForm.planId}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                {onboardClientMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Onboard Client
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credentials Sharing Dialog */}
+      {sharedCredentials && (
+        <Dialog open={!!sharedCredentials} onOpenChange={() => setSharedCredentials(null)}>
+          <DialogContent className="max-w-md mx-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Copy className="w-5 h-5 text-blue-600" />
+                Client Credentials Ready
+              </DialogTitle>
+              <DialogDescription>
+                Share these credentials with your new client to get them started.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h4 className="font-medium text-green-800 mb-2">Success!</h4>
+                <p className="text-sm text-green-700">
+                  {sharedCredentials.company.name} has been set up with a {sharedCredentials.subscription.trialDaysRemaining}-day trial.
+                </p>
+              </div>
+              
+              <div className="p-3 bg-gray-50 border rounded-lg text-sm font-mono">
+                <div><strong>Company:</strong> {sharedCredentials.company.name}</div>
+                <div><strong>Email:</strong> {sharedCredentials.admin.email}</div>
+                <div><strong>Password:</strong> {sharedCredentials.admin.tempPassword}</div>
+                <div><strong>Login:</strong> {sharedCredentials.admin.loginUrl}</div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => 
+                    shareCredentialsMutation.mutate({
+                      companyId: sharedCredentials.company.id,
+                      adminEmail: sharedCredentials.admin.email,
+                      method: 'copy'
+                    })
+                  }
+                  className="flex-1"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy for Sharing
+                </Button>
+                <Button
+                  onClick={() => setSharedCredentials(null)}
+                  className="flex-1"
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Billing Settings Dialog */}
+      <Dialog open={showBillingDialog} onOpenChange={setShowBillingDialog}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-blue-600" />
+              Billing Settings
+            </DialogTitle>
+            <DialogDescription>
+              Configure your monthly budget and alert thresholds.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label>Monthly Budget ($)</Label>
+              <Input
+                type="number"
+                value={billingSettings.monthlyBudget}
+                onChange={(e) => setBillingSettings(prev => ({ ...prev, monthlyBudget: parseFloat(e.target.value) }))}
+                min="10"
+                max="10000"
+                step="10"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>75% Alert (%)</Label>
+                <Input
+                  type="number"
+                  value={billingSettings.alertThreshold75}
+                  onChange={(e) => setBillingSettings(prev => ({ ...prev, alertThreshold75: parseInt(e.target.value) }))}
+                  min="50"
+                  max="90"
+                />
+              </div>
+              <div>
+                <Label>90% Alert (%)</Label>
+                <Input
+                  type="number"
+                  value={billingSettings.alertThreshold90}
+                  onChange={(e) => setBillingSettings(prev => ({ ...prev, alertThreshold90: parseInt(e.target.value) }))}
+                  min="75"
+                  max="100"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowBillingDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => updateBillingMutation.mutate(billingSettings)}
+                disabled={updateBillingMutation.isPending}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {updateBillingMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Update Settings
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Credits Dialog */}
+      <Dialog open={showAddCreditsDialog} onOpenChange={setShowAddCreditsDialog}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-purple-600" />
+              Add Credits
+            </DialogTitle>
+            <DialogDescription>
+              Add credits to your account to extend your usage limit.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label>Credit Amount ($)</Label>
+              <Input
+                type="number"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(e.target.value)}
+                placeholder="Enter amount (e.g., 25.00)"
+                min="5"
+                max="500"
+                step="5"
+              />
+            </div>
+            
+            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+              <p><strong>Recommended amounts:</strong></p>
+              <div className="mt-2 space-y-1">
+                <div className="flex justify-between">
+                  <span>Small boost:</span>
+                  <span>$25 - $50</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Medium boost:</span>
+                  <span>$75 - $100</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Large boost:</span>
+                  <span>$150 - $200</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddCreditsDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => addCreditsMutation.mutate({ amount: creditAmount })}
+                disabled={addCreditsMutation.isPending || !creditAmount || parseFloat(creditAmount) < 5}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+              >
+                {addCreditsMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    Add ${creditAmount || '0'}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

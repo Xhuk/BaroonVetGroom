@@ -1,0 +1,398 @@
+/* Import Leaflet CSS first */
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Force dark mode styling for textarea elements */
+.dark textarea {
+  background-color: rgb(31 41 55) !important; /* gray-800 */
+  color: rgb(243 244 246) !important; /* gray-100 */
+  border-color: rgb(75 85 99) !important; /* gray-600 */
+}
+
+/* Additional force for form textarea elements */
+.dark form textarea,
+.dark [role="dialog"] textarea,
+.dark [data-testid="textarea-diagnosis"],
+.dark [data-testid="textarea-treatment"],
+.dark [data-testid="textarea-treatment-plan"],
+.dark [data-testid="textarea-followup-instructions"],
+.dark [data-testid="textarea-notes"],
+.dark [data-testid="textarea-chief-complaint"],
+.dark textarea[placeholder*="Descripción"],
+.dark textarea[placeholder*="Tratamiento"],
+.dark textarea[placeholder*="diagnóstico"],
+.dark textarea[placeholder*="motivo"],
+.dark textarea[placeholder*="Observaciones"],
+.dark textarea[placeholder*="Instrucciones"] {
+  background-color: rgb(31 41 55) !important; /* gray-800 */
+  color: rgb(243 244 246) !important; /* gray-100 */
+  border-color: rgb(75 85 99) !important; /* gray-600 */
+}
+
+/* Ultra-aggressive textarea and input dark mode override */
+.dark textarea,
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark input[type="search"],
+.dark select,
+.dark .lucide-textarea,
+html.dark textarea,
+html.dark input,
+html.dark select,
+.dark textarea:focus,
+.dark textarea:hover,
+.dark input:focus,
+.dark input:hover,
+.dark select:focus,
+.dark select:hover,
+textarea.dark,
+input.dark,
+select.dark,
+[data-theme="dark"] textarea,
+[data-theme="dark"] input,
+[data-theme="dark"] select {
+  background-color: rgb(31 41 55) !important; /* gray-800 */
+  color: rgb(243 244 246) !important; /* gray-100 */
+  border-color: rgb(75 85 99) !important; /* gray-600 */
+}
+
+/* Override any possible conflicting styles */
+.dark textarea[style],
+.dark input[style],
+.dark select[style] {
+  background-color: rgb(31 41 55) !important; /* gray-800 */
+  color: rgb(243 244 246) !important; /* gray-100 */
+}
+
+/* Ethereal Pulse Effect for Current Time Indicator when slot is empty */
+.ethereal-pulse-line {
+  position: relative;
+  border-radius: 3px;
+  
+  /* Vibrant gradient for the line itself - increased visibility */
+  background: linear-gradient(
+    90deg,
+    rgba(239, 68, 68, 0.1) 0%,     /* Red, slightly more visible */
+    rgba(239, 68, 68, 0.6) 10%,    /* Red, good opacity */
+    rgba(220, 38, 127, 0.8) 25%,   /* Pink-red, high opacity */
+    rgba(220, 38, 127, 0.8) 35%,   /* Keep pink-red high opacity */
+    rgba(239, 68, 68, 0.6) 50%,    /* Red, good opacity */
+    rgba(239, 68, 68, 0.1) 60%     /* Red, slightly more visible */
+  );
+  background-size: 200% 100%;
+  background-position: 0% 0%;
+
+  /* Minimal blur for readability */
+  filter: blur(0.3px); 
+  
+  /* Very subtle glow effect */
+  box-shadow: 0 0 8px rgba(220, 38, 127, 0.5), 
+              0 0 15px rgba(239, 68, 68, 0.4);
+
+  /* Animation properties */
+  animation: 
+    ethereal-pulse 4s infinite alternate ease-in-out,
+    glow-pulse 4s infinite alternate ease-in-out;
+}
+
+@keyframes ethereal-pulse {
+  0% {
+    height: 3px;
+    filter: blur(0.5px);
+    background-size: 200% 100%;
+    background-position: 0% 0%;
+  }
+  25% {
+    height: 4px;
+    filter: blur(0.8px);
+    background-size: 180% 100%;
+    background-position: 20% 0%;
+  }
+  50% {
+    height: 5px;
+    filter: blur(1px);
+    background-size: 150% 100%;
+    background-position: 50% 0%;
+  }
+  75% {
+    height: 4px;
+    filter: blur(0.8px);
+    background-size: 180% 100%;
+    background-position: 80% 0%;
+  }
+  100% {
+    height: 3px;
+    filter: blur(0.5px);
+    background-size: 200% 100%;
+    background-position: 100% 0%;
+  }
+}
+
+@keyframes glow-pulse {
+  0% {
+    box-shadow: 0 0 8px rgba(220, 38, 127, 0.5), 
+                0 0 15px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(220, 38, 127, 0.7), 
+                0 0 20px rgba(239, 68, 68, 0.5),
+                0 0 25px rgba(220, 38, 127, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(220, 38, 127, 0.5), 
+                0 0 15px rgba(239, 68, 68, 0.4);
+  }
+}
+
+/* Force dark mode for option elements */
+.dark option,
+.dark select option,
+html.dark option,
+html.dark select option {
+  background-color: rgb(31 41 55) !important; /* gray-800 */
+  color: rgb(243 244 246) !important; /* gray-100 */
+}
+
+/* Additional dark mode styling for labels */
+.dark label {
+  color: rgb(243 244 246) !important; /* gray-100 */
+}
+
+/* Global dark mode text override */
+.dark .text-gray-700 {
+  color: rgb(156 163 175) !important; /* gray-400 */
+}
+
+/* Custom animation for time container glow effect behind all elements */
+@keyframes time-container-glow {
+  0%, 100% {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.08) 50%, rgba(239, 68, 68, 0.12) 100%);
+    box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.1), 0 0 10px rgba(239, 68, 68, 0.05);
+  }
+  50% {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.10) 50%, rgba(239, 68, 68, 0.15) 100%);
+    box-shadow: inset 0 0 25px rgba(239, 68, 68, 0.15), 0 0 15px rgba(239, 68, 68, 0.08);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Fix Leaflet map rendering issues */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}
+
+.leaflet-tile {
+  filter: none !important;
+}
+
+.leaflet-tile-container {
+  opacity: 1 !important;
+}
+
+/* Bounce animation for customer markers - exactly 2 bounces */
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  12.5% {
+    transform: translateY(-20px);
+  }
+  25% {
+    transform: translateY(0);
+  }
+  37.5% {
+    transform: translateY(-15px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Heartbeat animation for follow-up notifications */
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.2);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.2);
+  }
+  70% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-heartbeat-slow {
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+.animate-heartbeat-fast {
+  animation: heartbeat 1s ease-in-out infinite;
+}
+
+/* Time marker animations for calendar */
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), inset 0 0 20px rgba(239, 68, 68, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.8), inset 0 0 30px rgba(239, 68, 68, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), inset 0 0 20px rgba(239, 68, 68, 0.1);
+  }
+}
+
+@keyframes spin-border {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 0.3;
+  }
+}
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+
+  /* Veterinary theme colors */
+  --vet-blue: hsl(207, 90%, 54%);
+  --vet-green: hsl(142, 71%, 45%);
+  --vet-orange: hsl(25, 95%, 53%);
+  --vet-gray: hsl(0, 0%, 46%);
+}
+
+.dark {
+  --background: hsl(224, 71%, 4%);
+  --foreground: hsl(213, 31%, 91%);
+  --muted: hsl(223, 47%, 11%);
+  --muted-foreground: hsl(215, 20%, 65%);
+  --popover: hsl(224, 71%, 4%);
+  --popover-foreground: hsl(213, 31%, 91%);
+  --card: hsl(224, 71%, 4%);
+  --card-foreground: hsl(213, 31%, 91%);
+  --border: hsl(216, 34%, 17%);
+  --input: hsl(216, 34%, 17%);
+  --primary: hsl(210, 40%, 98%);
+  --primary-foreground: hsl(222, 84%, 5%);
+  --secondary: hsl(222, 47%, 11%);
+  --secondary-foreground: hsl(213, 31%, 91%);
+  --accent: hsl(216, 34%, 17%);
+  --accent-foreground: hsl(213, 31%, 91%);
+  --destructive: hsl(359, 51%, 48%);
+  --destructive-foreground: hsl(213, 31%, 91%);
+  --ring: hsl(216, 34%, 17%);
+  --radius: 0.5rem;
+
+  /* Veterinary theme colors for dark mode */
+  --vet-blue: hsl(207, 90%, 64%);
+  --vet-green: hsl(142, 71%, 55%);
+  --vet-orange: hsl(25, 95%, 63%);
+  --vet-gray: hsl(215, 20%, 65%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+  }
+  
+  .time-slot {
+    @apply border-r border-b border-border flex items-center justify-center text-xs text-muted-foreground bg-muted;
+  }
+  
+  .day-header {
+    @apply border-r border-b-2 border-primary flex items-center justify-center font-medium bg-muted;
+  }
+  
+  .calendar-cell {
+    @apply border-r border-b border-border relative bg-card cursor-pointer hover:bg-muted;
+    min-height: 60px;
+  }
+  
+  .appointment-block {
+    @apply absolute left-1 right-1 rounded text-white text-xs p-1 overflow-hidden;
+  }
+  
+  .current-time-line {
+    @apply absolute left-0 right-0 h-0.5 bg-red-500 z-10 pointer-events-none;
+  }
+  
+  .bottom-ribbon {
+    @apply fixed bottom-0 left-0 right-0 bg-card border-t-2 border-border z-20;
+  }
+}
+
+@layer utilities {
+  .blue-25 {
+    background-color: hsl(207, 90%, 97%);
+  }
+}

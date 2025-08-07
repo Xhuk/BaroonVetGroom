@@ -1,0 +1,615 @@
+import { useEffect, useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { useErrorToast } from "@/hooks/useErrorToast";
+import { Header } from "@/components/Header";
+import { Navigation } from "@/components/Navigation";
+import { BackButton } from "@/components/BackButton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { CompanyTenantSelector } from "@/components/CompanyTenantSelector";
+import { TeamMemberManager } from "@/components/TeamMemberManager";
+import { 
+  Shield, 
+  Users, 
+  Building2, 
+  UserCheck,
+  Plus,
+  Edit,
+  Trash2,
+  Settings,
+  Crown,
+  Key,
+  AlertTriangle
+} from "lucide-react";
+import { useAccessControl } from "@/hooks/useAccessControl";
+
+// Available pages in the system
+const AVAILABLE_PAGES = [
+  { id: '/', name: 'Dashboard', description: 'Panel principal' },
+  { id: '/appointments', name: 'Citas', description: 'Gestión de citas' },
+  { id: '/booking', name: 'Reservas', description: 'Asistente de reservas' },
+  { id: '/clients', name: 'Clientes', description: 'Gestión de clientes' },
+  { id: '/inventory', name: 'Inventario', description: 'Gestión de inventario' },
+  { id: '/delivery-plan', name: 'Plan Entregas', description: 'Planificación de entregas' },
+  { id: '/route-map', name: 'Mapa Rutas', description: 'Visualización de rutas' },
+  { id: '/billing', name: 'Facturación', description: 'Gestión de facturación' },
+  { id: '/admin', name: 'Administración', description: 'Panel administrativo' },
+  { id: '/admin/settings', name: 'Configuración Admin', description: 'Configuraciones del sistema' },
+  { id: '/admin/business-hours', name: 'Horarios', description: 'Configuración de horarios' },
+  { id: '/admin/van-config', name: 'Config Vehículos', description: 'Configuración de vehículos' }
+];
+
+export default function SuperAdminRBAC() {
+  const { toast } = useToast();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const { handleError } = useErrorHandler();
+  const { showErrorToast } = useErrorToast();
+  
+  // State management
+  const [selectedCompany, setSelectedCompany] = useState<string>("");
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isUserAssignDialogOpen, setIsUserAssignDialogOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<any>(null);
+  const [newRoleData, setNewRoleData] = useState({
+    name: '',
+    displayName: '',
+    description: '',
+    pageAccess: 'none' as 'all' | 'some' | 'one' | 'none',
+    allowedPages: [] as string[],
+    permissions: [] as string[],
+    department: 'admin'
+  });
+
+  // Check if user has system admin access
+  const { canAccessSuperAdmin, canDebugTenants, isLoading: accessLoading } = useAccessControl();
+
+  // Fetch system data with error handling
+  const { data: companies, error: companiesError, isLoading: companiesLoading } = useQuery({
+    queryKey: ['/api/superadmin/companies'],
+    enabled: canAccessSuperAdmin,
+    retry: false,
+  });
+
+  const { data: systemRoles, error: systemRolesError, isLoading: systemRolesLoading } = useQuery({
+    queryKey: ['/api/superadmin/system-roles'],
+    enabled: canAccessSuperAdmin,
+    retry: false,
+  });
+
+  const { data: roles = [], error: rolesError } = useQuery({
+    queryKey: ['/api/superadmin/roles', selectedCompany],
+    enabled: canAccessSuperAdmin && !!selectedCompany,
+    retry: false,
+  });
+
+  const { data: users = [], error: usersError } = useQuery({
+    queryKey: ['/api/superadmin/users', selectedCompany],
+    enabled: canAccessSuperAdmin && !!selectedCompany,
+    retry: false,
+  });
+
+  const { data: userAssignments = [], error: assignmentsError } = useQuery({
+    queryKey: ['/api/superadmin/user-assignments', selectedCompany],
+    enabled: canAccessSuperAdmin && !!selectedCompany,
+    retry: false,
+  });
+
+  // Create role mutation
+  const createRoleMutation = useMutation({
+    mutationFn: async (roleData: any) => {
+      return await apiRequest('/api/superadmin/roles', 'POST', {
+        ...roleData,
+        companyId: selectedCompany,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/roles'] });
+      setIsRoleDialogOpen(false);
+      setNewRoleData({
+        name: '',
+        displayName: '',
+        description: '',
+        pageAccess: 'none',
+        allowedPages: [],
+        permissions: [],
+        department: 'admin'
+      });
+      toast({
+        title: "Rol creado",
+        description: "El nuevo rol ha sido creado exitosamente",
+      });
+    },
+    onError: (error) => {
+      const errorInfo = handleError(error, { 
+        context: 'CreateRole',
+        additionalInfo: { roleData: newRoleData, selectedCompany }
+      });
+      
+      showErrorToast({
+        title: "Error creando rol",
+        description: "No se pudo crear el rol",
+        context: "CreateRole",
+        error,
+        additionalInfo: { roleData: newRoleData, selectedCompany }
+      });
+    },
+  });
+
+  // Assign system role mutation
+  const assignSystemRoleMutation = useMutation({
+    mutationFn: async ({ userId, systemRoleId }: { userId: string; systemRoleId: string }) => {
+      return await apiRequest('/api/superadmin/assign-system-role', 'POST', { userId, systemRoleId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/user-assignments'] });
+      toast({
+        title: "Rol de sistema asignado",
+        description: "El rol de sistema ha sido asignado correctamente",
+      });
+    },
+    onError: (error) => {
+      showErrorToast({
+        title: "Error asignando rol",
+        description: "No se pudo asignar el rol de sistema",
+        context: "AssignSystemRole",
+        error,
+        additionalInfo: { assignSystemRoleMutation }
+      });
+    },
+  });
+
+  // Check authorization - only show error if we have definitive failure
+  useEffect(() => {
+    if (!isLoading && !accessLoading && isAuthenticated && !canAccessSuperAdmin) {
+      showErrorToast({
+        title: "Acceso Denegado",
+        description: "Solo desarrolladores y administradores de VetGroom pueden acceder a esta página",
+        context: "Authorization",
+        error: new Error("Unauthorized access attempt"),
+        additionalInfo: { 
+          isAuthenticated, 
+          canAccessSuperAdmin, 
+          isLoading,
+          accessLoading,
+          page: "SuperAdminRBAC"
+        }
+      });
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
+      return;
+    }
+  }, [isAuthenticated, isLoading, accessLoading, canAccessSuperAdmin, showErrorToast]);
+
+  if (isLoading || accessLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !canAccessSuperAdmin) {
+    return null;
+  }
+
+  const handleCreateRole = () => {
+    if (!newRoleData.name || !newRoleData.displayName) {
+      showErrorToast({
+        title: "Datos incompletos",
+        description: "Nombre y nombre para mostrar son requeridos",
+        context: "CreateRoleValidation",
+        error: new Error("Missing required fields"),
+        additionalInfo: { newRoleData }
+      });
+      return;
+    }
+
+    createRoleMutation.mutate(newRoleData);
+  };
+
+  const handlePageAccessChange = (value: string) => {
+    const pageAccess = value as 'all' | 'some' | 'one' | 'none';
+    setNewRoleData(prev => ({
+      ...prev,
+      pageAccess,
+      allowedPages: pageAccess === 'all' || pageAccess === 'none' ? [] : prev.allowedPages
+    }));
+  };
+
+  const handlePageSelection = (pageId: string, checked: boolean) => {
+    setNewRoleData(prev => ({
+      ...prev,
+      allowedPages: checked 
+        ? [...prev.allowedPages, pageId]
+        : prev.allowedPages.filter(p => p !== pageId)
+    }));
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans">
+      <Header />
+      <Navigation />
+      
+      <main className="lg:ml-64 p-6 pb-40">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <BackButton className="mb-4" />
+            <div className="flex items-center gap-3 mb-2">
+              <Crown className="w-8 h-8 text-yellow-600" />
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                SuperAdmin RBAC
+              </h1>
+              <Badge variant="destructive" className="text-xs">
+                SOLO VETGROOM
+              </Badge>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400">
+              Gestión de roles y permisos para desarrolladores y administradores de sistema
+            </p>
+          </div>
+
+          {/* Debug Company/Tenant Selector */}
+          {canDebugTenants && <CompanyTenantSelector />}
+
+          {/* Error Display Section */}
+          {(companiesError || systemRolesError || rolesError || usersError || assignmentsError) && (
+            <div className="mb-6 space-y-4">
+              {companiesError && (
+                <ErrorDisplay 
+                  error={companiesError}
+                  context="Companies API"
+                  userId={user?.id}
+                  additionalInfo={{ 
+                    endpoint: '/api/superadmin/companies',
+                    canAccessSuperAdmin,
+                    accessLoading 
+                  }}
+                />
+              )}
+              {systemRolesError && (
+                <ErrorDisplay 
+                  error={systemRolesError}
+                  context="System Roles API"
+                  userId={user?.id}
+                  additionalInfo={{ 
+                    endpoint: '/api/superadmin/system-roles',
+                    canAccessSuperAdmin 
+                  }}
+                />
+              )}
+              {rolesError && (
+                <ErrorDisplay 
+                  error={rolesError}
+                  context="Roles API"
+                  userId={user?.id}
+                  additionalInfo={{ 
+                    endpoint: '/api/superadmin/roles',
+                    selectedCompany,
+                    canAccessSuperAdmin 
+                  }}
+                />
+              )}
+              {usersError && (
+                <ErrorDisplay 
+                  error={usersError}
+                  context="Users API"
+                  userId={user?.id}
+                  additionalInfo={{ 
+                    endpoint: '/api/superadmin/users',
+                    selectedCompany 
+                  }}
+                />
+              )}
+              {assignmentsError && (
+                <ErrorDisplay 
+                  error={assignmentsError}
+                  context="User Assignments API"
+                  userId={user?.id}
+                  additionalInfo={{ 
+                    endpoint: '/api/superadmin/user-assignments',
+                    selectedCompany 
+                  }}
+                />
+              )}
+            </div>
+          )}
+
+
+
+          {/* Team Management Section - Always visible for system admins */}
+          <Tabs defaultValue="team" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="team" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Equipo VetGroom
+              </TabsTrigger>
+              <TabsTrigger value="roles" className="flex items-center gap-2" disabled={!selectedCompany}>
+                <Shield className="w-4 h-4" />
+                Roles de Acceso
+              </TabsTrigger>
+              <TabsTrigger value="system-roles" className="flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Roles de Sistema
+              </TabsTrigger>
+              <TabsTrigger value="assignments" className="flex items-center gap-2" disabled={!selectedCompany}>
+                <UserCheck className="w-4 h-4" />
+                Asignaciones
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Team Management Tab */}
+            <TabsContent value="team" className="space-y-6">
+              <TeamMemberManager />
+            </TabsContent>
+
+              {/* Roles Management */}
+              <TabsContent value="roles" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                    Roles de Acceso a Páginas
+                  </h2>
+                  
+                  <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-blue-600 hover:bg-blue-700">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Nuevo Rol
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Crear Nuevo Rol de Acceso</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Nombre del Rol *</Label>
+                            <Input 
+                              value={newRoleData.name}
+                              onChange={(e) => setNewRoleData(prev => ({...prev, name: e.target.value}))}
+                              placeholder="ej: marketing_manager"
+                            />
+                          </div>
+                          <div>
+                            <Label>Nombre para Mostrar *</Label>
+                            <Input 
+                              value={newRoleData.displayName}
+                              onChange={(e) => setNewRoleData(prev => ({...prev, displayName: e.target.value}))}
+                              placeholder="ej: Gerente de Marketing"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label>Descripción</Label>
+                          <Textarea 
+                            value={newRoleData.description}
+                            onChange={(e) => setNewRoleData(prev => ({...prev, description: e.target.value}))}
+                            placeholder="Descripción del rol y sus responsabilidades"
+                          />
+                        </div>
+
+                        <div>
+                          <Label>Departamento</Label>
+                          <Select 
+                            value={newRoleData.department}
+                            onValueChange={(value) => setNewRoleData(prev => ({...prev, department: value}))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="admin">Administración</SelectItem>
+                              <SelectItem value="reception">Recepción</SelectItem>
+                              <SelectItem value="medical">Médico</SelectItem>
+                              <SelectItem value="grooming">Estética</SelectItem>
+                              <SelectItem value="delivery">Entregas</SelectItem>
+                              <SelectItem value="marketing">Marketing</SelectItem>
+                              <SelectItem value="finance">Finanzas</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label>Acceso a Páginas</Label>
+                          <Select value={newRoleData.pageAccess} onValueChange={handlePageAccessChange}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todas las páginas</SelectItem>
+                              <SelectItem value="some">Páginas específicas</SelectItem>
+                              <SelectItem value="one">Una sola página</SelectItem>
+                              <SelectItem value="none">Sin acceso a páginas</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {(newRoleData.pageAccess === 'some' || newRoleData.pageAccess === 'one') && (
+                          <div>
+                            <Label>Páginas Permitidas</Label>
+                            <div className="grid grid-cols-2 gap-2 mt-2 max-h-40 overflow-y-auto border rounded p-3">
+                              {AVAILABLE_PAGES.map((page) => (
+                                <div key={page.id} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={page.id}
+                                    checked={newRoleData.allowedPages.includes(page.id)}
+                                    onCheckedChange={(checked) => 
+                                      handlePageSelection(page.id, checked as boolean)
+                                    }
+                                    disabled={newRoleData.pageAccess === 'one' && 
+                                      newRoleData.allowedPages.length >= 1 && 
+                                      !newRoleData.allowedPages.includes(page.id)}
+                                  />
+                                  <Label htmlFor={page.id} className="text-sm">
+                                    {page.name}
+                                  </Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setIsRoleDialogOpen(false)}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button 
+                            onClick={handleCreateRole}
+                            disabled={createRoleMutation.isPending}
+                          >
+                            {createRoleMutation.isPending ? 'Creando...' : 'Crear Rol'}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+
+                <div className="grid gap-4">
+                  {roles?.map((role: any) => (
+                    <Card key={role.id}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-lg font-semibold">{role.displayName}</h3>
+                              <Badge variant="outline">{role.department}</Badge>
+                              <Badge className={
+                                role.pageAccess === 'all' ? 'bg-green-100 text-green-800' :
+                                role.pageAccess === 'some' ? 'bg-blue-100 text-blue-800' :
+                                role.pageAccess === 'one' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                              }>
+                                {role.pageAccess === 'all' ? 'Todas' :
+                                 role.pageAccess === 'some' ? 'Algunas' :
+                                 role.pageAccess === 'one' ? 'Una' : 'Ninguna'}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{role.description}</p>
+                            {role.allowedPages?.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {role.allowedPages.map((pageId: string) => {
+                                  const page = AVAILABLE_PAGES.find(p => p.id === pageId);
+                                  return (
+                                    <Badge key={pageId} variant="secondary" className="text-xs">
+                                      {page?.name || pageId}
+                                    </Badge>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button variant="outline" size="sm" className="text-red-600">
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+
+              {/* System Roles */}
+              <TabsContent value="system-roles" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Key className="w-5 h-5" />
+                      Roles de Sistema VetGroom
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {systemRoles?.map((systemRole: any) => (
+                        <div key={systemRole.id} className="flex items-center justify-between p-3 border rounded">
+                          <div>
+                            <h4 className="font-medium">{systemRole.displayName}</h4>
+                            <p className="text-sm text-gray-600">{systemRole.description}</p>
+                          </div>
+                          <Badge variant="secondary">Sistema</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* User Assignments */}
+              <TabsContent value="assignments" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserCheck className="w-5 h-5" />
+                      Asignaciones de Usuario
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {users?.map((user: any) => (
+                        <div key={user.id} className="flex items-center justify-between p-3 border rounded">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <Users className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <div className="font-medium">{user.firstName} {user.lastName}</div>
+                              <div className="text-sm text-gray-600">{user.email}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">
+                              {user.role?.displayName || 'Sin rol'}
+                            </Badge>
+                            <Button variant="outline" size="sm">
+                              Asignar Rol
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+
+          <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-yellow-900">Acceso Restringido</h3>
+                <p className="text-sm text-yellow-700 mt-1">
+                  Esta página está disponible únicamente para desarrolladores y administradores de sistema de VetGroom. 
+                  Los cambios realizados aquí afectan el control de acceso en toda la plataforma.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
