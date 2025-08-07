@@ -39,7 +39,8 @@ import {
   Filter,
   Grid3X3,
   List,
-  X
+  X,
+  Receipt
 } from "lucide-react";
 
 // Helper function to get room type icons
@@ -994,8 +995,22 @@ function Admin() {
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <BackButton className="mb-4" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Panel de Administración</h1>
-            <p className="text-gray-600 dark:text-gray-400">Gestiona salas, roles, servicios y configuraciones para {currentTenant?.name}</p>
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Panel de Administración</h1>
+                <p className="text-gray-600 dark:text-gray-400">Gestiona salas, roles, servicios y configuraciones para {currentTenant?.name}</p>
+              </div>
+              <div className="flex gap-3">
+                <Button 
+                  onClick={() => window.location.href = '/admin/receipt-templates'}
+                  className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                  data-testid="button-invoice-design"
+                >
+                  <Receipt className="w-4 h-4" />
+                  Diseño de Facturas
+                </Button>
+              </div>
+            </div>
           </div>
 
           <Tabs defaultValue="rooms" className="w-full">
