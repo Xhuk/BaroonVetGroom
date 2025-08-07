@@ -110,16 +110,18 @@ export default function ReceiptTemplatesAdmin() {
     clienteNombre: "María González",
     clienteTelefono: "(555) 987-6543",
     mascotaNombre: "Max (Golden Retriever)",
-    // Articles/Services - Comprehensive samples for veterinary services
+    // Articles/Services - Comprehensive hardcoded samples for veterinary services
     articulos: [
-      { servicio: "Consulta Médica General", precio: "$400.00" },
-      { servicio: "Vacuna Triple Canina", precio: "$280.00" },
-      { servicio: "Baño y Estética Completa", precio: "$350.00" },
-      { servicio: "Corte de Uñas", precio: "$80.00" },
+      { servicio: "Consulta Veterinaria General", precio: "$400.00" },
+      { servicio: "Vacunación Múltiple", precio: "$280.00" },
+      { servicio: "Estética y Baño Completo", precio: "$350.00" },
       { servicio: "Desparasitación Interna", precio: "$150.00" },
-      { servicio: "Análisis de Sangre", precio: "$220.00" }
+      { servicio: "Limpieza Dental", precio: "$320.00" },
+      { servicio: "Análisis de Sangre Completo", precio: "$450.00" },
+      { servicio: "Radiografía (2 placas)", precio: "$380.00" },
+      { servicio: "Cirugía Menor", precio: "$800.00" }
     ],
-    total: "$650.00"
+    total: "$3,130.00"
   });
   
   // Preview modal state
@@ -1300,7 +1302,7 @@ export default function ReceiptTemplatesAdmin() {
                           ))}
                         </div>
                         
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex space-x-2">
                           <Button
                             type="button"
                             variant="outline"
@@ -1312,28 +1314,6 @@ export default function ReceiptTemplatesAdmin() {
                             data-testid="button-add-service"
                           >
                             Agregar Servicio
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              const sampleServices = [
-                                { servicio: "Consulta Veterinaria", precio: "$400.00" },
-                                { servicio: "Vacunación Múltiple", precio: "$280.00" },
-                                { servicio: "Estética y Baño", precio: "$350.00" },
-                                { servicio: "Desparasitación", precio: "$150.00" },
-                                { servicio: "Limpieza Dental", precio: "$320.00" },
-                                { servicio: "Cirugía Menor", precio: "$800.00" },
-                                { servicio: "Rayos X", precio: "$450.00" },
-                                { servicio: "Hospitalización (1 día)", precio: "$600.00" }
-                              ];
-                              setTemplateConfig({...templateConfig, articulos: sampleServices});
-                            }}
-                            className="text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300"
-                            data-testid="button-load-samples"
-                          >
-                            <Zap className="w-3 h-3 mr-1" />
-                            Cargar Ejemplos
                           </Button>
                           {templateConfig.articulos.length > 1 && (
                             <Button
