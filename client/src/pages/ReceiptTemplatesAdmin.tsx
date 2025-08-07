@@ -23,7 +23,11 @@ import {
   Eye,
   CheckCircle,
   AlertCircle,
-  Loader2
+  Loader2,
+  Info,
+  BookOpen,
+  Code,
+  Layers
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -81,10 +85,7 @@ export default function ReceiptTemplatesAdmin() {
   // Create template mutation
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData: any) => {
-      return apiRequest('/api/admin/receipt-templates', {
-        method: 'POST',
-        body: JSON.stringify(templateData),
-      });
+      return apiRequest('/api/admin/receipt-templates', 'POST', templateData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/receipt-templates'] });
@@ -106,9 +107,7 @@ export default function ReceiptTemplatesAdmin() {
   // Delete template mutation
   const deleteTemplateMutation = useMutation({
     mutationFn: async (templateId: string) => {
-      return apiRequest(`/api/admin/receipt-templates/${templateId}`, {
-        method: 'DELETE',
-      });
+      return apiRequest(`/api/admin/receipt-templates/${templateId}`, 'DELETE');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/receipt-templates'] });
@@ -194,10 +193,7 @@ export default function ReceiptTemplatesAdmin() {
 
     try {
       // Get upload URL
-      const uploadResponse = await apiRequest('/api/admin/receipt-templates/upload-url', {
-        method: 'POST',
-        body: JSON.stringify({ fileName: selectedFile.name }),
-      });
+      const uploadResponse = await apiRequest('/api/admin/receipt-templates/upload-url', 'POST', { fileName: selectedFile.name }) as { uploadURL: string };
 
       // Upload file to object storage
       const uploadResult = await fetch(uploadResponse.uploadURL, {
@@ -282,6 +278,313 @@ export default function ReceiptTemplatesAdmin() {
               Gestiona las plantillas ZIP para recibos por empresa o sitio
             </p>
           </div>
+
+          {/* Template Creation Guide */}
+          <Card className="mb-8 border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-blue-800">
+                <BookOpen className="w-5 h-5" />
+                <span>Guía para Crear Plantillas de Recibo</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 text-blue-900">
+              <div className="bg-white p-4 rounded-lg border border-blue-200">
+                <h3 className="font-semibold mb-3 flex items-center space-x-2">
+                  <Layers className="w-4 h-4" />
+                  <span>Estructura Obligatoria del ZIP</span>
+                </h3>
+                <div className="bg-gray-50 p-3 rounded font-mono text-sm mb-3">
+                  {`template-recibo.zip
+├── recibo.html          (OBLIGATORIO)
+├── styles.css           (OBLIGATORIO)
+├── config.json          (OBLIGATORIO)
+├── assets/              (OPCIONAL)
+│   ├── logo.png
+│   └── firma.png
+└── fonts/               (OPCIONAL)
+    └── custom-font.woff`}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-blue-800">📄 recibo.html (Obligatorio)</h4>
+                    <div className="bg-gray-50 p-3 rounded text-xs font-mono">
+                      {`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="recibo-container">
+    <header class="recibo-header">
+      <img src="assets/logo.png" class="logo">
+      <div class="empresa-info">
+        <h1>\{\{empresa_nombre\}\}</h1>
+        <p>\{\{empresa_direccion\}\}</p>
+        <p>Tel: \{\{empresa_telefono\}\}</p>
+      </div>
+    </header>
+    
+    <section class="cliente-info">
+      <h2>Cliente: \{\{cliente_nombre\}\}</h2>
+      <p>Teléfono: \{\{cliente_telefono\}\}</p>
+      <p>Dirección: \{\{cliente_direccion\}\}</p>
+    </section>
+    
+    <section class="mascota-info">
+      <h3>Mascota: \{\{mascota_nombre\}\}</h3>
+      <p>Especie: \{\{mascota_especie\}\}</p>
+      <p>Raza: \{\{mascota_raza\}\}</p>
+    </section>
+    
+    <section class="servicios">
+      <table class="servicios-tabla">
+        <thead>
+          <tr>
+            <th>Servicio</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          \{\{#each servicios\}\}
+          <tr>
+            <td>\{\{nombre\}\}</td>
+            <td>\{\{cantidad\}\}</td>
+            <td>$\{\{precio\}\}</td>
+            <td>$\{\{total\}\}</td>
+          </tr>
+          \{\{/each\}\}
+        </tbody>
+      </table>
+    </section>
+    
+    <section class="totales">
+      <div class="subtotal">Subtotal: $\{\{subtotal\}\}</div>
+      <div class="impuestos">IVA (16%): $\{\{iva\}\}</div>
+      <div class="total-final">Total: $\{\{total_final\}\}</div>
+    </section>
+    
+    <footer class="recibo-footer">
+      <p>Fecha: \{\{fecha_emision\}\}</p>
+      <p>Folio: \{\{numero_folio\}\}</p>
+      <div class="firma">
+        <img src="assets/firma.png">
+        <p>\{\{veterinario_nombre\}\}</p>
+        <p>Cédula: \{\{veterinario_cedula\}\}</p>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>`}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-blue-800">🎨 styles.css (Obligatorio)</h4>
+                    <div className="bg-gray-50 p-3 rounded text-xs font-mono">
+                      {`/* Estilos base obligatorios */
+.recibo-container {
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 20mm;
+  font-family: Arial, sans-serif;
+  background: white;
+}
+
+.recibo-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #333;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.logo {
+  max-height: 80px;
+  max-width: 200px;
+}
+
+.empresa-info h1 {
+  font-size: 24px;
+  color: #333;
+  margin: 0;
+}
+
+.servicios-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.servicios-tabla th,
+.servicios-tabla td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.servicios-tabla th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.totales {
+  text-align: right;
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+.total-final {
+  font-weight: bold;
+  font-size: 20px;
+  color: #333;
+  border-top: 2px solid #333;
+  padding-top: 10px;
+}
+
+.recibo-footer {
+  margin-top: 40px;
+  border-top: 1px solid #ccc;
+  padding-top: 15px;
+}
+
+/* Estilos de impresión */
+@media print {
+  .recibo-container {
+    margin: 0;
+    box-shadow: none;
+  }
+}`}
+                    </div>
+                    
+                    <h4 className="font-medium text-blue-800">⚙️ config.json (Obligatorio)</h4>
+                    <div className="bg-gray-50 p-3 rounded text-xs font-mono">
+                      {`{
+  "template_version": "1.0",
+  "template_name": "Recibo Veterinario Estándar",
+  "required_fields": [
+    "empresa_nombre",
+    "empresa_direccion", 
+    "empresa_telefono",
+    "cliente_nombre",
+    "cliente_telefono",
+    "mascota_nombre",
+    "mascota_especie",
+    "servicios",
+    "subtotal",
+    "iva",
+    "total_final",
+    "fecha_emision",
+    "numero_folio"
+  ],
+  "optional_fields": [
+    "cliente_direccion",
+    "mascota_raza",
+    "veterinario_nombre",
+    "veterinario_cedula"
+  ],
+  "format_settings": {
+    "currency": "MXN",
+    "decimal_places": 2,
+    "date_format": "DD/MM/YYYY",
+    "paper_size": "A4"
+  }
+}`}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center space-x-2 text-amber-800">
+                  <Info className="w-4 h-4" />
+                  <span>Variables Obligatorias del Sistema</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <h4 className="font-medium text-amber-800 mb-2">🏢 Empresa</h4>
+                    <ul className="space-y-1 text-amber-700">
+                      <li><code>{'{{empresa_nombre}}'}</code></li>
+                      <li><code>{'{{empresa_direccion}}'}</code></li>
+                      <li><code>{'{{empresa_telefono}}'}</code></li>
+                      <li><code>{'{{empresa_email}}'}</code></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-amber-800 mb-2">👤 Cliente</h4>
+                    <ul className="space-y-1 text-amber-700">
+                      <li><code>{'{{cliente_nombre}}'}</code></li>
+                      <li><code>{'{{cliente_telefono}}'}</code></li>
+                      <li><code>{'{{cliente_direccion}}'}</code></li>
+                      <li><code>{'{{cliente_email}}'}</code></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-amber-800 mb-2">🐕 Mascota</h4>
+                    <ul className="space-y-1 text-amber-700">
+                      <li><code>{'{{mascota_nombre}}'}</code></li>
+                      <li><code>{'{{mascota_especie}}'}</code></li>
+                      <li><code>{'{{mascota_raza}}'}</code></li>
+                      <li><code>{'{{mascota_edad}}'}</code></li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div className="mt-4 p-3 bg-white rounded border border-amber-300">
+                  <h4 className="font-medium text-amber-800 mb-2">💰 Variables de Facturación</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-amber-700">
+                    <code>{'{{subtotal}}'}</code>
+                    <code>{'{{iva}}'}</code>
+                    <code>{'{{total_final}}'}</code>
+                    <code>{'{{fecha_emision}}'}</code>
+                    <code>{'{{numero_folio}}'}</code>
+                    <code>{'{{metodo_pago}}'}</code>
+                    <code>{'{{veterinario_nombre}}'}</code>
+                    <code>{'{{veterinario_cedula}}'}</code>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center space-x-2 text-red-800">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Reglas Estrictas - Cumplimiento Obligatorio</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-red-700">
+                  <div>
+                    <h4 className="font-medium mb-2">📋 Estructura de Archivos</h4>
+                    <ul className="space-y-1">
+                      <li>• Archivo principal DEBE llamarse <code>recibo.html</code></li>
+                      <li>• Archivo CSS DEBE llamarse <code>styles.css</code></li>
+                      <li>• Archivo config DEBE llamarse <code>config.json</code></li>
+                      <li>• Imágenes en carpeta <code>assets/</code></li>
+                      <li>• Fuentes en carpeta <code>fonts/</code></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2">🔧 Formato y Validación</h4>
+                    <ul className="space-y-1">
+                      <li>• Solo archivos ZIP son aceptados</li>
+                      <li>• Tamaño máximo: 50MB</li>
+                      <li>• Todas las variables del sistema son obligatorias</li>
+                      <li>• CSS debe incluir estilos de impresión</li>
+                      <li>• HTML debe ser válido y responsive</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div className="mt-3 p-3 bg-white rounded border border-red-300">
+                  <p className="text-red-800 text-sm">
+                    <strong>⚠️ Importante:</strong> Las plantillas que no cumplan estas reglas serán rechazadas automáticamente. 
+                    El sistema validará la estructura antes de permitir el uso de la plantilla.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Upload Form */}
           <Card className="mb-8">
