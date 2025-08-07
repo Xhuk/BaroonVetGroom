@@ -3,26 +3,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { useFastLoad, useFastFetch } from "@/hooks/useFastLoad";
+import { Header } from "@/components/Header";
+import { Navigation } from "@/components/Navigation";
 import { FastCalendar } from "@/components/FastCalendar";
 import { FastStatsRibbon } from "@/components/FastStatsRibbon";
-
 import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Plus, Truck, Phone, CalendarIcon, Users, Package, Calendar } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { Plus, Truck, Phone, CalendarIcon } from "lucide-react";
+import { Link } from "wouter";
 import type { Appointment } from "@shared/schema";
 import { getTodayInUserTimezone } from "@shared/timeUtils";
-import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const { currentTenant, isLoading: tenantLoading, isDebugMode } = useTenant();
-  
-  // Add device detection for debug
-  const deviceInfo = useDeviceDetection();
   const { isInstant, startBackgroundLoad, completeLoad } = useFastLoad();
-  const [, setLocation] = useLocation();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -115,52 +111,29 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-
+    <div className="min-h-screen bg-background font-sans">
+      <Header />
+      <Navigation />
       
-      {/* Header section */}
-      <div className="border-b bg-card rounded-lg mb-4">
-        <div className="flex h-16 items-center px-6">
-          <h1 className="text-xl font-semibold">Dashboard General</h1>
-          
-          {/* Top-right buttons - responsive layout */}
-          <div className="ml-auto flex items-center space-x-2 sm:space-x-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLocation('/clients')}
-              className="text-xs sm:text-sm px-2 sm:px-3"
-            >
-              <Users className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Gestionar </span>Clientes
+      {/* Main Content */}
+      <main className="ml-[10px] pb-40">
+        {/* Action Buttons - Positioned to align with card container */}
+        <div className="fixed flex gap-4" style={{ top: '95px', left: '298px', right: '24px' }}>
+          <Link href="/booking">
+            <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
+              <Phone className="w-4 h-4 mr-2" />
+              Nueva Cita por Teléfono
             </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLocation('/booking')}
-              className="text-xs sm:text-sm px-2 sm:px-3"
-            >
-              <Calendar className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              Nueva Cita
+          </Link>
+          <Link href="/appointments">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 shadow-md dark:bg-blue-700 dark:hover:bg-blue-800">
+              <CalendarIcon className="w-4 h-4 mr-2" />
+              Gestionar Citas
             </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLocation('/cashier')}
-              className="text-xs sm:text-sm px-2 sm:px-3"
-            >
-              <Package className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              Caja
-            </Button>
-          </div>
+          </Link>
         </div>
-      </div>
 
-      {/* Main Content - Responsive container */}
-      <div className="flex-1 h-[calc(100vh-200px)]">
-        {/* Fast Calendar - Full responsive container */}
+        {/* Fast Calendar - positioned to end at same level as navigation */}
         {showCalendar ? (
           <FastCalendar 
             appointments={appointmentData?.appointments || []} 
@@ -168,33 +141,32 @@ export default function Dashboard() {
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             tenantId={currentTenant?.id}
+
           />
         ) : (
-          <div className="bg-card rounded-lg shadow-lg animate-pulse flex items-center justify-center h-full">
+          <div className="bg-card rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed" style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
             <div className="text-muted-foreground">Cargando calendario...</div>
           </div>
         )}
-      </div>
+      </main>
 
-      {/* Fast Stats Ribbon - Responsive positioning */}
-      <div className="mt-4">
-        {showStats ? (
-          <FastStatsRibbon stats={stats} />
-        ) : (
-          <div className="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 backdrop-blur-md border-t border-slate-600/50 shadow-2xl rounded-lg">
-            <div className="px-8 py-4">
-              <div className="flex items-center justify-between">
-                <div className="h-6 bg-slate-600/50 animate-pulse rounded-lg w-32"></div>
-                <div className="flex items-center space-x-12">
-                  {Array.from({ length: 7 }).map((_, index) => (
-                    <div key={index} className="h-5 bg-slate-600/50 animate-pulse rounded-lg w-20"></div>
-                  ))}
-                </div>
+      {/* Fast Stats Ribbon - Direct implementation */}
+      {showStats ? (
+        <FastStatsRibbon stats={stats} />
+      ) : (
+        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 backdrop-blur-md border-t border-slate-600/50 z-20 shadow-2xl">
+          <div className="px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="h-6 bg-slate-600/50 animate-pulse rounded-lg w-32"></div>
+              <div className="flex items-center space-x-12">
+                {Array.from({ length: 7 }).map((_, index) => (
+                  <div key={index} className="h-5 bg-slate-600/50 animate-pulse rounded-lg w-20"></div>
+                ))}
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

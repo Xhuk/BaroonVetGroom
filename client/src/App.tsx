@@ -31,7 +31,6 @@ import Cashier from "@/pages/Cashier";
 import MedicalRecords from "@/pages/MedicalRecords";
 import MedicalAppointments from "@/pages/MedicalAppointments";
 import GroomingServices from "@/pages/GroomingServices";
-import SimpleCalendar from "@/pages/SimpleCalendar";
 import MobileUpload from "@/pages/MobileUpload";
 import FollowUpTasks from "@/pages/FollowUpTasks";
 import AdminPaymentGateways from "@/pages/AdminPaymentGateways";
@@ -47,35 +46,17 @@ import DriverRoute from "@/pages/DriverRoute";
 import DriverMobile from "@/pages/DriverMobile";
 import { InstantNavigation } from "@/components/InstantNavigation";
 import { DebugBanner } from "@/components/DebugBanner";
-import { DeviceBlocker } from "@/components/DeviceBlocker";
-import { ResponsiveNavigation } from "@/components/ResponsiveNavigation";
-import { useDeviceDetection } from "@/hooks/useDeviceDetection";
-import { cn } from "@/lib/utils";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
-  const { isPhone, isSmallTablet, isTablet, isDesktop } = useDeviceDetection();
 
   // NEVER show loading spinner on route changes - always render instantly
   // Only show auth loading on initial app load when no route is detected
 
   return (
-    <DeviceBlocker>
-      <div className="flex min-h-screen">
-        {/* Responsive Navigation - only show for authenticated users on larger screens */}
-        {isAuthenticated && !isPhone && <ResponsiveNavigation />}
-        
-        {/* Main content area with responsive margins */}
-        <main 
-          className={cn(
-            "flex-1 transition-all duration-300",
-            isAuthenticated && !isPhone ? (
-              isSmallTablet ? "ml-16" : "ml-72"
-            ) : "ml-0"
-          )}
-        >
-          <DebugBanner />
-          <Switch>
+    <>
+      <DebugBanner />
+      <Switch>
       {/* INSTANT ROUTING - All routes available immediately, no auth blocking */}
       <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
       <Route path="/plans" component={SubscriptionLanding} />
@@ -86,7 +67,6 @@ function Router() {
         <>
           <Route path="/booking" component={BookingWizard} />
           <Route path="/booking-wizard" component={BookingWizard} />
-          <Route path="/calendar" component={SimpleCalendar} />
           <Route path="/clients" component={Clients} />
           <Route path="/medical-records" component={MedicalRecords} />
           <Route path="/medical-appointments" component={MedicalAppointments} />
@@ -120,9 +100,7 @@ function Router() {
       <Route path="/temp/:token" component={TempLinkHandler} />
       <Route component={NotFound} />
       </Switch>
-        </main>
-      </div>
-    </DeviceBlocker>
+    </>
   );
 }
 
