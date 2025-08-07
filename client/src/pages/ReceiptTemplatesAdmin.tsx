@@ -110,10 +110,14 @@ export default function ReceiptTemplatesAdmin() {
     clienteNombre: "María González",
     clienteTelefono: "(555) 987-6543",
     mascotaNombre: "Max (Golden Retriever)",
-    // Articles/Services
+    // Articles/Services - Comprehensive samples for veterinary services
     articulos: [
       { servicio: "Consulta Médica General", precio: "$400.00" },
-      { servicio: "Vacuna Triple Canina", precio: "$250.00" }
+      { servicio: "Vacuna Triple Canina", precio: "$280.00" },
+      { servicio: "Baño y Estética Completa", precio: "$350.00" },
+      { servicio: "Corte de Uñas", precio: "$80.00" },
+      { servicio: "Desparasitación Interna", precio: "$150.00" },
+      { servicio: "Análisis de Sangre", precio: "$220.00" }
     ],
     total: "$650.00"
   });
@@ -534,7 +538,7 @@ export default function ReceiptTemplatesAdmin() {
     setUploadingLogo(true);
     try {
       // Get upload URL
-      const response = await apiRequest('/api/objects/upload', 'POST') as { uploadURL: string };
+      const response = await apiRequest('/api/objects/upload', 'POST') as unknown as { uploadURL: string };
       const { uploadURL } = response;
 
       // Upload file
@@ -1296,7 +1300,7 @@ export default function ReceiptTemplatesAdmin() {
                           ))}
                         </div>
                         
-                        <div className="flex space-x-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button
                             type="button"
                             variant="outline"
@@ -1308,6 +1312,28 @@ export default function ReceiptTemplatesAdmin() {
                             data-testid="button-add-service"
                           >
                             Agregar Servicio
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              const sampleServices = [
+                                { servicio: "Consulta Veterinaria", precio: "$400.00" },
+                                { servicio: "Vacunación Múltiple", precio: "$280.00" },
+                                { servicio: "Estética y Baño", precio: "$350.00" },
+                                { servicio: "Desparasitación", precio: "$150.00" },
+                                { servicio: "Limpieza Dental", precio: "$320.00" },
+                                { servicio: "Cirugía Menor", precio: "$800.00" },
+                                { servicio: "Rayos X", precio: "$450.00" },
+                                { servicio: "Hospitalización (1 día)", precio: "$600.00" }
+                              ];
+                              setTemplateConfig({...templateConfig, articulos: sampleServices});
+                            }}
+                            className="text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300"
+                            data-testid="button-load-samples"
+                          >
+                            <Zap className="w-3 h-3 mr-1" />
+                            Cargar Ejemplos
                           </Button>
                           {templateConfig.articulos.length > 1 && (
                             <Button
@@ -1333,11 +1359,8 @@ export default function ReceiptTemplatesAdmin() {
                             <Eye className="w-4 h-4 mr-2" />
                             Vista Previa - Actualización en Tiempo Real
                           </h4>
-                          <div className="w-full h-80 bg-white border rounded-lg overflow-hidden">
-                            <div 
-                              className="w-full h-full flex items-center justify-center"
-                              style={{ transform: 'scale(0.35)', transformOrigin: 'center center' }}
-                            >
+                          <div className="w-full h-96 bg-white border rounded-lg overflow-auto">
+                            <div className="w-full min-h-full flex items-start justify-center p-4">
                               {selectedTemplate && (() => {
                                 const template = preDesignedTemplates.find(t => t.id === selectedTemplate);
                                 if (!template) return null;
@@ -1383,8 +1406,24 @@ export default function ReceiptTemplatesAdmin() {
                               })()}
                             </div>
                           </div>
-                          <div className="mt-2 text-xs text-blue-600">
-                            <strong>Configuración actual:</strong> {templateConfig.colorScheme} • {preDesignedTemplates.find(t => t.id === selectedTemplate)?.name} • {templateConfig.includeSignature ? 'Con firma' : 'Sin firma'} • {templateConfig.articulos.length} servicios
+                          <div className="mt-2 flex flex-wrap gap-2 text-xs text-blue-600">
+                            <span><strong>Configuración:</strong></span>
+                            <Badge variant="outline" className="text-xs">{templateConfig.colorScheme}</Badge>
+                            <Badge variant="outline" className="text-xs">{preDesignedTemplates.find(t => t.id === selectedTemplate)?.name}</Badge>
+                            <Badge variant="outline" className="text-xs">{templateConfig.includeSignature ? 'Con firma' : 'Sin firma'}</Badge>
+                            <Badge variant="outline" className="text-xs">{templateConfig.articulos.length} servicios</Badge>
+                            <Button 
+                              size="sm"
+                              variant="outline" 
+                              onClick={() => {
+                                setPreviewTemplate(preDesignedTemplates.find(t => t.id === selectedTemplate)?.htmlPreview || '');
+                                setShowPreview(true);
+                              }}
+                              className="text-xs h-6 px-2"
+                            >
+                              <Maximize2 className="w-3 h-3 mr-1" />
+                              Vista Completa
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -1845,15 +1884,15 @@ export default function ReceiptTemplatesAdmin() {
 
       {/* Preview Modal */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
-              <Eye className="w-5 h-5" />
-              <span>Vista Previa de la Plantilla</span>
+              <Maximize2 className="w-5 h-5" />
+              <span>Vista Previa Completa de la Plantilla</span>
             </DialogTitle>
           </DialogHeader>
-          <div className="overflow-auto max-h-[75vh] bg-gray-50 rounded-lg p-4">
-            <div className="bg-white shadow-lg rounded-lg overflow-hidden mx-auto" style={{ maxWidth: '650px' }}>
+          <div className="overflow-auto max-h-[80vh] bg-gray-50 rounded-lg p-6">
+            <div className="bg-white shadow-lg rounded-lg overflow-hidden mx-auto" style={{ maxWidth: 'none', width: '100%' }}>
               <div dangerouslySetInnerHTML={{ __html: previewTemplate }} />
             </div>
           </div>
