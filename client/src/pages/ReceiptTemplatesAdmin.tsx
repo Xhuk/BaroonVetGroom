@@ -43,7 +43,9 @@ import {
   CloudUpload,
   ChevronLeft,
   Maximize2,
-  X
+  X,
+  Image,
+  Percent
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -79,11 +81,20 @@ export default function ReceiptTemplatesAdmin() {
   const [uploading, setUploading] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [dragActive, setDragActive] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string>("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [templateConfig, setTemplateConfig] = useState({
     headerStyle: "professional",
     colorScheme: "blue",
     includeSignature: true,
     logoPosition: "left",
+    logoOpacity: 100,
+    headerOpacity: 100,
+    backgroundOpacity: 100,
+    borderOpacity: 100,
+    logoSize: "medium",
+    preserveLogoTransparency: true,
     // Company Information
     empresaNombre: "Clínica Veterinaria San Marcos",
     empresaEslogan: "Cuidamos a tu mejor amigo",
@@ -187,11 +198,14 @@ export default function ReceiptTemplatesAdmin() {
       htmlPreview: `
         <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; border: 1px solid #3b82f6; border-radius: 8px; overflow: hidden; background: white;">
           <!-- Professional Header Style with Blue Color Scheme -->
-          <div style="background: #3b82f6; color: white; padding: 24px;">
+          <div style="background: #3b82f6; color: white; padding: 24px; opacity: ${templateConfig.headerOpacity / 100};">
             <!-- Logo Left Position -->
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <div style="width: 50px; height: 50px; background: white; color: #3b82f6; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 12px;">LOGO</div>
+                ${logoUrl ? 
+                  `<img src="${logoUrl}" alt="Logo" style="width: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; height: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; object-fit: ${templateConfig.preserveLogoTransparency ? 'contain' : 'cover'}; margin-bottom: 12px; opacity: ${templateConfig.logoOpacity / 100}; border-radius: 4px;" />` :
+                  `<div style="width: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; height: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; background: white; color: #3b82f6; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 12px; opacity: ${templateConfig.logoOpacity / 100};">LOGO</div>`
+                }
                 <h1 style="margin: 0; font-size: 20px; font-weight: bold;">{{ empresa_nombre }}</h1>
                 <p style="margin: 4px 0 0; font-size: 14px; opacity: 0.9;">{{ empresa_eslogan }}</p>
               </div>
@@ -222,9 +236,9 @@ export default function ReceiptTemplatesAdmin() {
             </div>
 
             <!-- Services Table -->
-            <table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb;">
+            <table style="width: 100%; border-collapse: collapse; border: 1px solid rgba(229, 231, 235, ${templateConfig.borderOpacity / 100});">
               <thead>
-                <tr style="background: #3b82f6; color: white;">
+                <tr style="background: #3b82f6; color: white; opacity: ${templateConfig.headerOpacity / 100};">
                   <th style="padding: 12px; text-align: left; font-weight: 600;">Servicio</th>
                   <th style="padding: 12px; text-align: center; font-weight: 600;">Cant.</th>
                   <th style="padding: 12px; text-align: right; font-weight: 600;">Precio</th>
@@ -493,8 +507,83 @@ export default function ReceiptTemplatesAdmin() {
     setSelectedFile(null);
     setSelectedTemplate("");
     setWizardStep(1);
+    setLogoFile(null);
+    setLogoUrl("");
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
+    const logoInput = document.getElementById('logo-input') as HTMLInputElement;
+    if (logoInput) logoInput.value = '';
+  };
+
+  // Logo upload functionality
+  const handleLogoUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Por favor selecciona un archivo de imagen válido",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for PNG to preserve transparency
+    if (file.type === 'image/png') {
+      setTemplateConfig(prev => ({ ...prev, preserveLogoTransparency: true }));
+    }
+
+    setUploadingLogo(true);
+    try {
+      // Get upload URL
+      const response = await apiRequest('/api/objects/upload', 'POST') as { uploadURL: string };
+      const { uploadURL } = response;
+
+      // Upload file
+      const uploadResponse = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Error al subir el logo');
+      }
+
+      // Set logo URL for template
+      const logoPath = `/objects/${uploadURL.split('/').pop()?.split('?')[0] || ''}`;
+      setLogoUrl(logoPath);
+      setLogoFile(file);
+      
+      toast({
+        title: "Éxito",
+        description: "Logo subido correctamente",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Error al subir el logo",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleLogoDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files[0]) {
+      handleLogoUpload(files[0]);
+    }
+  };
+
+  const handleLogoInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files[0]) {
+      handleLogoUpload(files[0]);
+    }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -894,6 +983,151 @@ export default function ReceiptTemplatesAdmin() {
                               className="rounded border-gray-300"
                             />
                             <Label htmlFor="includeSignature">Incluir espacio para firma</Label>
+                          </div>
+
+                          {/* Logo Upload Section */}
+                          <div className="space-y-3 pt-4 border-t border-gray-200">
+                            <h5 className="font-medium text-gray-800 flex items-center">
+                              <Image className="w-4 h-4 mr-2" />
+                              Logo y Transparencia
+                            </h5>
+                            
+                            {/* Logo Upload */}
+                            <div className="space-y-2">
+                              <Label className="text-sm">Logo de la Empresa</Label>
+                              <div 
+                                className={`relative border-2 border-dashed rounded-lg p-4 transition-all duration-300 ${
+                                  dragActive 
+                                    ? 'border-blue-400 bg-blue-50' 
+                                    : 'border-gray-300 hover:border-blue-400'
+                                }`}
+                                onDrop={handleLogoDrop}
+                                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                                onDragLeave={() => setDragActive(false)}
+                              >
+                                {logoUrl ? (
+                                  <div className="text-center space-y-2">
+                                    <div className="w-12 h-12 mx-auto rounded overflow-hidden border border-gray-200">
+                                      <img 
+                                        src={logoUrl} 
+                                        alt="Logo" 
+                                        className="w-full h-full object-contain"
+                                        style={{ opacity: templateConfig.logoOpacity / 100 }}
+                                      />
+                                    </div>
+                                    <p className="text-xs font-medium text-gray-700">Logo cargado</p>
+                                    <p className="text-xs text-gray-500">
+                                      {logoFile?.type.includes('png') ? 'PNG con transparencia' : 'Imagen'}
+                                    </p>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={() => { setLogoUrl(''); setLogoFile(null); }}
+                                      className="text-xs h-6"
+                                    >
+                                      Cambiar
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <div className="text-center space-y-2">
+                                    {uploadingLogo ? (
+                                      <div className="flex flex-col items-center space-y-1">
+                                        <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+                                        <p className="text-xs text-gray-600">Subiendo...</p>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <CloudUpload className="w-8 h-8 text-gray-400 mx-auto" />
+                                        <div>
+                                          <p className="text-xs font-medium text-gray-700">Arrastra tu logo aquí</p>
+                                          <p className="text-xs text-gray-500">PNG recomendado para transparencia</p>
+                                        </div>
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm" 
+                                          onClick={() => document.getElementById('logo-input')?.click()}
+                                          className="text-xs h-6"
+                                        >
+                                          Seleccionar
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                                <input
+                                  id="logo-input"
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleLogoInputChange}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Transparency Controls */}
+                            <div className="space-y-3">
+                              <div>
+                                <div className="flex items-center justify-between mb-1">
+                                  <Label className="text-xs">Transparencia Logo</Label>
+                                  <span className="text-xs text-gray-600">{templateConfig.logoOpacity}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={templateConfig.logoOpacity}
+                                  onChange={(e) => setTemplateConfig(prev => ({ ...prev, logoOpacity: parseInt(e.target.value) }))}
+                                  className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                />
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Tamaño del Logo</Label>
+                                <Select 
+                                  value={templateConfig.logoSize} 
+                                  onValueChange={(value) => setTemplateConfig(prev => ({ ...prev, logoSize: value }))}
+                                >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="small">Pequeño</SelectItem>
+                                    <SelectItem value="medium">Mediano</SelectItem>
+                                    <SelectItem value="large">Grande</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div>
+                                <div className="flex items-center justify-between mb-1">
+                                  <Label className="text-xs">Transparencia Encabezado</Label>
+                                  <span className="text-xs text-gray-600">{templateConfig.headerOpacity}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={templateConfig.headerOpacity}
+                                  onChange={(e) => setTemplateConfig(prev => ({ ...prev, headerOpacity: parseInt(e.target.value) }))}
+                                  className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                />
+                              </div>
+
+                              <div>
+                                <div className="flex items-center justify-between mb-1">
+                                  <Label className="text-xs">Transparencia Bordes</Label>
+                                  <span className="text-xs text-gray-600">{templateConfig.borderOpacity}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={templateConfig.borderOpacity}
+                                  onChange={(e) => setTemplateConfig(prev => ({ ...prev, borderOpacity: parseInt(e.target.value) }))}
+                                  className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                         
