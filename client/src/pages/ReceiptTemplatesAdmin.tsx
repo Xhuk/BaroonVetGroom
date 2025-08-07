@@ -13,6 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { 
   Upload, 
   Download, 
@@ -25,9 +28,18 @@ import {
   AlertCircle,
   Loader2,
   Info,
-  BookOpen,
-  Code,
-  Layers
+  Wand2,
+  ArrowRight,
+  ArrowLeft,
+  Palette,
+  Layout,
+  FileImage,
+  Type,
+  Signature,
+  Package,
+  Zap,
+  MousePointer,
+  CloudUpload
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -51,6 +63,8 @@ interface ReceiptTemplate {
 }
 
 export default function ReceiptTemplatesAdmin() {
+  const [activeTab, setActiveTab] = useState("wizard");
+  const [wizardStep, setWizardStep] = useState(1);
   const [uploadMode, setUploadMode] = useState<"company" | "tenant">("company");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [selectedTenantId, setSelectedTenantId] = useState<string>("");
@@ -58,6 +72,14 @@ export default function ReceiptTemplatesAdmin() {
   const [templateDescription, setTemplateDescription] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [dragActive, setDragActive] = useState(false);
+  const [templateConfig, setTemplateConfig] = useState({
+    headerStyle: "professional",
+    colorScheme: "blue",
+    includeSignature: true,
+    logoPosition: "left"
+  });
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -125,10 +147,36 @@ export default function ReceiptTemplatesAdmin() {
     },
   });
 
+  const preDesignedTemplates = [
+    {
+      id: "veterinary-professional",
+      name: "Veterinario Profesional",
+      description: "Plantilla elegante para clínicas veterinarias con espacios para servicios múltiples",
+      preview: "/assets/template-preview-1.png",
+      features: ["Logo personalizable", "Tabla de servicios", "Cálculos automáticos", "Firma digital"]
+    },
+    {
+      id: "minimalist-clinic",
+      name: "Clínica Minimalista",
+      description: "Diseño limpio y moderno para consultorios pequeños",
+      preview: "/assets/template-preview-2.png",
+      features: ["Diseño simple", "Enfoque en servicios", "Fácil lectura", "Compacto"]
+    },
+    {
+      id: "detailed-invoice",
+      name: "Factura Detallada",
+      description: "Plantilla completa con desglose de impuestos y términos",
+      preview: "/assets/template-preview-3.png",
+      features: ["Desglose fiscal", "Términos y condiciones", "Múltiples mascotas", "Historial médico"]
+    }
+  ];
+
   const resetForm = () => {
     setTemplateName("");
     setTemplateDescription("");
     setSelectedFile(null);
+    setSelectedTemplate("");
+    setWizardStep(1);
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
@@ -158,6 +206,61 @@ export default function ReceiptTemplatesAdmin() {
       if (!templateName) {
         setTemplateName(file.name.replace('.zip', ''));
       }
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      handleFileSelect({ target: { files } } as any);
+    }
+  };
+
+  const generatePreDesignedTemplate = async (templateId: string) => {
+    setUploading(true);
+    try {
+      // Generate template based on configuration
+      const templateData = {
+        templateId,
+        config: templateConfig,
+        name: templateName || `Plantilla ${preDesignedTemplates.find(t => t.id === templateId)?.name}`,
+        description: templateDescription,
+        companyId: uploadMode === "company" ? selectedCompanyId : undefined,
+        tenantId: uploadMode === "tenant" ? selectedTenantId : undefined,
+      };
+      
+      await apiRequest('/api/admin/receipt-templates/generate', 'POST', templateData);
+      
+      toast({
+        title: "Éxito",
+        description: "Plantilla generada y guardada correctamente",
+      });
+      
+      setWizardStep(1);
+      resetForm();
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/receipt-templates'] });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Error al generar la plantilla",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -264,6 +367,16 @@ export default function ReceiptTemplatesAdmin() {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  const nextStep = () => {
+    if (wizardStep < 4) setWizardStep(wizardStep + 1);
+  };
+
+  const prevStep = () => {
+    if (wizardStep > 1) setWizardStep(wizardStep - 1);
+  };
+
+  const getStepProgress = () => (wizardStep / 4) * 100;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -275,533 +388,652 @@ export default function ReceiptTemplatesAdmin() {
               Administración de Plantillas de Recibo
             </h1>
             <p className="text-gray-600">
-              Gestiona las plantillas ZIP para recibos por empresa o sitio
+              Crea plantillas personalizadas con nuestro asistente visual o sube tus propios archivos ZIP
             </p>
           </div>
 
-          {/* Template Creation Guide */}
-          <Card className="mb-8 border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-blue-800">
-                <BookOpen className="w-5 h-5" />
-                <span>Guía para Crear Plantillas de Recibo</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 text-blue-900">
-              <div className="bg-white p-4 rounded-lg border border-blue-200">
-                <h3 className="font-semibold mb-3 flex items-center space-x-2">
-                  <Layers className="w-4 h-4" />
-                  <span>Estructura Obligatoria del ZIP</span>
-                </h3>
-                <div className="bg-gray-50 p-3 rounded font-mono text-sm mb-3">
-                  {`template-recibo.zip
-├── recibo.html          (OBLIGATORIO)
-├── styles.css           (OBLIGATORIO)
-├── config.json          (OBLIGATORIO)
-├── assets/              (OPCIONAL)
-│   ├── logo.png
-│   └── firma.png
-└── fonts/               (OPCIONAL)
-    └── custom-font.woff`}
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-blue-800">📄 recibo.html (Obligatorio)</h4>
-                    <div className="bg-gray-50 p-3 rounded text-xs font-mono">
-                      {`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="recibo-container">
-    <header class="recibo-header">
-      <img src="assets/logo.png" class="logo">
-      <div class="empresa-info">
-        <h1>\{\{empresa_nombre\}\}</h1>
-        <p>\{\{empresa_direccion\}\}</p>
-        <p>Tel: \{\{empresa_telefono\}\}</p>
-      </div>
-    </header>
-    
-    <section class="cliente-info">
-      <h2>Cliente: \{\{cliente_nombre\}\}</h2>
-      <p>Teléfono: \{\{cliente_telefono\}\}</p>
-      <p>Dirección: \{\{cliente_direccion\}\}</p>
-    </section>
-    
-    <section class="mascota-info">
-      <h3>Mascota: \{\{mascota_nombre\}\}</h3>
-      <p>Especie: \{\{mascota_especie\}\}</p>
-      <p>Raza: \{\{mascota_raza\}\}</p>
-    </section>
-    
-    <section class="servicios">
-      <table class="servicios-tabla">
-        <thead>
-          <tr>
-            <th>Servicio</th>
-            <th>Cantidad</th>
-            <th>Precio</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          \{\{#each servicios\}\}
-          <tr>
-            <td>\{\{nombre\}\}</td>
-            <td>\{\{cantidad\}\}</td>
-            <td>$\{\{precio\}\}</td>
-            <td>$\{\{total\}\}</td>
-          </tr>
-          \{\{/each\}\}
-        </tbody>
-      </table>
-    </section>
-    
-    <section class="totales">
-      <div class="subtotal">Subtotal: $\{\{subtotal\}\}</div>
-      <div class="impuestos">IVA (16%): $\{\{iva\}\}</div>
-      <div class="total-final">Total: $\{\{total_final\}\}</div>
-    </section>
-    
-    <footer class="recibo-footer">
-      <p>Fecha: \{\{fecha_emision\}\}</p>
-      <p>Folio: \{\{numero_folio\}\}</p>
-      <div class="firma">
-        <img src="assets/firma.png">
-        <p>\{\{veterinario_nombre\}\}</p>
-        <p>Cédula: \{\{veterinario_cedula\}\}</p>
-      </div>
-    </footer>
-  </div>
-</body>
-</html>`}
-                    </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="wizard" className="flex items-center space-x-2">
+                <Wand2 className="w-4 h-4" />
+                <span>Asistente Visual</span>
+              </TabsTrigger>
+              <TabsTrigger value="upload" className="flex items-center space-x-2">
+                <CloudUpload className="w-4 h-4" />
+                <span>Subida Rápida</span>
+              </TabsTrigger>
+              <TabsTrigger value="manage" className="flex items-center space-x-2">
+                <Eye className="w-4 h-4" />
+                <span>Gestionar Plantillas</span>
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Visual Wizard Tab */}
+            <TabsContent value="wizard">
+              <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center space-x-2 text-blue-800">
+                      <Wand2 className="w-6 h-6" />
+                      <span>Asistente de Creación de Plantillas</span>
+                    </CardTitle>
+                    <Badge variant="outline" className="text-blue-700 border-blue-300">
+                      Paso {wizardStep} de 4
+                    </Badge>
                   </div>
-                  
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-blue-800">🎨 styles.css (Obligatorio)</h4>
-                    <div className="bg-gray-50 p-3 rounded text-xs font-mono">
-                      {`/* Estilos base obligatorios */
-.recibo-container {
-  max-width: 210mm;
-  margin: 0 auto;
-  padding: 20mm;
-  font-family: Arial, sans-serif;
-  background: white;
-}
-
-.recibo-header {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 2px solid #333;
-  padding-bottom: 15px;
-  margin-bottom: 20px;
-}
-
-.logo {
-  max-height: 80px;
-  max-width: 200px;
-}
-
-.empresa-info h1 {
-  font-size: 24px;
-  color: #333;
-  margin: 0;
-}
-
-.servicios-tabla {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 20px 0;
-}
-
-.servicios-tabla th,
-.servicios-tabla td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.servicios-tabla th {
-  background-color: #f2f2f2;
-  font-weight: bold;
-}
-
-.totales {
-  text-align: right;
-  margin-top: 20px;
-  font-size: 16px;
-}
-
-.total-final {
-  font-weight: bold;
-  font-size: 20px;
-  color: #333;
-  border-top: 2px solid #333;
-  padding-top: 10px;
-}
-
-.recibo-footer {
-  margin-top: 40px;
-  border-top: 1px solid #ccc;
-  padding-top: 15px;
-}
-
-/* Estilos de impresión */
-@media print {
-  .recibo-container {
-    margin: 0;
-    box-shadow: none;
-  }
-}`}
-                    </div>
-                    
-                    <h4 className="font-medium text-blue-800">⚙️ config.json (Obligatorio)</h4>
-                    <div className="bg-gray-50 p-3 rounded text-xs font-mono">
-                      {`{
-  "template_version": "1.0",
-  "template_name": "Recibo Veterinario Estándar",
-  "required_fields": [
-    "empresa_nombre",
-    "empresa_direccion", 
-    "empresa_telefono",
-    "cliente_nombre",
-    "cliente_telefono",
-    "mascota_nombre",
-    "mascota_especie",
-    "servicios",
-    "subtotal",
-    "iva",
-    "total_final",
-    "fecha_emision",
-    "numero_folio"
-  ],
-  "optional_fields": [
-    "cliente_direccion",
-    "mascota_raza",
-    "veterinario_nombre",
-    "veterinario_cedula"
-  ],
-  "format_settings": {
-    "currency": "MXN",
-    "decimal_places": 2,
-    "date_format": "DD/MM/YYYY",
-    "paper_size": "A4"
-  }
-}`}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
-                <h3 className="font-semibold mb-3 flex items-center space-x-2 text-amber-800">
-                  <Info className="w-4 h-4" />
-                  <span>Variables Obligatorias del Sistema</span>
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <h4 className="font-medium text-amber-800 mb-2">🏢 Empresa</h4>
-                    <ul className="space-y-1 text-amber-700">
-                      <li><code>{'{{empresa_nombre}}'}</code></li>
-                      <li><code>{'{{empresa_direccion}}'}</code></li>
-                      <li><code>{'{{empresa_telefono}}'}</code></li>
-                      <li><code>{'{{empresa_email}}'}</code></li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-amber-800 mb-2">👤 Cliente</h4>
-                    <ul className="space-y-1 text-amber-700">
-                      <li><code>{'{{cliente_nombre}}'}</code></li>
-                      <li><code>{'{{cliente_telefono}}'}</code></li>
-                      <li><code>{'{{cliente_direccion}}'}</code></li>
-                      <li><code>{'{{cliente_email}}'}</code></li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-amber-800 mb-2">🐕 Mascota</h4>
-                    <ul className="space-y-1 text-amber-700">
-                      <li><code>{'{{mascota_nombre}}'}</code></li>
-                      <li><code>{'{{mascota_especie}}'}</code></li>
-                      <li><code>{'{{mascota_raza}}'}</code></li>
-                      <li><code>{'{{mascota_edad}}'}</code></li>
-                    </ul>
-                  </div>
-                </div>
-                
-                <div className="mt-4 p-3 bg-white rounded border border-amber-300">
-                  <h4 className="font-medium text-amber-800 mb-2">💰 Variables de Facturación</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-amber-700">
-                    <code>{'{{subtotal}}'}</code>
-                    <code>{'{{iva}}'}</code>
-                    <code>{'{{total_final}}'}</code>
-                    <code>{'{{fecha_emision}}'}</code>
-                    <code>{'{{numero_folio}}'}</code>
-                    <code>{'{{metodo_pago}}'}</code>
-                    <code>{'{{veterinario_nombre}}'}</code>
-                    <code>{'{{veterinario_cedula}}'}</code>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
-                <h3 className="font-semibold mb-3 flex items-center space-x-2 text-red-800">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>Reglas Estrictas - Cumplimiento Obligatorio</span>
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-red-700">
-                  <div>
-                    <h4 className="font-medium mb-2">📋 Estructura de Archivos</h4>
-                    <ul className="space-y-1">
-                      <li>• Archivo principal DEBE llamarse <code>recibo.html</code></li>
-                      <li>• Archivo CSS DEBE llamarse <code>styles.css</code></li>
-                      <li>• Archivo config DEBE llamarse <code>config.json</code></li>
-                      <li>• Imágenes en carpeta <code>assets/</code></li>
-                      <li>• Fuentes en carpeta <code>fonts/</code></li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">🔧 Formato y Validación</h4>
-                    <ul className="space-y-1">
-                      <li>• Solo archivos ZIP son aceptados</li>
-                      <li>• Tamaño máximo: 50MB</li>
-                      <li>• Todas las variables del sistema son obligatorias</li>
-                      <li>• CSS debe incluir estilos de impresión</li>
-                      <li>• HTML debe ser válido y responsive</li>
-                    </ul>
-                  </div>
-                </div>
-                
-                <div className="mt-3 p-3 bg-white rounded border border-red-300">
-                  <p className="text-red-800 text-sm">
-                    <strong>⚠️ Importante:</strong> Las plantillas que no cumplan estas reglas serán rechazadas automáticamente. 
-                    El sistema validará la estructura antes de permitir el uso de la plantilla.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Upload Form */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Upload className="w-5 h-5" />
-                <span>Subir Nueva Plantilla</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Upload Mode Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Tipo de Plantilla</Label>
-                  <Select value={uploadMode} onValueChange={(value: "company" | "tenant") => setUploadMode(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="company">
-                        <div className="flex items-center space-x-2">
-                          <Building className="w-4 h-4" />
-                          <span>Global por Empresa</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="tenant">
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="w-4 h-4" />
-                          <span>Específico por Sitio</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Company Selection */}
-                <div className="space-y-2">
-                  <Label>Empresa</Label>
-                  <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona una empresa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Tenant Selection (only if tenant mode) */}
-              {uploadMode === "tenant" && (
-                <div className="space-y-2">
-                  <Label>Sitio</Label>
-                  <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un sitio" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tenants.map((tenant) => (
-                        <SelectItem key={tenant.id} value={tenant.id}>
-                          {tenant.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {/* Template Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Nombre de la Plantilla</Label>
-                  <Input
-                    value={templateName}
-                    onChange={(e) => setTemplateName(e.target.value)}
-                    placeholder="Ej: Recibo Veterinario Estándar"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Archivo ZIP</Label>
-                  <Input
-                    id="file-input"
-                    type="file"
-                    accept=".zip"
-                    onChange={handleFileSelect}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Descripción (Opcional)</Label>
-                <Textarea
-                  value={templateDescription}
-                  onChange={(e) => setTemplateDescription(e.target.value)}
-                  placeholder="Describe el contenido y uso de esta plantilla..."
-                  rows={3}
-                />
-              </div>
-
-              {/* Upload Button */}
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-gray-500">
-                  {selectedFile && (
-                    <div className="flex items-center space-x-2">
-                      <FileText className="w-4 h-4" />
-                      <span>{selectedFile.name} ({formatFileSize(selectedFile.size)})</span>
+                  <Progress value={getStepProgress()} className="mt-2" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Step 1: Template Selection */}
+                  {wizardStep === 1 && (
+                    <div className="space-y-6">
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                          Selecciona una Plantilla Base
+                        </h3>
+                        <p className="text-gray-600">
+                          Elige entre nuestras plantillas prediseñadas para veterinarias
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {preDesignedTemplates.map((template) => (
+                          <div
+                            key={template.id}
+                            className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+                              selectedTemplate === template.id
+                                ? 'border-blue-500 bg-blue-50 shadow-lg'
+                                : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
+                            }`}
+                            onClick={() => setSelectedTemplate(template.id)}
+                            data-testid={`template-${template.id}`}
+                          >
+                            {selectedTemplate === template.id && (
+                              <div className="absolute top-2 right-2">
+                                <CheckCircle className="w-5 h-5 text-blue-500" />
+                              </div>
+                            )}
+                            
+                            <div className="mb-4">
+                              <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+                                <FileImage className="w-12 h-12 text-gray-400" />
+                                <span className="ml-2 text-sm text-gray-500">Vista Previa</span>
+                              </div>
+                            </div>
+                            
+                            <h4 className="font-semibold text-gray-900 mb-2">{template.name}</h4>
+                            <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                            
+                            <div className="space-y-1">
+                              {template.features.map((feature, index) => (
+                                <div key={index} className="flex items-center text-xs text-gray-500">
+                                  <CheckCircle className="w-3 h-3 mr-1 text-green-500" />
+                                  {feature}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <Button 
+                          onClick={nextStep} 
+                          disabled={!selectedTemplate}
+                          className="flex items-center space-x-2"
+                          data-testid="button-next-step"
+                        >
+                          <span>Continuar</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   )}
-                </div>
-                <div className="space-x-2">
-                  <Button variant="outline" onClick={resetForm}>
-                    Limpiar
-                  </Button>
-                  <Button 
-                    onClick={handleUpload} 
-                    disabled={uploading || !selectedFile || !templateName}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {uploading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Subiendo...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Subir Plantilla
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Templates List */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <FileText className="w-5 h-5" />
-                <span>Plantillas Existentes</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                </div>
-              ) : templates.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No hay plantillas disponibles</p>
-                  <p className="text-sm">Sube tu primera plantilla para comenzar</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {templates.map((template) => (
-                    <div key={template.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center space-x-3">
-                            <FileText className="w-5 h-5 text-blue-600" />
-                            <h3 className="font-medium text-lg">{template.name}</h3>
-                            {template.isActive ? (
-                              <CheckCircle className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <AlertCircle className="w-4 h-4 text-gray-400" />
-                            )}
+                  {/* Step 2: Template Configuration */}
+                  {wizardStep === 2 && (
+                    <div className="space-y-6">
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                          Personaliza tu Plantilla
+                        </h3>
+                        <p className="text-gray-600">
+                          Configura los colores, estilos y elementos de tu recibo
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Esquema de Colores</Label>
+                            <Select value={templateConfig.colorScheme} onValueChange={(value) => 
+                              setTemplateConfig({...templateConfig, colorScheme: value})
+                            }>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="blue">Azul Profesional</SelectItem>
+                                <SelectItem value="green">Verde Veterinario</SelectItem>
+                                <SelectItem value="purple">Morado Elegante</SelectItem>
+                                <SelectItem value="gray">Gris Corporativo</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           
-                          {template.description && (
-                            <p className="text-gray-600 text-sm">{template.description}</p>
-                          )}
-                          
-                          <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-                            <span>Archivo: {template.fileName}</span>
-                            <span>Tamaño: {formatFileSize(template.fileSize)}</span>
-                            <span>Versión: {template.version}</span>
-                            <span>Tipo: {template.tenantId ? 'Sitio específico' : 'Global de empresa'}</span>
+                          <div>
+                            <Label>Estilo de Encabezado</Label>
+                            <Select value={templateConfig.headerStyle} onValueChange={(value) => 
+                              setTemplateConfig({...templateConfig, headerStyle: value})
+                            }>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="professional">Profesional</SelectItem>
+                                <SelectItem value="modern">Moderno</SelectItem>
+                                <SelectItem value="classic">Clásico</SelectItem>
+                                <SelectItem value="minimal">Minimalista</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           
-                          <div className="text-xs text-gray-400">
-                            Creado: {new Date(template.createdAt).toLocaleDateString('es-MX')}
+                          <div>
+                            <Label>Posición del Logo</Label>
+                            <Select value={templateConfig.logoPosition} onValueChange={(value) => 
+                              setTemplateConfig({...templateConfig, logoPosition: value})
+                            }>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="left">Izquierda</SelectItem>
+                                <SelectItem value="center">Centro</SelectItem>
+                                <SelectItem value="right">Derecha</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
                         
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDownload(template)}
-                            data-testid={`button-download-${template.id}`}
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => deleteTemplateMutation.mutate(template.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            data-testid={`button-delete-${template.id}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                        <div className="space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="checkbox" 
+                              id="includeSignature" 
+                              checked={templateConfig.includeSignature}
+                              onChange={(e) => setTemplateConfig({...templateConfig, includeSignature: e.target.checked})}
+                              className="rounded border-gray-300"
+                            />
+                            <Label htmlFor="includeSignature">Incluir espacio para firma</Label>
+                          </div>
+                          
+                          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <h4 className="font-medium text-blue-800 mb-2 flex items-center">
+                              <Eye className="w-4 h-4 mr-2" />
+                              Vista Previa
+                            </h4>
+                            <div className="w-full h-48 bg-white border rounded-lg flex items-center justify-center">
+                              <div className="text-center text-gray-500">
+                                <FileText className="w-12 h-12 mx-auto mb-2" />
+                                <p className="text-sm">Vista previa de la plantilla</p>
+                                <p className="text-xs">Esquema: {templateConfig.colorScheme}</p>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
+                      
+                      <div className="flex justify-between">
+                        <Button variant="outline" onClick={prevStep} className="flex items-center space-x-2">
+                          <ArrowLeft className="w-4 h-4" />
+                          <span>Anterior</span>
+                        </Button>
+                        <Button onClick={nextStep} className="flex items-center space-x-2">
+                          <span>Continuar</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  )}
+
+                  {/* Step 3: Scope Selection */}
+                  {wizardStep === 3 && (
+                    <div className="space-y-6">
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                          Define el Alcance de la Plantilla
+                        </h3>
+                        <p className="text-gray-600">
+                          Decide si será para toda la empresa o para sitios específicos
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Tipo de Plantilla</Label>
+                          <Select value={uploadMode} onValueChange={(value: "company" | "tenant") => setUploadMode(value)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="company">
+                                <div className="flex items-center space-x-2">
+                                  <Building className="w-4 h-4" />
+                                  <span>Global por Empresa</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="tenant">
+                                <div className="flex items-center space-x-2">
+                                  <MapPin className="w-4 h-4" />
+                                  <span>Específico por Sitio</span>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Empresa</Label>
+                          <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona una empresa" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {companies.map((company) => (
+                                <SelectItem key={company.id} value={company.id}>
+                                  {company.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {uploadMode === "tenant" && (
+                        <div className="space-y-2">
+                          <Label>Sitio</Label>
+                          <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona un sitio" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {tenants.map((tenant) => (
+                                <SelectItem key={tenant.id} value={tenant.id}>
+                                  {tenant.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between">
+                        <Button variant="outline" onClick={prevStep} className="flex items-center space-x-2">
+                          <ArrowLeft className="w-4 h-4" />
+                          <span>Anterior</span>
+                        </Button>
+                        <Button onClick={nextStep} className="flex items-center space-x-2">
+                          <span>Continuar</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 4: Final Details */}
+                  {wizardStep === 4 && (
+                    <div className="space-y-6">
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                          Detalles Finales
+                        </h3>
+                        <p className="text-gray-600">
+                          Proporciona un nombre y descripción para tu plantilla
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Nombre de la Plantilla</Label>
+                          <Input
+                            value={templateName}
+                            onChange={(e) => setTemplateName(e.target.value)}
+                            placeholder="Ej: Recibo Clínica Principal"
+                            data-testid="input-template-name"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Descripción (Opcional)</Label>
+                          <Textarea
+                            value={templateDescription}
+                            onChange={(e) => setTemplateDescription(e.target.value)}
+                            placeholder="Describe el propósito de esta plantilla..."
+                            rows={3}
+                            data-testid="textarea-template-description"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 className="font-medium text-green-800 mb-2 flex items-center">
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Resumen de la Plantilla
+                        </h4>
+                        <div className="text-sm text-green-700 space-y-1">
+                          <p><strong>Plantilla:</strong> {preDesignedTemplates.find(t => t.id === selectedTemplate)?.name}</p>
+                          <p><strong>Esquema de colores:</strong> {templateConfig.colorScheme}</p>
+                          <p><strong>Estilo:</strong> {templateConfig.headerStyle}</p>
+                          <p><strong>Alcance:</strong> {uploadMode === "company" ? "Toda la empresa" : "Sitio específico"}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <Button variant="outline" onClick={prevStep} className="flex items-center space-x-2">
+                          <ArrowLeft className="w-4 h-4" />
+                          <span>Anterior</span>
+                        </Button>
+                        <Button 
+                          onClick={() => generatePreDesignedTemplate(selectedTemplate)} 
+                          disabled={uploading || !templateName}
+                          className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
+                          data-testid="button-generate-template"
+                        >
+                          {uploading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Zap className="w-4 h-4" />
+                          )}
+                          <span>Generar Plantilla</span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Quick Upload Tab */}
+            <TabsContent value="upload">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <CloudUpload className="w-5 h-5" />
+                    <span>Subida Rápida de Plantilla ZIP</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Drag and Drop Upload Area */}
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                      dragActive 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-300 hover:border-blue-400'
+                    }`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                    data-testid="drag-drop-area"
+                  >
+                    <div className="space-y-4">
+                      <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                        <CloudUpload className={`w-8 h-8 ${dragActive ? 'text-blue-600' : 'text-blue-500'}`} />
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          {dragActive ? 'Suelta el archivo ZIP aquí' : 'Arrastra tu archivo ZIP aquí'}
+                        </h3>
+                        <p className="text-gray-600">
+                          o{' '}
+                          <label className="text-blue-600 hover:text-blue-700 cursor-pointer underline">
+                            examina tu computadora
+                            <input
+                              id="file-input"
+                              type="file"
+                              accept=".zip"
+                              onChange={handleFileSelect}
+                              className="hidden"
+                              data-testid="input-file-upload"
+                            />
+                          </label>
+                        </p>
+                      </div>
+                      
+                      <div className="text-sm text-gray-500">
+                        <p>Solo archivos ZIP • Máximo 50MB</p>
+                        {selectedFile && (
+                          <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded inline-block">
+                            <span className="text-green-700 flex items-center">
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Configuration */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Tipo de Plantilla</Label>
+                        <Select value={uploadMode} onValueChange={(value: "company" | "tenant") => setUploadMode(value)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="company">
+                              <div className="flex items-center space-x-2">
+                                <Building className="w-4 h-4" />
+                                <span>Global por Empresa</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="tenant">
+                              <div className="flex items-center space-x-2">
+                                <MapPin className="w-4 h-4" />
+                                <span>Específico por Sitio</span>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Empresa</Label>
+                        <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona una empresa" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {companies.map((company) => (
+                              <SelectItem key={company.id} value={company.id}>
+                                {company.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {uploadMode === "tenant" && (
+                        <div className="space-y-2">
+                          <Label>Sitio</Label>
+                          <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona un sitio" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {tenants.map((tenant) => (
+                                <SelectItem key={tenant.id} value={tenant.id}>
+                                  {tenant.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Nombre de la Plantilla</Label>
+                        <Input
+                          value={templateName}
+                          onChange={(e) => setTemplateName(e.target.value)}
+                          placeholder="Ej: Recibo Clínica Principal"
+                          data-testid="input-template-name"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Descripción (Opcional)</Label>
+                        <Textarea
+                          value={templateDescription}
+                          onChange={(e) => setTemplateDescription(e.target.value)}
+                          placeholder="Describe el propósito de esta plantilla..."
+                          rows={3}
+                          data-testid="textarea-template-description"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Upload Button */}
+                  <div className="flex justify-center">
+                    <Button 
+                      onClick={handleUpload} 
+                      disabled={uploading || !selectedFile || !templateName}
+                      className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+                      data-testid="button-upload-template"
+                    >
+                      {uploading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                      <span>{uploading ? 'Subiendo...' : 'Subir Plantilla ZIP'}</span>
+                    </Button>
+                  </div>
+                  
+                  {/* Technical Guide Accordion */}
+                  <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Info className="w-5 h-5 text-amber-600" />
+                      <h3 className="font-medium text-amber-800">Guía Técnica para Archivos ZIP</h3>
+                    </div>
+                    <div className="text-sm text-amber-700 space-y-2">
+                      <p><strong>Estructura requerida:</strong> recibo.html, styles.css, config.json</p>
+                      <p><strong>Carpetas opcionales:</strong> assets/ (logos, imágenes), fonts/ (tipografías)</p>
+                      <p><strong>Variables del sistema:</strong> Use {'{'}{'{'} empresa_nombre {'}'}{'}' para datos dinámicos</p>
+                      <p><strong>Tamaño máximo:</strong> 50MB</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Template Management Tab */}
+            <TabsContent value="manage">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <FileText className="w-5 h-5" />
+                    <span>Plantillas Existentes</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                      <span className="ml-2 text-gray-600">Cargando plantillas...</span>
+                    </div>
+                  ) : templates.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p>No hay plantillas disponibles</p>
+                      <p className="text-sm">Crea tu primera plantilla con el Asistente Visual</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {templates.map((template) => (
+                        <div
+                          key={template.id}
+                          className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                          data-testid={`template-card-${template.id}`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3 mb-2">
+                                <FileText className="w-5 h-5 text-blue-500" />
+                                <h3 className="font-semibold text-gray-900">{template.name}</h3>
+                                <Badge variant={template.isActive ? "default" : "secondary"}>
+                                  {template.isActive ? "Activa" : "Inactiva"}
+                                </Badge>
+                                {template.companyId && (
+                                  <Badge variant="outline" className="text-blue-600">
+                                    <Building className="w-3 h-3 mr-1" />
+                                    Empresa
+                                  </Badge>
+                                )}
+                                {template.tenantId && (
+                                  <Badge variant="outline" className="text-green-600">
+                                    <MapPin className="w-3 h-3 mr-1" />
+                                    Sitio
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              {template.description && (
+                                <p className="text-gray-600 text-sm mb-2">{template.description}</p>
+                              )}
+                              
+                              <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                <span>Archivo: {template.fileName}</span>
+                                <span>Tamaño: {formatFileSize(template.fileSize)}</span>
+                                <span>Versión: {template.version}</span>
+                                <span>Subido: {new Date(template.createdAt).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownload(template)}
+                                className="flex items-center space-x-1"
+                                data-testid={`button-download-${template.id}`}
+                              >
+                                <Download className="w-4 h-4" />
+                                <span>Descargar</span>
+                              </Button>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => deleteTemplateMutation.mutate(template.id)}
+                                disabled={deleteTemplateMutation.isPending}
+                                className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                data-testid={`button-delete-${template.id}`}
+                              >
+                                {deleteTemplateMutation.isPending ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-4 h-4" />
+                                )}
+                                <span>Eliminar</span>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
