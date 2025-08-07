@@ -16,6 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Upload, 
   Download, 
@@ -40,7 +41,9 @@ import {
   Zap,
   MousePointer,
   CloudUpload,
-  ChevronLeft
+  ChevronLeft,
+  Maximize2,
+  X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -82,6 +85,10 @@ export default function ReceiptTemplatesAdmin() {
     includeSignature: true,
     logoPosition: "left"
   });
+  
+  // Preview modal state
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewTemplate, setPreviewTemplate] = useState<string>("");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -155,21 +162,210 @@ export default function ReceiptTemplatesAdmin() {
       name: "Veterinario Profesional",
       description: "Plantilla elegante para clínicas veterinarias con espacios para servicios múltiples",
       preview: "/assets/template-preview-1.png",
-      features: ["Logo personalizable", "Tabla de servicios", "Cálculos automáticos", "Firma digital"]
+      features: ["Logo personalizable", "Tabla de servicios", "Cálculos automáticos", "Firma digital"],
+      htmlPreview: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 2px solid #3b82f6; border-radius: 8px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 20px;">
+            <div style="display: flex; justify-content: between; align-items: center;">
+              <div style="flex: 1;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: bold;">CLINICA VETERINARIA</h1>
+                <p style="margin: 5px 0 0; opacity: 0.9;">Cuidando a tus mascotas con amor</p>
+              </div>
+              <div style="background: white; color: #3b82f6; padding: 8px 16px; border-radius: 4px; font-weight: bold;">RECIBO</div>
+            </div>
+          </div>
+          <div style="padding: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+              <div>
+                <h3 style="color: #3b82f6; margin: 0 0 10px; font-size: 16px;">Datos del Cliente</h3>
+                <p style="margin: 2px 0;"><strong>Nombre:</strong> María González</p>
+                <p style="margin: 2px 0;"><strong>Teléfono:</strong> (555) 123-4567</p>
+                <p style="margin: 2px 0;"><strong>Mascota:</strong> Max (Perro)</p>
+              </div>
+              <div>
+                <h3 style="color: #3b82f6; margin: 0 0 10px; font-size: 16px;">Información</h3>
+                <p style="margin: 2px 0;"><strong>Fecha:</strong> 07/08/2025</p>
+                <p style="margin: 2px 0;"><strong>Recibo #:</strong> R-2025-001</p>
+                <p style="margin: 2px 0;"><strong>Doctor:</strong> Dr. Luis Morales</p>
+              </div>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+              <thead>
+                <tr style="background: #eff6ff; color: #3b82f6;">
+                  <th style="padding: 10px; text-align: left; border-bottom: 2px solid #3b82f6;">Servicio</th>
+                  <th style="padding: 10px; text-align: right; border-bottom: 2px solid #3b82f6;">Precio</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Consulta General</td>
+                  <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$350.00</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Vacuna Antirrábica</td>
+                  <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$200.00</td>
+                </tr>
+                <tr style="background: #eff6ff;">
+                  <td style="padding: 10px; font-weight: bold; color: #3b82f6;">TOTAL</td>
+                  <td style="padding: 10px; font-weight: bold; text-align: right; color: #3b82f6;">$550.00</td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="text-align: center; margin-top: 30px; color: #6b7280;">
+              <p style="margin: 5px 0;">Gracias por confiar en nosotros</p>
+              <p style="margin: 5px 0; font-size: 12px;">www.clinicaveterinaria.com | info@clinicaveterinaria.com</p>
+            </div>
+          </div>
+        </div>
+      `
     },
     {
       id: "minimalist-clinic",
       name: "Clínica Minimalista",
       description: "Diseño limpio y moderno para consultorios pequeños",
       preview: "/assets/template-preview-2.png",
-      features: ["Diseño simple", "Enfoque en servicios", "Fácil lectura", "Compacto"]
+      features: ["Diseño simple", "Enfoque en servicios", "Fácil lectura", "Compacto"],
+      htmlPreview: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #60a5fa; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);">
+          <div style="background: #60a5fa; color: white; padding: 16px; text-align: center;">
+            <h2 style="margin: 0; font-size: 20px; font-weight: 300;">VetCare Clinic</h2>
+            <div style="width: 40px; height: 2px; background: white; margin: 8px auto; opacity: 0.8;"></div>
+          </div>
+          <div style="padding: 24px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <div style="display: inline-block; background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;">RECIBO #VET-001</div>
+            </div>
+            <div style="margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #6b7280; font-size: 14px;">Cliente:</span>
+                <span style="font-weight: 500;">Ana López</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #6b7280; font-size: 14px;">Mascota:</span>
+                <span style="font-weight: 500;">Luna (Gato)</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #6b7280; font-size: 14px;">Fecha:</span>
+                <span style="font-weight: 500;">07 Ago 2025</span>
+              </div>
+            </div>
+            <div style="border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; padding: 16px 0;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <span>Estética y Baño</span>
+                <span style="font-weight: 500;">$450.00</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <span>Corte de Uñas</span>
+                <span style="font-weight: 500;">$100.00</span>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 8px;">
+              <span style="font-size: 18px; font-weight: 600; color: #1e40af;">TOTAL</span>
+              <span style="font-size: 20px; font-weight: 700; color: #1e40af;">$550.00</span>
+            </div>
+            <div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
+              <p style="margin: 0;">Gracias por visitarnos</p>
+            </div>
+          </div>
+        </div>
+      `
     },
     {
       id: "detailed-invoice",
       name: "Factura Detallada",
       description: "Plantilla completa con desglose de impuestos y términos",
       preview: "/assets/template-preview-3.png",
-      features: ["Desglose fiscal", "Términos y condiciones", "Múltiples mascotas", "Historial médico"]
+      features: ["Desglose fiscal", "Términos y condiciones", "Múltiples mascotas", "Historial médico"],
+      htmlPreview: `
+        <div style="font-family: 'Times New Roman', serif; max-width: 650px; margin: 0 auto; border: 3px solid #2563eb; border-radius: 6px;">
+          <div style="background: #2563eb; color: white; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+              <div>
+                <h1 style="margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 1px;">HOSPITAL VETERINARIO</h1>
+                <p style="margin: 8px 0 0; font-size: 14px; opacity: 0.95;">Servicios Médicos Especializados</p>
+              </div>
+              <div style="text-align: right;">
+                <div style="background: white; color: #2563eb; padding: 8px 16px; border-radius: 4px; font-weight: bold; margin-bottom: 8px;">FACTURA</div>
+                <div style="font-size: 12px; opacity: 0.9;">RFC: VET123456789</div>
+              </div>
+            </div>
+          </div>
+          <div style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px;">
+              <div>
+                <h3 style="color: #2563eb; margin: 0 0 12px; font-size: 16px; text-transform: uppercase;">Información del Cliente</h3>
+                <div style="line-height: 1.6;">
+                  <p style="margin: 4px 0;"><strong>Nombre:</strong> Carlos Ruiz González</p>
+                  <p style="margin: 4px 0;"><strong>Dirección:</strong> Av. Reforma 123, CDMX</p>
+                  <p style="margin: 4px 0;"><strong>Teléfono:</strong> (555) 987-6543</p>
+                  <p style="margin: 4px 0;"><strong>Email:</strong> carlos.ruiz@email.com</p>
+                </div>
+              </div>
+              <div>
+                <h3 style="color: #2563eb; margin: 0 0 12px; font-size: 16px; text-transform: uppercase;">Datos de la Factura</h3>
+                <div style="line-height: 1.6;">
+                  <p style="margin: 4px 0;"><strong>Número:</strong> FAC-2025-0001</p>
+                  <p style="margin: 4px 0;"><strong>Fecha:</strong> 07 de Agosto, 2025</p>
+                  <p style="margin: 4px 0;"><strong>Veterinario:</strong> Dr. Luis Morales</p>
+                  <p style="margin: 4px 0;"><strong>Paciente:</strong> Rocky (Labrador, 5 años)</p>
+                </div>
+              </div>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
+              <thead>
+                <tr style="background: #1e40af; color: white;">
+                  <th style="padding: 12px 8px; text-align: left; font-weight: bold;">Descripción</th>
+                  <th style="padding: 12px 8px; text-align: center; font-weight: bold;">Cant.</th>
+                  <th style="padding: 12px 8px; text-align: right; font-weight: bold;">P. Unit.</th>
+                  <th style="padding: 12px 8px; text-align: right; font-weight: bold;">Importe</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">Consulta Médica General</td>
+                  <td style="padding: 10px 8px; text-align: center; border-bottom: 1px solid #e5e7eb;">1</td>
+                  <td style="padding: 10px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$400.00</td>
+                  <td style="padding: 10px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$400.00</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">Vacuna Triple Felina</td>
+                  <td style="padding: 10px 8px; text-align: center; border-bottom: 1px solid #e5e7eb;">1</td>
+                  <td style="padding: 10px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$250.00</td>
+                  <td style="padding: 10px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$250.00</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">Medicamento Antibiótico</td>
+                  <td style="padding: 10px 8px; text-align: center; border-bottom: 1px solid #e5e7eb;">1</td>
+                  <td style="padding: 10px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$180.00</td>
+                  <td style="padding: 10px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$180.00</td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="border-top: 2px solid #2563eb; padding-top: 16px;">
+              <div style="display: flex; justify-content: flex-end;">
+                <div style="width: 250px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>Subtotal:</span>
+                    <span>$830.00</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>IVA (16%):</span>
+                    <span>$132.80</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; color: #2563eb; border-top: 2px solid #2563eb; padding-top: 8px;">
+                    <span>TOTAL:</span>
+                    <span>$962.80</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 30px; padding: 16px; background: #f8fafc; border-left: 4px solid #2563eb; border-radius: 4px;">
+              <h4 style="margin: 0 0 8px; color: #2563eb; font-size: 14px;">Términos y Condiciones:</h4>
+              <p style="margin: 0; font-size: 12px; color: #6b7280; line-height: 1.4;">Esta factura es válida por 30 días. Los pagos deben realizarse dentro de los primeros 15 días. Consulte nuestros términos completos en nuestro sitio web.</p>
+            </div>
+          </div>
+        </div>
+      `
     }
   ];
 
@@ -466,9 +662,22 @@ export default function ReceiptTemplatesAdmin() {
                             )}
                             
                             <div className="mb-4">
-                              <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-                                <FileImage className="w-12 h-12 text-gray-400" />
-                                <span className="ml-2 text-sm text-gray-500">Vista Previa</span>
+                              <div className="w-full h-32 bg-white border border-gray-200 rounded-lg overflow-hidden mb-3 relative group">
+                                <div 
+                                  className="w-full h-full transform scale-75 origin-top-left"
+                                  dangerouslySetInnerHTML={{ __html: template.htmlPreview }}
+                                  style={{ transform: 'scale(0.35) translate(-45%, -45%)', transformOrigin: 'top left' }}
+                                />
+                                <div 
+                                  className="absolute inset-0 bg-blue-500/0 group-hover:bg-blue-500/10 transition-colors duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPreviewTemplate(template.htmlPreview);
+                                    setShowPreview(true);
+                                  }}
+                                >
+                                  <Eye className="w-6 h-6 text-blue-600" />
+                                </div>
                               </div>
                             </div>
                             
@@ -1047,6 +1256,51 @@ export default function ReceiptTemplatesAdmin() {
           </Tabs>
         </div>
       </main>
+
+      {/* Preview Modal */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Eye className="w-5 h-5" />
+              <span>Vista Previa de la Plantilla</span>
+            </DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPreview(false)}
+              className="absolute right-4 top-4 w-6 h-6 p-0"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[75vh] bg-gray-50 rounded-lg p-4">
+            <div className="bg-white shadow-lg rounded-lg overflow-hidden mx-auto" style={{ maxWidth: '650px' }}>
+              <div dangerouslySetInnerHTML={{ __html: previewTemplate }} />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => setShowPreview(false)}>
+              Cerrar
+            </Button>
+            <Button 
+              onClick={() => {
+                const selectedTemplateData = preDesignedTemplates.find(t => t.htmlPreview === previewTemplate);
+                if (selectedTemplateData) {
+                  setSelectedTemplate(selectedTemplateData.id);
+                  setShowPreview(false);
+                  setActiveTab('wizard');
+                  setWizardStep(1);
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Wand2 className="w-4 h-4 mr-2" />
+              Usar Esta Plantilla
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
