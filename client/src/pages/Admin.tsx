@@ -58,9 +58,9 @@ function Admin() {
   const { currentTenant, isLoading: tenantLoading } = useTenant();
   
   // Data from database
-  const [rooms, setRooms] = useState([]);
-  const [services, setServices] = useState([]);
-  const [staff, setStaff] = useState([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [staff, setStaff] = useState<any[]>([]);
   
   // Fetch data from database
   const { data: roomsData, isLoading: roomsLoading } = useQuery({
@@ -116,7 +116,7 @@ function Admin() {
   }, [roomsData, servicesData, rolesData, staffData, deliveryConfigData]);
 
   // State for roles (loaded from database)
-  const [roles, setRoles] = useState([]);
+  const [roles, setRoles] = useState<any[]>([]);
 
   // State for users
   const [users, setUsers] = useState([
@@ -197,8 +197,8 @@ function Admin() {
 
   // API Mutations
   const createRoleMutation = useMutation({
-    mutationFn: async (data) => {
-      return apiRequest('POST', '/api/admin/roles', { ...data, tenantId: currentTenant?.id });
+    mutationFn: async (data: any) => {
+      return apiRequest('/api/admin/roles', 'POST', { ...data, tenantId: currentTenant?.id });
     },
     onSuccess: () => {
       toast({
@@ -268,8 +268,8 @@ function Admin() {
 
   // Create staff mutation
   const createStaffMutation = useMutation({
-    mutationFn: async (data) => {
-      return apiRequest('POST', '/api/staff', { ...data, tenantId: currentTenant?.id });
+    mutationFn: async (data: any) => {
+      return apiRequest('/api/staff', 'POST', { ...data, tenantId: currentTenant?.id });
     },
     onSuccess: () => {
       toast({
@@ -376,8 +376,8 @@ function Admin() {
 
   // Update staff mutation
   const updateStaffMutation = useMutation({
-    mutationFn: async ({ staffId, data }) => {
-      return apiRequest('PUT', `/api/staff/${staffId}`, data);
+    mutationFn: async ({ staffId, data }: { staffId: string; data: any }) => {
+      return apiRequest(`/api/staff/${staffId}`, 'PUT', data);
     },
     onSuccess: () => {
       toast({
@@ -409,7 +409,7 @@ function Admin() {
   });
 
   // Handle create role
-  const handleCreateRole = (e) => {
+  const handleCreateRole = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     
@@ -434,7 +434,7 @@ function Admin() {
   };
 
   // Handle create staff
-  const handleCreateStaff = (e) => {
+  const handleCreateStaff = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     
@@ -458,7 +458,7 @@ function Admin() {
   };
 
   // Handle edit staff
-  const handleEditStaff = (staffMember) => {
+  const handleEditStaff = (staffMember: any) => {
     setEditingStaff(staffMember);
     setEditStaffData({
       name: staffMember.name,
@@ -510,8 +510,8 @@ function Admin() {
 
   // Create service mutation
   const createServiceMutation = useMutation({
-    mutationFn: async (data) => {
-      return apiRequest('POST', `/api/admin/services/${currentTenant?.id}`, data);
+    mutationFn: async (data: any) => {
+      return apiRequest(`/api/admin/services/${currentTenant?.id}`, 'POST', data);
     },
     onSuccess: () => {
       toast({
@@ -543,8 +543,8 @@ function Admin() {
 
   // Update service mutation
   const updateServiceMutation = useMutation({
-    mutationFn: async ({ serviceId, data }) => {
-      return apiRequest('PUT', `/api/admin/services/${serviceId}`, data);
+    mutationFn: async ({ serviceId, data }: { serviceId: string; data: any }) => {
+      return apiRequest(`/api/admin/services/${serviceId}`, 'PUT', data);
     },
     onSuccess: () => {
       toast({
@@ -608,14 +608,14 @@ function Admin() {
   });
 
   // Handle create service
-  const handleCreateService = (e) => {
+  const handleCreateService = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = {
       name: formData.get('name'),
       type: formData.get('type'),
-      duration: parseInt(formData.get('duration')),
-      price: parseFloat(formData.get('price')),
+      duration: parseInt(formData.get('duration') as string),
+      price: parseFloat(formData.get('price') as string),
       isActive: true
     };
 
@@ -623,7 +623,7 @@ function Admin() {
   };
 
   // Handle edit service
-  const handleEditService = (service) => {
+  const handleEditService = (service: any) => {
     setEditingService(service);
     setEditServiceData({
       name: service.name,
@@ -652,7 +652,7 @@ function Admin() {
 
   // Delivery configuration mutation
   const updateDeliveryConfigMutation = useMutation({
-    mutationFn: async (config) => {
+    mutationFn: async (config: any) => {
       return apiRequest('/api/admin/delivery-config', 'POST', { 
         ...config, 
         tenantId: currentTenant?.id 

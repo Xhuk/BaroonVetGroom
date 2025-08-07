@@ -77,15 +77,17 @@ export function Navigation({ className }: NavigationProps) {
     { icon: BarChart3, label: "Tablero", href: "/" },
     { icon: Users, label: "Clientes", href: "/clients" },
     { icon: Stethoscope, label: "Medical", href: "/medical-appointments" },
-    { icon: Scissors, label: "Estética", href: "/grooming-services" },
     { icon: Heart, label: "Seguimientos", href: "/follow-up-tasks" },
     { icon: Truck, label: "Plan de Entregas", href: "/delivery-plan" },
     { icon: CreditCard, label: "Caja", href: "/cashier" },
-
   ];
 
   const adminItems = [
-    ...(canAccessAdmin ? [{ icon: Settings, label: "Admin Dashboard", href: "/admin" }] : []),
+    ...(canAccessAdmin ? [
+      { icon: Settings, label: "Admin Dashboard", href: "/admin" },
+      { icon: Scissors, label: "Gestión de Servicios", href: "/grooming-services" },
+      { icon: Receipt, label: "Plantillas de Recibo", href: "/receipt-templates-admin" }
+    ] : []),
     ...(canAccessSuperAdmin ? [
       { icon: Crown, label: "Super-Admin Dashboard", href: "/superadmin" }
     ] : []),
