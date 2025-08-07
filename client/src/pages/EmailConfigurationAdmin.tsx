@@ -70,6 +70,9 @@ function EmailConfigurationAdmin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [testEmail, setTestEmail] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [hasExistingApiKey, setHasExistingApiKey] = useState(false);
+  const [isChangingApiKey, setIsChangingApiKey] = useState(false);
 
   const form = useForm<EmailConfigForm>({
     resolver: zodResolver(emailConfigSchema),
@@ -100,11 +103,13 @@ function EmailConfigurationAdmin() {
   // Update form when config loads
   useEffect(() => {
     if (emailConfig) {
+      const hasApiKey = emailConfig.isConfigured;
+      setHasExistingApiKey(hasApiKey);
       form.reset({
         provider: emailConfig.provider as any,
         fromEmail: emailConfig.fromEmail,
         fromName: emailConfig.fromName,
-        apiKey: '', // Don't populate API key for security
+        apiKey: hasApiKey ? '••••••••••••••••••••••••••••••••••••••••••••••••••••' : '', // Masked API key for existing config
       });
     }
   }, [emailConfig, form]);
@@ -133,6 +138,8 @@ function EmailConfigurationAdmin() {
         description: "Email configuration has been updated successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/email-config'] });
+      setIsChangingApiKey(false);
+      setShowApiKey(false);
     },
     onError: (error: any) => {
       toast({
@@ -179,7 +186,28 @@ function EmailConfigurationAdmin() {
   });
 
   const onSubmit = (data: EmailConfigForm) => {
+    // If there's an existing API key and the current field is masked, don't submit
+    if (hasExistingApiKey && data.apiKey.includes('••••••')) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter a new API key to update the configuration",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // If changing API key and there's an existing one, ask for confirmation
+    if (hasExistingApiKey && !isChangingApiKey && data.apiKey && !data.apiKey.includes('••••••')) {
+      setIsChangingApiKey(true);
+      toast({
+        title: "Confirm API Key Change",
+        description: "You are about to replace your existing API key. Click Save again to confirm.",
+      });
+      return;
+    }
+
     saveConfigMutation.mutate(data);
+    setIsChangingApiKey(false);
   };
 
   const handleTestEmail = () => {
@@ -321,16 +349,48 @@ function EmailConfigurationAdmin() {
                     name="apiKey"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">API Key</FormLabel>
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="text-gray-300">API Key</FormLabel>
+                          {hasExistingApiKey && (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const newValue = showApiKey ? '••••••••••••••••••••••••••••••••••••••••••••••••••••' : '';
+                                  form.setValue('apiKey', newValue);
+                                  setShowApiKey(!showApiKey);
+                                }}
+                                className="h-7 text-xs border-gray-600 text-gray-400 hover:text-white"
+                                data-testid="toggle-api-key"
+                              >
+                                {showApiKey ? 'Hide Key' : 'Change Key'}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                         <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="Enter API key" 
+                          <Input
                             {...field}
-                            data-testid="api-key-input"
+                            type={showApiKey || !hasExistingApiKey ? "text" : "password"}
+                            placeholder={hasExistingApiKey ? "Enter new API key to change" : "Enter your API key"}
                             className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                            data-testid="api-key-input"
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // If user starts typing and there's an existing key, show change mode
+                              if (hasExistingApiKey && e.target.value && !e.target.value.includes('••••••')) {
+                                setShowApiKey(true);
+                              }
+                            }}
                           />
                         </FormControl>
+                        {hasExistingApiKey && (
+                          <p className="text-xs text-gray-500">
+                            API key is securely stored. Enter a new key to replace the existing one.
+                          </p>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -378,10 +438,10 @@ function EmailConfigurationAdmin() {
                   <Button 
                     type="submit" 
                     disabled={saveConfigMutation.isPending}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className={`w-full ${isChangingApiKey ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'}`}
                     data-testid="save-config-button"
                   >
-                    {saveConfigMutation.isPending ? 'Saving...' : 'Save Configuration'}
+                    {saveConfigMutation.isPending ? 'Saving...' : isChangingApiKey ? 'Click Again to Confirm Change' : 'Save Configuration'}
                   </Button>
                 </form>
               </Form>
