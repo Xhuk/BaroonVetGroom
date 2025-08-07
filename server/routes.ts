@@ -357,12 +357,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         veterinarians: relevantVets.map(vet => ({
           id: vet.id,
           name: vet.name,
-          email: vet.email
+          specialization: vet.specialization
         })),
         rooms: relevantRooms.map(room => ({
           id: room.id,
           name: room.name,
-          roomType: room.roomType
+          type: room.type
         })),
         count: medicalAppointments.length
       });
@@ -4234,11 +4234,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         companyId: company.id,
         planId: selectedPlan.id,
         status: "trial",
-        trialStartDate: new Date(),
-        trialEndDate: new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000),
-        maxTenants: maxTenants || selectedPlan.maxTenants,
-        maxStaff: maxStaff,
-        customLimits: customLimits
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000),
+        trialEndsAt: new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000)
       });
 
       // Generate initial credentials
@@ -4251,7 +4249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: company.id,
           name: company.name,
           subscriptionStatus: "trial",
-          trialEndDate: subscription.trialEndDate
+          trialEndDate: subscription.trialEndsAt
         },
         admin: {
           id: adminUser.id,
@@ -4262,8 +4260,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subscription: {
           plan: selectedPlan.displayName,
           status: "trial",
-          maxTenants: subscription.maxTenants,
-          maxStaff: subscription.maxStaff,
+          maxTenants: null,
+          maxStaff: null,
           trialDaysRemaining: trialDays
         },
         credentials: {

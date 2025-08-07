@@ -219,6 +219,7 @@ export interface IStorage {
   
   // Pet operations
   getPets(clientId: string): Promise<Pet[]>;
+  getPetById(petId: string): Promise<Pet | undefined>;
   createPet(pet: InsertPet): Promise<Pet>;
   
   // Appointment operations
@@ -371,6 +372,16 @@ export interface IStorage {
   // Delivery Configuration operations
   getDeliveryConfig(tenantId: string): Promise<DeliveryConfig | undefined>;
   updateDeliveryConfig(tenantId: string, config: Partial<InsertDeliveryConfig>): Promise<DeliveryConfig>;
+  
+  // Missing methods used in routes
+  getAppointmentsByDate(tenantId: string, date: string): Promise<Appointment[]>;
+  getFraccionamientos(): Promise<any[]>;
+  getDeliveryRoutes(tenantId: string): Promise<any[]>;
+  createUser(userData: any): Promise<User>;
+  createUserCompany(userId: string, companyId: string): Promise<any>;
+  getCompany(companyId: string): Promise<Company | undefined>;
+  getTenantsByCompany(companyId: string): Promise<Tenant[]>;
+  getStaffByCompany(companyId: string): Promise<Staff[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2645,6 +2656,61 @@ export class DatabaseStorage implements IStorage {
       .where(eq(paymentGatewayConfig.tenantId, tenantId));
     return config;
   }
+
+  // Missing method implementations
+  async getAppointmentsByDate(tenantId: string, date: string): Promise<Appointment[]> {
+    return await db
+      .select()
+      .from(appointments)
+      .where(and(
+        eq(appointments.tenantId, tenantId),
+        eq(appointments.scheduledDate, date)
+      ))
+      .orderBy(asc(appointments.scheduledTime));
+  }
+
+  async getFraccionamientos(): Promise<any[]> {
+    // Return empty array for now - this seems to be a specific business logic feature
+    return [];
+  }
+
+  async getDeliveryRoutes(tenantId: string): Promise<any[]> {
+    // Return empty array for now - delivery routes functionality
+    return [];
+  }
+
+  async createUser(userData: any): Promise<User> {
+    const [user] = await db.insert(users).values(userData).returning();
+    return user;
+  }
+
+  async createUserCompany(userId: string, companyId: string): Promise<any> {
+    const [userCompany] = await db.insert(userCompanies).values({
+      userId,
+      companyId,
+      createdAt: new Date()
+    }).returning();
+    return userCompany;
+  }
+
+  async getCompany(companyId: string): Promise<Company | undefined> {
+    const [company] = await db.select().from(companies).where(eq(companies.id, companyId));
+    return company;
+  }
+
+  async getTenantsByCompany(companyId: string): Promise<Tenant[]> {
+    return await db.select().from(tenants).where(eq(tenants.companyId, companyId));
+  }
+
+  async getStaffByCompany(companyId: string): Promise<Staff[]> {
+    const tenantsInCompany = await this.getTenantsByCompany(companyId);
+    const tenantIds = tenantsInCompany.map(t => t.id);
+    
+    if (tenantIds.length === 0) return [];
+    
+    return await db.select().from(staff).where(inArray(staff.tenantId, tenantIds));
+  }
+
 }
 
 export const storage = new DatabaseStorage();
