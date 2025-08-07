@@ -46,6 +46,7 @@ import DriverRoute from "@/pages/DriverRoute";
 import DriverMobile from "@/pages/DriverMobile";
 import { InstantNavigation } from "@/components/InstantNavigation";
 import { DebugBanner } from "@/components/DebugBanner";
+import { DeviceBlocker } from "@/components/DeviceBlocker";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -54,7 +55,7 @@ function Router() {
   // Only show auth loading on initial app load when no route is detected
 
   return (
-    <>
+    <DeviceBlocker>
       <DebugBanner />
       <Switch>
       {/* INSTANT ROUTING - All routes available immediately, no auth blocking */}
@@ -100,7 +101,7 @@ function Router() {
       <Route path="/temp/:token" component={TempLinkHandler} />
       <Route component={NotFound} />
       </Switch>
-    </>
+    </DeviceBlocker>
   );
 }
 

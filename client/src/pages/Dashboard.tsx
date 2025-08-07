@@ -3,8 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { useFastLoad, useFastFetch } from "@/hooks/useFastLoad";
-import { Header } from "@/components/Header";
-import { Navigation } from "@/components/Navigation";
+import { ResponsiveLayout } from "@/components/ResponsiveLayout";
 import { FastCalendar } from "@/components/FastCalendar";
 import { FastStatsRibbon } from "@/components/FastStatsRibbon";
 import { Button } from "@/components/ui/button";
@@ -111,14 +110,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background font-sans">
-      <Header />
-      <Navigation />
-      
+    <ResponsiveLayout>
       {/* Main Content */}
-      <main className="ml-[10px] pb-40">
-        {/* Action Buttons - Positioned to align with card container */}
-        <div className="fixed flex gap-4" style={{ top: '95px', left: '298px', right: '24px' }}>
+      <div className="pb-40">
+        {/* Action Buttons - Responsive positioning */}
+        <div className="flex gap-4 mb-6 tablet-card">
           <Link href="/booking">
             <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
               <Phone className="w-4 h-4 mr-2" />
@@ -144,11 +140,11 @@ export default function Dashboard() {
 
           />
         ) : (
-          <div className="bg-card rounded-lg shadow-lg animate-pulse flex items-center justify-center fixed" style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
+          <div className="bg-card rounded-lg shadow-lg animate-pulse flex items-center justify-center h-96 tablet-card">
             <div className="text-muted-foreground">Cargando calendario...</div>
           </div>
         )}
-      </main>
+      </div>
 
       {/* Fast Stats Ribbon - Direct implementation */}
       {showStats ? (
@@ -167,6 +163,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-    </div>
+    </ResponsiveLayout>
   );
 }
