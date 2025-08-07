@@ -158,11 +158,11 @@ export default function ReceiptTemplatesAdmin() {
 
   const preDesignedTemplates = [
     {
-      id: "veterinary-professional",
-      name: "Veterinario Profesional",
-      description: "Plantilla elegante para clínicas veterinarias con espacios para servicios múltiples",
+      id: "header-professional",
+      name: "Estilo Profesional",
+      description: "Encabezado corporativo con logo a la izquierda y gradiente elegante",
       preview: "/assets/template-preview-1.png",
-      features: ["Logo personalizable", "Tabla de servicios", "Cálculos automáticos", "Firma digital"],
+      features: ["Logo izquierda", "Gradiente azul", "Información estructurada", "Aspecto corporativo"],
       htmlPreview: `
         <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; border: 1px solid #3b82f6; border-radius: 8px; overflow: hidden; background: white;">
           <!-- Professional Header Style with Blue Color Scheme -->
@@ -252,11 +252,11 @@ export default function ReceiptTemplatesAdmin() {
       `
     },
     {
-      id: "minimalist-clinic",
-      name: "Clínica Minimalista",
-      description: "Diseño limpio y moderno para consultorios pequeños",
+      id: "header-modern",
+      name: "Estilo Moderno",
+      description: "Encabezado minimalista con logo centrado y líneas limpias",
       preview: "/assets/template-preview-2.png",
-      features: ["Diseño simple", "Enfoque en servicios", "Fácil lectura", "Compacto"],
+      features: ["Logo centrado", "Diseño limpio", "Colores suaves", "Espacios amplios"],
       htmlPreview: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #60a5fa; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);">
           <div style="background: #60a5fa; color: white; padding: 16px; text-align: center;">
@@ -303,11 +303,11 @@ export default function ReceiptTemplatesAdmin() {
       `
     },
     {
-      id: "detailed-invoice",
-      name: "Factura Detallada",
-      description: "Plantilla completa con desglose de impuestos y términos",
+      id: "header-classic",
+      name: "Estilo Clásico",
+      description: "Encabezado tradicional con logo a la derecha y tipografía serif",
       preview: "/assets/template-preview-3.png",
-      features: ["Desglose fiscal", "Términos y condiciones", "Múltiples mascotas", "Historial médico"],
+      features: ["Logo derecha", "Tipografía serif", "Bordes definidos", "Formal tradicional"],
       htmlPreview: `
         <div style="font-family: 'Times New Roman', serif; max-width: 650px; margin: 0 auto; border: 3px solid #2563eb; border-radius: 6px;">
           <div style="background: #2563eb; color: white; padding: 20px;">
@@ -394,6 +394,71 @@ export default function ReceiptTemplatesAdmin() {
             <div style="margin-top: 30px; padding: 16px; background: #f8fafc; border-left: 4px solid #2563eb; border-radius: 4px;">
               <h4 style="margin: 0 0 8px; color: #2563eb; font-size: 14px;">Términos y Condiciones:</h4>
               <p style="margin: 0; font-size: 12px; color: #6b7280; line-height: 1.4;">Esta factura es válida por 30 días. Los pagos deben realizarse dentro de los primeros 15 días. Consulte nuestros términos completos en nuestro sitio web.</p>
+            </div>
+          </div>
+        </div>
+      `
+    },
+    {
+      id: "header-minimal",
+      name: "Estilo Minimalista",
+      description: "Encabezado ultra-simple con elementos básicos y máxima claridad",
+      preview: "/assets/template-preview-4.png",
+      features: ["Elementos básicos", "Sin gradientes", "Texto plano", "Máxima simplicidad"],
+      htmlPreview: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #d1d5db; border-radius: 4px; overflow: hidden; background: white;">
+          <!-- Minimal Header Style -->
+          <div style="background: white; color: #374151; padding: 20px; border-bottom: 2px solid #374151;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h1 style="margin: 0; font-size: 18px; font-weight: normal; color: #111827;">{{ empresa_nombre }}</h1>
+                <p style="margin: 4px 0 0; font-size: 12px; color: #6b7280;">{{ empresa_eslogan }}</p>
+              </div>
+              <div style="text-align: right;">
+                <div style="border: 1px solid #374151; padding: 6px 12px; font-size: 14px; font-weight: normal;">RECIBO</div>
+                <p style="margin: 4px 0 0; font-size: 12px; color: #6b7280;"># {{ numero_recibo }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div style="padding: 20px;">
+            <!-- Simple Client Info -->
+            <div style="margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #6b7280; font-size: 14px;">Cliente:</span>
+                <span style="color: #111827;">{{ cliente_nombre }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #6b7280; font-size: 14px;">Mascota:</span>
+                <span style="color: #111827;">{{ mascota_nombre }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #6b7280; font-size: 14px;">Fecha:</span>
+                <span style="color: #111827;">{{ fecha }}</span>
+              </div>
+            </div>
+
+            <!-- Simple Services -->
+            <div style="border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; padding: 16px 0;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #374151;">{{ servicio_1 }}</span>
+                <span style="color: #111827; font-weight: 500;">{{ precio_1 }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #374151;">{{ servicio_2 }}</span>
+                <span style="color: #111827; font-weight: 500;">{{ precio_2 }}</span>
+              </div>
+            </div>
+
+            <!-- Simple Total -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding: 12px 0; border-top: 2px solid #374151;">
+              <span style="font-size: 16px; font-weight: 600; color: #111827;">TOTAL</span>
+              <span style="font-size: 18px; font-weight: 700; color: #111827;">{{ total }}</span>
+            </div>
+
+            <!-- Simple Footer -->
+            <div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
+              <p style="margin: 0;">{{ empresa_telefono }} | {{ empresa_web }}</p>
             </div>
           </div>
         </div>
@@ -675,7 +740,7 @@ export default function ReceiptTemplatesAdmin() {
                         </p>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {preDesignedTemplates.map((template) => (
                           <div
                             key={template.id}
@@ -713,8 +778,8 @@ export default function ReceiptTemplatesAdmin() {
                               </div>
                             </div>
                             
-                            <h4 className="font-semibold text-gray-900 mb-2">{template.name}</h4>
-                            <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                            <h4 className="font-semibold text-gray-900 mb-2 text-center">{template.name}</h4>
+                            <p className="text-sm text-gray-600 mb-3 text-center text-xs">{template.description}</p>
                             
                             <div className="space-y-1">
                               {template.features.map((feature, index) => (
