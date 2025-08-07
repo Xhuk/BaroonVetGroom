@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { 
-  isMobile, 
-  isTablet, 
-  isDesktop,
-  deviceType,
-  browserName,
-  osName,
-  mobileVendor,
-  mobileModel
-} from 'react-device-detect';
+
+// Simple direct detection - bypass library issues
+function getScreenInfo() {
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    userAgent: navigator.userAgent,
+    screenWidth: screen.width,
+    screenHeight: screen.height
+  };
+}
 
 interface DeviceInfo {
   width: number;
@@ -26,68 +27,42 @@ interface DeviceInfo {
 }
 
 function detectDevice(): DeviceInfo {
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  const userAgent = navigator.userAgent;
+  const { width, height, userAgent, screenWidth, screenHeight } = getScreenInfo();
   const screenDensity = window.devicePixelRatio || 1;
-  
-  // Use mobile-device-detect for reliable detection
+
+  // Direct detection based on screen width
   let detectedDeviceType: 'phone' | 'small-tablet' | 'tablet' | 'desktop';
   let isPhone = false, isSmallTablet = false, isTabletDevice = false, isDesktopDevice = false;
   
-  if (isMobile && !isTablet) {
-    // Phone
+  console.log(`🔍 DIRECT DEVICE DETECTION (bypassing library):`);
+  console.log(`📐 Window size: ${width}x${height}`);
+  console.log(`📐 Screen size: ${screenWidth}x${screenHeight}`);
+  console.log(`📐 Device pixel ratio: ${screenDensity}x`);
+  console.log(`🌐 User Agent: ${userAgent}`);
+  
+  // Classify based on width
+  if (width < 640) {
     detectedDeviceType = 'phone';
     isPhone = true;
-  } else if (isTablet) {
-    // Tablet - determine size based on screen width
-    if (width < 1024) {
-      // Small tablets (8-10 inch) like iPad Mini, Android 8" tablets
-      detectedDeviceType = 'small-tablet';
-      isSmallTablet = true;
-    } else {
-      // Large tablets (10+ inch) like iPad Pro, large Android tablets
-      detectedDeviceType = 'tablet';
-      isTabletDevice = true;
-    }
+    console.log(`📱 PHONE detected (width < 640px)`);
+  } else if (width >= 640 && width < 1024) {
+    // This should catch Xiaomi Tab 8 and similar tablets
+    detectedDeviceType = 'small-tablet';
+    isSmallTablet = true;
+    console.log(`📱 SMALL TABLET detected (640px ≤ width < 1024px) - NAVIGATION SHOULD COLLAPSE`);
+  } else if (width >= 1024 && width < 1440) {
+    detectedDeviceType = 'tablet';
+    isTabletDevice = true;
+    console.log(`📱 LARGE TABLET detected (1024px ≤ width < 1440px)`);
   } else {
-    // Fallback: If mobile-device-detect fails (like in development), use screen size
-    if (width < 640) {
-      detectedDeviceType = 'phone';
-      isPhone = true;
-    } else if (width >= 640 && width < 1024) {
-      // For Xiaomi Tab 8 and similar - force small tablet classification
-      detectedDeviceType = 'small-tablet';
-      isSmallTablet = true;
-    } else if (width >= 1024 && width < 1440) {
-      detectedDeviceType = 'tablet';
-      isTabletDevice = true;
-    } else {
-      detectedDeviceType = 'desktop';
-      isDesktopDevice = true;
-    }
+    detectedDeviceType = 'desktop';
+    isDesktopDevice = true;
+    console.log(`💻 DESKTOP detected (width ≥ 1440px)`);
   }
   
-  // Generate device name
-  let deviceName = 'Unknown Device';
-  if (mobileVendor && mobileModel) {
-    deviceName = `${mobileVendor} ${mobileModel}`;
-  } else if (mobileVendor) {
-    deviceName = `${mobileVendor} Device`;
-  } else if (isTablet) {
-    deviceName = `${osName} Tablet`;
-  } else if (isMobile) {
-    deviceName = `${osName} Phone`;
-  } else {
-    deviceName = `${osName} Computer`;
-  }
+  let deviceName = `${detectedDeviceType} (${width}x${height})`;
   
-  console.log(`🔍 DEVICE DETECTION BY REACT-DEVICE-DETECT:`);
-  console.log(`📱 Device: ${deviceName} (${detectedDeviceType})`);
-  console.log(`📐 Screen: ${width}x${height} (${screenDensity}x density)`);
-  console.log(`📚 Library detection: isMobile=${isMobile}, isTablet=${isTablet}, isDesktop=${isDesktop}`);
-  console.log(`🌐 Browser: ${browserName} on ${osName}`);
-  console.log(`✅ Final classification: isSmallTablet=${isSmallTablet} (should collapse navigation)`);
+  console.log(`✅ Final classification: isSmallTablet=${isSmallTablet} (navigation should ${isSmallTablet ? 'COLLAPSE' : 'stay expanded'})`);
   console.log(`====================================`);
   
   return {
@@ -100,8 +75,8 @@ function detectDevice(): DeviceInfo {
     deviceType: detectedDeviceType,
     userAgent,
     deviceName,
-    browserName,
-    osName,
+    browserName: 'unknown',
+    osName: 'unknown',
     screenDensity
   };
 }
