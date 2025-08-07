@@ -77,6 +77,7 @@ export function Navigation({ className }: NavigationProps) {
     { icon: BarChart3, label: "Tablero", href: "/" },
     { icon: Users, label: "Clientes", href: "/clients" },
     { icon: Stethoscope, label: "Medical", href: "/medical-appointments" },
+    { icon: Scissors, label: "Estética", href: "/grooming-services" },
     { icon: Heart, label: "Seguimientos", href: "/follow-up-tasks" },
     { icon: Truck, label: "Plan de Entregas", href: "/delivery-plan" },
     { icon: CreditCard, label: "Caja", href: "/cashier" },
