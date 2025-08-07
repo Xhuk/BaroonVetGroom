@@ -749,7 +749,11 @@ export default function ReceiptTemplatesAdmin() {
                                 ? 'border-blue-500 bg-blue-50 shadow-lg'
                                 : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
                             }`}
-                            onClick={() => setSelectedTemplate(template.id)}
+                            onClick={() => {
+                              setSelectedTemplate(template.id);
+                              // Auto-set header style based on template selection
+                              setTemplateConfig({...templateConfig, headerStyle: template.id.replace('header-', '')});
+                            }}
                             data-testid={`template-${template.id}`}
                           >
                             {selectedTemplate === template.id && (
@@ -839,22 +843,6 @@ export default function ReceiptTemplatesAdmin() {
                             </Select>
                           </div>
                           
-                          <div>
-                            <Label>Estilo de Encabezado</Label>
-                            <Select value={templateConfig.headerStyle} onValueChange={(value) => 
-                              setTemplateConfig({...templateConfig, headerStyle: value})
-                            }>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="professional">Profesional</SelectItem>
-                                <SelectItem value="modern">Moderno</SelectItem>
-                                <SelectItem value="classic">Clásico</SelectItem>
-                                <SelectItem value="minimal">Minimalista</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
                           
                           <div>
                             <Label>Posición del Logo</Label>
@@ -888,14 +876,40 @@ export default function ReceiptTemplatesAdmin() {
                           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <h4 className="font-medium text-blue-800 mb-2 flex items-center">
                               <Eye className="w-4 h-4 mr-2" />
-                              Vista Previa
+                              Vista Previa - Actualización Automática
                             </h4>
-                            <div className="w-full h-48 bg-white border rounded-lg flex items-center justify-center">
-                              <div className="text-center text-gray-500">
-                                <FileText className="w-12 h-12 mx-auto mb-2" />
-                                <p className="text-sm">Vista previa de la plantilla</p>
-                                <p className="text-xs">Esquema: {templateConfig.colorScheme}</p>
+                            <div className="w-full h-64 bg-white border rounded-lg overflow-hidden">
+                              <div 
+                                className="w-full h-full flex items-center justify-center"
+                                style={{ transform: 'scale(0.25)', transformOrigin: 'center center' }}
+                              >
+                                {selectedTemplate && (() => {
+                                  const template = preDesignedTemplates.find(t => t.id === selectedTemplate);
+                                  if (!template) return null;
+                                  
+                                  // Create dynamic preview HTML with current config
+                                  let previewHtml = template.htmlPreview;
+                                  
+                                  // Apply color scheme changes
+                                  if (templateConfig.colorScheme === 'green') {
+                                    previewHtml = previewHtml.replace(/#3b82f6/g, '#059669').replace(/#60a5fa/g, '#10b981').replace(/#2563eb/g, '#047857').replace(/#1e40af/g, '#065f46');
+                                  } else if (templateConfig.colorScheme === 'purple') {
+                                    previewHtml = previewHtml.replace(/#3b82f6/g, '#7c3aed').replace(/#60a5fa/g, '#8b5cf6').replace(/#2563eb/g, '#6d28d9').replace(/#1e40af/g, '#5b21b6');
+                                  } else if (templateConfig.colorScheme === 'gray') {
+                                    previewHtml = previewHtml.replace(/#3b82f6/g, '#374151').replace(/#60a5fa/g, '#6b7280').replace(/#2563eb/g, '#1f2937').replace(/#1e40af/g, '#111827');
+                                  }
+                                  
+                                  // Hide signature section if disabled
+                                  if (!templateConfig.includeSignature) {
+                                    previewHtml = previewHtml.replace(/<!-- Signature Area.*?<\/div>\s*<\/div>/s, '');
+                                  }
+                                  
+                                  return <div dangerouslySetInnerHTML={{ __html: previewHtml }} />;
+                                })()}
                               </div>
+                            </div>
+                            <div className="mt-2 text-xs text-blue-600">
+                              <strong>Configuración actual:</strong> {templateConfig.colorScheme} • {preDesignedTemplates.find(t => t.id === selectedTemplate)?.name} • {templateConfig.includeSignature ? 'Con firma' : 'Sin firma'}
                             </div>
                           </div>
                         </div>
