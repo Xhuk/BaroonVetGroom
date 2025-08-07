@@ -40,25 +40,33 @@ function detectDevice(): DeviceInfo {
   console.log(`📐 Device pixel ratio: ${screenDensity}x`);
   console.log(`🌐 User Agent: ${userAgent}`);
   
-  // Classify based on width - adjusted for 8-inch tablets with high DPI
+  // Enhanced detection considering both width and screen density
+  // Xiaomi Tab 8: 1152x584 with 2.5x density = physical 8-inch tablet
+  // Desktop in Replit: 1301x787 with 1x density = should stay desktop
+  
   if (width < 640) {
     detectedDeviceType = 'phone';
     isPhone = true;
     console.log(`📱 PHONE detected (width < 640px)`);
-  } else if (width >= 640 && width < 1280) {
-    // Expanded range to catch 8-inch tablets with high DPI like Xiaomi Tab 8
+  } else if (width >= 640 && width <= 1200 && screenDensity >= 2.0) {
+    // High-DPI small tablets (8-10 inch) like Xiaomi Tab 8
     detectedDeviceType = 'small-tablet';
     isSmallTablet = true;
-    console.log(`📱 SMALL TABLET detected (640px ≤ width < 1280px) - NAVIGATION SHOULD COLLAPSE`);
-    console.log(`📱 This includes 8-10 inch tablets with high pixel density`);
-  } else if (width >= 1280 && width < 1600) {
+    console.log(`📱 SMALL TABLET detected (640-1200px + high DPI ≥2.0x) - NAVIGATION SHOULD COLLAPSE`);
+    console.log(`📱 Physical size: 8-10 inch tablet with high pixel density`);
+  } else if (width >= 640 && width < 1024) {
+    // Standard resolution small tablets
+    detectedDeviceType = 'small-tablet';
+    isSmallTablet = true;
+    console.log(`📱 SMALL TABLET detected (640-1024px standard DPI) - NAVIGATION SHOULD COLLAPSE`);
+  } else if (width >= 1024 && width < 1400) {
     detectedDeviceType = 'tablet';
     isTabletDevice = true;
-    console.log(`📱 LARGE TABLET detected (1280px ≤ width < 1600px)`);
+    console.log(`📱 LARGE TABLET detected (1024-1400px)`);
   } else {
     detectedDeviceType = 'desktop';
     isDesktopDevice = true;
-    console.log(`💻 DESKTOP detected (width ≥ 1600px)`);
+    console.log(`💻 DESKTOP detected (width ≥ 1400px)`);
   }
   
   let deviceName = `${detectedDeviceType} (${width}x${height})`;
