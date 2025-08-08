@@ -3035,12 +3035,12 @@ export class DatabaseStorage implements IStorage {
       const [expired] = await db
         .select({ count: sql<number>`count(*)` })
         .from(companySubscriptions)
-        .where(eq(companySubscriptions.status, 'expired'));
+        .where(eq(companySubscriptions.status, 'cancelled'));
       
       const [inactive] = await db
         .select({ count: sql<number>`count(*)` })
         .from(companySubscriptions)
-        .where(eq(companySubscriptions.status, 'inactive'));
+        .where(eq(companySubscriptions.status, 'suspended'));
       
       const [total] = await db
         .select({ count: sql<number>`count(*)` })
@@ -3115,7 +3115,7 @@ export class DatabaseStorage implements IStorage {
         description: `${sub.companyName || 'Unknown Company'} - Subscription ${sub.status}`,
         timestamp: (sub.updatedAt || sub.createdAt || new Date()).toISOString(),
         status: sub.status === 'active' ? 'success' as const :
-                sub.status === 'expired' ? 'error' as const :
+                sub.status === 'cancelled' ? 'error' as const :
                 'warning' as const,
       }));
       
@@ -3142,16 +3142,16 @@ export class DatabaseStorage implements IStorage {
         .select({
           serviceId: externalServiceSubscriptions.serviceName,
           activatedAt: externalServiceSubscriptions.createdAt,
-          autoRenewal: externalServiceSubscriptions.autoRenewEnabled,
+          autoRenewal: sql<boolean>`false`,
           usagePercentage: sql<number>`
             CASE 
-              WHEN COALESCE(${externalServiceSubscriptions.creditsLimit}, 0) > 0 
-              THEN ((COALESCE(${externalServiceSubscriptions.creditsLimit}, 0) - COALESCE(${externalServiceSubscriptions.creditsRemaining}, 0))::decimal / COALESCE(${externalServiceSubscriptions.creditsLimit}, 1)::decimal * 100)
+              WHEN COALESCE(${externalServiceSubscriptions.creditsRemaining}, 0) > 0 
+              THEN (COALESCE(${externalServiceSubscriptions.usageThisPeriod}, 0)::decimal / 100)
               ELSE 0 
             END
           `,
-          usedAmount: sql<number>`(COALESCE(${externalServiceSubscriptions.creditsLimit}, 0) - COALESCE(${externalServiceSubscriptions.creditsRemaining}, 0))`,
-          monthlyLimit: externalServiceSubscriptions.creditsLimit,
+          usedAmount: sql<number>`COALESCE(${externalServiceSubscriptions.usageThisPeriod}, 0)`,
+          monthlyLimit: sql<number>`100`,
         })
         .from(externalServiceSubscriptions)
         .where(
