@@ -2191,7 +2191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const config = await storage.upsertCompanyBillingConfig(companyId);
+      const config = await storage.upsertCompanyBillingConfig(companyId, configData);
       res.json(config);
     } catch (error) {
       console.error("Error updating billing config:", error);
@@ -2763,14 +2763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentDate: new Date(),
       };
 
-      const transaction = await subscriptionService.createSubscriptionTransaction({
-        ...transactionData,
-        companyId: "temp",
-        subscriptionPlanId: transactionData.subscriptionPlan,
-        billingCycle: "monthly",
-        subscriptionStartDate: new Date(),
-        amount: transactionData.amount.toString()
-      });
+      const transaction = await subscriptionService.createSubscriptionTransaction(transactionData);
       
       // Process onboarding
       const { company, onboarding } = await subscriptionService.processCompanyOnboarding(
@@ -4335,7 +4328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Verify pet exists and user has access
       const pet = await storage.getPetById(petId);
-      if (!pet || (pet as any).tenantId !== tenantId) {
+      if (!pet || pet.tenantId !== tenantId) {
         return res.status(404).json({ error: "Pet not found" });
       }
 
@@ -4441,7 +4434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db.update(tempLinks)
         .set({ 
           metadata: { 
-            ...(result.link?.metadata || {}), 
+            ...result.link!.metadata, 
             fileUrl,
             uploadedAt: new Date().toISOString()
           } 
@@ -4524,7 +4517,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Link user to company
-      await storage.createUserCompany(adminUser.id, company.id);
+      await storage.createUserCompany({
+        userId: adminUser.id,
+        companyId: company.id,
+        role: "admin",
+        isActive: true
+      });
 
       // Create company subscription
       const subscription = await storage.createCompanySubscription({
@@ -5085,7 +5083,7 @@ This password expires in 24 hours.
       const { driverId } = req.params;
       
       // Get driver info (assuming driver is a staff member)
-      const drivers = await storage.getStaff('', driverId); // This should get staff for that tenant
+      const drivers = await storage.getStaff(driverId); // This should get staff for that tenant
       const driver = drivers.find((s: any) => s.id === driverId);
       if (!driver) {
         return res.status(404).json({ message: "Driver not found" });
@@ -5134,7 +5132,7 @@ This password expires in 24 hours.
     try {
       const { routeId, format } = req.params;
       
-      const routes = await storage.getDeliveryRoutes('', new Date().toISOString().split('T')[0]);
+      const routes = await storage.getDeliveryRoutes('all', new Date().toISOString().split('T')[0]);
       const route = routes.find((r: any) => r.id === routeId);
       if (!route) {
         return res.status(404).json({ message: "Route not found" });
@@ -5157,7 +5155,7 @@ This password expires in 24 hours.
 
       if (format === 'waze') {
         // Generate Waze-compatible URLs
-        const wazeUrls = waypoints.map((wp: any) => 
+        const wazeUrls = waypoints.map(wp => 
           `https://waze.com/ul?navigate=yes&ll=${wp.lat},${wp.lng}&address=${encodeURIComponent(wp.address)}`
         );
         res.json({ 
@@ -5169,7 +5167,7 @@ This password expires in 24 hours.
         });
       } else if (format === 'googlemaps') {
         // Generate Google Maps URLs
-        const googleUrls = waypoints.map((wp: any) => 
+        const googleUrls = waypoints.map(wp => 
           `https://www.google.com/maps/dir/?api=1&destination=${wp.lat},${wp.lng}&destination_place_id=${encodeURIComponent(wp.address)}`
         );
         res.json({ 
@@ -5218,7 +5216,8 @@ This password expires in 24 hours.
       
       const updatedAppointment = await storage.updateAppointment(appointmentId, {
         status: 'completed',
-        notes: notes || `Completed by driver ${driverId}`
+        notes: notes || `Completed by driver ${driverId}`,
+        completedAt: completedAt || new Date().toISOString()
       });
 
       res.json({
@@ -5237,7 +5236,7 @@ This password expires in 24 hours.
       const { driverId, tenantId } = req.params;
       const today = new Date().toISOString().split('T')[0];
       
-      const routes = await storage.getDeliveryRoutes('', today);
+      const routes = await storage.getDeliveryRoutes(tenantId, today);
       const driverRoutes = routes.filter((route: any) => route.driverId === driverId);
       const appointments = await storage.getAppointments(tenantId, today);
       const driverAppointments = appointments.filter((apt: any) => 
