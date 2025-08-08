@@ -1186,7 +1186,7 @@ export default function ReceiptTemplatesAdmin() {
                 </div>
 
                 <div>
-                  <Label>Tipo Factura *</Label>
+                  <Label>Publicar a nivel: *</Label>
                   <Select value={facturaType} onValueChange={(value: "empresarial" | "clinica") => setFacturaType(value)}>
                     <SelectTrigger className="mt-1">
                       <SelectValue />
@@ -1197,24 +1197,6 @@ export default function ReceiptTemplatesAdmin() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                {facturaType === "empresarial" && (
-                  <div>
-                    <Label htmlFor="companySelect">Empresa *</Label>
-                    <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Selecciona una empresa" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {companies.map((company) => (
-                          <SelectItem key={company.id} value={company.id}>
-                            {company.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
 
                 {facturaType === "clinica" && (
                   <>
