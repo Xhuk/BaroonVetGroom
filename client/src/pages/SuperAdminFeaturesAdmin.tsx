@@ -144,7 +144,7 @@ function SuperAdminFeaturesAdmin() {
       
       return { isValid: true, parsedData: parsedJson };
     } catch (error) {
-      return { isValid: false, error: `JSON inválido: ${error.message}` };
+      return { isValid: false, error: `JSON inválido: ${error instanceof Error ? error.message : 'Error desconocido'}` };
     }
   };
 
@@ -159,7 +159,7 @@ function SuperAdminFeaturesAdmin() {
     
     const validation = validateFeaturesJson(value);
     if (!validation.isValid) {
-      setJsonValidationError(validation.error);
+      setJsonValidationError(validation.error || null);
     } else {
       setJsonValidationError(null);
     }
@@ -312,7 +312,7 @@ function SuperAdminFeaturesAdmin() {
       return;
     }
 
-    importFeatures.mutate(validation.parsedData);
+    importFeatures.mutate(validation.parsedData || []);
   };
 
   const handleCreateFeature = () => {
@@ -513,28 +513,28 @@ function SuperAdminFeaturesAdmin() {
                       <div>
                         <Label htmlFor="featureId" className="text-gray-300">ID Único</Label>
                         <Input
-                        id="featureId"
-                        value={editingFeature?.id || newFeatureForm.id}
-                        onChange={(e) => editingFeature ? 
-                          setEditingFeature({...editingFeature, id: e.target.value}) : 
-                          setNewFeatureForm({...newFeatureForm, id: e.target.value})
-                        }
-                        className="bg-gray-700 border-gray-600 text-white"
-                        placeholder="basic_appointments, premium_support..."
-                        disabled={!!editingFeature}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="featureName" className="text-gray-300">Nombre (Inglés)</Label>
-                      <Input
-                        id="featureName"
-                        value={editingFeature?.name || newFeatureForm.name}
-                        onChange={(e) => editingFeature ? 
-                          setEditingFeature({...editingFeature, name: e.target.value}) : 
-                          setNewFeatureForm({...newFeatureForm, name: e.target.value})
-                        }
-                        className="bg-gray-700 border-gray-600 text-white"
-                        placeholder="Basic Appointments"
+                          id="featureId"
+                          value={editingFeature?.id || newFeatureForm.id}
+                          onChange={(e) => editingFeature ? 
+                            setEditingFeature({...editingFeature, id: e.target.value}) : 
+                            setNewFeatureForm({...newFeatureForm, id: e.target.value})
+                          }
+                          className="bg-gray-700 border-gray-600 text-white"
+                          placeholder="basic_appointments, premium_support..."
+                          disabled={!!editingFeature}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="featureName" className="text-gray-300">Nombre (Inglés)</Label>
+                        <Input
+                          id="featureName"
+                          value={editingFeature?.name || newFeatureForm.name}
+                          onChange={(e) => editingFeature ? 
+                            setEditingFeature({...editingFeature, name: e.target.value}) : 
+                            setNewFeatureForm({...newFeatureForm, name: e.target.value})
+                          }
+                          className="bg-gray-700 border-gray-600 text-white"
+                          placeholder="Basic Appointments"
                         />
                       </div>
                     </div>
@@ -543,13 +543,13 @@ function SuperAdminFeaturesAdmin() {
                       <div>
                         <Label htmlFor="spanishName" className="text-gray-300">Nombre (Español)</Label>
                         <Input
-                        id="spanishName"
-                        value={editingFeature?.spanishName || newFeatureForm.spanishName}
-                        onChange={(e) => editingFeature ? 
-                          setEditingFeature({...editingFeature, spanishName: e.target.value}) : 
-                          setNewFeatureForm({...newFeatureForm, spanishName: e.target.value})
-                        }
-                        className="bg-gray-700 border-gray-600 text-white"
+                          id="spanishName"
+                          value={editingFeature?.spanishName || newFeatureForm.spanishName}
+                          onChange={(e) => editingFeature ? 
+                            setEditingFeature({...editingFeature, spanishName: e.target.value}) : 
+                            setNewFeatureForm({...newFeatureForm, spanishName: e.target.value})
+                          }
+                          className="bg-gray-700 border-gray-600 text-white"
                           placeholder="Citas Básicas"
                         />
                       </div>
@@ -665,7 +665,6 @@ function SuperAdminFeaturesAdmin() {
                       </div>
                     </div>
                   </div>
-                  </div>
                   
                   <div className="flex justify-end gap-2 pt-4">
                     <Button 
@@ -691,12 +690,13 @@ function SuperAdminFeaturesAdmin() {
                   </div>
                 </DialogContent>
             </Dialog>
+            </div>
           </div>
         </div>
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features?.map((feature: Feature) => (
+          {(features as Feature[])?.map((feature: Feature) => (
             <Card key={feature.id} className="bg-gray-800 border-gray-700 hover:border-purple-500 transition-all duration-200">
               <CardHeader>
                 <div className="flex justify-between items-start">
@@ -767,7 +767,7 @@ function SuperAdminFeaturesAdmin() {
           ))}
         </div>
 
-        {(!features || features.length === 0) && !isLoading && (
+        {(!features || (features as Feature[])?.length === 0) && !isLoading && (
           <div className="text-center py-12">
             <Settings className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-400 mb-2">No hay características</h3>
