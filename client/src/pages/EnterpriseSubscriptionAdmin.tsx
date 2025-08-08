@@ -78,32 +78,37 @@ function EnterpriseSubscriptionAdmin() {
     isActive: true
   });
 
-  // Feature definitions for subscription plans
+  // Definiciones de características para planes de suscripción
   const availableFeatures = {
-    // VetSites Management
-    'X_vetsites': 'The number of independent clinic dashboards (VetSites) the tenant can manage',
+    // Gestión de VetSites
+    '1_vetsite': 'Acceso a 1 clínica veterinaria',
+    '3_vetsites': 'Acceso a hasta 3 clínicas veterinarias',
+    '5_vetsites': 'Acceso a hasta 5 clínicas veterinarias',
+    '7_vetsites': 'Acceso a hasta 7 clínicas veterinarias',
+    '10_vetsites': 'Acceso a hasta 10 clínicas veterinarias',
+    'unlimited_vetsites': 'Clínicas veterinarias ilimitadas',
     
-    // Appointment Features
-    'basic_appointments': 'Only simple appointment booking (no staff/room/resource allocation or calendar sync)',
-    'unlimited_appointments': 'No limit on appointments per clinic, includes full scheduling features',
+    // Características de Citas
+    'basic_appointments': 'Sistema básico de reservas (sin asignación de personal/recursos)',
+    'unlimited_appointments': 'Citas ilimitadas por clínica con programación completa',
     
-    // Reporting Features
-    'basic_reporting': 'Access to basic reports: clients, appointments, sales',
-    'advanced_reporting': 'Access to detailed analytics: services usage, income tracking, clinic performance, etc.',
+    // Características de Reportes
+    'basic_reporting': 'Acceso a reportes básicos: clientes, citas, ventas',
+    'advanced_reporting': 'Analíticas detalladas: uso de servicios, seguimiento de ingresos, rendimiento de clínica',
     
-    // Support Features
-    'email_support': 'Support provided via email (standard response time)',
-    'priority_support': 'Faster response time via email or WhatsApp (premium queue)',
-    'phone_support': 'Phone support line included',
-    'dedicated_support': 'Assigned success manager or premium onboarding/training',
+    // Características de Soporte
+    'email_support': 'Soporte proporcionado por correo electrónico (tiempo de respuesta estándar)',
+    'priority_support': 'Tiempo de respuesta más rápido por correo o WhatsApp (cola premium)',
+    'phone_support': 'Línea de soporte telefónico incluida',
+    'dedicated_support': 'Gerente de éxito asignado o capacitación premium',
     
-    // Integration Features
-    'whatsapp_integration': 'Ability to send appointment reminders, confirmations, follow-ups via WhatsApp',
-    'grooming_module': 'Enables grooming-specific features: bath scheduling, notes, pet grooming history, etc.',
-    'delivery_tracking': 'Tracks medicine/product deliveries from clinic to customer',
-    'api_access': 'Enables access to public API for external integrations',
-    'custom_integrations': 'Includes integration service for ERP/CRM/payments per enterprise use case',
-    'multi_location_dashboard': 'Centralized dashboard to monitor all clinics from one parent account (for chains/franchises)'
+    // Características de Integración
+    'whatsapp_integration': 'Envío de recordatorios, confirmaciones y seguimientos de citas por WhatsApp',
+    'grooming_module': 'Características específicas de peluquería: programación de baños, notas, historial',
+    'delivery_tracking': 'Seguimiento de entregas de medicinas/productos desde clínica hasta cliente',
+    'api_access': 'Acceso a API pública para integraciones externas',
+    'custom_integrations': 'Servicio de integración para ERP/CRM/pagos por caso empresarial',
+    'multi_location_dashboard': 'Panel centralizado para monitorear todas las clínicas (para cadenas/franquicias)'
   };
 
   // Fastload optimization: Fetch subscription plans with caching
@@ -289,8 +294,8 @@ function EnterpriseSubscriptionAdmin() {
   "monthly_multiplier": 1.5,
   "plans": [
     {
-      "name": "Basic",
-      "description": "Perfect for single clinic operations",
+      "name": "Básico",
+      "description": "Perfecto para operaciones de clínica única",
       "status": "Activo",
       "monthly_price_mxn": 299,
       "yearly_price_mxn": 2990,
@@ -301,6 +306,22 @@ function EnterpriseSubscriptionAdmin() {
         "basic_reporting",
         "email_support",
         "whatsapp_integration"
+      ]
+    },
+    {
+      "name": "Mediano",
+      "description": "Ideal para prácticas veterinarias en crecimiento",
+      "status": "Activo",
+      "monthly_price_mxn": 699,
+      "yearly_price_mxn": 6990,
+      "max_vetsites": 3,
+      "features": [
+        "3_vetsites",
+        "unlimited_appointments",
+        "advanced_reporting",
+        "priority_support",
+        "whatsapp_integration",
+        "grooming_module"
       ]
     }
   ]
