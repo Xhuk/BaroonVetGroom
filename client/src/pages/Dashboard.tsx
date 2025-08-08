@@ -115,8 +115,8 @@ export default function Dashboard() {
     <ResponsiveLayout>
       {/* Main Content */}
       <div className="pb-40">
-        {/* Action Buttons - Positioned at 94px from top */}
-        <div className="absolute top-[94px] left-0 right-0 flex gap-4 mb-6 px-6 z-10">
+        {/* Action Buttons - Positioned at 94px from top, 288px from left */}
+        <div className="absolute top-[94px] left-[288px] flex gap-4 mb-6 px-6 z-10">
           <Link href="/booking">
             <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
               <Phone className="w-4 h-4 mr-2" />
