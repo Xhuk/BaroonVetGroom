@@ -470,6 +470,11 @@ html.dark select option {
 }
 
 @layer components {
+  /* Force header border to stay visible */
+  .force-header-border {
+    border-bottom: 2px solid hsl(20, 5.9%, 78%) !important;
+  }
+  
   .calendar-grid {
     display: grid;
     grid-template-columns: 80px repeat(7, 1fr);

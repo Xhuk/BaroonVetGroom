@@ -61,7 +61,7 @@ export function Header() {
   };
 
   return (
-    <header className="bg-card shadow-sm border-b-2 border-border px-6 py-4" style={{borderBottomColor: 'hsl(20, 5.9%, 78%)'}}>
+    <header className="bg-card shadow-sm px-6 py-4 force-header-border">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-3">
