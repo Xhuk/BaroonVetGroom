@@ -142,7 +142,7 @@ export function SimpleSlotBookingDialog({
           requestedTime: selectedTime,
           status: "scheduled",
           logistics: "",
-          notes: `Servicios: ${selectedServices.map(s => s.name).join(", ")}. Total: $${totalPrice}`,
+          notes: `Servicios: ${(selectedServices || []).map(s => s?.name || 'Unknown').join(", ")}. Total: $${totalPrice}`,
         };
 
         const appointment = await apiRequest(`/api/appointments/${tenantId}`, "POST", appointmentData);

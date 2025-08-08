@@ -312,11 +312,11 @@ export default function ReceiptTemplatesAdmin() {
                 </tr>
               </thead>
               <tbody>
-                ${hardcodedData.articulos.map((articulo, index) => `
+                ${(hardcodedData.articulos || []).map((articulo, index) => `
                 <tr style="border-bottom: 1px solid #e5e7eb; ${index % 2 === 1 ? 'background: #f9fafb;' : ''}">
-                  <td style="padding: 10px;">${articulo.servicio}</td>
+                  <td style="padding: 10px;">${articulo?.servicio || "N/A"}</td>
                   <td style="padding: 10px; text-align: center;">1</td>
-                  <td style="padding: 10px; text-align: right;">${articulo.precio}</td>
+                  <td style="padding: 10px; text-align: right;">${articulo?.precio || "$0.00"}</td>
                 </tr>`).join('')}
                 <tr style="background: #eff6ff; border: 2px solid ${getColorValue(templateConfig.colorScheme)};">
                   <td style="padding: 12px; font-weight: bold; color: ${getColorValue(templateConfig.colorScheme)};">TOTAL</td>
@@ -400,11 +400,11 @@ export default function ReceiptTemplatesAdmin() {
                 </tr>
               </thead>
               <tbody>
-                ${hardcodedData.articulos.map((articulo, index) => `
+                ${(hardcodedData.articulos || []).map((articulo, index) => `
                 <tr style="border-bottom: 1px solid #e5e7eb; ${index % 2 === 1 ? 'background: #f9fafb;' : ''}">
-                  <td style="padding: 10px;">${articulo.servicio}</td>
+                  <td style="padding: 10px;">${articulo?.servicio || "N/A"}</td>
                   <td style="padding: 10px; text-align: center;">1</td>
-                  <td style="padding: 10px; text-align: right;">${articulo.precio}</td>
+                  <td style="padding: 10px; text-align: right;">${articulo?.precio || "$0.00"}</td>
                 </tr>`).join('')}
                 <tr style="background: #eff6ff; border: 2px solid ${getColorValue(templateConfig.colorScheme)};">
                   <td style="padding: 12px; font-weight: bold; color: ${getColorValue(templateConfig.colorScheme)};">TOTAL</td>

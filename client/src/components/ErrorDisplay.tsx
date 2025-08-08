@@ -60,7 +60,7 @@ Stack Trace:
 ${errorDetails.stack}
 
 Additional Information:
-${Object.entries(additionalInfo).map(([key, value]) => 
+${Object.entries(additionalInfo || {}).map(([key, value]) => 
   `- ${key}: ${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}`
 ).join('\n')}
 
