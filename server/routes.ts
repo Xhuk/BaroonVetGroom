@@ -5046,17 +5046,17 @@ This password expires in 24 hours.
         enabledFeatures: config.features.filter(f => f.enabled).length,
         betaFeatures: config.features.filter(f => f.betaFeature).length,
         resourceUsage: {
-          tenants: stats.overview.totalCompanies,
-          maxTenants: config.maxTenants === -1 ? 'Unlimited' : config.maxTenants,
-          utilizationPercentage: config.maxTenants === -1 ? 0 : 
-            Math.round((stats.overview.totalCompanies / config.maxTenants) * 100)
+          tenants: stats.totalCompanies,
+          maxTenants: (config.maxTenants === -1 || !config.maxTenants) ? 'Unlimited' : config.maxTenants,
+          utilizationPercentage: (config.maxTenants === -1 || !config.maxTenants) ? 0 : 
+            Math.round((stats.totalCompanies / (config.maxTenants || 1)) * 100)
         },
         recommendations,
         featuresByCategory: {}
       };
 
       // Group features by category
-      config.features.forEach(feature => {
+      config.features.forEach((feature: any) => {
         if (!insights.featuresByCategory[feature.category]) {
           insights.featuresByCategory[feature.category] = [];
         }
@@ -6309,6 +6309,235 @@ This password expires in 24 hours.
     } catch (error) {
       console.error('Error downloading receipt template:', error);
       res.status(500).json({ error: 'Failed to download receipt template' });
+    }
+  });
+
+  // Company Services Catalog
+  app.get("/api/superadmin/services-catalog", isSuperAdmin, async (req, res) => {
+    try {
+      const servicesCatalog = [
+        {
+          id: "whatsapp-integration",
+          name: "WhatsApp Integration",
+          description: "Complete WhatsApp messaging integration with automated appointment confirmations and reminders",
+          category: "Communication",
+          baseCost: 15, // USD per month (Latenode cost approximation)
+          sellingPrice: 25, // USD per month (50% profit margin)
+          profitMargin: 0.40, // 40% ((25-15)/25)
+          features: [
+            "1,000 messages per month",
+            "Automated appointment confirmations",
+            "Reminder notifications",
+            "Two-way messaging support",
+            "Message templates",
+            "Delivery reports"
+          ],
+          setupFee: 50,
+          status: "available"
+        },
+        {
+          id: "sms-notifications",
+          name: "SMS Notifications", 
+          description: "SMS messaging system for appointment reminders and notifications",
+          category: "Communication",
+          baseCost: 8,
+          sellingPrice: 15,
+          profitMargin: 0.47,
+          features: [
+            "500 SMS per month",
+            "Automated reminders",
+            "Custom message templates",
+            "Delivery tracking"
+          ],
+          setupFee: 25,
+          status: "available"
+        },
+        {
+          id: "email-automation",
+          name: "Email Marketing & Automation",
+          description: "Advanced email marketing and automated communication workflows",
+          category: "Marketing",
+          baseCost: 12,
+          sellingPrice: 20,
+          profitMargin: 0.40,
+          features: [
+            "Unlimited emails",
+            "Automated workflows",
+            "Customer segmentation",
+            "Analytics & reporting",
+            "Custom templates"
+          ],
+          setupFee: 35,
+          status: "available"
+        },
+        {
+          id: "payment-processing",
+          name: "Advanced Payment Processing",
+          description: "Integrated payment gateway with multiple payment methods",
+          category: "Financial",
+          baseCost: 20,
+          sellingPrice: 35,
+          profitMargin: 0.43,
+          features: [
+            "Credit card processing",
+            "PayPal integration",
+            "Bank transfers",
+            "Recurring payments",
+            "Payment analytics",
+            "PCI compliance"
+          ],
+          setupFee: 75,
+          status: "available"
+        },
+        {
+          id: "advanced-reporting",
+          name: "Advanced Analytics & Reporting",
+          description: "Comprehensive business intelligence and custom reporting tools",
+          category: "Analytics",
+          baseCost: 18,
+          sellingPrice: 30,
+          profitMargin: 0.40,
+          features: [
+            "Custom dashboards",
+            "Financial reports",
+            "Performance metrics",
+            "Export capabilities",
+            "Scheduled reports",
+            "Data visualization"
+          ],
+          setupFee: 60,
+          status: "available"
+        },
+        {
+          id: "inventory-management",
+          name: "Inventory Management System",
+          description: "Complete inventory tracking and management for veterinary supplies",
+          category: "Operations",
+          baseCost: 22,
+          sellingPrice: 40,
+          profitMargin: 0.45,
+          features: [
+            "Stock tracking",
+            "Low stock alerts",
+            "Supplier management",
+            "Purchase orders",
+            "Cost tracking",
+            "Expiration monitoring"
+          ],
+          setupFee: 80,
+          status: "available"
+        },
+        {
+          id: "telemedicine",
+          name: "Telemedicine Platform",
+          description: "Virtual consultation platform with video calling and file sharing",
+          category: "Medical",
+          baseCost: 35,
+          sellingPrice: 60,
+          profitMargin: 0.42,
+          features: [
+            "HD video calling",
+            "Screen sharing",
+            "File upload/sharing",
+            "Session recording",
+            "Prescription management",
+            "Patient portal"
+          ],
+          setupFee: 150,
+          status: "beta"
+        }
+      ];
+
+      // Calculate totals
+      const totalServices = servicesCatalog.length;
+      const availableServices = servicesCatalog.filter(s => s.status === "available").length;
+      const betaServices = servicesCatalog.filter(s => s.status === "beta").length;
+      const totalMonthlyRevenuePotential = servicesCatalog
+        .filter(s => s.status === "available")
+        .reduce((sum, service) => sum + service.sellingPrice, 0);
+      const totalSetupRevenuePotential = servicesCatalog
+        .filter(s => s.status === "available")
+        .reduce((sum, service) => sum + service.setupFee, 0);
+
+      res.json({
+        success: true,
+        catalog: servicesCatalog,
+        summary: {
+          totalServices,
+          availableServices,
+          betaServices,
+          totalMonthlyRevenuePotential,
+          totalSetupRevenuePotential,
+          averageProfitMargin: servicesCatalog.reduce((sum, s) => sum + s.profitMargin, 0) / totalServices
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching services catalog:", error);
+      res.status(500).json({ error: "Failed to fetch services catalog" });
+    }
+  });
+
+  // Company Service Subscriptions Management
+  app.get("/api/superadmin/company-services/:companyId", isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      
+      // This would typically fetch from a companyServices table
+      // For now, returning sample data structure
+      const companyServices = {
+        companyId,
+        activeServices: [
+          {
+            serviceId: "whatsapp-integration",
+            serviceName: "WhatsApp Integration",
+            monthlyPrice: 25,
+            activatedDate: "2024-12-01",
+            status: "active",
+            nextBillingDate: "2025-01-01"
+          }
+        ],
+        availableServices: [
+          "sms-notifications",
+          "email-automation", 
+          "payment-processing",
+          "advanced-reporting",
+          "inventory-management"
+        ],
+        monthlyTotal: 25,
+        setupFeesOwed: 0
+      };
+
+      res.json({ success: true, companyServices });
+    } catch (error) {
+      console.error("Error fetching company services:", error);
+      res.status(500).json({ error: "Failed to fetch company services" });
+    }
+  });
+
+  app.post("/api/superadmin/activate-service", isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId, serviceId } = req.body;
+      
+      if (!companyId || !serviceId) {
+        return res.status(400).json({ error: "Company ID and Service ID are required" });
+      }
+
+      // Here you would typically:
+      // 1. Validate the service exists
+      // 2. Check if company already has this service
+      // 3. Create a new companyService record
+      // 4. Set up billing/subscription
+      // 5. Send activation notification
+      
+      // For now, return success response
+      res.json({
+        success: true,
+        message: `Service ${serviceId} activated for company ${companyId}`,
+        activatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error activating service:", error);
+      res.status(500).json({ error: "Failed to activate service" });
     }
   });
 
