@@ -2191,7 +2191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const config = await storage.upsertCompanyBillingConfig(companyId, configData);
+      const config = await storage.updateCompanyBillingConfig(companyId, configData);
       res.json(config);
     } catch (error) {
       console.error("Error updating billing config:", error);
@@ -5057,10 +5057,10 @@ This password expires in 24 hours.
 
       // Group features by category
       config.features.forEach((feature: any) => {
-        if (!(insights.featuresByCategory as any)[feature.category]) {
-          (insights.featuresByCategory as any)[feature.category] = [];
+        if (!insights.featuresByCategory[feature.category]) {
+          insights.featuresByCategory[feature.category] = [];
         }
-        (insights.featuresByCategory as any)[feature.category].push(feature);
+        insights.featuresByCategory[feature.category].push(feature);
       });
       
       res.json({
@@ -5735,8 +5735,8 @@ This password expires in 24 hours.
           
           if (existingFeature) {
             // Check if the feature is used in any subscription plan
-            const subscriptionPlans = await storage.getSubscriptionPlans();
-            const isFeatureUsed = subscriptionPlans.some((plan: any) => 
+            const subscriptionPlans = await storage.getAllSubscriptionPlans();
+            const isFeatureUsed = subscriptionPlans.some(plan => 
               plan.features && plan.features.includes(featureConfig.key)
             );
             
@@ -5757,7 +5757,7 @@ This password expires in 24 hours.
           // await storage.upsertFeature(featureData);
 
         } catch (featureError: any) {
-          importResults.errors.push(`Feature '${(featureConfig as any).key}': ${featureError.message}`);
+          importResults.errors.push(`Feature '${featureConfig.key}': ${featureError.message}`);
         }
       }
 
@@ -5799,7 +5799,7 @@ This password expires in 24 hours.
           return {
             id: company.id,
             name: company.name,
-            email: (company as any).email || "unknown@email.com",
+            email: company.email,
             subscriptionPlan: plan?.displayName || 'Sin Plan',
             subscriptionStatus: subscription?.status || 'inactive',
             vetsitesUsed: tenants.length,
@@ -5826,6 +5826,7 @@ This password expires in 24 hours.
       // Create company
       const company = await storage.createCompany({
         name,
+        email,
         subscriptionStatus: 'trial',
         subscriptionPlan: 'trial'
       });
@@ -6034,7 +6035,7 @@ This password expires in 24 hours.
         let errorMessage = error.message || "Unknown email provider error";
         let helpText = "";
         
-        if ((error as any).name === 'validation_error' && (error as any).error?.includes('domain is not verified')) {
+        if (error.name === 'validation_error' && error.error?.includes('domain is not verified')) {
           errorMessage = "Domain verification required";
           helpText = "Please verify your domain at https://resend.com/domains or use a verified domain like your-domain@resend.dev";
         }
@@ -7115,7 +7116,7 @@ This password expires in 24 hours.
       
       if (!usageData) {
         // Return default usage data if service is not active
-        const serviceDefaults: Record<string, { limit: number | null }> = {
+        const serviceDefaults = {
           "whatsapp-integration": { limit: 1000 },
           "sms-notifications": { limit: 500 },
           "email-automation": { limit: null } // Unlimited
