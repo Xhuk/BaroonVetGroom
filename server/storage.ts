@@ -43,6 +43,7 @@ import {
   subscriptionPromotions,
   emailConfig,
   emailLogs,
+  companyOnboarding,
   taxConfiguration,
   pendingInvoices,
   invoiceLineItems,
