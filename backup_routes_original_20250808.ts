@@ -4319,7 +4319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/temp-links/qr/:petId", isAuthenticated, async (req, res) => {
     try {
       const { petId } = req.params;
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = req.user?.claims?.sub;
       const { tenantId } = req.body;
       
       if (!userId || !tenantId) {
@@ -4358,7 +4358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create temporary link for file sharing
   app.post("/api/temp-links/file-share", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = req.user?.claims?.sub;
       const { tenantId, expirationHours = 24, maxAccess = 10 } = req.body;
       
       if (!userId || !tenantId) {
@@ -4608,8 +4608,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (extendTrialDays) {
         const currentSub = await storage.getCompanySubscription(companyId);
-        if (currentSub?.trialEndsAt) {
-          updates.trialEndsAt = new Date(currentSub.trialEndsAt.getTime() + extendTrialDays * 24 * 60 * 60 * 1000);
+        if (currentSub?.trialEndDate) {
+          updates.trialEndDate = new Date(currentSub.trialEndDate.getTime() + extendTrialDays * 24 * 60 * 60 * 1000);
         }
       }
 
@@ -4652,16 +4652,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentUsage = {
         tenants: tenants.length,
         staff: staff.length,
-        maxTenants: plan?.maxTenants || 1,
-        maxStaff: 50
+        maxTenants: subscription.maxTenants,
+        maxStaff: subscription.maxStaff || 50
       };
 
       const trialInfo = subscription.status === 'trial' ? {
         isOnTrial: true,
-        trialStartDate: subscription.currentPeriodStart,
-        trialEndDate: subscription.trialEndsAt,
-        daysRemaining: subscription.trialEndsAt ? 
-          Math.max(0, Math.ceil((subscription.trialEndsAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000))) : 0
+        trialStartDate: subscription.trialStartDate,
+        trialEndDate: subscription.trialEndDate,
+        daysRemaining: subscription.trialEndDate ? 
+          Math.max(0, Math.ceil((subscription.trialEndDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000))) : 0
       } : { isOnTrial: false };
 
       res.json({
@@ -4680,8 +4680,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             monthlyPrice: plan.monthlyPrice
           } : null,
           limits: {
-            maxTenants: plan?.maxTenants || 1,
-            maxStaff: 50
+            maxTenants: subscription.maxTenants,
+            maxStaff: subscription.maxStaff,
+            customLimits: subscription.customLimits
           },
           usage: currentUsage,
           trial: trialInfo
