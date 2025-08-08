@@ -303,10 +303,10 @@ export default function SuperAdmin() {
                 <Link href="/superadmin/subscriptions" className="block">
                   <Button 
                     variant="outline" 
-                    className="w-full h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                    className="w-full h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200"
                   >
-                    <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-                    <span className="text-xs sm:text-sm font-medium text-center">Subscriptions</span>
+                    <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+                    <span className="text-xs sm:text-sm font-medium text-center">Planes Suscripción</span>
                   </Button>
                 </Link>
                 
