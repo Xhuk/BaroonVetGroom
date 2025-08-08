@@ -1,0 +1,4 @@
+// BACKUP: package.json before deployment analysis
+// Date: 2025-08-08 14:41:30
+// Context: User reports npm deployment always fails, analyzing causes
+// Purpose: Preserve current configuration before potential modifications

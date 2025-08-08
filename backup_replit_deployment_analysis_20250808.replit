@@ -1,0 +1,8 @@
+# BACKUP: .replit before deployment fix
+# Date: 2025-08-08 14:42:00
+# Issues identified:
+# 1. Multiple ports exposed (3000 and 5000) - deployment only supports single port
+# 2. esbuild failure during build process
+# 3. PORT mismatch between configuration and actual server
+
+# Current .replit content backed up for recovery if needed
