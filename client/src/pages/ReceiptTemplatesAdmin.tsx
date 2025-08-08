@@ -1164,13 +1164,26 @@ export default function ReceiptTemplatesAdmin() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="templateName">Nombre de la Plantilla *</Label>
-                  <Input
-                    id="templateName"
-                    value={templateName}
-                    onChange={(e) => setTemplateName(e.target.value)}
-                    placeholder="Ej: Recibo Profesional San Marcos"
-                    className="mt-1"
-                  />
+                  <Select value={templateName} onValueChange={setTemplateName}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecciona una clínica" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {companies
+                        .find(company => company.id === selectedCompanyId)
+                        ?.tenants?.map((tenant: any) => (
+                          <SelectItem key={tenant.id} value={tenant.name}>
+                            {tenant.name}
+                          </SelectItem>
+                        )) || 
+                        tenants?.map((tenant: any) => (
+                          <SelectItem key={tenant.id} value={tenant.name}>
+                            {tenant.name}
+                          </SelectItem>
+                        ))
+                      }
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
