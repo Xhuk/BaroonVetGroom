@@ -2966,24 +2966,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simple upload test route without middleware interference
-  app.post('/api/test-upload', async (req, res) => {
-    try {
-      console.log('TEST UPLOAD: Request body:', req.body);
-      const response = { 
-        uploadURL: "https://test-url.com/test",
-        success: true,
-        fileName: "test.png"
-      };
-      console.log('TEST UPLOAD: Sending response:', response);
-      res.setHeader('Content-Type', 'application/json');
-      res.status(200).send(JSON.stringify(response));
-    } catch (error) {
-      console.error('TEST UPLOAD: Error:', error);
-      res.status(500).json({ error: "Test failed" });
-    }
-  });
-
   // Object Storage Routes - simplified for logo uploads
   app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
     try {

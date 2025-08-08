@@ -489,7 +489,8 @@ export default function ReceiptTemplatesAdmin() {
       }
       
       console.log('Upload parameters:', uploadParams);
-      const response = await apiRequest('/api/test-upload', 'POST', uploadParams) as unknown as { 
+      const res = await apiRequest('/api/objects/upload', 'POST', uploadParams);
+      const response = await res.json() as { 
         uploadURL: string; 
         success: boolean; 
         fileName: string; 
