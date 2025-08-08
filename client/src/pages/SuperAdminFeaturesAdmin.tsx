@@ -215,11 +215,11 @@ function SuperAdminFeaturesAdmin() {
               <Button
                 onClick={() => navigate('/superadmin/subscriptions')}
                 variant="outline"
+                size="sm"
                 className="bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white"
                 data-testid="button-back"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver
+                <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
                 <h1 className="text-3xl font-bold text-white mb-2">
