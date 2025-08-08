@@ -206,6 +206,20 @@ export default function ReceiptTemplatesAdmin() {
     },
   });
 
+  // Check if selected template has logo placeholders
+  const templateHasLogo = (templateId: string) => {
+    const template = preDesignedTemplates.find(t => t.id === templateId);
+    if (!template?.htmlPreview) return false;
+    
+    // Check if template contains logo-related variables or placeholders
+    return template.htmlPreview.includes('logoUrl') || 
+           template.htmlPreview.includes('${logoUrl') ||
+           template.htmlPreview.includes('logo') ||
+           template.features?.some(feature => feature.toLowerCase().includes('logo'));
+  };
+
+  const selectedTemplateHasLogo = selectedTemplate ? templateHasLogo(selectedTemplate) : false;
+
   const preDesignedTemplates = [
     {
       id: "header-professional",
@@ -248,6 +262,88 @@ export default function ReceiptTemplatesAdmin() {
                 </div>
                 <p style="margin: 0; font-size: 14px;"># ${hardcodedData.numeroRecibo}</p>
               </div>`}
+            </div>
+          </div>
+          
+          <div style="padding: 24px;">
+            <!-- Client and Service Info -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+              <div>
+                <h3 style="color: ${getColorValue(templateConfig.colorScheme)}; margin: 0 0 12px; font-size: 16px; font-weight: 600;">Cliente</h3>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Nombre:</strong> ${hardcodedData.clienteNombre}</p>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Teléfono:</strong> ${hardcodedData.clienteTelefono}</p>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Mascota:</strong> ${hardcodedData.mascotaNombre}</p>
+              </div>
+              <div>
+                <h3 style="color: ${getColorValue(templateConfig.colorScheme)}; margin: 0 0 12px; font-size: 16px; font-weight: 600;">Información</h3>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Fecha:</strong> ${hardcodedData.fecha}</p>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Hora:</strong> ${hardcodedData.hora}</p>
+                <p style="margin: 4px 0; font-size: 14px;"><strong>Veterinario:</strong> ${hardcodedData.veterinario}</p>
+              </div>
+            </div>
+
+            <!-- Services Table -->
+            <table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb;">
+              <thead>
+                <tr style="background: ${getColorValue(templateConfig.colorScheme)}; color: white;">
+                  <th style="padding: 12px; text-align: left; font-weight: 600;">Servicio</th>
+                  <th style="padding: 12px; text-align: center; font-weight: 600;">Cant.</th>
+                  <th style="padding: 12px; text-align: right; font-weight: 600;">Precio</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${hardcodedData.articulos.map((articulo, index) => `
+                <tr style="border-bottom: 1px solid #e5e7eb; ${index % 2 === 1 ? 'background: #f9fafb;' : ''}">
+                  <td style="padding: 10px;">${articulo.servicio}</td>
+                  <td style="padding: 10px; text-align: center;">1</td>
+                  <td style="padding: 10px; text-align: right;">${articulo.precio}</td>
+                </tr>`).join('')}
+                <tr style="background: #eff6ff; border: 2px solid ${getColorValue(templateConfig.colorScheme)};">
+                  <td style="padding: 12px; font-weight: bold; color: ${getColorValue(templateConfig.colorScheme)};">TOTAL</td>
+                  <td style="padding: 12px;"></td>
+                  <td style="padding: 12px; font-weight: bold; text-align: right; color: ${getColorValue(templateConfig.colorScheme)}; font-size: 18px;">${hardcodedData.total}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Signature Area -->
+            <div style="margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 24px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                <div style="text-align: center;">
+                  <div style="border-bottom: 1px solid #9ca3af; margin-bottom: 8px; height: 40px;"></div>
+                  <p style="margin: 0; font-size: 12px; color: #6b7280;">Firma del Cliente</p>
+                </div>
+                <div style="text-align: center;">
+                  <div style="border-bottom: 1px solid #9ca3af; margin-bottom: 8px; height: 40px;"></div>
+                  <p style="margin: 0; font-size: 12px; color: #6b7280;">Firma del Veterinario</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280;">
+              <p style="margin: 4px 0; font-size: 13px;">${hardcodedData.empresaWeb} | ${hardcodedData.empresaTelefono}</p>
+              <p style="margin: 4px 0; font-size: 12px;">${hardcodedData.empresaDireccion}</p>
+            </div>
+          </div>
+        </div>
+      `
+    },
+    {
+      id: "simple-text-only",
+      name: "Solo Texto Profesional",
+      description: "Diseño limpio y profesional sin logo, solo texto y colores",
+      preview: "/assets/template-preview-2.png",
+      features: ["Sin logo requerido", "Diseño minimalista", "Solo colores personalizables", "Tipografía profesional"],
+      htmlPreview: `
+        <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; border: 1px solid ${getColorValue(templateConfig.colorScheme)}; border-radius: 8px; overflow: hidden; background: white;">
+          <!-- Simple Header without Logo -->
+          <div style="background: ${getColorValue(templateConfig.colorScheme)}; color: white; padding: 24px; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">${hardcodedData.empresaNombre}</h1>
+            <p style="margin: 8px 0 0; font-size: 16px; opacity: 0.9;">${hardcodedData.empresaEslogan}</p>
+            <div style="margin-top: 16px; background: rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 6px; display: inline-block;">
+              <span style="font-size: 20px; font-weight: bold;">RECIBO</span>
+              <span style="margin-left: 12px; font-size: 16px;"># ${hardcodedData.numeroRecibo}</span>
             </div>
           </div>
           
@@ -410,10 +506,14 @@ export default function ReceiptTemplatesAdmin() {
   };
 
   const handleCreateTemplate = async () => {
-    if (!templateName || !selectedTemplate || !logoUrl) {
+    const requiresLogo = templateHasLogo(selectedTemplate);
+    
+    if (!templateName || !selectedTemplate || (requiresLogo && !logoUrl)) {
       toast({
         title: "Error",
-        description: "Por favor completa todos los campos requeridos, incluyendo el logo",
+        description: requiresLogo 
+          ? "Por favor completa todos los campos requeridos, incluyendo el logo"
+          : "Por favor completa todos los campos requeridos",
         variant: "destructive",
       });
       return;
@@ -745,17 +845,34 @@ export default function ReceiptTemplatesAdmin() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-6">
-                          {/* Logo Required Warning */}
-                          {!logoUrl && (
+                          {/* Logo Required Warning - Only show for templates that have logo placeholders */}
+                          {selectedTemplateHasLogo && !logoUrl && (
                             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
                               <div className="flex items-center space-x-3">
                                 <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                                 <div>
                                   <p className="text-amber-800 dark:text-amber-200 font-medium text-sm">
-                                    <strong>Logo Requerido:</strong> Debes subir un logo para continuar.
+                                    <strong>Logo Requerido:</strong> Esta plantilla requiere un logo para continuar.
                                   </p>
                                   <p className="text-amber-700 dark:text-amber-300 text-xs mt-1">
                                     Sin el logo, solo podrás seleccionar el esquema de colores. Las demás opciones se habilitarán una vez que subas tu logo.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Info for templates without logo */}
+                          {selectedTemplate && !selectedTemplateHasLogo && (
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                              <div className="flex items-center space-x-3">
+                                <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                                <div>
+                                  <p className="text-blue-800 dark:text-blue-200 font-medium text-sm">
+                                    <strong>Plantilla Sin Logo:</strong> Esta plantilla no incluye espacios para logo.
+                                  </p>
+                                  <p className="text-blue-700 dark:text-blue-300 text-xs mt-1">
+                                    Puedes personalizar solo el esquema de colores para esta plantilla.
                                   </p>
                                 </div>
                               </div>
@@ -774,7 +891,7 @@ export default function ReceiptTemplatesAdmin() {
                               className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
                                 dragActive
                                   ? 'border-blue-400 bg-blue-50 dark:bg-blue-950/20 scale-102'
-                                  : !logoUrl 
+                                  : selectedTemplateHasLogo && !logoUrl 
                                     ? 'border-amber-300 dark:border-amber-600 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/10'
                                     : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/30'
                               }`}
@@ -969,8 +1086,8 @@ export default function ReceiptTemplatesAdmin() {
                       </Button>
                       <Button
                         onClick={() => setWizardStep(3)}
-                        disabled={!logoUrl}
-                        className={`${!logoUrl ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                        disabled={selectedTemplateHasLogo && !logoUrl}
+                        className={`${selectedTemplateHasLogo && !logoUrl ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
                         data-testid="button-next-step"
                       >
                         Seleccionar Plantilla
