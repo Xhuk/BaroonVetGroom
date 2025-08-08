@@ -95,28 +95,30 @@ export default function Dashboard() {
         </div>
       );
     } else {
-      // No tenant assigned and not loading - redirect to landing page
-      useEffect(() => {
-        toast({
-          title: "Sin acceso",
-          description: "No tienes acceso a ningún tenant. Contacta al administrador.",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 2000);
-      }, [toast]);
-
+      // No tenant assigned and not loading - show message and logout option
       return (
         <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              Redirigiendo...
+          <div className="text-center max-w-md mx-auto p-6">
+            <h2 className="text-xl font-semibold text-foreground mb-4">
+              Sin acceso a tenant
             </h2>
-            <p className="text-muted-foreground">
-              No tienes acceso a ningún tenant.
+            <p className="text-muted-foreground mb-6">
+              No tienes acceso a ningún tenant. Contacta al administrador para obtener acceso.
             </p>
+            <div className="flex gap-4 justify-center">
+              <Button 
+                onClick={() => window.location.href = "/api/logout"}
+                variant="outline"
+              >
+                Cerrar Sesión
+              </Button>
+              <Button 
+                onClick={() => window.location.reload()}
+                variant="default"
+              >
+                Recargar
+              </Button>
+            </div>
           </div>
         </div>
       );

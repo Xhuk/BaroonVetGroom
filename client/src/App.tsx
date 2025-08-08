@@ -72,7 +72,16 @@ function Router() {
       <DebugBanner />
       <Switch>
       {/* INSTANT ROUTING - All routes available immediately, no auth blocking */}
-      <Route path="/" component={isAuthenticated ? Dashboard : LandingPage} />
+      <Route path="/" component={() => {
+        if (isLoading) {
+          return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          );
+        }
+        return isAuthenticated ? <Dashboard /> : <LandingPage />;
+      }} />
       <Route path="/plans" component={SubscriptionLanding} />
       <Route path="/checkout" component={SubscriptionCheckout} />
       <Route path="/onboarding" component={CompanyOnboarding} />
