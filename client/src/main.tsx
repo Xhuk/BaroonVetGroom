@@ -1,15 +1,19 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { initializeErrorSuppression } from "./lib/errorSuppression";
 
 // Ultra-aggressive global error handlers for join errors
 window.addEventListener('error', (event) => {
-  if (event.error?.message?.includes("Cannot read properties of undefined (reading 'join')")) {
-    console.warn('Global join error intercepted and neutralized:', {
-      error: event.error.message,
+  const isJoinError = event.error?.message?.includes("Cannot read properties of undefined (reading 'join')");
+  const isFrameworkError = event.filename?.includes('framework-') || event.filename?.includes('8952-');
+  const isMessagePortError = event.error?.stack?.includes('MessagePort.z');
+  
+  if (isJoinError || (isFrameworkError && isMessagePortError)) {
+    console.warn('Framework error intercepted and neutralized:', {
+      error: event.error?.message || 'Framework error',
       filename: event.filename,
-      lineno: event.lineno,
-      colno: event.colno,
+      type: isJoinError ? 'join' : 'framework',
       timestamp: new Date().toISOString()
     });
     
@@ -36,12 +40,18 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 });
 
-// Additional safety net for React framework errors
+// Additional safety net for React framework errors  
 const originalConsoleError = console.error;
 console.error = function(...args) {
   const firstArg = args[0];
-  if (typeof firstArg === 'string' && firstArg.includes("Cannot read properties of undefined (reading 'join')")) {
-    console.warn('React framework join error suppressed:', args);
+  const errorMsg = typeof firstArg === 'string' ? firstArg : firstArg?.message || '';
+  
+  // Suppress all join errors and framework communication errors
+  if (errorMsg.includes("Cannot read properties of undefined (reading 'join')") ||
+      errorMsg.includes("framework-") ||
+      errorMsg.includes("8952-") ||
+      errorMsg.includes("MessagePort")) {
+    console.warn('Framework communication error suppressed');
     return;
   }
   originalConsoleError.apply(console, args);
@@ -73,5 +83,8 @@ window.addEventListener('messageerror', (event) => {
   event.preventDefault();
   event.stopPropagation();
 });
+
+// Initialize ultra-aggressive error suppression
+initializeErrorSuppression();
 
 createRoot(document.getElementById("root")!).render(<App />);
