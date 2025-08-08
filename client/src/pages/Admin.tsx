@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
-import { Header } from "@/components/Header";
 import { Navigation } from "@/components/Navigation";
 import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -991,8 +990,6 @@ function Admin() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans">
-      <Header />
-      
       <main className="p-6 pb-40">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
