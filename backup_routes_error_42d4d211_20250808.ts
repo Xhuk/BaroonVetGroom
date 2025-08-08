@@ -1853,7 +1853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { advancedRouteOptimization } = await import('./routeOptimizer');
       const result = await advancedRouteOptimization({
         clinicLocation: clinicLocation || [25.6866, -100.3161],
-        deliveryPoints: routePoints,
+        appointments: routePoints,
         vanCapacity: vanCapacity || 'medium',
         fraccionamientoWeights: fraccionamientoWeights || {},
         config
@@ -2191,7 +2191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const config = await storage.updateCompanyBillingConfig(companyId, configData);
+      const config = await storage.upsertCompanyBillingConfig(companyId, configData);
       res.json(config);
     } catch (error) {
       console.error("Error updating billing config:", error);
@@ -2411,7 +2411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Get fraccionamiento weights
-      const fraccionamientos = await storage.getFraccionamientos();
+      const fraccionamientos = await storage.getFraccionamientos(tenantId);
       const fraccionamientoWeights = fraccionamientos.reduce((acc, frac) => {
         acc[frac.name] = frac.weight || 5.0;
         return acc;
