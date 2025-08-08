@@ -5470,7 +5470,7 @@ This password expires in 24 hours.
             petName: pet?.name || 'N/A',
             service: items.map(item => item.name).join(', ') || 'Venta general',
             amount: parseFloat(sale.totalAmount),
-            status: (sale as any).status === 'completed' ? 'paid' : 'pending'
+            status: sale.status === 'completed' ? 'paid' : 'pending'
           };
         })
       );
@@ -5478,7 +5478,7 @@ This password expires in 24 hours.
       res.json({
         totalRevenue,
         monthlyRevenue,
-        outstandingInvoices: filteredSales.filter(sale => (sale as any).status === 'pending').length,
+        outstandingInvoices: filteredSales.filter(sale => sale.status === 'pending').length,
         totalTransactions: filteredSales.length,
         recentTransactions: recentTransactions.reverse()
       });
@@ -5578,7 +5578,7 @@ This password expires in 24 hours.
           const missingFields = requiredFields.filter(field => !planConfig.hasOwnProperty(field));
           
           if (missingFields.length > 0) {
-            (importResults.errors as any[]).push(`Plan '${planConfig.name}': Missing required fields: ${missingFields.join(', ')}`);
+            importResults.errors.push(`Plan '${planConfig.name}': Missing required fields: ${missingFields.join(', ')}`);
             continue;
           }
 
@@ -5608,7 +5608,7 @@ This password expires in 24 hours.
           }
 
         } catch (planError: any) {
-          (importResults.errors as any[]).push(`Plan '${planConfig.name}': ${planError.message}`);
+          importResults.errors.push(`Plan '${planConfig.name}': ${planError.message}`);
         }
       }
 
@@ -5717,7 +5717,7 @@ This password expires in 24 hours.
           const missingFields = requiredFields.filter(field => !featureConfig.hasOwnProperty(field));
           
           if (missingFields.length > 0) {
-            (importResults.errors as any[]).push(`Feature '${featureConfig.key}': Missing required fields: ${missingFields.join(', ')}`);
+            importResults.errors.push(`Feature '${featureConfig.key}': Missing required fields: ${missingFields.join(', ')}`);
             continue;
           }
 
@@ -5746,7 +5746,7 @@ This password expires in 24 hours.
             
             if (isFeatureUsed) {
               importResults.skipped++;
-              (importResults.errors as any[]).push(`Feature '${featureConfig.key}' is used in subscription plans and cannot be overwritten`);
+              importResults.errors.push(`Feature '${featureConfig.key}' is used in subscription plans and cannot be overwritten`);
               continue;
             } else {
               // Feature exists but is not used, can be updated
@@ -5761,7 +5761,7 @@ This password expires in 24 hours.
           // await storage.upsertFeature(featureData);
 
         } catch (featureError: any) {
-          (importResults.errors as any[]).push(`Feature '${(featureConfig as any).key}': ${featureError.message}`);
+          importResults.errors.push(`Feature '${(featureConfig as any).key}': ${featureError.message}`);
         }
       }
 
