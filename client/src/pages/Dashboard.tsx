@@ -113,10 +113,9 @@ export default function Dashboard() {
 
   return (
     <ResponsiveLayout>
-      {/* Main Content */}
-      <div className="pb-40">
-        {/* Action Buttons - Responsive positioning */}
-        <div className="flex gap-4 mb-6 tablet-card">
+      {/* Action Buttons - Fixed positioning above calendar */}
+      <div className="px-6 py-4 bg-background border-b border-border">
+        <div className="flex gap-4 max-w-7xl mx-auto">
           <Link href="/booking">
             <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
               <Phone className="w-4 h-4 mr-2" />
@@ -130,6 +129,10 @@ export default function Dashboard() {
             </Button>
           </Link>
         </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="pb-40">
 
         {/* Fast Calendar - positioned to end at same level as navigation */}
         {showCalendar ? (
