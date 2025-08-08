@@ -27,12 +27,12 @@ export function ResponsiveLayout({ children, showNavigation = true }: Responsive
 
   const getContentPadding = () => {
     if (isTabletLandscape) {
-      return "pt-20 pb-20"; // Padding for ribbon at bottom
+      return "pt-32 pb-20"; // More padding for header + ribbon at bottom
     }
     if (isSmallTablet) {
-      return "pt-20 pb-4"; // Reduced padding for small tablets
+      return "pt-28 pb-4"; // More padding for header on small tablets  
     }
-    return "pt-24 pb-6"; // Original padding for larger screens
+    return "pt-32 pb-6"; // More padding to account for header on larger screens
   };
 
   console.log(`📱 ResponsiveLayout: Device ${deviceType}, landscape: ${isTabletLandscape}, useRibbon: ${shouldUseRibbonNavigation}, hideRibbon: ${shouldHideBottomRibbon}`);
