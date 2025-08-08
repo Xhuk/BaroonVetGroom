@@ -55,7 +55,7 @@ export function useSequentialQueries(configs: SequentialQueryConfig[]) {
       });
       
       if (nextConfig) {
-        setEnabledQueries(prev => new Set([...prev, JSON.stringify(nextConfig.queryKey)]));
+        setEnabledQueries(prev => new Set([...Array.from(prev), JSON.stringify(nextConfig.queryKey)]));
         
         // Schedule next query after short delay
         timeoutId = setTimeout(enableNextQuery, 100); // 100ms between requests

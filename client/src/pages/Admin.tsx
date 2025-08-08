@@ -114,12 +114,12 @@ function Admin() {
   });
 
   useEffect(() => {
-    if (roomsData) setRooms(roomsData);
-    if (servicesData) setServices(servicesData);
-    if (rolesData) setRoles(rolesData);
-    if (staffData) setStaff(staffData);
+    if (roomsData) setRooms(Array.isArray(roomsData) ? roomsData : []);
+    if (servicesData) setServices(Array.isArray(servicesData) ? servicesData : []);
+    if (rolesData) setRoles(Array.isArray(rolesData) ? rolesData : []);
+    if (staffData) setStaff(Array.isArray(staffData) ? staffData : []);
     if (deliveryConfigData) {
-      setDeliveryConfig(deliveryConfigData);
+      setDeliveryConfig(deliveryConfigData || {});
     }
   }, [roomsData, servicesData, rolesData, staffData, deliveryConfigData]);
 
@@ -179,7 +179,7 @@ function Admin() {
     freeEndTime: '20:00'
   });
   
-  const [editingStaff, setEditingStaff] = useState(null);
+  const [editingStaff, setEditingStaff] = useState<any>(null);
   const [editStaffData, setEditStaffData] = useState({
     name: '',
     role: '',
@@ -190,8 +190,8 @@ function Admin() {
   const [replacementStaffId, setReplacementStaffId] = useState('');
   
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [availableRoles, setAvailableRoles] = useState([]);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [availableRoles, setAvailableRoles] = useState<any[]>([]);
   const [newRoleData, setNewRoleData] = useState({
     name: '',
     displayName: '',
@@ -424,7 +424,7 @@ function Admin() {
   // Handle create role
   const handleCreateRole = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.target as HTMLFormElement);
     
     const data = {
       name: formData.get('name'),
@@ -449,7 +449,7 @@ function Admin() {
   // Handle create staff
   const handleCreateStaff = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.target as HTMLFormElement);
     
     const data = {
       name: formData.get('name'),
@@ -623,7 +623,7 @@ function Admin() {
   // Handle create service
   const handleCreateService = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.target as HTMLFormElement);
     const data = {
       name: formData.get('name'),
       type: formData.get('type'),
@@ -729,13 +729,13 @@ function Admin() {
   });
 
   // Handle edit role
-  const handleEditRole = (role) => {
+  const handleEditRole = (role: any) => {
     setEditingRole(role);
     setEditRoleData({
       name: role.name,
       displayName: role.displayName,
       department: role.department,
-      permissions: [...role.permissions]
+      permissions: [...(role.permissions || [])]
     });
   };
 
@@ -757,14 +757,14 @@ function Admin() {
   };
 
   // Handle user role assignment
-  const handleAssignRole = (user) => {
+  const handleAssignRole = (user: any) => {
     setSelectedUser(user);
     setAvailableRoles(roles);
     setIsAssignDialogOpen(true);
   };
 
   // Handle save user role assignment
-  const handleSaveRoleAssignment = (newRoleName) => {
+  const handleSaveRoleAssignment = (newRoleName: any) => {
     if (selectedUser && newRoleName) {
       // Update user's current role
       setUsers(prev => prev.map(user => 

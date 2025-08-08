@@ -31,10 +31,7 @@ export function ScalabilityDemo() {
 
   const loadTestMutation = useMutation({
     mutationFn: async (params: { totalUsers: number; totalTenants: number }) => {
-      return apiRequest('/api/admin/simulate-load', {
-        method: 'POST',
-        body: JSON.stringify(params)
-      });
+      return apiRequest('/api/admin/simulate-load', 'POST', params);
     },
     onSuccess: (data) => {
       setSimulationResults(data);

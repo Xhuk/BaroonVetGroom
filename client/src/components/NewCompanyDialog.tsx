@@ -144,7 +144,7 @@ export function NewCompanyDialog({ open, onOpenChange }: NewCompanyDialogProps) 
         },
       };
 
-      const company = await apiRequest('/api/superadmin/companies', 'POST', companyData);
+      const company = await apiRequest('/api/superadmin/companies', 'POST', companyData) as unknown as ApiCompanyResponse;
 
       // Step 2: Create subscription or trial
       if (data.subscriptionType === "trial") {
@@ -153,12 +153,12 @@ export function NewCompanyDialog({ open, onOpenChange }: NewCompanyDialogProps) 
           duration: data.trialDuration,
           customFee: data.trialCustomFee,
           notes: data.trialNotes,
-        });
+        }) as unknown as ApiCompanyResponse;
       } else if (data.subscriptionType === "direct_subscription" && data.planId) {
         await apiRequest('/api/superadmin/companies/subscription', 'POST', {
           companyId: company.id,
           planId: data.planId,
-        });
+        }) as unknown as ApiCompanyResponse;
       }
 
       // Step 3: Setup WhatsApp credits if enabled
@@ -166,7 +166,7 @@ export function NewCompanyDialog({ open, onOpenChange }: NewCompanyDialogProps) 
         await apiRequest('/api/superadmin/companies/whatsapp', 'POST', {
           companyId: company.id,
           credits: data.whatsAppCredits,
-        });
+        }) as unknown as ApiCompanyResponse;
       }
 
       return company;

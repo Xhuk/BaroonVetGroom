@@ -377,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getMedicalAppointments(tenantId),
         storage.getPetsByTenant(tenantId),
         storage.getClients(tenantId),
-        storage.getStaff(tenantId, 'veterinarian'),
+        storage.getStaffByRole(tenantId, 'veterinarian'),
         storage.getRooms(tenantId)
       ]);
 
@@ -4680,9 +4680,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             monthlyPrice: plan.monthlyPrice
           } : null,
           limits: {
-            maxTenants: subscription.maxTenants,
-            maxStaff: subscription.maxStaff,
-            customLimits: subscription.customLimits
+            maxTenants: (subscription as any).maxTenants,
+            maxStaff: (subscription as any).maxStaff,
+            customLimits: (subscription as any).customLimits
           },
           usage: currentUsage,
           trial: trialInfo
@@ -5467,7 +5467,7 @@ This password expires in 24 hours.
             petName: pet?.name || 'N/A',
             service: items.map(item => item.name).join(', ') || 'Venta general',
             amount: parseFloat(sale.totalAmount),
-            status: sale.status === 'completed' ? 'paid' : 'pending'
+            status: (sale as any).status === 'completed' ? 'paid' : 'pending'
           };
         })
       );
@@ -5475,7 +5475,7 @@ This password expires in 24 hours.
       res.json({
         totalRevenue,
         monthlyRevenue,
-        outstandingInvoices: filteredSales.filter(sale => sale.status === 'pending').length,
+        outstandingInvoices: filteredSales.filter(sale => (sale as any).status === 'pending').length,
         totalTransactions: filteredSales.length,
         recentTransactions: recentTransactions.reverse()
       });

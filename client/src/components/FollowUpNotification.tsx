@@ -27,7 +27,7 @@ export function FollowUpNotification({ className }: FollowUpNotificationProps) {
   });
 
   // Get follow-up count
-  const { data: followUpData } = useQuery({
+  const { data: followUpData } = useQuery<{ count: number }>({
     queryKey: ["/api/medical-appointments/follow-up-count", currentTenant?.id],
     enabled: !!currentTenant?.id,
     refetchInterval: 30000, // Refresh every 30 seconds
