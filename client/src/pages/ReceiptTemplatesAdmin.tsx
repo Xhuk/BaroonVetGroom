@@ -468,8 +468,10 @@ export default function ReceiptTemplatesAdmin() {
       }
 
       // Get upload URL
-      console.log('Requesting upload URL for logo...');
-      const response = await apiRequest('/api/objects/upload', 'POST') as unknown as { uploadURL: string };
+      console.log('Requesting upload URL for logo...', file.name);
+      const response = await apiRequest('/api/objects/upload', 'POST', { 
+        fileName: file.name 
+      }) as unknown as { uploadURL: string };
       
       console.log('Full upload response:', response);
       
