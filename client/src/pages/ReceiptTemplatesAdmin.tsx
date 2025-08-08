@@ -467,16 +467,40 @@ export default function ReceiptTemplatesAdmin() {
         setTemplateConfig(prev => ({ ...prev, preserveLogoTransparency: true }));
       }
 
-      // Get upload URL
+      // Get upload URL with company/tenant security
       console.log('Requesting upload URL for logo...', file.name);
-      const response = await apiRequest('/api/objects/upload', 'POST', { 
-        fileName: file.name 
-      }) as unknown as { uploadURL: string };
+      const uploadParams = { 
+        fileName: file.name,
+        templateType: 'receipt-logo'
+      };
+      
+      // Add company/tenant information for security
+      if (facturaType === "empresarial" && selectedCompanyId) {
+        uploadParams.companyId = selectedCompanyId;
+      } else if (facturaType === "clinica" && selectedTenantId) {
+        uploadParams.tenantId = selectedTenantId;
+        // Get company ID from selected tenant data
+        const selectedTenant = tenants.find(t => t.id === selectedTenantId);
+        if (selectedTenant?.companyId) {
+          uploadParams.companyId = selectedTenant.companyId;
+        } else if (selectedCompanyId) {
+          uploadParams.companyId = selectedCompanyId;
+        }
+      }
+      
+      console.log('Upload parameters:', uploadParams);
+      const response = await apiRequest('/api/objects/upload', 'POST', uploadParams) as unknown as { 
+        uploadURL: string; 
+        success: boolean; 
+        fileName: string; 
+        path: string; 
+      };
       
       console.log('Full upload response:', response);
       
-      if (!response || !response.uploadURL || response.uploadURL === null) {
-        throw new Error('El servidor no proporcionó una URL de subida válida. Verifica la configuración del almacenamiento.');
+      if (!response || !response.success || !response.uploadURL || response.uploadURL === null) {
+        const errorMsg = response?.error || 'El servidor no proporcionó una URL de subida válida. Verifica la configuración del almacenamiento.';
+        throw new Error(errorMsg);
       }
       
       // Upload file directly to object storage

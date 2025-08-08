@@ -195,66 +195,6 @@ export class ObjectStorageService {
     });
   }
 
-  // Gets the upload URL for receipt template logos
-  async getReceiptTemplateUploadURL(fileName?: string): Promise<string> {
-    const publicObjectPaths = this.getPublicObjectSearchPaths();
-    if (!publicObjectPaths || publicObjectPaths.length === 0) {
-      throw new Error(
-        "PUBLIC_OBJECT_SEARCH_PATHS not set. Create a bucket in 'Object Storage' " +
-          "tool and set PUBLIC_OBJECT_SEARCH_PATHS env var."
-      );
-    }
-
-    // Use the first public path for receipt templates
-    const publicPath = publicObjectPaths[0];
-    const objectId = fileName ? fileName.replace(/[^a-zA-Z0-9.-]/g, '_') + '_' + randomUUID() : randomUUID();
-    const fullPath = `${publicPath}/receipt-templates/${objectId}`;
-
-    const { bucketName, objectName } = parseObjectPath(fullPath);
-
-    // Sign URL for PUT method with TTL
-    return signObjectURL({
-      bucketName,
-      objectName,
-      method: "PUT",
-      ttlSec: 900,
-    });
-  }
-
-  // Get receipt template file
-  async getReceiptTemplateFile(fileUrl: string): Promise<File> {
-    let objectPath = fileUrl;
-    
-    // If it's a full URL, extract the path
-    if (fileUrl.startsWith('http')) {
-      try {
-        const url = new URL(fileUrl);
-        objectPath = url.pathname;
-      } catch {
-        throw new Error('Invalid file URL');
-      }
-    }
-    
-    // If it starts with /public-objects, extract the actual path
-    if (objectPath.startsWith('/public-objects/')) {
-      objectPath = objectPath.replace('/public-objects/', '');
-    }
-    
-    // Search in public paths
-    for (const searchPath of this.getPublicObjectSearchPaths()) {
-      const fullPath = `${searchPath}/${objectPath}`;
-      const { bucketName, objectName } = parseObjectPath(fullPath);
-      const bucket = objectStorageClient.bucket(bucketName);
-      const file = bucket.file(objectName);
-      
-      const [exists] = await file.exists();
-      if (exists) {
-        return file;
-      }
-    }
-    
-    throw new Error('Receipt template file not found');
-  }
 
   // Gets the object entity file from the object path.
   async getObjectEntityFile(objectPath: string): Promise<File> {
@@ -340,8 +280,14 @@ export class ObjectStorageService {
     });
   }
 
-  // Gets the upload URL for receipt templates
+  // Gets the upload URL for receipt templates (fallback method)
   async getReceiptTemplateUploadURL(fileName: string = "receipt-template.zip"): Promise<string> {
+    // Use the secure method with default path
+    return this.getSecureReceiptTemplateUploadURL(fileName, 'general/receipt-templates');
+  }
+
+  // Gets secure upload URL with company/tenant path for enhanced security
+  async getSecureReceiptTemplateUploadURL(fileName: string, pathPrefix: string): Promise<string> {
     const privateObjectDir = this.getPrivateObjectDir();
     if (!privateObjectDir) {
       throw new Error(
@@ -352,7 +298,8 @@ export class ObjectStorageService {
 
     const objectId = randomUUID();
     const cleanFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const fullPath = `${privateObjectDir}/receipt-templates/${objectId}-${cleanFileName}`;
+    const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD for daily rotation
+    const fullPath = `${privateObjectDir}/${pathPrefix}/${timestamp}/${objectId}-${cleanFileName}`;
 
     const { bucketName, objectName } = parseObjectPath(fullPath);
 
@@ -365,7 +312,7 @@ export class ObjectStorageService {
     });
   }
 
-  // Gets the receipt template file from the object path.
+  // Gets the receipt template file from the object path
   async getReceiptTemplateFile(objectPath: string): Promise<File> {
     if (!objectPath.startsWith("/")) {
       objectPath = `/${objectPath}`;

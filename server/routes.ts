@@ -2966,20 +2966,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Object Storage Routes
+  // Object Storage Routes with company/tenant security
   app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
     try {
       const objectStorageService = new ObjectStorageService();
-      const { fileName } = req.body;
+      const { fileName, companyId, tenantId, templateType = 'receipt' } = req.body;
+      const userId = (req as AuthenticatedRequest).user.claims.sub;
+      
+      // Validate that user has access to this company/tenant
+      if (tenantId) {
+        const userTenants = await storage.getUserTenants(userId);
+        const hasAccess = userTenants.some(ut => ut.tenantId === tenantId);
+        if (!hasAccess && !(await isSystemAdmin(req))) {
+          return res.status(403).json({ error: "Access denied to this tenant" });
+        }
+      }
+      
+      // Generate company/tenant specific upload path for security
+      const secureFileName = fileName ? fileName.replace(/[^a-zA-Z0-9.-]/g, '_') : 'upload';
+      const pathPrefix = companyId && tenantId ? 
+        `companies/${companyId}/tenants/${tenantId}/${templateType}` : 
+        companyId ? `companies/${companyId}/${templateType}` : 
+        `general/${templateType}`;
       
       // Use receipt template upload for better compatibility
-      const uploadURL = await objectStorageService.getReceiptTemplateUploadURL(fileName);
+      const uploadURL = await objectStorageService.getSecureReceiptTemplateUploadURL(
+        secureFileName, 
+        pathPrefix
+      );
       
+      // Log the upload request for security audit
+      console.log(`Upload requested by user ${userId} for company ${companyId}, tenant ${tenantId}, file: ${fileName}`);
       console.log('Generated upload URL:', uploadURL);
-      res.json({ uploadURL });
-    } catch (error) {
+      
+      res.json({ 
+        uploadURL,
+        success: true,
+        fileName: secureFileName,
+        path: pathPrefix
+      });
+    } catch (error: any) {
       console.error("Error getting upload URL:", error);
-      res.status(500).json({ error: "Failed to get upload URL", details: error.message });
+      res.status(500).json({ 
+        error: "Failed to get upload URL", 
+        details: error?.message || "Unknown error",
+        success: false
+      });
     }
   });
 
