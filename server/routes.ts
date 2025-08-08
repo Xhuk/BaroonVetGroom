@@ -6321,16 +6321,18 @@ This password expires in 24 hours.
           name: "WhatsApp Integration",
           description: "Complete WhatsApp messaging integration with automated appointment confirmations and reminders",
           category: "Communication",
-          baseCost: 15, // USD per month (Latenode cost approximation)
-          sellingPrice: 25, // USD per month (50% profit margin)
-          profitMargin: 0.40, // 40% ((25-15)/25)
+          baseCost: 15, // USD per month per clinic (Latenode cost approximation)
+          sellingPrice: 25, // USD per month per clinic (67% markup)
+          profitMargin: 0.40, // 40% profit margin
+          pricingModel: "per_clinic", // Price multiplied by number of active clinics
           features: [
-            "1,000 messages per month",
+            "1,000 messages per month total across all clinics",
             "Automated appointment confirmations",
             "Reminder notifications",
             "Two-way messaging support",
             "Message templates",
-            "Delivery reports"
+            "Delivery reports",
+            "Shared message pool across all company locations"
           ],
           setupFee: 50,
           status: "available"
@@ -6340,14 +6342,16 @@ This password expires in 24 hours.
           name: "SMS Notifications", 
           description: "SMS messaging system for appointment reminders and notifications",
           category: "Communication",
-          baseCost: 8,
-          sellingPrice: 15,
+          baseCost: 8, // USD per month per clinic
+          sellingPrice: 15, // USD per month per clinic
           profitMargin: 0.47,
+          pricingModel: "per_clinic",
           features: [
-            "500 SMS per month",
+            "500 SMS per month total across all clinics",
             "Automated reminders",
             "Custom message templates",
-            "Delivery tracking"
+            "Delivery tracking",
+            "Shared SMS pool across all company locations"
           ],
           setupFee: 25,
           status: "available"
@@ -6357,15 +6361,17 @@ This password expires in 24 hours.
           name: "Email Marketing & Automation",
           description: "Advanced email marketing and automated communication workflows",
           category: "Marketing",
-          baseCost: 12,
-          sellingPrice: 20,
+          baseCost: 12, // USD per month per clinic
+          sellingPrice: 20, // USD per month per clinic
           profitMargin: 0.40,
+          pricingModel: "per_clinic",
           features: [
-            "Unlimited emails",
+            "Unlimited emails across all clinics",
             "Automated workflows",
             "Customer segmentation",
             "Analytics & reporting",
-            "Custom templates"
+            "Custom templates",
+            "Centralized campaign management"
           ],
           setupFee: 35,
           status: "available"
@@ -6375,16 +6381,17 @@ This password expires in 24 hours.
           name: "Advanced Payment Processing",
           description: "Integrated payment gateway with multiple payment methods",
           category: "Financial",
-          baseCost: 20,
-          sellingPrice: 35,
+          baseCost: 20, // USD per month per clinic
+          sellingPrice: 35, // USD per month per clinic
           profitMargin: 0.43,
+          pricingModel: "per_clinic",
           features: [
-            "Credit card processing",
+            "Credit card processing for all clinics",
             "PayPal integration",
             "Bank transfers",
             "Recurring payments",
-            "Payment analytics",
-            "PCI compliance"
+            "Consolidated payment analytics",
+            "PCI compliance across all locations"
           ],
           setupFee: 75,
           status: "available"
@@ -6394,16 +6401,17 @@ This password expires in 24 hours.
           name: "Advanced Analytics & Reporting",
           description: "Comprehensive business intelligence and custom reporting tools",
           category: "Analytics",
-          baseCost: 18,
-          sellingPrice: 30,
+          baseCost: 18, // USD per month per clinic
+          sellingPrice: 30, // USD per month per clinic
           profitMargin: 0.40,
+          pricingModel: "per_clinic",
           features: [
-            "Custom dashboards",
-            "Financial reports",
-            "Performance metrics",
+            "Custom dashboards for all clinics",
+            "Consolidated financial reports",
+            "Multi-location performance metrics",
             "Export capabilities",
             "Scheduled reports",
-            "Data visualization"
+            "Advanced data visualization"
           ],
           setupFee: 60,
           status: "available"
@@ -6413,16 +6421,17 @@ This password expires in 24 hours.
           name: "Inventory Management System",
           description: "Complete inventory tracking and management for veterinary supplies",
           category: "Operations",
-          baseCost: 22,
-          sellingPrice: 40,
+          baseCost: 22, // USD per month per clinic
+          sellingPrice: 40, // USD per month per clinic
           profitMargin: 0.45,
+          pricingModel: "per_clinic",
           features: [
-            "Stock tracking",
+            "Stock tracking across all clinic locations",
             "Low stock alerts",
-            "Supplier management",
-            "Purchase orders",
-            "Cost tracking",
-            "Expiration monitoring"
+            "Centralized supplier management",
+            "Multi-location purchase orders",
+            "Consolidated cost tracking",
+            "Expiration monitoring for all locations"
           ],
           setupFee: 80,
           status: "available"
@@ -6432,16 +6441,17 @@ This password expires in 24 hours.
           name: "Telemedicine Platform",
           description: "Virtual consultation platform with video calling and file sharing",
           category: "Medical",
-          baseCost: 35,
-          sellingPrice: 60,
+          baseCost: 35, // USD per month per clinic
+          sellingPrice: 60, // USD per month per clinic
           profitMargin: 0.42,
+          pricingModel: "per_clinic",
           features: [
-            "HD video calling",
+            "HD video calling for all clinic staff",
             "Screen sharing",
             "File upload/sharing",
             "Session recording",
             "Prescription management",
-            "Patient portal"
+            "Unified patient portal across locations"
           ],
           setupFee: 150,
           status: "beta"
@@ -6452,10 +6462,10 @@ This password expires in 24 hours.
       const totalServices = servicesCatalog.length;
       const availableServices = servicesCatalog.filter(s => s.status === "available").length;
       const betaServices = servicesCatalog.filter(s => s.status === "beta").length;
-      const totalMonthlyRevenuePotential = servicesCatalog
+      const totalMonthlyRevenuePotentialPerClinic = servicesCatalog
         .filter(s => s.status === "available")
         .reduce((sum, service) => sum + service.sellingPrice, 0);
-      const totalSetupRevenuePotential = servicesCatalog
+      const totalSetupRevenuePotentialPerClinic = servicesCatalog
         .filter(s => s.status === "available")
         .reduce((sum, service) => sum + service.setupFee, 0);
 
@@ -6466,9 +6476,10 @@ This password expires in 24 hours.
           totalServices,
           availableServices,
           betaServices,
-          totalMonthlyRevenuePotential,
-          totalSetupRevenuePotential,
-          averageProfitMargin: servicesCatalog.reduce((sum, s) => sum + s.profitMargin, 0) / totalServices
+          totalMonthlyRevenuePotentialPerClinic,
+          totalSetupRevenuePotentialPerClinic,
+          averageProfitMargin: servicesCatalog.reduce((sum, s) => sum + s.profitMargin, 0) / totalServices,
+          pricingNote: "All prices are per clinic. Total cost = price × number of active clinics"
         }
       });
     } catch (error) {
@@ -6482,29 +6493,65 @@ This password expires in 24 hours.
     try {
       const { companyId } = req.params;
       
-      // This would typically fetch from a companyServices table
-      // For now, returning sample data structure
+      // Get number of active clinics for this company
+      // In a real implementation, this would query the database
+      // For now, using sample data
+      const activeClinics = 3; // This would be: await storage.getActiveClinicCount(companyId);
+      
       const companyServices = {
         companyId,
+        activeClinics,
         activeServices: [
           {
             serviceId: "whatsapp-integration",
             serviceName: "WhatsApp Integration",
-            monthlyPrice: 25,
+            pricePerClinic: 25,
+            totalMonthlyPrice: 25 * activeClinics, // $75 for 3 clinics
             activatedDate: "2024-12-01",
             status: "active",
-            nextBillingDate: "2025-01-01"
+            nextBillingDate: "2025-01-01",
+            messageLimit: "1,000 messages/month total across all clinics"
           }
         ],
         availableServices: [
-          "sms-notifications",
-          "email-automation", 
-          "payment-processing",
-          "advanced-reporting",
-          "inventory-management"
+          {
+            serviceId: "sms-notifications",
+            serviceName: "SMS Notifications",
+            pricePerClinic: 15,
+            totalMonthlyPrice: 15 * activeClinics
+          },
+          {
+            serviceId: "email-automation",
+            serviceName: "Email Marketing & Automation",
+            pricePerClinic: 20,
+            totalMonthlyPrice: 20 * activeClinics
+          },
+          {
+            serviceId: "payment-processing",
+            serviceName: "Advanced Payment Processing",
+            pricePerClinic: 35,
+            totalMonthlyPrice: 35 * activeClinics
+          },
+          {
+            serviceId: "advanced-reporting",
+            serviceName: "Advanced Analytics & Reporting",
+            pricePerClinic: 30,
+            totalMonthlyPrice: 30 * activeClinics
+          },
+          {
+            serviceId: "inventory-management",
+            serviceName: "Inventory Management System",
+            pricePerClinic: 40,
+            totalMonthlyPrice: 40 * activeClinics
+          }
         ],
-        monthlyTotal: 25,
-        setupFeesOwed: 0
+        monthlyTotal: 25 * activeClinics, // Current total: $75
+        setupFeesOwed: 0,
+        pricingInfo: {
+          activeClinics,
+          pricingModel: "per_clinic",
+          note: "All services are priced per clinic. Total cost = price per clinic × number of active clinics"
+        }
       };
 
       res.json({ success: true, companyServices });
@@ -6522,17 +6569,47 @@ This password expires in 24 hours.
         return res.status(400).json({ error: "Company ID and Service ID are required" });
       }
 
+      // Get number of active clinics for pricing calculation
+      // In a real implementation: const activeClinics = await storage.getActiveClinicCount(companyId);
+      const activeClinics = 3; // Sample data
+      
+      // Find service details from catalog
+      const servicesCatalog = [
+        { id: "whatsapp-integration", name: "WhatsApp Integration", pricePerClinic: 25, setupFee: 50 },
+        { id: "sms-notifications", name: "SMS Notifications", pricePerClinic: 15, setupFee: 25 },
+        { id: "email-automation", name: "Email Marketing & Automation", pricePerClinic: 20, setupFee: 35 },
+        { id: "payment-processing", name: "Advanced Payment Processing", pricePerClinic: 35, setupFee: 75 },
+        { id: "advanced-reporting", name: "Advanced Analytics & Reporting", pricePerClinic: 30, setupFee: 60 },
+        { id: "inventory-management", name: "Inventory Management System", pricePerClinic: 40, setupFee: 80 }
+      ];
+      
+      const service = servicesCatalog.find(s => s.id === serviceId);
+      if (!service) {
+        return res.status(404).json({ error: "Service not found" });
+      }
+      
+      const totalMonthlyPrice = service.pricePerClinic * activeClinics;
+      const totalSetupFee = service.setupFee; // Setup fee is one-time, not per clinic
+
       // Here you would typically:
-      // 1. Validate the service exists
+      // 1. Validate the service exists ✓
       // 2. Check if company already has this service
       // 3. Create a new companyService record
-      // 4. Set up billing/subscription
+      // 4. Set up billing/subscription with calculated pricing
       // 5. Send activation notification
       
-      // For now, return success response
       res.json({
         success: true,
-        message: `Service ${serviceId} activated for company ${companyId}`,
+        message: `${service.name} activated for company ${companyId}`,
+        serviceDetails: {
+          serviceId,
+          serviceName: service.name,
+          activeClinics,
+          pricePerClinic: service.pricePerClinic,
+          totalMonthlyPrice,
+          setupFee: totalSetupFee,
+          pricingNote: `$${service.pricePerClinic} per clinic × ${activeClinics} clinics = $${totalMonthlyPrice}/month`
+        },
         activatedAt: new Date().toISOString()
       });
     } catch (error) {
