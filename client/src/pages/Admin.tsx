@@ -1283,7 +1283,7 @@ function Admin() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                             <span className="text-sm font-medium text-blue-600 dark:text-blue-300">
-                              {member.name.split(' ').map(n => n[0]).join('')}
+                              {member.name ? member.name.split(' ').map(n => n[0]).join('') : '??'}
                             </span>
                           </div>
                           <div>
@@ -1591,7 +1591,7 @@ function Admin() {
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                                 <span className="text-sm font-medium text-blue-600 dark:text-blue-300">
-                                  {user.name.split(' ').map(n => n[0]).join('')}
+                                  {user.name ? user.name.split(' ').map(n => n[0]).join('') : '??'}
                                 </span>
                               </div>
                               <div>
@@ -1728,7 +1728,7 @@ function Admin() {
                         <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                           <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                             <span className="text-sm font-medium text-blue-600 dark:text-blue-300">
-                              {selectedUser.name.split(' ').map(n => n[0]).join('')}
+                              {selectedUser.name ? selectedUser.name.split(' ').map(n => n[0]).join('') : '??'}
                             </span>
                           </div>
                           <div>

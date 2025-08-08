@@ -49,6 +49,7 @@
     "@stripe/stripe-js": "^7.8.0",
     "@tanstack/react-query": "^5.60.5",
     "@types/leaflet": "^1.9.20",
+    "@types/lodash": "^4.17.20",
     "@types/memoizee": "^0.4.12",
     "@types/qrcode": "^1.5.5",
     "@uppy/aws-s3": "^4.3.2",

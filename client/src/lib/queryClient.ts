@@ -29,6 +29,11 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Ensure queryKey is an array before calling join
+    if (!Array.isArray(queryKey) || queryKey.length === 0) {
+      throw new Error("Invalid queryKey: must be a non-empty array");
+    }
+    
     const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
     });
