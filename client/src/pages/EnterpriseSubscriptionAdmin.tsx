@@ -67,6 +67,7 @@ function EnterpriseSubscriptionAdmin() {
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [jsonImportDialog, setJsonImportDialog] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
+  const [jsonValidationError, setJsonValidationError] = useState<string | null>(null);
   const [newPlanForm, setNewPlanForm] = useState({
     name: '',
     displayName: '',
@@ -109,6 +110,88 @@ function EnterpriseSubscriptionAdmin() {
     'api_access': 'Acceso a API pública para integraciones externas',
     'custom_integrations': 'Servicio de integración para ERP/CRM/pagos por caso empresarial',
     'multi_location_dashboard': 'Panel centralizado para monitorear todas las clínicas (para cadenas/franquicias)'
+  };
+
+  // JSON Validation function
+  const validateJsonConfiguration = (jsonString: string) => {
+    try {
+      const parsedJson = JSON.parse(jsonString);
+      
+      // Check required top-level properties
+      if (!parsedJson.hasOwnProperty('plans') || !Array.isArray(parsedJson.plans)) {
+        return { isValid: false, error: 'Propiedad "plans" requerida y debe ser un array' };
+      }
+      
+      if (parsedJson.plans.length === 0) {
+        return { isValid: false, error: 'El array "plans" no puede estar vacío' };
+      }
+      
+      // Validate each plan
+      for (let i = 0; i < parsedJson.plans.length; i++) {
+        const plan = parsedJson.plans[i];
+        const planIndex = i + 1;
+        
+        // Check required plan properties
+        const requiredProps = ['name', 'description', 'monthly_price_mxn', 'yearly_price_mxn', 'max_vetsites'];
+        for (const prop of requiredProps) {
+          if (!plan.hasOwnProperty(prop)) {
+            return { isValid: false, error: `Plan ${planIndex}: Propiedad "${prop}" requerida` };
+          }
+        }
+        
+        // Validate data types
+        if (typeof plan.name !== 'string' || plan.name.trim() === '') {
+          return { isValid: false, error: `Plan ${planIndex}: "name" debe ser un texto no vacío` };
+        }
+        
+        if (typeof plan.description !== 'string' || plan.description.trim() === '') {
+          return { isValid: false, error: `Plan ${planIndex}: "description" debe ser un texto no vacío` };
+        }
+        
+        if (typeof plan.monthly_price_mxn !== 'number' || plan.monthly_price_mxn < 0) {
+          return { isValid: false, error: `Plan ${planIndex}: "monthly_price_mxn" debe ser un número positivo` };
+        }
+        
+        if (typeof plan.yearly_price_mxn !== 'number' || plan.yearly_price_mxn < 0) {
+          return { isValid: false, error: `Plan ${planIndex}: "yearly_price_mxn" debe ser un número positivo` };
+        }
+        
+        if (typeof plan.max_vetsites !== 'number' || plan.max_vetsites < 1) {
+          return { isValid: false, error: `Plan ${planIndex}: "max_vetsites" debe ser un número mayor a 0` };
+        }
+        
+        // Validate features array if present
+        if (plan.features && !Array.isArray(plan.features)) {
+          return { isValid: false, error: `Plan ${planIndex}: "features" debe ser un array` };
+        }
+        
+        // Validate status if present
+        if (plan.status && typeof plan.status !== 'string') {
+          return { isValid: false, error: `Plan ${planIndex}: "status" debe ser un texto` };
+        }
+      }
+      
+      return { isValid: true, parsedData: parsedJson };
+    } catch (error) {
+      return { isValid: false, error: `JSON inválido: ${error.message}` };
+    }
+  };
+
+  // Handle JSON input change with real-time validation
+  const handleJsonInputChange = (value: string) => {
+    setJsonInput(value);
+    
+    if (value.trim() === '') {
+      setJsonValidationError(null);
+      return;
+    }
+    
+    const validation = validateJsonConfiguration(value);
+    if (!validation.isValid) {
+      setJsonValidationError(validation.error);
+    } else {
+      setJsonValidationError(null);
+    }
   };
 
   // Fastload optimization: Fetch subscription plans with caching
@@ -186,6 +269,7 @@ function EnterpriseSubscriptionAdmin() {
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/subscription-plans'] });
       setJsonImportDialog(false);
       setJsonInput('');
+      setJsonValidationError(null);
       
       toast({
         title: "✅ Importación Exitosa",
@@ -203,30 +287,19 @@ function EnterpriseSubscriptionAdmin() {
   });
 
   const handleJsonImport = () => {
-    try {
-      const parsedJson = JSON.parse(jsonInput);
-      if (!parsedJson.plans || !Array.isArray(parsedJson.plans)) {
-        throw new Error('Estructura JSON inválida. Se espera un array "plans".');
-      }
-      
-      // Validate that plans have required fields
-      const invalidPlans = parsedJson.plans.filter((plan: any) => 
-        !plan.name || !plan.description || typeof plan.monthly_price_mxn !== 'number'
-      );
-      
-      if (invalidPlans.length > 0) {
-        throw new Error(`Planes inválidos detectados. Revisa que tengan name, description y monthly_price_mxn.`);
-      }
-      
-      importPlans.mutate(parsedJson);
-    } catch (error: any) {
-      console.error('JSON parse error:', error);
+    // Validate JSON before importing
+    const validation = validateJsonConfiguration(jsonInput);
+    
+    if (!validation.isValid) {
       toast({
-        title: "❌ Error de Formato JSON",
-        description: error.message || "Error al parsear el JSON. Verifica el formato e intenta de nuevo.",
+        title: "❌ Error de Validación",
+        description: validation.error,
         variant: "destructive",
       });
+      return;
     }
+
+    importPlans.mutate(validation.parsedData);
   };
 
   // Early return with skeleton for fastload optimization
@@ -287,8 +360,14 @@ function EnterpriseSubscriptionAdmin() {
                     <Label className="text-gray-300">Configuración JSON</Label>
                     <textarea
                       value={jsonInput}
-                      onChange={(e) => setJsonInput(e.target.value)}
-                      className="w-full h-96 bg-gray-700 border-gray-600 text-white p-3 rounded-lg font-mono text-sm resize-none"
+                      onChange={(e) => handleJsonInputChange(e.target.value)}
+                      className={`w-full h-96 bg-gray-700 text-white p-3 rounded-lg font-mono text-sm resize-none ${
+                        jsonValidationError 
+                          ? 'border-2 border-red-500' 
+                          : jsonInput.trim() && !jsonValidationError
+                          ? 'border-2 border-green-500'
+                          : 'border border-gray-600'
+                      }`}
                       placeholder={`{
   "trial_days": 10,
   "monthly_multiplier": 1.5,
@@ -328,6 +407,30 @@ function EnterpriseSubscriptionAdmin() {
 }`}
                       data-testid="textarea-json-input"
                     />
+                    
+                    {/* Validation Error Display */}
+                    {jsonValidationError && (
+                      <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-red-400" />
+                          <span className="text-sm font-medium text-red-300">Error de Validación</span>
+                        </div>
+                        <p className="mt-2 text-sm text-red-200">{jsonValidationError}</p>
+                      </div>
+                    )}
+                    
+                    {/* Success Validation Display */}
+                    {jsonInput.trim() && !jsonValidationError && (
+                      <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full bg-green-400 flex items-center justify-center">
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-medium text-green-300">JSON Válido</span>
+                        </div>
+                        <p className="mt-2 text-sm text-green-200">La configuración JSON es válida y está lista para importar</p>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3">
@@ -347,6 +450,7 @@ function EnterpriseSubscriptionAdmin() {
                       onClick={() => {
                         setJsonImportDialog(false);
                         setJsonInput('');
+                        setJsonValidationError(null);
                       }}
                       className="bg-gray-700 border-gray-600 hover:bg-gray-600"
                     >
@@ -355,7 +459,7 @@ function EnterpriseSubscriptionAdmin() {
                     <Button 
                       onClick={handleJsonImport}
                       className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                      disabled={importPlans.isPending || !jsonInput.trim()}
+                      disabled={importPlans.isPending || !jsonInput.trim() || !!jsonValidationError}
                     >
                       {importPlans.isPending ? (
                         <>
