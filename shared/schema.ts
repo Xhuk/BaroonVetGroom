@@ -272,6 +272,56 @@ export const betaFeatureUsage = pgTable("beta_feature_usage", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+// Service activation and usage tracking tables
+export const serviceActivations = pgTable("service_activations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull(),
+  serviceId: varchar("service_id").notNull(),
+  isActive: boolean("is_active").default(true),
+  activatedAt: timestamp("activated_at").defaultNow(),
+  deactivatedAt: timestamp("deactivated_at"),
+  monthlyLimit: integer("monthly_limit").notNull(), // e.g., 1000 WhatsApp messages
+  setupFee: decimal("setup_fee", { precision: 10, scale: 2 }),
+  monthlyPrice: decimal("monthly_price", { precision: 10, scale: 2 }).notNull(),
+  paymentIntentId: varchar("payment_intent_id"),
+  autoRenewal: boolean("auto_renewal").default(false),
+  renewalThreshold: decimal("renewal_threshold", { precision: 5, scale: 2 }).default("0.15"), // 15%
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const serviceUsage = pgTable("service_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  serviceActivationId: varchar("service_activation_id").notNull().references(() => serviceActivations.id, { onDelete: 'cascade' }),
+  usageType: varchar("usage_type").notNull(), // 'whatsapp_message', 'sms_message', 'email_sent', etc.
+  amount: integer("amount").notNull().default(1),
+  metadata: jsonb("metadata"), // Additional data like recipient, message_id, etc.
+  timestamp: timestamp("timestamp").defaultNow(),
+  billingPeriodStart: timestamp("billing_period_start").notNull(),
+  billingPeriodEnd: timestamp("billing_period_end").notNull(),
+});
+
+export const serviceRenewals = pgTable("service_renewals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  serviceActivationId: varchar("service_activation_id").notNull().references(() => serviceActivations.id, { onDelete: 'cascade' }),
+  renewalDate: timestamp("renewal_date").defaultNow(),
+  previousPeriodStart: timestamp("previous_period_start").notNull(),
+  previousPeriodEnd: timestamp("previous_period_end").notNull(),
+  newPeriodStart: timestamp("new_period_start").notNull(),
+  newPeriodEnd: timestamp("new_period_end").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  paymentIntentId: varchar("payment_intent_id"),
+  status: varchar("status").notNull().default("completed"), // completed, failed, pending
+  triggerReason: varchar("trigger_reason").notNull(), // 'auto_renewal', 'manual_renewal', 'usage_threshold'
+});
+
+export type ServiceActivation = typeof serviceActivations.$inferSelect;
+export type InsertServiceActivation = typeof serviceActivations.$inferInsert;
+export type ServiceUsage = typeof serviceUsage.$inferSelect;
+export type InsertServiceUsage = typeof serviceUsage.$inferInsert;
+export type ServiceRenewal = typeof serviceRenewals.$inferSelect;
+export type InsertServiceRenewal = typeof serviceRenewals.$inferInsert;
+
 // New tables for billing and delivery integration
 export const billingInvoices = pgTable("billing_invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

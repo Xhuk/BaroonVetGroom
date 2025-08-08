@@ -28,7 +28,8 @@ import {
   Activity,
   Building2,
   Users,
-  Zap
+  Zap,
+  AlertTriangle
 } from "lucide-react";
 
 // Load Stripe
@@ -52,6 +53,11 @@ interface ServiceItem {
 interface StoreService extends ServiceItem {
   isActive?: boolean;
   activatedAt?: string;
+  autoRenewal?: boolean;
+  usagePercentage?: number;
+  usedAmount?: number;
+  monthlyLimit?: number;
+  renewalThreshold?: number;
 }
 
 const getCategoryIcon = (category: string) => {
@@ -238,6 +244,46 @@ export default function ServiceStore() {
     setIsCheckoutOpen(false);
     setClientSecret(null);
     setSelectedService(null);
+  };
+
+  // Auto-renewal toggle mutation
+  const toggleAutoRenewalMutation = useMutation({
+    mutationFn: async ({ serviceId, autoRenewal }: { serviceId: string; autoRenewal: boolean }) => {
+      return apiRequest('/api/store/toggle-auto-renewal', 'POST', {
+        serviceId,
+        tenantId: currentTenant?.id,
+        autoRenewal
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Configuración actualizada",
+        description: "La renovación automática ha sido actualizada.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services', currentTenant?.id] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para cambiar configuraciones",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar la configuración",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAutoRenewalToggle = (serviceId: string, autoRenewal: boolean) => {
+    toggleAutoRenewalMutation.mutate({ serviceId, autoRenewal });
   };
 
   const isServiceActive = (serviceId: string) => {
@@ -444,17 +490,79 @@ export default function ServiceStore() {
                       </ul>
                     </div>
 
+                    {/* Usage Tracking - Only show for active services with usage limits */}
+                    {isActive && service.id !== 'payment-gateway' && service.id !== 'analytics-dashboard' && service.id !== 'inventory-management' && (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Uso Mensual</span>
+                          <span className="text-xs text-blue-600 dark:text-blue-300">
+                            {(activeServices.find((s: StoreService) => s.id === service.id)?.usedAmount) || 0} / 
+                            {(activeServices.find((s: StoreService) => s.id === service.id)?.monthlyLimit) || 1000}
+                          </span>
+                        </div>
+                        <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              ((activeServices.find((s: StoreService) => s.id === service.id)?.usagePercentage) || 0) >= 85 ? 'bg-red-500' :
+                              ((activeServices.find((s: StoreService) => s.id === service.id)?.usagePercentage) || 0) >= 70 ? 'bg-yellow-500' : 'bg-green-500'
+                            }`}
+                            style={{ width: `${Math.min((activeServices.find((s: StoreService) => s.id === service.id)?.usagePercentage) || 0, 100)}%` }}
+                          />
+                        </div>
+                        <div className="text-xs text-blue-600 dark:text-blue-400">
+                          {((activeServices.find((s: StoreService) => s.id === service.id)?.usagePercentage) || 0).toFixed(1)}% utilizado
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Auto-renewal Toggle - Only show for active services */}
+                    {isActive && (
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">Renovación Automática</span>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Al 85% de uso del límite mensual</p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              className="sr-only peer" 
+                              checked={(activeServices.find((s: StoreService) => s.id === service.id)?.autoRenewal) || false}
+                              onChange={(e) => handleAutoRenewalToggle(service.id, e.target.checked)}
+                              data-testid={`toggle-auto-renewal-${service.id}`}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-blue-600"></div>
+                          </label>
+                        </div>
+                        {(activeServices.find((s: StoreService) => s.id === service.id)?.autoRenewal) && (
+                          <div className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                            <Check className="h-3 w-3" />
+                            Se renovará automáticamente cuando alcance el 85% del uso
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Action Button */}
                     <div className="pt-2">
                       {isActive ? (
-                        <Button
-                          disabled
-                          className="w-full bg-green-100 text-green-800 hover:bg-green-100 cursor-not-allowed"
-                          data-testid={`button-active-${service.id}`}
-                        >
-                          <Check className="h-4 w-4 mr-2" />
-                          Servicio Activo
-                        </Button>
+                        <div className="space-y-2">
+                          <Button
+                            disabled
+                            className="w-full bg-green-100 text-green-800 hover:bg-green-100 cursor-not-allowed"
+                            data-testid={`button-active-${service.id}`}
+                          >
+                            <Check className="h-4 w-4 mr-2" />
+                            Servicio Activo
+                          </Button>
+                          {/* Show warning if usage is high */}
+                          {((activeServices.find((s: StoreService) => s.id === service.id)?.usagePercentage) || 0) >= 85 && (
+                            <div className="text-xs text-red-600 dark:text-red-400 text-center flex items-center justify-center gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              Cerca del límite mensual
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <Button
                           onClick={() => handlePurchaseService(service)}
