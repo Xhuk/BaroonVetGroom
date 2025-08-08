@@ -1853,7 +1853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { advancedRouteOptimization } = await import('./routeOptimizer');
       const result = await advancedRouteOptimization({
         clinicLocation: clinicLocation || [25.6866, -100.3161],
-        appointments: routePoints,
+        deliveryPoints: routePoints,
         vanCapacity: vanCapacity || 'medium',
         fraccionamientoWeights: fraccionamientoWeights || {},
         config
@@ -2191,10 +2191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const config = await storage.upsertCompanyBillingConfig({
-        companyId,
-        ...configData
-      });
+      const config = await storage.upsertCompanyBillingConfig(companyId);
       res.json(config);
     } catch (error) {
       console.error("Error updating billing config:", error);
@@ -5088,7 +5085,7 @@ This password expires in 24 hours.
       const { driverId } = req.params;
       
       // Get driver info (assuming driver is a staff member)
-      const drivers = await storage.getStaff(driverId); // This should get staff for that tenant
+      const drivers = await storage.getStaff('', driverId); // This should get staff for that tenant
       const driver = drivers.find((s: any) => s.id === driverId);
       if (!driver) {
         return res.status(404).json({ message: "Driver not found" });
@@ -5137,7 +5134,7 @@ This password expires in 24 hours.
     try {
       const { routeId, format } = req.params;
       
-      const routes = await storage.getDeliveryRoutes(new Date().toISOString().split('T')[0]);
+      const routes = await storage.getDeliveryRoutes('', new Date().toISOString().split('T')[0]);
       const route = routes.find((r: any) => r.id === routeId);
       if (!route) {
         return res.status(404).json({ message: "Route not found" });
@@ -5240,7 +5237,7 @@ This password expires in 24 hours.
       const { driverId, tenantId } = req.params;
       const today = new Date().toISOString().split('T')[0];
       
-      const routes = await storage.getDeliveryRoutes(today);
+      const routes = await storage.getDeliveryRoutes('', today);
       const driverRoutes = routes.filter((route: any) => route.driverId === driverId);
       const appointments = await storage.getAppointments(tenantId, today);
       const driverAppointments = appointments.filter((apt: any) => 
@@ -5335,7 +5332,7 @@ This password expires in 24 hours.
       res.json({
         enabled: true,
         provider: gatewayConfig.gatewayType,
-        publicKey: (gatewayConfig.config as any)?.publicKey || null
+        publicKey: gatewayConfig.config?.publicKey || null
       });
     } catch (error) {
       console.error("Error fetching payment gateway config:", error);
@@ -5445,14 +5442,14 @@ This password expires in 24 hours.
       }
       
       const filteredSales = salesData.filter(sale => {
-        const saleDate = new Date(sale.createdAt || new Date());
+        const saleDate = new Date(sale.createdAt);
         return saleDate >= startDate && saleDate <= endDate;
       });
       
       const totalRevenue = filteredSales.reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0);
       const monthlyRevenue = period === 'current_month' ? totalRevenue : 
         salesData.filter(sale => {
-          const saleDate = new Date(sale.createdAt || new Date());
+          const saleDate = new Date(sale.createdAt);
           return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
         }).reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0);
       
@@ -5460,8 +5457,8 @@ This password expires in 24 hours.
       const recentTransactions = await Promise.all(
         filteredSales.slice(-10).map(async (sale) => {
           const items = await storage.getSaleItems(sale.id);
-          const client = (sale as any).clientId ? await storage.getClients((sale as any).clientId).then(c => c[0]) : null;
-          const pet = (sale as any).petId ? await storage.getPets((sale as any).petId).then(p => p[0]) : null;
+          const client = sale.clientId ? await storage.getClient(sale.clientId) : null;
+          const pet = sale.petId ? await storage.getPet(sale.petId) : null;
           
           return {
             id: sale.id,
@@ -5501,18 +5498,18 @@ This password expires in 24 hours.
       const exportData = await Promise.all(
         salesData.map(async (sale) => {
           const items = await storage.getSaleItems(sale.id);
-          const client = (sale as any).clientId ? await storage.getClients((sale as any).clientId).then(c => c[0]) : null;
-          const pet = (sale as any).petId ? await storage.getPets((sale as any).petId).then(p => p[0]) : null;
+          const client = sale.clientId ? await storage.getClient(sale.clientId) : null;
+          const pet = sale.petId ? await storage.getPet(sale.petId) : null;
           
           return {
-            Fecha: new Date(sale.createdAt || new Date()).toLocaleDateString('es-MX'),
+            Fecha: new Date(sale.createdAt).toLocaleDateString('es-MX'),
             Cliente: client?.name || 'Cliente General',
             Mascota: pet?.name || 'N/A',
             Servicio: items.map(item => item.name).join(', '),
-            Subtotal: parseFloat((sale as any).subtotal || '0'),
-            IVA: parseFloat((sale as any).taxAmount || '0'),
+            Subtotal: parseFloat(sale.subtotal),
+            IVA: parseFloat(sale.taxAmount),
             Total: parseFloat(sale.totalAmount),
-            Estado: (sale as any).status === 'completed' ? 'Pagado' : 'Pendiente',
+            Estado: sale.status === 'completed' ? 'Pagado' : 'Pendiente',
             'Método de Pago': sale.paymentMethod || 'Efectivo'
           };
         })
