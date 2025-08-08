@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
 import { Plus, Building2, Users, DollarSign, Settings, AlertTriangle, ArrowLeft } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Link } from "wouter";
@@ -61,8 +62,11 @@ const SubscriptionSkeleton = memo(() => (
 
 function EnterpriseSubscriptionAdmin() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [planConfigDialog, setPlanConfigDialog] = useState(false);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
+  const [jsonImportDialog, setJsonImportDialog] = useState(false);
+  const [jsonInput, setJsonInput] = useState('');
   const [newPlanForm, setNewPlanForm] = useState({
     name: '',
     displayName: '',
@@ -162,6 +166,64 @@ function EnterpriseSubscriptionAdmin() {
     },
   });
 
+  // Bulk import subscription plans from JSON
+  const importPlans = useMutation({
+    mutationFn: async (jsonData: any) => {
+      const response = await fetch('/api/superadmin/subscription-plans/bulk-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(jsonData),
+      });
+      if (!response.ok) throw new Error('Failed to import plans');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/subscription-plans'] });
+      setJsonImportDialog(false);
+      setJsonInput('');
+      
+      toast({
+        title: "✅ Importación Exitosa",
+        description: data.message || "Planes de suscripción importados correctamente",
+        variant: "default",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ Error de Importación",
+        description: error?.message || "Error al importar planes de suscripción",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleJsonImport = () => {
+    try {
+      const parsedJson = JSON.parse(jsonInput);
+      if (!parsedJson.plans || !Array.isArray(parsedJson.plans)) {
+        throw new Error('Estructura JSON inválida. Se espera un array "plans".');
+      }
+      
+      // Validate that plans have required fields
+      const invalidPlans = parsedJson.plans.filter((plan: any) => 
+        !plan.name || !plan.description || typeof plan.monthly_price_mxn !== 'number'
+      );
+      
+      if (invalidPlans.length > 0) {
+        throw new Error(`Planes inválidos detectados. Revisa que tengan name, description y monthly_price_mxn.`);
+      }
+      
+      importPlans.mutate(parsedJson);
+    } catch (error: any) {
+      console.error('JSON parse error:', error);
+      toast({
+        title: "❌ Error de Formato JSON",
+        description: error.message || "Error al parsear el JSON. Verifica el formato e intenta de nuevo.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Early return with skeleton for fastload optimization
   if (plansLoading) {
     return (
@@ -192,6 +254,105 @@ function EnterpriseSubscriptionAdmin() {
           </div>
           
           <div className="flex gap-2">
+            {/* JSON Import Button */}
+            <Dialog open={jsonImportDialog} onOpenChange={setJsonImportDialog}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="bg-gray-700 border-gray-600 hover:bg-gray-600"
+                  data-testid="button-json-import"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Importar JSON
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl bg-gray-800 border-gray-700 text-white">
+                <DialogHeader>
+                  <DialogTitle className="text-purple-300 flex items-center gap-2">
+                    <Settings className="w-5 h-5" />
+                    Importar Configuración de Planes
+                  </DialogTitle>
+                  <DialogDescription className="text-gray-400">
+                    Pega el JSON con la configuración de planes para importar o reconfigurar todos los planes de suscripción
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-gray-300">Configuración JSON</Label>
+                    <textarea
+                      value={jsonInput}
+                      onChange={(e) => setJsonInput(e.target.value)}
+                      className="w-full h-96 bg-gray-700 border-gray-600 text-white p-3 rounded-lg font-mono text-sm resize-none"
+                      placeholder={`{
+  "trial_days": 10,
+  "monthly_multiplier": 1.5,
+  "plans": [
+    {
+      "name": "Basic",
+      "description": "Perfect for single clinic operations",
+      "status": "Activo",
+      "monthly_price_mxn": 299,
+      "yearly_price_mxn": 2990,
+      "max_vetsites": 1,
+      "features": [
+        "1_vetsite",
+        "unlimited_appointments",
+        "basic_reporting",
+        "email_support",
+        "whatsapp_integration"
+      ]
+    }
+  ]
+}`}
+                      data-testid="textarea-json-input"
+                    />
+                  </div>
+                  
+                  <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3">
+                    <div className="text-sm text-blue-300">
+                      <strong>Formato Esperado:</strong>
+                      <ul className="mt-2 space-y-1 text-xs text-blue-200">
+                        <li>• <code>trial_days</code>: Días de prueba gratuita</li>
+                        <li>• <code>monthly_multiplier</code>: Multiplicador para cálculo de precios</li>
+                        <li>• <code>plans</code>: Array de planes con name, description, status, precios, max_vetsites, features</li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setJsonImportDialog(false);
+                        setJsonInput('');
+                      }}
+                      className="bg-gray-700 border-gray-600 hover:bg-gray-600"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      onClick={handleJsonImport}
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      disabled={importPlans.isPending || !jsonInput.trim()}
+                    >
+                      {importPlans.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                          Importando...
+                        </>
+                      ) : (
+                        <>
+                          <Settings className="w-4 h-4 mr-2" />
+                          Importar Planes
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
             {/* Quick Feature Template Button */}
             <Button 
               onClick={() => {

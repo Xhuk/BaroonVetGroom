@@ -5552,6 +5552,79 @@ This password expires in 24 hours.
     }
   });
 
+  // Bulk import subscription plans from JSON configuration
+  app.post('/api/superadmin/subscription-plans/bulk-import', isSuperAdmin, async (req, res) => {
+    try {
+      const { trial_days, monthly_multiplier, plans } = req.body;
+      
+      if (!plans || !Array.isArray(plans)) {
+        return res.status(400).json({ message: "Invalid JSON structure. Expected 'plans' array." });
+      }
+
+      const importResults = {
+        created: 0,
+        updated: 0,
+        errors: []
+      };
+
+      // Process each plan in the import
+      for (const planConfig of plans) {
+        try {
+          // Validate required fields
+          const requiredFields = ['name', 'description', 'monthly_price_mxn', 'yearly_price_mxn', 'max_vetsites'];
+          const missingFields = requiredFields.filter(field => !planConfig.hasOwnProperty(field));
+          
+          if (missingFields.length > 0) {
+            importResults.errors.push(`Plan '${planConfig.name}': Missing required fields: ${missingFields.join(', ')}`);
+            continue;
+          }
+
+          // Check if plan exists
+          const existingPlan = await storage.getSubscriptionPlanByName(planConfig.name);
+          
+          // Transform the plan configuration to match our database schema
+          const planData = {
+            name: planConfig.name,
+            displayName: planConfig.name,
+            description: planConfig.description,
+            monthlyPrice: planConfig.monthly_price_mxn.toString(),
+            yearlyPrice: planConfig.yearly_price_mxn.toString(),
+            maxTenants: planConfig.max_vetsites,
+            features: planConfig.features || [],
+            isActive: planConfig.status === 'Activo' || planConfig.status === 'Active'
+          };
+
+          if (existingPlan) {
+            // Update existing plan
+            await storage.updateSubscriptionPlan(existingPlan.id, planData);
+            importResults.updated++;
+          } else {
+            // Create new plan
+            await storage.createSubscriptionPlan(planData);
+            importResults.created++;
+          }
+
+        } catch (planError: any) {
+          importResults.errors.push(`Plan '${planConfig.name}': ${planError.message}`);
+        }
+      }
+
+      res.json({
+        success: true,
+        message: `Import completed: ${importResults.created} created, ${importResults.updated} updated`,
+        results: importResults
+      });
+
+    } catch (error) {
+      console.error("Error importing subscription plans:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to import subscription plans",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Get all TenantVet customers (companies) for enterprise management
   app.get('/api/superadmin/tenant-customers', isSuperAdmin, async (req, res) => {
     try {

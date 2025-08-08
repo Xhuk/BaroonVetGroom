@@ -2224,6 +2224,22 @@ export class DatabaseStorage implements IStorage {
     return plan;
   }
 
+  async getSubscriptionPlanByName(name: string): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(subscriptionPlans)
+      .where(eq(subscriptionPlans.name, name));
+    return plan;
+  }
+
+  async createSubscriptionPlan(planData: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const [newPlan] = await db
+      .insert(subscriptionPlans)
+      .values(planData)
+      .returning();
+    return newPlan;
+  }
+
   async updateSubscriptionPlan(planId: string, updates: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
     const [updatedPlan] = await db
       .update(subscriptionPlans)
