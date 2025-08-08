@@ -44,6 +44,7 @@ import { VersionedSuperAdminDashboard } from "@/components/VersionedSuperAdminDa
 import EmailConfigurationAdmin from "@/pages/EmailConfigurationAdmin";
 import SubscriptionCheckout from "@/pages/SubscriptionCheckout";
 import CompanyOnboarding from "@/pages/CompanyOnboarding";
+import ServiceStore from "@/pages/ServiceStore";
 
 import WebhookIntegrations from "@/pages/WebhookIntegrations";
 import SubscriptionLanding from "@/pages/SubscriptionLanding";
@@ -101,6 +102,7 @@ function Router() {
           <Route path="/admin/external-services" component={AdminExternalServices} />
           <Route path="/admin/receipt-templates" component={ReceiptTemplatesAdmin} />
           <Route path="/admin/company-clinic" component={CompanyClinicAdmin} />
+          <Route path="/store" component={ServiceStore} />
           <Route path="/superadmin" component={SuperAdmin} />
           <Route path="/superadmin/monitoring" component={SuperAdminMonitoring} />
           <Route path="/superadmin/route-config" component={SuperAdminRouteConfig} />

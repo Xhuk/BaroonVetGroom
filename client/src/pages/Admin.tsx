@@ -40,7 +40,9 @@ import {
   Grid3X3,
   List,
   X,
-  Receipt
+  Receipt,
+  ShoppingCart,
+  Star
 } from "lucide-react";
 
 // Helper function to get room type icons
@@ -1011,6 +1013,41 @@ function Admin() {
                 </Button>
               </div>
             </div>
+
+            {/* Store Button - Holding Cartel */}
+            <Card className="bg-gradient-to-r from-blue-600 to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group mb-6" onClick={() => window.location.href = '/store'} data-testid="store-banner">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors">
+                      <ShoppingCart className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold mb-1">Tienda de Servicios Premium</h3>
+                      <p className="text-blue-100 text-lg">
+                        Descubre servicios avanzados: WhatsApp, SMS, Email Marketing y más
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right hidden md:block">
+                      <div className="flex items-center gap-2 text-yellow-300 mb-1">
+                        <Star className="h-5 w-5 fill-current" />
+                        <span className="font-semibold">Servicios Profesionales</span>
+                      </div>
+                      <p className="text-sm text-blue-100">Integra con tus clínicas existentes</p>
+                    </div>
+                    <Button 
+                      variant="secondary" 
+                      className="bg-white text-blue-600 hover:bg-gray-50 font-semibold px-6 py-3 text-lg group-hover:scale-105 transition-transform"
+                      data-testid="button-open-store"
+                    >
+                      Explorar Tienda
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <Tabs defaultValue="rooms" className="w-full">
