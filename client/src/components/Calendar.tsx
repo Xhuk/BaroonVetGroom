@@ -108,7 +108,7 @@ export function Calendar({ className }: CalendarProps) {
 
   // Check if current time slot is active
   const isCurrentSlot = (timeSlot: string) => {
-    const [hour, minute] = timeSlot.split(':').map(Number);
+    const [hour, minute] = (timeSlot || '').split(':').map(Number);
     const now = currentTime;
     return (
       now.getHours() === hour &&

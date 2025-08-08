@@ -1208,7 +1208,7 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                           } else {
                             setAvailabilityStatus({
                               available: false,
-                              message: `❌ Horario no disponible. Alternativas: ${availability.alternativeSlots?.join(', ') || 'Ninguna'}`
+                              message: `❌ Horario no disponible. Alternativas: ${(availability.alternativeSlots || []).join(', ') || 'Ninguna'}`
                             });
                           }
                         } catch (error) {

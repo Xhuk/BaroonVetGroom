@@ -90,10 +90,12 @@ ${colorConfig
       itemConfig.color
     return color ? `  --color-${key}: ${color};` : null
   })
+  .filter(Boolean)
   .join("\n")}
 }
 `
           )
+          .filter(Boolean)
           .join("\n"),
       }}
     />

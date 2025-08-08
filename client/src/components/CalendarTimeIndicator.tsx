@@ -94,7 +94,7 @@ export function CalendarTimeIndicator({ appointments = [], selectedDate, onRefre
           .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime))
           .map(appointment => {
             const aptTime = appointment.scheduledTime;
-            const isCurrentHour = isToday && aptTime.split(':')[0] === String(currentHour).padStart(2, '0');
+            const isCurrentHour = isToday && (aptTime || '0:0').split(':')[0] === String(currentHour).padStart(2, '0');
             
             return (
               <div 

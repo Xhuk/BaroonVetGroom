@@ -104,7 +104,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     
     // Filter to clinic hours for display (6 AM to 10 PM)
     const visibleSlots = allSlots.filter(slot => {
-      const hour = parseInt(slot.split(':')[0]);
+      const hour = parseInt((slot || '0:0').split(':')[0]);
       return hour >= 6 && hour < 22;
     });
     
@@ -131,7 +131,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
         return false;
       }
 
-      const normalizedAppointmentDate = appointmentDate.split('T')[0];
+      const normalizedAppointmentDate = (appointmentDate || '').split('T')[0];
       const appointmentTimeStr = typeof appointmentTime === 'string' 
         ? appointmentTime.substring(0, 5) 
         : appointmentTime;
@@ -186,7 +186,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
       const appointmentTime = appointment.scheduledTime;
       if (!appointmentTime) return false;
       
-      const [appointmentHour, appointmentMinute] = appointmentTime.split(':').map(Number);
+      const [appointmentHour, appointmentMinute] = (appointmentTime || '0:0').split(':').map(Number);
       const appointmentStart = new Date(now);
       appointmentStart.setUTCHours(appointmentHour, appointmentMinute, 0, 0);
       
@@ -225,8 +225,8 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     
     // Find current time slot in visible slots and scroll to center it at 50%
     const currentSlotIndex = visibleTimeSlots.findIndex(slot => {
-      const slotHour = parseInt(slot.split(':')[0]);
-      const slotMinute = parseInt(slot.split(':')[1]);
+      const slotHour = parseInt((slot || '0:0').split(':')[0]);
+      const slotMinute = parseInt((slot || '0:0').split(':')[1]);
       return hours === slotHour && now.getUTCMinutes() >= slotMinute && now.getUTCMinutes() < slotMinute + 30;
     });
     
@@ -296,7 +296,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     return appointments.filter(appointment => {
       const appointmentDate = appointment.scheduledDate;
       if (!appointmentDate) return false;
-      const normalizedDate = appointmentDate.split('T')[0];
+      const normalizedDate = (appointmentDate || '').split('T')[0];
       return normalizedDate === displayDate;
     }).length;
   };
@@ -321,7 +321,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     return appointments.filter(appointment => {
       if (!appointment.scheduledDate || !appointment.scheduledTime) return false;
       
-      const appointmentDate = appointment.scheduledDate.split('T')[0];
+      const appointmentDate = (appointment.scheduledDate || '').split('T')[0];
       if (appointmentDate !== displayDate) return false;
       
       const appointmentTime = appointment.scheduledTime;
@@ -413,9 +413,9 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
           
           {visibleTimeSlots.map((slot, index) => {
             const slotAppointments = getAppointmentsForSlot(slot);
-            const isCurrentSlot = currentTime.getUTCHours() === parseInt(slot.split(':')[0]) &&
-                                  currentTime.getUTCMinutes() >= parseInt(slot.split(':')[1]) &&
-                                  currentTime.getUTCMinutes() < parseInt(slot.split(':')[1]) + 30;
+            const isCurrentSlot = currentTime.getUTCHours() === parseInt((slot || '0:0').split(':')[0]) &&
+                                  currentTime.getUTCMinutes() >= parseInt((slot || '0:0').split(':')[1]) &&
+                                  currentTime.getUTCMinutes() < parseInt((slot || '0:0').split(':')[1]) + 30;
             
             const isFirstSlot = index === 0;
             const isLastSlot = index === visibleTimeSlots.length - 1;
