@@ -385,30 +385,7 @@ function EnterpriseSubscriptionAdmin() {
               Admin Características
             </Button>
 
-            {/* Quick Feature Template Button */}
-            <Button 
-              onClick={() => {
-                setEditingPlan(null);
-                const basicFeatures = ['basic_appointments', 'email_support', 'basic_reporting', 'whatsapp_integration'];
-                setNewPlanForm({
-                  name: 'basic',
-                  displayName: 'Plan Básico',
-                  description: 'Plan inicial con características esenciales',
-                  maxTenants: 1,
-                  monthlyPrice: 49,
-                  yearlyPrice: 490,
-                  features: basicFeatures,
-                  isActive: true
-                });
-                setPlanConfigDialog(true);
-              }}
-              variant="outline"
-              className="bg-gray-700 border-gray-600 hover:bg-gray-600"
-              data-testid="button-feature-template"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Plantilla Básica
-            </Button>
+
             
             <Dialog open={planConfigDialog} onOpenChange={setPlanConfigDialog}>
               <DialogTrigger asChild>
