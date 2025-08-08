@@ -823,6 +823,54 @@ export default function SuperAdmin() {
             </Card>
           </div>
 
+          {/* Subscription Plan Pricing Management */}
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <CreditCard className="h-5 w-5 text-blue-600" />
+                    <span>Gestión de Planes de Suscripción</span>
+                  </div>
+                  <Link to="/enterprise-subscription-admin">
+                    <Button 
+                      size="sm" 
+                      className="bg-blue-600 hover:bg-blue-700"
+                      data-testid="button-manage-subscription-plans"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Gestionar Precios
+                    </Button>
+                  </Link>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-900 mb-2">Configuración de Precios de Planes</h4>
+                    <p className="text-sm text-blue-700 mb-3">
+                      Administra los precios de los planes de suscripción disponibles para los clientes.
+                      Configura precios mensuales, anuales y límites de tenants para cada plan.
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-blue-600 mb-4">
+                      <div>• Plan Trial/Básico</div>
+                      <div>• Plan Medium</div>
+                      <div>• Plan Large</div>
+                      <div>• Plan Extra Large</div>
+                    </div>
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                      <h5 className="font-medium text-orange-900 text-sm mb-1">Acceso Rápido</h5>
+                      <p className="text-xs text-orange-700">
+                        Use el botón "Gestionar Precios" para acceder al panel completo de administración de planes
+                        donde puede modificar precios, configurar características y gestionar disponibilidad.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Demo Data Seeding Panel */}
           <div className="mt-8">
             <Card>
