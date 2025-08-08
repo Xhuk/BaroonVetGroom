@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { RoleImpersonationProvider } from "@/hooks/useRoleImpersonation";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
@@ -131,21 +132,23 @@ import { TimezoneProvider } from "@/contexts/TimezoneContext";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ThemeProvider>
-          <TimezoneProvider>
-            <InstantNavigation />
-            <TenantProvider>
-              <RoleImpersonationProvider>
-                <Toaster />
-                <Router />
-              </RoleImpersonationProvider>
-            </TenantProvider>
-          </TimezoneProvider>
-        </ThemeProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ThemeProvider>
+            <TimezoneProvider>
+              <InstantNavigation />
+              <TenantProvider>
+                <RoleImpersonationProvider>
+                  <Toaster />
+                  <Router />
+                </RoleImpersonationProvider>
+              </TenantProvider>
+            </TimezoneProvider>
+          </ThemeProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

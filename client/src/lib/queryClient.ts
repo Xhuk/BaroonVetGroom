@@ -29,12 +29,29 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Ensure queryKey is an array before calling join
-    if (!Array.isArray(queryKey) || queryKey.length === 0) {
-      throw new Error("Invalid queryKey: must be a non-empty array");
+    // Ultra-defensive queryKey handling
+    if (!queryKey) {
+      throw new Error("queryKey is null or undefined");
+    }
+    if (!Array.isArray(queryKey)) {
+      throw new Error("queryKey must be an array, got: " + typeof queryKey);
+    }
+    if (queryKey.length === 0) {
+      throw new Error("queryKey array is empty");
     }
     
-    const res = await fetch(queryKey.join("/") as string, {
+    // Additional safety check for array elements
+    const safeQueryKey = queryKey.filter(item => item != null && item !== undefined);
+    if (safeQueryKey.length === 0) {
+      throw new Error("All queryKey elements are null/undefined");
+    }
+    
+    const url = safeQueryKey.join("/");
+    if (!url || typeof url !== 'string') {
+      throw new Error("Failed to create valid URL from queryKey");
+    }
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 
