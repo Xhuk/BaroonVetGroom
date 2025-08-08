@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
-import { Navigation } from "@/components/Navigation";
 import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -307,9 +306,7 @@ export default function ServiceStore() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Header />
-        <div className="flex">
-          <Navigation />
-          <main className="flex-1 p-6 space-y-6">
+        <main className="p-6 space-y-6">
             <div className="animate-pulse">
               <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -319,7 +316,6 @@ export default function ServiceStore() {
               </div>
             </div>
           </main>
-        </div>
       </div>
     );
   }
@@ -327,9 +323,7 @@ export default function ServiceStore() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
-      <div className="flex">
-        <Navigation />
-        <main className="flex-1 p-6 space-y-6">
+      <main className="p-6 space-y-6">
           {/* Back Button */}
           <BackButton />
           
@@ -627,6 +621,5 @@ export default function ServiceStore() {
           </Dialog>
         </main>
       </div>
-    </div>
   );
 }
