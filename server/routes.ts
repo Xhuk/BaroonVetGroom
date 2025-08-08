@@ -14,6 +14,8 @@ import { eq, sql } from "drizzle-orm";
 import { pets, companies, tempLinks } from "@shared/schema";
 import { gt } from "drizzle-orm";
 import { subscriptionService } from "./subscriptionService";
+import express from "express";
+import path from "path";
 // Removed autoStatusService import - now using database functions
 
 // Extended request type for authenticated requests
@@ -132,6 +134,20 @@ const checkSubscriptionValidity = async (req: any, res: any, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Simple marketing brochure route that reads file content
+  app.get('/marketing/brochure.html', async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const marketingPath = path.resolve(import.meta.dirname, '..', 'marketing', 'brochure.html');
+      const content = await fs.promises.readFile(marketingPath, 'utf-8');
+      res.setHeader('Content-Type', 'text/html');
+      res.send(content);
+    } catch (error) {
+      console.error('Error serving marketing brochure:', error);
+      res.status(404).send('Marketing brochure not found');
+    }
+  });
 
   // Enhanced in-memory cache for user data (valid for 15 minutes)
   const userCache = new Map<string, { data: any, timestamp: number }>();
