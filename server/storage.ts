@@ -399,6 +399,9 @@ export interface IStorage {
   updateReceiptTemplate(templateId: string, template: Partial<InsertReceiptTemplate>): Promise<ReceiptTemplate>;
   deleteReceiptTemplate(templateId: string): Promise<void>;
   getActiveReceiptTemplate(companyId?: string, tenantId?: string): Promise<ReceiptTemplate | undefined>;
+  
+  // Receipt numbering operations
+  generateReceiptNumber(tenantId: string): Promise<string>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1317,10 +1320,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSale(sale: InsertSale): Promise<Sale> {
+    // Generate receipt number if not provided
+    let receiptId = sale.receiptId;
+    if (!receiptId && sale.tenantId) {
+      receiptId = await this.generateReceiptNumber(sale.tenantId);
+    }
+    
     const [newSale] = await db
       .insert(sales)
       .values({
         ...sale,
+        receiptId,
         id: undefined, // Let DB generate ID
       })
       .returning();
@@ -2878,6 +2888,55 @@ export class DatabaseStorage implements IStorage {
 
   async deleteReceiptTemplate(templateId: string): Promise<void> {
     await db.delete(receiptTemplates).where(eq(receiptTemplates.id, templateId));
+  }
+
+  // Generate receipt number with format: CompanyName-TenantCode-Year-SeqNumber
+  async generateReceiptNumber(tenantId: string): Promise<string> {
+    try {
+      // Get tenant and company information
+      const tenant = await this.getTenant(tenantId);
+      if (!tenant) throw new Error('Tenant not found');
+      
+      const company = await this.getCompany(tenant.companyId);
+      if (!company) throw new Error('Company not found');
+      
+      // Extract first 3 characters from company name (uppercase, alphanumeric only)
+      const companyPrefix = company.name
+        .replace(/[^A-Za-z0-9]/g, '') // Remove non-alphanumeric
+        .substring(0, 3)
+        .toUpperCase()
+        .padEnd(3, 'X'); // Pad with X if less than 3 chars
+      
+      // Get next sequence number for this tenant for current year
+      const currentYear = new Date().getFullYear();
+      const startOfYear = `${currentYear}-01-01`;
+      const endOfYear = `${currentYear}-12-31`;
+      
+      const [result] = await db
+        .select({ count: count() })
+        .from(sales)
+        .where(
+          and(
+            eq(sales.tenantId, tenantId),
+            gte(sales.createdAt, new Date(startOfYear)),
+            lte(sales.createdAt, new Date(endOfYear))
+          )
+        );
+      
+      const sequenceNumber = (result?.count || 0) + 1;
+      const paddedSequence = sequenceNumber.toString().padStart(4, '0');
+      
+      // Format: COMPANY-TEN-YYYY-NNNN (e.g., VET-CLI-2025-0001)
+      const tenantCode = tenantId.substring(0, 3).toUpperCase();
+      const receiptNumber = `${companyPrefix}-${tenantCode}-${currentYear}-${paddedSequence}`;
+      
+      return receiptNumber;
+    } catch (error) {
+      console.error('Error generating receipt number:', error);
+      // Fallback to simple format
+      const timestamp = Date.now().toString().slice(-6);
+      return `REC-${tenantId.substring(0, 3).toUpperCase()}-${timestamp}`;
+    }
   }
 
   async getActiveReceiptTemplate(companyId?: string, tenantId?: string): Promise<ReceiptTemplate | undefined> {
