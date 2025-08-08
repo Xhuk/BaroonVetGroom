@@ -30,11 +30,7 @@ export function ResponsiveNavigation({ className }: ResponsiveNavigationProps) {
 
   console.log(`📱 ResponsiveNavigation: Device ${deviceType}, shouldCollapse: ${shouldCollapseNavigation}, landscape: ${isTabletLandscape}`);
 
-  // Hide navigation in tablet landscape mode (ribbon takes over)
-  if (isTabletLandscape) {
-    return null;
-  }
-
+  // Always call hooks first, before any early returns
   // Get follow-up count for heart animation
   const { data: followUpData } = useQuery<{ count: number }>({
     queryKey: ["/api/medical-appointments/follow-up-count", currentTenant?.id],
@@ -56,6 +52,12 @@ export function ResponsiveNavigation({ className }: ResponsiveNavigationProps) {
     queryKey: ["/api/company/follow-up-config", currentTenant?.companyId],
     enabled: !!currentTenant?.companyId,
   });
+
+  // Hide navigation in tablet landscape mode (ribbon takes over)
+  // Move early return AFTER all hooks are called
+  if (isTabletLandscape) {
+    return null;
+  }
 
   const followUpCount = followUpData?.count ?? 0;
   
