@@ -372,7 +372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getMedicalAppointments(tenantId),
         storage.getPetsByTenant(tenantId),
         storage.getClients(tenantId),
-        storage.getStaff(tenantId),
+        storage.getStaff(tenantId, 'veterinarian'),
         storage.getRooms(tenantId)
       ]);
 
