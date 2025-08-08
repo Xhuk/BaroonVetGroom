@@ -1567,12 +1567,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Super Admin Routes - Webhook Monitoring
-  app.get('/api/superadmin/webhook-stats', isAuthenticated, async (req: any, res) => {
+  // Super Admin Routes - Webhook Monitoring (Global System Administration)
+  app.get('/api/superadmin/webhook-stats', isSuperAdmin, async (req: any, res) => {
     try {
-      // Check if user is super admin (this could be enhanced with proper role checking)
-      const userId = (req.user as any)?.claims?.sub;
-      
+      // SuperAdmin gets system-wide webhook statistics
       const stats = await webhookMonitor.getWebhookStats();
       res.json(stats);
     } catch (error) {
@@ -1581,10 +1579,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/superadmin/webhook-errors', isAuthenticated, async (req: any, res) => {
+  app.get('/api/superadmin/webhook-errors', isSuperAdmin, async (req: any, res) => {
     try {
+      // SuperAdmin gets all webhook errors across ALL tenants, with optional filtering
       const { tenantId, limit } = req.query;
-      const logs = await storage.getWebhookErrorLogs(tenantId, parseInt(limit) || 50);
+      const logs = await storage.getWebhookErrorLogs(tenantId || undefined, parseInt(limit) || 100);
       res.json(logs);
     } catch (error) {
       console.error("Error fetching webhook errors:", error);
@@ -1592,11 +1591,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/superadmin/webhook-retry/:logId', isAuthenticated, async (req: any, res) => {
+  app.post('/api/superadmin/webhook-retry/:logId', isSuperAdmin, async (req: any, res) => {
     try {
       const { logId } = req.params;
       
-      // Mark error as resolved
+      // SuperAdmin can resolve webhook errors for any tenant
       await storage.updateWebhookErrorStatus(logId, 'resolved', new Date());
       
       res.json({ message: "Webhook error marked as resolved" });
@@ -1606,17 +1605,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/superadmin/webhook-monitoring', isAuthenticated, async (req: any, res) => {
+  app.get('/api/superadmin/webhook-monitoring', isSuperAdmin, async (req: any, res) => {
     try {
+      // SuperAdmin gets ALL webhook monitoring records across the entire system
       const { tenantId } = req.query;
       
-      // Get all webhook monitoring records
       const { db } = await import('./db');
       const { webhookMonitoring } = await import('@shared/schema');
       const { eq, sql } = await import('drizzle-orm');
       
+      // If tenantId is provided, filter by tenant; otherwise return ALL monitoring data
       const monitoring = await db.select().from(webhookMonitoring)
-        .where(tenantId ? eq(webhookMonitoring.tenantId, tenantId) : undefined)
+        .where(tenantId ? eq(webhookMonitoring.tenantId, tenantId as string) : undefined)
         .orderBy(sql`${webhookMonitoring.updatedAt} DESC`);
       
       res.json(monitoring);
@@ -1626,11 +1626,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/superadmin/webhook-monitoring/:tenantId/:webhookType', isAuthenticated, async (req: any, res) => {
+  app.put('/api/superadmin/webhook-monitoring/:tenantId/:webhookType', isSuperAdmin, async (req: any, res) => {
     try {
       const { tenantId, webhookType } = req.params;
       const { isAutoRetryEnabled, retryIntervalMinutes, maxRetryIntervalMinutes } = req.body;
       
+      // SuperAdmin can update webhook monitoring for any tenant
       const monitoring = await storage.getWebhookMonitoring(tenantId, webhookType);
       if (!monitoring) {
         return res.status(404).json({ message: "Webhook monitoring not found" });

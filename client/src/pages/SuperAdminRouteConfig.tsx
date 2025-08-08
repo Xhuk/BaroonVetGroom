@@ -38,8 +38,14 @@ export default function SuperAdminRouteConfig() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [editingCompany, setEditingCompany] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    provider: 'none' as const,
+  const [formData, setFormData] = useState<{
+    provider: 'mapbox' | 'google' | 'here' | 'none';
+    isEnabled: boolean;
+    apiKey: string;
+    monthlyUsageLimit: number;
+    pricePerRequest: number;
+  }>({
+    provider: 'none',
     isEnabled: false,
     apiKey: '',
     monthlyUsageLimit: 1000,
@@ -52,10 +58,7 @@ export default function SuperAdminRouteConfig() {
 
   const updateConfigMutation = useMutation({
     mutationFn: async ({ companyId, config }: { companyId: string, config: any }) => {
-      return await apiRequest(`/api/superadmin/route-config/${companyId}`, {
-        method: 'POST',
-        body: JSON.stringify(config),
-      });
+      return await apiRequest('POST', `/api/superadmin/route-config/${companyId}`, config);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/companies-route-config"] });
