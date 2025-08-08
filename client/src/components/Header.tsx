@@ -52,12 +52,14 @@ export function Header() {
     return () => clearInterval(timer);
   }, [timezone]); // Re-run when timezone changes
 
+  const { logout } = useAuth();
+  
   const handleLogout = () => {
     // Clear debug mode on logout
     sessionStorage.removeItem('selectedTenantId');
     sessionStorage.removeItem('debugMode');
     sessionStorage.removeItem('impersonatedRole');
-    window.location.href = "/api/logout";
+    logout();
   };
 
   return (

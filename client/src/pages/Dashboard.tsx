@@ -95,15 +95,27 @@ export default function Dashboard() {
         </div>
       );
     } else {
-      // No tenant assigned and not loading
+      // No tenant assigned and not loading - redirect to landing page
+      useEffect(() => {
+        toast({
+          title: "Sin acceso",
+          description: "No tienes acceso a ningún tenant. Contacta al administrador.",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
+      }, [toast]);
+
       return (
         <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <h2 className="text-xl font-semibold text-foreground mb-2">
-              No hay tenant asignado
+              Redirigiendo...
             </h2>
             <p className="text-muted-foreground">
-              Contacta al administrador para obtener acceso a un tenant.
+              No tienes acceso a ningún tenant.
             </p>
           </div>
         </div>

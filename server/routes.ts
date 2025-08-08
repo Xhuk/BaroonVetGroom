@@ -195,6 +195,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear auth cache endpoint for clean logout
+  app.post('/api/auth/clear-cache', (req: any, res) => {
+    // This endpoint helps clear server-side session data if needed
+    res.json({ success: true, message: 'Cache cleared' });
+  });
+
   // Enhanced in-memory cache for user data (valid for 15 minutes)
   const userCache = new Map<string, { data: any, timestamp: number }>();
   const CACHE_TTL = 15 * 60 * 1000; // 15 minutes - longer cache

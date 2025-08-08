@@ -10,6 +10,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
+import { LandingPage } from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import Admin from "@/pages/Admin";
 import SuperAdmin from "@/pages/SuperAdmin";
@@ -71,7 +72,7 @@ function Router() {
       <DebugBanner />
       <Switch>
       {/* INSTANT ROUTING - All routes available immediately, no auth blocking */}
-      <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
+      <Route path="/" component={isAuthenticated ? Dashboard : LandingPage} />
       <Route path="/plans" component={SubscriptionLanding} />
       <Route path="/checkout" component={SubscriptionCheckout} />
       <Route path="/onboarding" component={CompanyOnboarding} />

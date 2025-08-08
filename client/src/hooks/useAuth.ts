@@ -38,10 +38,22 @@ export function useAuth() {
     }
   });
 
+  const logout = () => {
+    // Clear all authentication cache
+    localStorage.removeItem('auth_user_cache');
+    localStorage.removeItem('auth_cache_time');
+    // Clear tenant cache as well
+    localStorage.removeItem('tenant_cache');
+    localStorage.removeItem('tenant_cache_time');
+    // Redirect to logout endpoint which will handle session cleanup
+    window.location.href = '/api/logout';
+  };
+
   return {
     user,
     isLoading,
     error,
     isAuthenticated: !!user,
+    logout,
   };
 }
