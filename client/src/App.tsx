@@ -62,7 +62,15 @@ import { DebugBanner } from "@/components/DebugBanner";
 import { DeviceBlocker } from "@/components/DeviceBlocker";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading, error, isAuthenticated } = useAuth();
+  
+  // Force landing page if there's an auth error (401) or explicit logout
+  const shouldShowLandingPage = !isLoading && (!isAuthenticated || error?.message?.includes('401') || error?.message?.includes('Unauthorized'));
+  
+  // Clear logout flag on successful auth
+  if (isAuthenticated && localStorage.getItem('auth_logged_out') === 'true') {
+    localStorage.removeItem('auth_logged_out');
+  }
 
   // NEVER show loading spinner on route changes - always render instantly
   // Only show auth loading on initial app load when no route is detected
@@ -80,7 +88,11 @@ function Router() {
             </div>
           );
         }
-        return isAuthenticated ? <Dashboard /> : <LandingPage />;
+        // Always show landing page if not properly authenticated
+        if (shouldShowLandingPage) {
+          return <LandingPage />;
+        }
+        return <Dashboard />;
       }} />
       <Route path="/plans" component={SubscriptionLanding} />
       <Route path="/checkout" component={SubscriptionCheckout} />
