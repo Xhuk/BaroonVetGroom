@@ -17,6 +17,7 @@ import SuperAdminRouteConfig from "@/pages/SuperAdminRouteConfig";
 import SuperAdminRBAC from "@/pages/SuperAdminRBAC";
 import SuperAdminReports from "@/pages/SuperAdminReports";
 import EnterpriseSubscriptionAdmin from "@/pages/EnterpriseSubscriptionAdmin";
+import SuperAdminFeaturesAdmin from "@/pages/SuperAdminFeaturesAdmin";
 import MobileAdmin from "@/pages/MobileAdmin";
 import AdminSettings from "@/pages/AdminSettings";
 import AdminBusinessHours from "@/pages/AdminBusinessHours";
@@ -112,6 +113,7 @@ function Router() {
           <Route path="/superadmin/email-config" component={EmailConfigurationAdmin} />
           <Route path="/superadmin/reports" component={SuperAdminReports} />
           <Route path="/superadmin/subscriptions" component={EnterpriseSubscriptionAdmin} />
+          <Route path="/superadmin/features" component={SuperAdminFeaturesAdmin} />
           <Route path="/superadmin/deployment" component={() => <VersionedSuperAdminDashboard />} />
         </>
       )}

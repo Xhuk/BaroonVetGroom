@@ -374,6 +374,17 @@ function EnterpriseSubscriptionAdmin() {
               </DialogContent>
             </Dialog>
 
+            {/* Features Admin Button */}
+            <Button 
+              onClick={() => window.open('/superadmin/features', '_blank')}
+              variant="outline"
+              className="bg-gray-700 border-gray-600 hover:bg-gray-600"
+              data-testid="button-features-admin"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Admin Características
+            </Button>
+
             {/* Quick Feature Template Button */}
             <Button 
               onClick={() => {

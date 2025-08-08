@@ -5625,6 +5625,70 @@ This password expires in 24 hours.
     }
   });
 
+  // SuperAdmin Features Management API Endpoints
+  
+  // Get all features
+  app.get('/api/superadmin/features', isSuperAdmin, async (req, res) => {
+    try {
+      // For now, return the predefined feature definitions from shared/deploymentFeatures.ts
+      const { FEATURE_DEFINITIONS } = await import('../shared/deploymentFeatures.js');
+      const features = Object.values(FEATURE_DEFINITIONS);
+      res.json(features);
+    } catch (error) {
+      console.error("Error fetching features:", error);
+      res.status(500).json({ message: "Failed to fetch features" });
+    }
+  });
+
+  // Create new feature
+  app.post('/api/superadmin/features', isSuperAdmin, async (req, res) => {
+    try {
+      const featureData = req.body;
+      // TODO: Implement database storage for custom features
+      // For now, we'll just return success as features are managed via deploymentFeatures.ts
+      res.json({ 
+        success: true, 
+        message: "Feature creation noted. Update deploymentFeatures.ts for permanent changes.",
+        feature: featureData 
+      });
+    } catch (error) {
+      console.error("Error creating feature:", error);
+      res.status(500).json({ message: "Failed to create feature" });
+    }
+  });
+
+  // Update feature
+  app.put('/api/superadmin/features/:featureId', isSuperAdmin, async (req, res) => {
+    try {
+      const { featureId } = req.params;
+      const featureData = req.body;
+      // TODO: Implement database storage for custom features
+      res.json({ 
+        success: true, 
+        message: "Feature update noted. Update deploymentFeatures.ts for permanent changes.",
+        feature: featureData 
+      });
+    } catch (error) {
+      console.error("Error updating feature:", error);
+      res.status(500).json({ message: "Failed to update feature" });
+    }
+  });
+
+  // Delete feature
+  app.delete('/api/superadmin/features/:featureId', isSuperAdmin, async (req, res) => {
+    try {
+      const { featureId } = req.params;
+      // TODO: Implement database storage for custom features
+      res.json({ 
+        success: true, 
+        message: "Feature deletion noted. Update deploymentFeatures.ts for permanent changes."
+      });
+    } catch (error) {
+      console.error("Error deleting feature:", error);
+      res.status(500).json({ message: "Failed to delete feature" });
+    }
+  });
+
   // Get all TenantVet customers (companies) for enterprise management
   app.get('/api/superadmin/tenant-customers', isSuperAdmin, async (req, res) => {
     try {
