@@ -468,9 +468,17 @@ export default function ReceiptTemplatesAdmin() {
       }
 
       // Get upload URL
+      console.log('Requesting upload URL for logo...');
       const response = await apiRequest('/api/objects/upload', 'POST') as unknown as { uploadURL: string };
       
+      console.log('Full upload response:', response);
+      
+      if (!response || !response.uploadURL || response.uploadURL === null) {
+        throw new Error('El servidor no proporcionó una URL de subida válida. Verifica la configuración del almacenamiento.');
+      }
+      
       // Upload file directly to object storage
+      console.log('Uploading file to:', response.uploadURL);
       const uploadResponse = await fetch(response.uploadURL, {
         method: 'PUT',
         body: file,
@@ -480,7 +488,8 @@ export default function ReceiptTemplatesAdmin() {
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload logo');
+        const errorText = await uploadResponse.text();
+        throw new Error(`Error al subir el logo: ${uploadResponse.status} ${uploadResponse.statusText}. ${errorText}`);
       }
 
       // Set the logo URL (extract from the upload URL)
@@ -488,6 +497,10 @@ export default function ReceiptTemplatesAdmin() {
       console.log('Upload URL received:', uploadUrl);
       
       try {
+        if (!uploadUrl || typeof uploadUrl !== 'string') {
+          throw new Error('URL de subida inválida');
+        }
+        
         const url = new URL(uploadUrl);
         const logoPath = url.pathname;
         console.log('Extracted path:', logoPath);
@@ -500,14 +513,13 @@ export default function ReceiptTemplatesAdmin() {
           setLogoUrl(objectPath);
         } else {
           // Fallback: use the full upload URL temporarily
+          console.log('Using fallback URL:', uploadUrl);
           setLogoUrl(uploadUrl);
         }
         setLogoFile(file);
       } catch (error) {
         console.error('Error parsing upload URL:', error);
-        // Use the upload URL directly as fallback
-        setLogoUrl(uploadUrl);
-        setLogoFile(file);
+        throw new Error(`Error al procesar la URL del logo: ${error instanceof Error ? error.message : 'Error desconocido'}`);
       }
 
       toast({
