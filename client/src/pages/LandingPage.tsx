@@ -21,7 +21,7 @@ export function LandingPage() {
                 Folleto
               </Button>
             </Link>
-            <Link href="/api/auth/login">
+            <Link href="/api/login">
               <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 Iniciar Sesión
               </Button>
@@ -45,7 +45,7 @@ export function LandingPage() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/api/auth/login">
+            <Link href="/api/login">
               <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg">
                 Comenzar Ahora
                 <ArrowRight className="ml-2 h-5 w-5" />
