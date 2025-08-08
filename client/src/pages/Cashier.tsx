@@ -85,6 +85,12 @@ export default function Cashier() {
   const [showNewSale, setShowNewSale] = useState(false);
   const [currentSaleItems, setCurrentSaleItems] = useState<SaleItem[]>([]);
   
+  // Receipt generation states
+  const [showReceiptPreview, setShowReceiptPreview] = useState(false);
+  const [receiptHtml, setReceiptHtml] = useState<string>("");
+  const [isGeneratingReceipt, setIsGeneratingReceipt] = useState(false);
+  const [pendingCompletionSaleId, setPendingCompletionSaleId] = useState<string | null>(null);
+  
   // Product search states
   const [productSearchQuery, setProductSearchQuery] = useState("");
   const [showProductSearch, setShowProductSearch] = useState(false);
@@ -209,6 +215,26 @@ export default function Cashier() {
     },
   });
 
+  // Generate receipt mutation
+  const generateReceiptMutation = useMutation({
+    mutationFn: async (saleId: string) => {
+      return apiRequest(`/api/sales/${saleId}/generate-receipt`, "POST", {});
+    },
+    onSuccess: (data) => {
+      setReceiptHtml(data.receiptHtml);
+      setShowReceiptPreview(true);
+      setIsGeneratingReceipt(false);
+    },
+    onError: (error) => {
+      setIsGeneratingReceipt(false);
+      toast({
+        title: "Error",
+        description: "No se pudo generar la factura",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Complete delivery for entire order
   const completeDeliveryMutation = useMutation({
     mutationFn: async (saleId: string) => {
@@ -221,12 +247,40 @@ export default function Cashier() {
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
       setSelectedSale(null);
       setDeliveryNotes("");
+      setPendingCompletionSaleId(null);
+      setShowReceiptPreview(false);
+      setReceiptHtml("");
       toast({
         title: "Entrega Completada",
-        description: "Todos los productos han sido entregados",
+        description: "Todos los productos han sido entregados y la factura ha sido generada",
       });
     },
   });
+
+  // Handle completion with receipt generation
+  const handleCompleteWithReceipt = (saleId: string) => {
+    setPendingCompletionSaleId(saleId);
+    setIsGeneratingReceipt(true);
+    generateReceiptMutation.mutate(saleId);
+  };
+
+  // Confirm completion after receipt preview
+  const confirmCompletion = () => {
+    if (pendingCompletionSaleId) {
+      completeDeliveryMutation.mutate(pendingCompletionSaleId);
+    }
+  };
+
+  // Download receipt as PDF (basic implementation)
+  const downloadReceipt = () => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(receiptHtml);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+    }
+  };
 
   // Add additional item to order
   const addItemMutation = useMutation({
@@ -611,13 +665,15 @@ export default function Cashier() {
                 {/* Action Buttons */}
                 <div className="flex gap-3">
                   <Button
-                    onClick={() => completeDeliveryMutation.mutate(selectedSale.id)}
-                    disabled={completeDeliveryMutation.isPending || selectedSale.paymentStatus === 'pending'}
+                    onClick={() => handleCompleteWithReceipt(selectedSale.id)}
+                    disabled={isGeneratingReceipt || completeDeliveryMutation.isPending || selectedSale.paymentStatus === 'pending'}
                     data-testid="button-complete-delivery"
                     className="flex-1"
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Completar Entrega
+                    {isGeneratingReceipt ? "Generando Factura..." : 
+                     completeDeliveryMutation.isPending ? "Completando..." : 
+                     "Generar Factura y Completar"}
                   </Button>
                   <Button
                     variant="outline"
@@ -648,6 +704,62 @@ export default function Cashier() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Receipt Preview Modal */}
+      {showReceiptPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-600">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Vista Previa de Factura</h2>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={downloadReceipt}
+                    data-testid="button-download-receipt"
+                  >
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Descargar/Imprimir
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowReceiptPreview(false);
+                      setPendingCompletionSaleId(null);
+                      setReceiptHtml("");
+                    }}
+                    data-testid="button-cancel-receipt"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={confirmCompletion}
+                    disabled={completeDeliveryMutation.isPending}
+                    data-testid="button-confirm-completion"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {completeDeliveryMutation.isPending ? "Finalizando..." : "Confirmar y Finalizar"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 overflow-auto max-h-[70vh]">
+              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                <div 
+                  className="bg-white rounded-lg shadow-lg"
+                  dangerouslySetInnerHTML={{ __html: receiptHtml }}
+                  style={{ 
+                    transform: 'scale(0.8)',
+                    transformOrigin: 'top center',
+                    marginBottom: '-20%'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New Sale Modal */}
       {showNewSale && (

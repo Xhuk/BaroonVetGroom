@@ -5806,6 +5806,50 @@ This password expires in 24 hours.
     }
   });
 
+  // Generate receipt from sale data
+  app.post('/api/sales/:saleId/generate-receipt', isAuthenticated, async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const { templateConfig } = req.body;
+      
+      // Get sale data
+      const sale = await storage.getSale(saleId);
+      if (!sale) {
+        return res.status(404).json({ error: 'Sale not found' });
+      }
+      
+      // Get sale items
+      const items = await storage.getSaleItems(saleId);
+      
+      // Get active receipt template or use provided config
+      let template = null;
+      if (templateConfig) {
+        template = templateConfig;
+      } else {
+        // Try to get active template for tenant/company
+        const saleData = await storage.getSale(saleId);
+        template = await storage.getActiveReceiptTemplate(undefined, saleData?.tenantId);
+      }
+      
+      // Generate receipt HTML
+      const receiptHtml = generateReceiptHtml({
+        sale,
+        items,
+        template: template || getDefaultTemplate()
+      });
+      
+      res.json({ 
+        receiptHtml,
+        saleId: sale.id,
+        receiptId: sale.receiptId,
+        customerName: sale.customerName
+      });
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      res.status(500).json({ error: 'Failed to generate receipt' });
+    }
+  });
+
   // Receipt Templates routes
   app.get('/api/admin/receipt-templates', isAuthenticated, async (req, res) => {
     try {
@@ -5904,6 +5948,166 @@ This password expires in 24 hours.
       res.status(500).json({ error: 'Failed to generate upload URL' });
     }
   });
+
+  // Helper function to generate receipt HTML
+  function generateReceiptHtml({ sale, items, template }: { sale: any, items: any[], template: any }) {
+    const currentDate = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const totalAmount = typeof sale.totalAmount === 'string' 
+      ? parseFloat(sale.totalAmount) 
+      : sale.totalAmount;
+    
+    const itemsHtml = items.map(item => {
+      const unitPrice = typeof item.unitPrice === 'string' 
+        ? parseFloat(item.unitPrice) 
+        : item.unitPrice;
+      const total = typeof item.total === 'string' 
+        ? parseFloat(item.total) 
+        : item.total;
+      
+      return `
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
+          <div>
+            <div style="font-weight: 500;">${item.name}</div>
+            <div style="font-size: 0.9em; color: #666;">Cantidad: ${item.quantity}</div>
+          </div>
+          <div style="text-align: right;">
+            <div>$${unitPrice.toFixed(2)}</div>
+            <div style="font-weight: 600;">$${total.toFixed(2)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    // Use template configuration or default styling
+    const logoHtml = template?.logoUrl ? 
+      `<img src="${template.logoUrl}" alt="Logo" style="max-height: 60px; max-width: 150px; object-fit: contain;">` : '';
+    
+    const companyName = template?.companyName || 'Veterinaria';
+    const primaryColor = template?.primaryColor || '#3b82f6';
+    const accentColor = template?.accentColor || '#1e40af';
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Factura - ${sale.receiptId}</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f9fafb;
+          }
+          .receipt-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+          }
+          .header {
+            background: linear-gradient(135deg, ${primaryColor}, ${accentColor});
+            color: white;
+            padding: 30px;
+            text-align: center;
+          }
+          .content {
+            padding: 30px;
+          }
+          .customer-info {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+          }
+          .items-section {
+            margin: 30px 0;
+          }
+          .total-section {
+            background: ${primaryColor};
+            color: white;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+          }
+          .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid #eee;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-container">
+          <div class="header">
+            ${logoHtml}
+            <h1>${companyName}</h1>
+            <h2>Factura de Venta</h2>
+            <p>Recibo: ${sale.receiptId}</p>
+          </div>
+          
+          <div class="content">
+            <div class="customer-info">
+              <h3>Información del Cliente</h3>
+              <p><strong>Nombre:</strong> ${sale.customerName}</p>
+              <p><strong>Teléfono:</strong> ${sale.customerPhone}</p>
+              <p><strong>Fecha:</strong> ${currentDate}</p>
+            </div>
+            
+            <div class="items-section">
+              <h3>Productos/Servicios</h3>
+              ${itemsHtml}
+            </div>
+            
+            <div class="total-section">
+              TOTAL: $${totalAmount.toFixed(2)}
+            </div>
+            
+            <div style="margin-top: 30px; padding: 20px; background: #f0f9ff; border-radius: 6px;">
+              <p><strong>Estado de Pago:</strong> 
+                <span style="color: ${sale.paymentStatus === 'paid' ? '#16a34a' : '#dc2626'};">
+                  ${sale.paymentStatus === 'paid' ? 'PAGADO' : 'PENDIENTE'}
+                </span>
+              </p>
+              <p><strong>Estado de Entrega:</strong> 
+                <span style="color: ${sale.deliveryStatus === 'delivered' ? '#16a34a' : '#dc2626'};">
+                  ${sale.deliveryStatus === 'delivered' ? 'ENTREGADO' : 'PENDIENTE'}
+                </span>
+              </p>
+              ${sale.notes ? `<p><strong>Notas:</strong> ${sale.notes}</p>` : ''}
+            </div>
+          </div>
+          
+          <div class="footer">
+            <p>Gracias por su preferencia</p>
+            <p style="font-size: 0.9em;">Factura generada el ${currentDate}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+  
+  // Default template configuration
+  function getDefaultTemplate() {
+    return {
+      companyName: 'Veterinaria',
+      primaryColor: '#3b82f6',
+      accentColor: '#1e40af',
+      logoUrl: null
+    };
+  }
 
   // Download receipt template
   app.get('/api/admin/receipt-templates/:templateId/download', isAuthenticated, async (req, res) => {
