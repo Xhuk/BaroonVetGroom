@@ -114,7 +114,7 @@ export default function Dashboard() {
   return (
     <>
       {/* Action Buttons - Positioned in the gap between header and main content */}
-      <div className="absolute top-16 left-72 right-0 z-10 px-6 py-4 bg-background border-b border-border">
+      <div className="absolute top-20 left-72 right-0 z-10 px-6 py-4 bg-background">
         <div className="flex gap-4">
           <Link href="/booking">
             <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
