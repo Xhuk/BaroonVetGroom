@@ -469,12 +469,13 @@ html.dark select option {
   }
 }
 
+/* Force header border using box-shadow - outside all layers for maximum priority */
+.force-header-border {
+  border-bottom: 2px solid hsl(20, 5.9%, 78%) !important;
+  box-shadow: 0 2px 0 0 hsl(20, 5.9%, 78%) !important;
+}
+
 @layer components {
-  /* Force header border to stay visible */
-  .force-header-border {
-    border-bottom: 2px solid hsl(20, 5.9%, 78%) !important;
-  }
-  
   .calendar-grid {
     display: grid;
     grid-template-columns: 80px repeat(7, 1fr);
