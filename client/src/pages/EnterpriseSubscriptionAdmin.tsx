@@ -65,6 +65,15 @@ function EnterpriseSubscriptionAdmin() {
   const [newClientDialog, setNewClientDialog] = useState(false);
   const [planConfigDialog, setPlanConfigDialog] = useState(false);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
+  const [newClientForm, setNewClientForm] = useState({
+    companyName: '',
+    adminEmail: '',
+    adminFirstName: '',
+    adminLastName: '',
+    planId: '',
+    vetsitesCount: 1,
+    trialDays: 14
+  });
 
   // Fastload optimization: Fetch subscription plans with caching
   const { data: subscriptionPlans, isLoading: plansLoading } = useQuery({
@@ -94,6 +103,9 @@ function EnterpriseSubscriptionAdmin() {
       email: string;
       planId: string;
       vetsitesCount?: number;
+      adminFirstName?: string;
+      adminLastName?: string;
+      trialDays?: number;
     }) => {
       const response = await fetch('/api/superadmin/tenant-customers', {
         method: 'POST',
@@ -106,8 +118,33 @@ function EnterpriseSubscriptionAdmin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/tenant-customers'] });
       setNewClientDialog(false);
+      setNewClientForm({
+        companyName: '',
+        adminEmail: '',
+        adminFirstName: '',
+        adminLastName: '',
+        planId: '',
+        vetsitesCount: 1,
+        trialDays: 14
+      });
     },
   });
+
+  const handleCreateClient = () => {
+    if (!newClientForm.companyName || !newClientForm.adminEmail || !newClientForm.planId) {
+      return;
+    }
+    
+    createCustomer.mutate({
+      name: newClientForm.companyName,
+      email: newClientForm.adminEmail,
+      planId: newClientForm.planId,
+      vetsitesCount: newClientForm.vetsitesCount,
+      adminFirstName: newClientForm.adminFirstName,
+      adminLastName: newClientForm.adminLastName,
+      trialDays: newClientForm.trialDays
+    });
+  };
 
   // Update subscription plan configuration
   const updatePlan = useMutation({
@@ -213,7 +250,129 @@ function EnterpriseSubscriptionAdmin() {
                     Registra un nuevo cliente con su suscripción inicial
                   </DialogDescription>
                 </DialogHeader>
-                {/* Form content would go here */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="company-name" className="text-gray-300">Nombre de la Empresa</Label>
+                      <Input
+                        id="company-name"
+                        placeholder="Ej: VetCorp Services"
+                        className="bg-gray-700 border-gray-600 text-white"
+                        data-testid="input-company-name"
+                        value={newClientForm.companyName}
+                        onChange={(e) => setNewClientForm({...newClientForm, companyName: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="admin-email" className="text-gray-300">Email del Administrador</Label>
+                      <Input
+                        id="admin-email"
+                        type="email"
+                        placeholder="admin@empresa.com"
+                        className="bg-gray-700 border-gray-600 text-white"
+                        data-testid="input-admin-email"
+                        value={newClientForm.adminEmail}
+                        onChange={(e) => setNewClientForm({...newClientForm, adminEmail: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="admin-firstname" className="text-gray-300">Nombre</Label>
+                      <Input
+                        id="admin-firstname"
+                        placeholder="Juan"
+                        className="bg-gray-700 border-gray-600 text-white"
+                        data-testid="input-admin-firstname"
+                        value={newClientForm.adminFirstName}
+                        onChange={(e) => setNewClientForm({...newClientForm, adminFirstName: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="admin-lastname" className="text-gray-300">Apellido</Label>
+                      <Input
+                        id="admin-lastname"
+                        placeholder="García"
+                        className="bg-gray-700 border-gray-600 text-white"
+                        data-testid="input-admin-lastname"
+                        value={newClientForm.adminLastName}
+                        onChange={(e) => setNewClientForm({...newClientForm, adminLastName: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="subscription-plan" className="text-gray-300">Plan de Suscripción</Label>
+                    <Select value={newClientForm.planId} onValueChange={(value) => setNewClientForm({...newClientForm, planId: value})}>
+                      <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                        <SelectValue placeholder="Selecciona un plan" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-700 border-gray-600">
+                        {subscriptionPlans?.map((plan: SubscriptionPlan) => (
+                          <SelectItem key={plan.id} value={plan.id} className="text-white hover:bg-gray-600">
+                            {plan.displayName} - ${plan.monthlyPrice}/mes ({plan.maxTenants} VetSites)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="vetsites-count" className="text-gray-300">Número de VetSites</Label>
+                      <Input
+                        id="vetsites-count"
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={newClientForm.vetsitesCount}
+                        onChange={(e) => setNewClientForm({...newClientForm, vetsitesCount: parseInt(e.target.value) || 1})}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        data-testid="input-vetsites-count"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="trial-days" className="text-gray-300">Días de Trial</Label>
+                      <Input
+                        id="trial-days"
+                        type="number"
+                        min="0"
+                        max="30"
+                        value={newClientForm.trialDays}
+                        onChange={(e) => setNewClientForm({...newClientForm, trialDays: parseInt(e.target.value) || 14})}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        data-testid="input-trial-days"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setNewClientDialog(false)}
+                      className="bg-gray-700 border-gray-600 hover:bg-gray-600"
+                      data-testid="button-cancel-new-client"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      className="bg-blue-600 hover:bg-blue-700"
+                      disabled={createCustomer.isPending || !newClientForm.companyName || !newClientForm.adminEmail || !newClientForm.planId}
+                      onClick={handleCreateClient}
+                      data-testid="button-create-client"
+                    >
+                      {createCustomer.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                          Creando...
+                        </>
+                      ) : (
+                        "Crear Cliente"
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </DialogContent>
             </Dialog>
           </div>
