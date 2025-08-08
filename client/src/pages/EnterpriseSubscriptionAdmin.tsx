@@ -70,9 +70,37 @@ function EnterpriseSubscriptionAdmin() {
     maxTenants: 1,
     monthlyPrice: 0,
     yearlyPrice: 0,
-    features: [''],
+    features: [] as string[],
     isActive: true
   });
+
+  // Feature definitions for subscription plans
+  const availableFeatures = {
+    // VetSites Management
+    'X_vetsites': 'The number of independent clinic dashboards (VetSites) the tenant can manage',
+    
+    // Appointment Features
+    'basic_appointments': 'Only simple appointment booking (no staff/room/resource allocation or calendar sync)',
+    'unlimited_appointments': 'No limit on appointments per clinic, includes full scheduling features',
+    
+    // Reporting Features
+    'basic_reporting': 'Access to basic reports: clients, appointments, sales',
+    'advanced_reporting': 'Access to detailed analytics: services usage, income tracking, clinic performance, etc.',
+    
+    // Support Features
+    'email_support': 'Support provided via email (standard response time)',
+    'priority_support': 'Faster response time via email or WhatsApp (premium queue)',
+    'phone_support': 'Phone support line included',
+    'dedicated_support': 'Assigned success manager or premium onboarding/training',
+    
+    // Integration Features
+    'whatsapp_integration': 'Ability to send appointment reminders, confirmations, follow-ups via WhatsApp',
+    'grooming_module': 'Enables grooming-specific features: bath scheduling, notes, pet grooming history, etc.',
+    'delivery_tracking': 'Tracks medicine/product deliveries from clinic to customer',
+    'api_access': 'Enables access to public API for external integrations',
+    'custom_integrations': 'Includes integration service for ERP/CRM/payments per enterprise use case',
+    'multi_location_dashboard': 'Centralized dashboard to monitor all clinics from one parent account (for chains/franchises)'
+  };
 
   // Fastload optimization: Fetch subscription plans with caching
   const { data: subscriptionPlans, isLoading: plansLoading } = useQuery({
@@ -164,6 +192,31 @@ function EnterpriseSubscriptionAdmin() {
           </div>
           
           <div className="flex gap-2">
+            {/* Quick Feature Template Button */}
+            <Button 
+              onClick={() => {
+                setEditingPlan(null);
+                const basicFeatures = ['basic_appointments', 'email_support', 'basic_reporting', 'whatsapp_integration'];
+                setNewPlanForm({
+                  name: 'basic',
+                  displayName: 'Plan Básico',
+                  description: 'Plan inicial con características esenciales',
+                  maxTenants: 1,
+                  monthlyPrice: 49,
+                  yearlyPrice: 490,
+                  features: basicFeatures,
+                  isActive: true
+                });
+                setPlanConfigDialog(true);
+              }}
+              variant="outline"
+              className="bg-gray-700 border-gray-600 hover:bg-gray-600"
+              data-testid="button-feature-template"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Plantilla Básica
+            </Button>
+            
             <Dialog open={planConfigDialog} onOpenChange={setPlanConfigDialog}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700" data-testid="button-new-plan">
@@ -241,7 +294,7 @@ function EnterpriseSubscriptionAdmin() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="monthlyPrice" className="text-gray-300">Precio Mensual</Label>
+                      <Label htmlFor="monthlyPrice" className="text-gray-300">Precio Mensual ($)</Label>
                       <Input
                         id="monthlyPrice"
                         type="number"
@@ -253,10 +306,11 @@ function EnterpriseSubscriptionAdmin() {
                         className="bg-gray-700 border-gray-600 text-white"
                         min="0"
                         step="0.01"
+                        placeholder="99.00"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="yearlyPrice" className="text-gray-300">Precio Anual</Label>
+                      <Label htmlFor="yearlyPrice" className="text-gray-300">Precio Anual ($)</Label>
                       <Input
                         id="yearlyPrice"
                         type="number"
@@ -268,7 +322,73 @@ function EnterpriseSubscriptionAdmin() {
                         className="bg-gray-700 border-gray-600 text-white"
                         min="0"
                         step="0.01"
+                        placeholder="990.00"
                       />
+                    </div>
+                  </div>
+                  
+                  {/* Feature Assignment Section */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-gray-300 font-semibold">Características del Plan</Label>
+                      <Badge variant="outline" className="bg-purple-900/30 border-purple-600 text-purple-300">
+                        {(editingPlan?.features || newPlanForm.features).length} seleccionadas
+                      </Badge>
+                    </div>
+                    
+                    <div className="max-h-60 overflow-y-auto bg-gray-750 rounded-lg border border-gray-600 p-3">
+                      <div className="grid grid-cols-1 gap-2">
+                        {Object.entries(availableFeatures).map(([featureKey, description]) => {
+                          const currentFeatures = editingPlan?.features || newPlanForm.features;
+                          const isSelected = currentFeatures.includes(featureKey);
+                          
+                          return (
+                            <div
+                              key={featureKey}
+                              className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                                isSelected 
+                                  ? 'bg-purple-900/30 border-purple-500 text-white' 
+                                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:border-purple-400'
+                              }`}
+                              onClick={() => {
+                                const updatedFeatures = isSelected
+                                  ? currentFeatures.filter(f => f !== featureKey)
+                                  : [...currentFeatures, featureKey];
+                                
+                                if (editingPlan) {
+                                  setEditingPlan({...editingPlan, features: updatedFeatures});
+                                } else {
+                                  setNewPlanForm({...newPlanForm, features: updatedFeatures});
+                                }
+                              }}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                                      isSelected 
+                                        ? 'bg-purple-600 border-purple-600' 
+                                        : 'border-gray-500'
+                                    }`}>
+                                      {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
+                                    </div>
+                                    <span className="font-medium text-sm">
+                                      {featureKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-gray-400 mt-1 ml-6">
+                                    {description}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-gray-400">
+                      💡 Selecciona las características que incluirá este plan de suscripción
                     </div>
                   </div>
                   
@@ -341,14 +461,33 @@ function EnterpriseSubscriptionAdmin() {
                       <span className="text-white font-semibold">{plan.maxTenants}</span>
                     </div>
                     
-                    <div className="space-y-1">
-                      <span className="text-gray-300 text-sm">Características:</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 text-sm font-medium">Características:</span>
+                        <Badge variant="secondary" className="bg-gray-600 text-xs">
+                          {plan.features?.length || 0} funciones
+                        </Badge>
+                      </div>
                       {plan.features?.length > 0 ? (
-                        <ul className="list-disc list-inside space-y-1">
-                          {plan.features.map((feature, index) => (
-                            <li key={index} className="text-sm text-gray-400">{feature}</li>
-                          ))}
-                        </ul>
+                        <div className="space-y-1">
+                          {plan.features.slice(0, 4).map((feature, index) => {
+                            const featureName = feature.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            return (
+                              <div key={index} className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
+                                <span className="text-xs text-gray-300">{featureName}</span>
+                              </div>
+                            );
+                          })}
+                          {plan.features.length > 4 && (
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-gray-500 rounded-full flex-shrink-0"></div>
+                              <span className="text-xs text-gray-400">
+                                +{plan.features.length - 4} características más
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <p className="text-sm text-gray-500 italic">No hay características definidas</p>
                       )}

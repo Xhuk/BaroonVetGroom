@@ -1,0 +1,105 @@
+{
+  "trial_days": 10,
+  "monthly_multiplier": 1.5,
+  "plans": [
+    {
+      "name": "Trial",
+      "description": "Free trial for new customers",
+      "status": "Activo",
+      "monthly_price_mxn": 0,
+      "yearly_price_mxn": 0,
+      "max_vetsites": 1,
+      "features": [
+        "1_vetsite",
+        "basic_appointments",
+        "basic_reporting",
+        "email_support"
+      ]
+    },
+    {
+      "name": "Basic",
+      "description": "Perfect for single clinic operations",
+      "status": "Activo",
+      "monthly_price_mxn": 299,
+      "yearly_price_mxn": 2990,
+      "max_vetsites": 1,
+      "features": [
+        "1_vetsite",
+        "unlimited_appointments",
+        "basic_reporting",
+        "email_support",
+        "whatsapp_integration"
+      ]
+    },
+    {
+      "name": "Medium",
+      "description": "Great for growing veterinary practices",
+      "status": "Activo",
+      "monthly_price_mxn": 699,
+      "yearly_price_mxn": 6990,
+      "max_vetsites": 3,
+      "features": [
+        "3_vetsites",
+        "unlimited_appointments",
+        "advanced_reporting",
+        "priority_support",
+        "whatsapp_integration",
+        "grooming_module"
+      ]
+    },
+    {
+      "name": "Large",
+      "description": "Perfect for established veterinary businesses",
+      "status": "Activo",
+      "monthly_price_mxn": 999,
+      "yearly_price_mxn": 9990,
+      "max_vetsites": 5,
+      "features": [
+        "5_vetsites",
+        "unlimited_appointments",
+        "advanced_reporting",
+        "priority_support",
+        "whatsapp_integration",
+        "grooming_module",
+        "delivery_tracking"
+      ]
+    },
+    {
+      "name": "Extra Large",
+      "description": "For large veterinary chains and franchises",
+      "status": "Activo",
+      "monthly_price_mxn": 1499,
+      "yearly_price_mxn": 14990,
+      "max_vetsites": 10,
+      "features": [
+        "10_vetsites",
+        "unlimited_appointments",
+        "advanced_reporting",
+        "phone_support",
+        "whatsapp_integration",
+        "grooming_module",
+        "delivery_tracking",
+        "api_access",
+        "multi_location_dashboard"
+      ]
+    },
+    {
+      "name": "Empresarial",
+      "description": "Custom solution for large enterprises",
+      "status": "Activo",
+      "monthly_price_mxn": 2999,
+      "yearly_price_mxn": 29990,
+      "max_vetsites": 50,
+      "features": [
+        "unlimited_appointments",
+        "advanced_reporting",
+        "dedicated_support",
+        "whatsapp_integration",
+        "grooming_module",
+        "delivery_tracking",
+        "api_access",
+        "custom_integrations"
+      ]
+    }
+  ]
+}
