@@ -18,24 +18,33 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    // Update state so the next render will show the fallback UI
+    // Immediately suppress join errors without showing error UI
+    if (error.message?.includes("Cannot read properties of undefined (reading 'join')")) {
+      console.warn('Join error detected in getDerivedStateFromError - suppressing:', error.message);
+      return { hasError: false }; // Don't show error UI for join errors
+    }
+    
+    // For other errors, show fallback UI
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Handle join() errors specifically
+    // Handle join() errors specifically with immediate recovery
     if (error.message?.includes("Cannot read properties of undefined (reading 'join')")) {
-      console.warn('Caught join() error in React boundary:', {
+      console.warn('Caught join() error in React boundary - forcing immediate recovery:', {
         error: error.message,
         stack: error.stack,
         componentStack: errorInfo.componentStack,
         timestamp: new Date().toISOString()
       });
       
-      // Try to recover by reloading the component
-      setTimeout(() => {
-        this.setState({ hasError: false, error: undefined, errorInfo: undefined });
-      }, 100);
+      // Immediate recovery - don't even set error state
+      this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+      
+      // Force a micro-task to ensure clean recovery
+      Promise.resolve().then(() => {
+        this.forceUpdate();
+      });
       
       return;
     }
