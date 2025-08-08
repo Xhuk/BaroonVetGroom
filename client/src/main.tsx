@@ -47,4 +47,31 @@ console.error = function(...args) {
   originalConsoleError.apply(console, args);
 };
 
+// Enhanced MessagePort error handling for Replit iframe communication
+if (typeof MessagePort !== 'undefined') {
+  const originalPostMessage = MessagePort.prototype.postMessage;
+  MessagePort.prototype.postMessage = function(message: any, ...args: any[]) {
+    try {
+      // Ensure message is properly structured before posting
+      if (message && typeof message === 'object') {
+        // Safely stringify and parse to validate structure
+        const safeMessage = JSON.parse(JSON.stringify(message));
+        return originalPostMessage.call(this, safeMessage, ...args);
+      }
+      return originalPostMessage.call(this, message, ...args);
+    } catch (error) {
+      console.warn('MessagePort communication error intercepted:', error);
+      // Don't throw, just return gracefully
+      return;
+    }
+  };
+}
+
+// Handle MessagePort errors specifically for Replit environment
+window.addEventListener('messageerror', (event) => {
+  console.warn('MessagePort error intercepted:', event);
+  event.preventDefault();
+  event.stopPropagation();
+});
+
 createRoot(document.getElementById("root")!).render(<App />);

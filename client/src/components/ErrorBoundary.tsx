@@ -29,27 +29,29 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Handle join() errors specifically with immediate recovery
-    if (error.message?.includes("Cannot read properties of undefined (reading 'join')")) {
-      console.warn('Caught join() error in React boundary - forcing immediate recovery:', {
+    // Handle join() errors and MessagePort errors specifically
+    const isJoinError = error.message?.includes("Cannot read properties of undefined (reading 'join')");
+    const isMessagePortError = error.stack?.includes("MessagePort") || errorInfo.componentStack?.includes("MessagePort");
+    
+    if (isJoinError || isMessagePortError) {
+      console.warn('Caught framework communication error - forcing silent recovery:', {
         error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-        timestamp: new Date().toISOString()
+        stack: error.stack?.substring(0, 200) + '...',
+        componentStack: errorInfo.componentStack?.substring(0, 200) + '...',
+        timestamp: new Date().toISOString(),
+        type: isJoinError ? 'join' : 'messageport'
       });
       
-      // Immediate recovery - don't even set error state
+      // Ultra-fast silent recovery - no error state, no UI flash
       this.setState({ hasError: false, error: undefined, errorInfo: undefined });
       
-      // Force a micro-task to ensure clean recovery
-      Promise.resolve().then(() => {
-        this.forceUpdate();
-      });
+      // Immediate force update to prevent any error UI
+      this.forceUpdate();
       
       return;
     }
 
-    // Log other errors
+    // Log other errors normally
     console.error('Error caught by boundary:', error, errorInfo);
     this.setState({ error, errorInfo });
   }
