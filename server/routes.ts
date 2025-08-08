@@ -5870,11 +5870,17 @@ This password expires in 24 hours.
         template = await storage.getActiveReceiptTemplate(undefined, saleData?.tenantId);
       }
       
+      // Get company and tenant information for receipt
+      const tenant = await storage.getTenant(sale.tenantId);
+      const company = tenant ? await storage.getCompany(tenant.companyId) : null;
+      
       // Generate receipt HTML
       const receiptHtml = generateReceiptHtml({
         sale,
         items,
-        template: template || getDefaultTemplate()
+        template: template || getDefaultTemplate(),
+        company: company,
+        tenant: tenant
       });
       
       res.json({ 
@@ -5886,6 +5892,59 @@ This password expires in 24 hours.
     } catch (error) {
       console.error('Error generating receipt:', error);
       res.status(500).json({ error: 'Failed to generate receipt' });
+    }
+  });
+
+  // Company & Clinic Admin routes
+  app.get('/api/admin/company/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      res.json(company);
+    } catch (error) {
+      console.error('Error fetching company:', error);
+      res.status(500).json({ error: 'Failed to fetch company' });
+    }
+  });
+
+  app.put('/api/admin/company/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const updates = req.body;
+      const updatedCompany = await storage.updateCompany(companyId, updates);
+      res.json(updatedCompany);
+    } catch (error) {
+      console.error('Error updating company:', error);
+      res.status(500).json({ error: 'Failed to update company' });
+    }
+  });
+
+  app.get('/api/admin/tenant/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const tenant = await storage.getTenant(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ error: 'Tenant not found' });
+      }
+      res.json(tenant);
+    } catch (error) {
+      console.error('Error fetching tenant:', error);
+      res.status(500).json({ error: 'Failed to fetch tenant' });
+    }
+  });
+
+  app.put('/api/admin/tenant/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const updates = req.body;
+      const updatedTenant = await storage.updateTenant(tenantId, updates);
+      res.json(updatedTenant);
+    } catch (error) {
+      console.error('Error updating tenant:', error);
+      res.status(500).json({ error: 'Failed to update tenant' });
     }
   });
 
@@ -6025,7 +6084,7 @@ This password expires in 24 hours.
   }
 
   // Helper function to generate receipt HTML with actual transaction data
-  function generateReceiptHtml({ sale, items, template }: { sale: any, items: any[], template: any }) {
+  function generateReceiptHtml({ sale, items, template, company, tenant }: { sale: any, items: any[], template: any, company?: any, tenant?: any }) {
     const currentDate = new Date().toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
@@ -6065,7 +6124,13 @@ This password expires in 24 hours.
     const logoHtml = template?.logoUrl ? 
       `<img src="${template.logoUrl}" alt="Logo" style="max-height: 60px; max-width: 150px; object-fit: contain;">` : '';
     
-    const companyName = template?.companyName || 'Veterinaria';
+    // Use real company and clinic information
+    const companyName = company?.name || template?.companyName || 'Veterinaria';
+    const clinicName = tenant?.name || 'Clínica';
+    const companyAddress = company?.address || '';
+    const companyPhone = company?.phone || '';
+    const clinicAddress = tenant?.address || '';
+    const clinicPhone = tenant?.phone || '';
     const primaryColor = template?.primaryColor || '#3b82f6';
     const accentColor = template?.accentColor || '#1e40af';
     
@@ -6131,7 +6196,8 @@ This password expires in 24 hours.
           <div class="header">
             ${logoHtml}
             <h1>${companyName}</h1>
-            <h2>Factura de Venta</h2>
+            <h2>${clinicName}</h2>
+            <h3>Factura de Venta</h3>
             <p>Recibo: ${sale.receiptId}</p>
           </div>
           
@@ -6168,6 +6234,22 @@ This password expires in 24 hours.
           </div>
           
           <div class="footer">
+            <!-- Company and Clinic Information -->
+            <div style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 6px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <div style="flex: 1;">
+                  <p style="margin: 0; font-weight: 600; color: ${primaryColor};">${companyName}</p>
+                  ${companyAddress ? `<p style="margin: 2px 0; font-size: 0.9em;">${companyAddress}</p>` : ''}
+                  ${companyPhone ? `<p style="margin: 2px 0; font-size: 0.9em;">Tel: ${companyPhone}</p>` : ''}
+                </div>
+                <div style="flex: 1; text-align: right;">
+                  <p style="margin: 0; font-weight: 600; color: ${accentColor};">${clinicName}</p>
+                  ${clinicAddress ? `<p style="margin: 2px 0; font-size: 0.9em;">${clinicAddress}</p>` : ''}
+                  ${clinicPhone ? `<p style="margin: 2px 0; font-size: 0.9em;">Tel: ${clinicPhone}</p>` : ''}
+                </div>
+              </div>
+            </div>
+            
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
               <div style="flex: 1;">
                 <p>Gracias por su preferencia</p>

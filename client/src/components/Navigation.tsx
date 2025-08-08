@@ -15,7 +15,8 @@ import {
   Scissors,
   Heart,
   Receipt,
-  CreditCard
+  CreditCard,
+  Building2
 } from "lucide-react";
 
 interface NavigationProps {
@@ -86,6 +87,7 @@ export function Navigation({ className }: NavigationProps) {
   const adminItems = [
     ...(canAccessAdmin ? [
       { icon: Settings, label: "Admin Dashboard", href: "/admin" },
+      { icon: Building2, label: "Empresa y Clínica", href: "/admin/company-clinic" },
       { icon: Receipt, label: "Plantillas de Recibo", href: "/admin/receipt-templates" }
     ] : []),
     ...(canAccessSuperAdmin ? [

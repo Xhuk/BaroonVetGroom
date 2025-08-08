@@ -50,6 +50,7 @@ import DriverRoute from "@/pages/DriverRoute";
 import DriverMobile from "@/pages/DriverMobile";
 import SalesDelivery from "@/pages/SalesDelivery";
 import ReceiptTemplatesAdmin from "@/pages/ReceiptTemplatesAdmin";
+import CompanyClinicAdmin from "@/pages/CompanyClinicAdmin";
 import { InstantNavigation } from "@/components/InstantNavigation";
 import { DebugBanner } from "@/components/DebugBanner";
 import { DeviceBlocker } from "@/components/DeviceBlocker";
@@ -97,6 +98,7 @@ function Router() {
           <Route path="/admin/van-config" component={AdminVanConfig} />
           <Route path="/admin/external-services" component={AdminExternalServices} />
           <Route path="/admin/receipt-templates" component={ReceiptTemplatesAdmin} />
+          <Route path="/admin/company-clinic" component={CompanyClinicAdmin} />
           <Route path="/superadmin" component={SuperAdmin} />
           <Route path="/superadmin/monitoring" component={SuperAdminMonitoring} />
           <Route path="/superadmin/route-config" component={SuperAdminRouteConfig} />

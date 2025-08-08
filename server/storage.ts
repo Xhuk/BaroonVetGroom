@@ -389,6 +389,8 @@ export interface IStorage {
   createUser(userData: any): Promise<User>;
   createUserCompany(userId: string, companyId: string): Promise<any>;
   getCompany(companyId: string): Promise<Company | undefined>;
+  updateCompany(companyId: string, updates: Partial<InsertCompany>): Promise<Company>;
+  updateTenant(tenantId: string, updates: Partial<InsertTenant>): Promise<Tenant>;
   getTenantsByCompany(companyId: string): Promise<Tenant[]>;
   getStaffByCompany(companyId: string): Promise<Staff[]>;
   
@@ -2833,6 +2835,24 @@ export class DatabaseStorage implements IStorage {
   async getCompany(companyId: string): Promise<Company | undefined> {
     const [company] = await db.select().from(companies).where(eq(companies.id, companyId));
     return company;
+  }
+
+  async updateCompany(companyId: string, updates: Partial<InsertCompany>): Promise<Company> {
+    const [updatedCompany] = await db
+      .update(companies)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(companies.id, companyId))
+      .returning();
+    return updatedCompany;
+  }
+
+  async updateTenant(tenantId: string, updates: Partial<InsertTenant>): Promise<Tenant> {
+    const [updatedTenant] = await db
+      .update(tenants)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(tenants.id, tenantId))
+      .returning();
+    return updatedTenant;
   }
 
   async getTenantsByCompany(companyId: string): Promise<Tenant[]> {
