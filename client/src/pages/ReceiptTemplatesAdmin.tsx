@@ -153,7 +153,7 @@ export default function ReceiptTemplatesAdmin() {
     return colorMap[colorScheme] || '#3b82f6';
   };
 
-  // Generate QR Code HTML for footer integration
+  // Generate QR Code HTML for footer integration - Uses HARDCODED preview values
   const generateQrCodeHtml = () => {
     if (!qrConfig.enabled) return '';
     
@@ -163,11 +163,14 @@ export default function ReceiptTemplatesAdmin() {
       large: '70px'
     }[qrConfig.size];
 
+    // QR Code Preview Data - All values are hardcoded for demonstration
+    const qrPreviewReceiptNumber = hardcodedData.numeroRecibo; // "VET-2025-0001"
+
     return `
       <div style="display: flex; align-items: center; justify-content: center;">
         <div style="background: white; padding: 6px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
           <div style="width: ${qrSize}; height: ${qrSize}; background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9IiMwMDAiLz4KPHJlY3QgeD0iNTYiIHk9IjgiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iIzAwMCIvPgo8cmVjdCB4PSI4IiB5PSI1NiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSIjMDAwIi8+CjxyZWN0IHg9IjMyIiB5PSIzMiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSIjMDAwIi8+CjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjgiIGhlaWdodD0iOCIgZmlsbD0iIzAwMCIvPgo8cmVjdCB4PSI0OCIgeT0iMTYiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiMwMDAiLz4KPHJlY3QgeD0iMTYiIHk9IjQ4IiB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMDAwIi8+CjwvdGc+Cjwvc3ZnPgo=') center/contain no-repeat; border: 1px solid #e5e7eb;"></div>
-          <p style="margin: 4px 0 0; font-size: 9px; text-align: center; color: #6b7280; white-space: nowrap;">Recibo #${hardcodedData.numeroRecibo}</p>
+          <p style="margin: 4px 0 0; font-size: 9px; text-align: center; color: #6b7280; white-space: nowrap;">Recibo #${qrPreviewReceiptNumber}</p>
         </div>
       </div>
     `;
@@ -469,7 +472,7 @@ export default function ReceiptTemplatesAdmin() {
 
       // Get upload URL with company/tenant security
       console.log('Requesting upload URL for logo...', file.name);
-      const uploadParams = { 
+      const uploadParams: any = { 
         fileName: file.name,
         templateType: 'receipt-logo'
       };
@@ -500,7 +503,7 @@ export default function ReceiptTemplatesAdmin() {
       console.log('Full upload response:', response);
       
       if (!response || !response.success || !response.uploadURL || response.uploadURL === null) {
-        const errorMsg = response?.error || 'El servidor no proporcionó una URL de subida válida. Verifica la configuración del almacenamiento.';
+        const errorMsg = 'El servidor no proporcionó una URL de subida válida. Verifica la configuración del almacenamiento.';
         throw new Error(errorMsg);
       }
       
