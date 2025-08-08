@@ -242,19 +242,7 @@ export default function ReceiptTemplatesAdmin() {
     },
   });
 
-  // Check if selected template has logo placeholders
-  const templateHasLogo = (templateId: string) => {
-    const template = preDesignedTemplates.find(t => t.id === templateId);
-    if (!template?.htmlPreview) return false;
-    
-    return template.htmlPreview.includes('logoUrl') || 
-           template.htmlPreview.includes('${logoUrl') ||
-           template.htmlPreview.includes('logo') ||
-           template.features?.some(feature => feature.toLowerCase().includes('logo'));
-  };
-
-  const selectedTemplateHasLogo = selectedTemplate ? templateHasLogo(selectedTemplate) : false;
-
+  // Pre-designed templates data (moved to top to avoid initialization issues)
   const preDesignedTemplates = [
     {
       id: "header-professional",
@@ -454,6 +442,19 @@ export default function ReceiptTemplatesAdmin() {
     }
   ];
 
+  // Check if selected template has logo placeholders
+  const templateHasLogo = (templateId: string) => {
+    const template = preDesignedTemplates.find(t => t.id === templateId);
+    if (!template?.htmlPreview) return false;
+    
+    return template.htmlPreview.includes('logoUrl') || 
+           template.htmlPreview.includes('${logoUrl') ||
+           template.htmlPreview.includes('logo') ||
+           template.features?.some(feature => feature.toLowerCase().includes('logo'));
+  };
+
+  const selectedTemplateHasLogo = selectedTemplate ? templateHasLogo(selectedTemplate) : false;
+
   // Logo upload functions
   const handleLogoUpload = async (file: File) => {
     if (!file) return;
@@ -628,14 +629,14 @@ export default function ReceiptTemplatesAdmin() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {preDesignedTemplates.map((template) => (
                 <Card 
                   key={template.id} 
                   className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
                     selectedTemplate === template.id 
-                      ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950/20' 
-                      : 'hover:ring-1 hover:ring-blue-300'
+                      ? 'ring-2 ring-blue-500 shadow-lg bg-blue-50 dark:bg-blue-950/30' 
+                      : 'hover:shadow-md'
                   }`}
                   onClick={() => setSelectedTemplate(template.id)}
                 >
@@ -653,7 +654,34 @@ export default function ReceiptTemplatesAdmin() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
+                      {/* Live Preview Card */}
+                      <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-800/50">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 flex items-center space-x-1">
+                          <Eye className="w-3 h-3" />
+                          <span>Vista Previa</span>
+                        </div>
+                        <div 
+                          className="scale-[0.28] origin-top-left overflow-hidden bg-white rounded border shadow-sm"
+                          style={{ 
+                            width: '357%', // Scale up to compensate for scale down
+                            height: '180px',
+                            transform: 'scale(0.28)',
+                            transformOrigin: 'top left'
+                          }}
+                        >
+                          <div 
+                            dangerouslySetInnerHTML={{ __html: template.htmlPreview }}
+                            style={{ 
+                              pointerEvents: 'none',
+                              fontSize: '14px',
+                              lineHeight: '1.3'
+                            }}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Features */}
                       <div className="flex flex-wrap gap-2">
                         {template.features.map((feature, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
@@ -661,6 +689,17 @@ export default function ReceiptTemplatesAdmin() {
                           </Badge>
                         ))}
                       </div>
+                      
+                      {/* Selection Indicator */}
+                      {selectedTemplate === template.id && (
+                        <div className="pt-3 border-t">
+                          <Badge className="bg-blue-500 w-full justify-center py-2">
+                            ✓ Formato Seleccionado
+                          </Badge>
+                        </div>
+                      )}
+                      
+                      {/* Full Preview Button */}
                       <Button
                         variant="outline"
                         size="sm"
@@ -671,8 +710,8 @@ export default function ReceiptTemplatesAdmin() {
                           setShowPreview(true);
                         }}
                       >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Vista Previa
+                        <Maximize2 className="w-4 h-4 mr-2" />
+                        Ver Tamaño Completo
                       </Button>
                     </div>
                   </CardContent>
