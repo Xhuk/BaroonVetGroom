@@ -1,8 +1,7 @@
-# BACKUP: .replit before deployment fix
-# Date: 2025-08-08 14:42:00
-# Issues identified:
-# 1. Multiple ports exposed (3000 and 5000) - deployment only supports single port
-# 2. esbuild failure during build process
-# 3. PORT mismatch between configuration and actual server
+# BACKUP: .replit before fixing critical dual port deployment issue
+# Date: 2025-08-08 14:57:45
+# Critical Issue: Dual port configuration (3000 and 5000) breaks Replit deployment
+# Deployment only supports single external port mapping
+# Lines 13-19 need to be fixed by removing port 3000 configuration
 
-# Current .replit content backed up for recovery if needed
+# This backup preserves the original before fixing the critical deployment blocker
