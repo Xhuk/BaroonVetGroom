@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Settings, Trash2, Save, X } from 'lucide-react';
+import { Plus, Edit, Settings, Trash2, Save, X, ArrowLeft } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 interface Feature {
   id: string;
@@ -49,6 +50,7 @@ const LoadingSkeleton = () => (
 function SuperAdminFeaturesAdmin() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [editingFeature, setEditingFeature] = useState<Feature | null>(null);
   const [featureDialog, setFeatureDialog] = useState(false);
   const [newFeatureForm, setNewFeatureForm] = useState({
@@ -209,13 +211,24 @@ function SuperAdminFeaturesAdmin() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Administración de Características
-              </h1>
-              <p className="text-gray-300">
-                Gestiona las características disponibles para los planes de suscripción
-              </p>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => navigate('/superadmin/subscriptions')}
+                variant="outline"
+                className="bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white"
+                data-testid="button-back"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Volver
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  Administración de Características
+                </h1>
+                <p className="text-gray-300">
+                  Gestiona las características disponibles para los planes de suscripción
+                </p>
+              </div>
             </div>
             
             <Dialog open={featureDialog} onOpenChange={setFeatureDialog}>
