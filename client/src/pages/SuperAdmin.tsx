@@ -68,8 +68,6 @@ export default function SuperAdmin() {
     maxStaff: 5
   });
   const [sharedCredentials, setSharedCredentials] = useState<any>(null);
-  const [showAddCreditsDialog, setShowAddCreditsDialog] = useState(false);
-  const [creditAmount, setCreditAmount] = useState('');
 
   // Demo data seeding mutation
   const seedDemoDataMutation = useMutation({
@@ -139,39 +137,6 @@ export default function SuperAdmin() {
     },
   });
 
-  // Add credits mutation
-  const addCreditsMutation = useMutation({
-    mutationFn: async (data: { amount: string; description?: string }) => {
-      const response = await fetch('/api/superadmin/add-credits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
-        throw new Error(errorData.message || `HTTP ${response.status}`);
-      }
-      
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Credits Added Successfully! 💳",
-        description: `$${data.transaction.amount} has been added to your account.`,
-      });
-      setCreditAmount('');
-      setShowAddCreditsDialog(false);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Credit Addition Failed",
-        description: error?.message || "Failed to add credits. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
 
 
   // Fetch dashboard statistics from the database cube
@@ -345,14 +310,6 @@ export default function SuperAdmin() {
                   </Button>
                 </Link>
                 
-                <Button 
-                  variant="outline" 
-                  className="h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200"
-                  onClick={() => setShowAddCreditsDialog(true)}
-                >
-                  <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
-                  <span className="text-xs sm:text-sm font-medium text-center">Add Credits</span>
-                </Button>
                 
                 <Button variant="outline" className="h-auto py-3 px-4 flex flex-col items-center space-y-2 hover:bg-white">
                   <Settings className="w-5 h-5 text-gray-600" />
@@ -1196,80 +1153,6 @@ export default function SuperAdmin() {
       )}
 
 
-      {/* Add Credits Dialog */}
-      <Dialog open={showAddCreditsDialog} onOpenChange={setShowAddCreditsDialog}>
-        <DialogContent className="max-w-md mx-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-purple-600" />
-              Add Credits
-            </DialogTitle>
-            <DialogDescription>
-              Add credits to your account to extend your usage limit.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label>Credit Amount ($)</Label>
-              <Input
-                type="number"
-                value={creditAmount}
-                onChange={(e) => setCreditAmount(e.target.value)}
-                placeholder="Enter amount (e.g., 25.00)"
-                min="5"
-                max="500"
-                step="5"
-              />
-            </div>
-            
-            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-              <p><strong>Recommended amounts:</strong></p>
-              <div className="mt-2 space-y-1">
-                <div className="flex justify-between">
-                  <span>Small boost:</span>
-                  <span>$25 - $50</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Medium boost:</span>
-                  <span>$75 - $100</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Large boost:</span>
-                  <span>$150 - $200</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex gap-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowAddCreditsDialog(false)}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => addCreditsMutation.mutate({ amount: creditAmount })}
-                disabled={addCreditsMutation.isPending || !creditAmount || parseFloat(creditAmount) < 5}
-                className="flex-1 bg-purple-600 hover:bg-purple-700"
-              >
-                {addCreditsMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <DollarSign className="w-4 h-4 mr-2" />
-                    Add ${creditAmount || '0'}
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
