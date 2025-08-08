@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetGroom - Editor de Folleto Comercial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .editor-container {
+            display: flex;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .editor-panel {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .preview-panel {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: auto;
+        }
+
+        .editor-header {
+            background: #3b82f6;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-content {
+            padding: 20px;
+            height: calc(100% - 60px);
+            overflow: auto;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            height: 100%;
+            border: none;
+            resize: none;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .save-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .save-btn:hover {
+            background: #059669;
+        }
+
+        .save-btn:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .status-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .preview-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .toolbar button {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .toolbar button:hover {
+            background: #4b5563;
+        }
+
+        .editable-section {
+            border: 2px dashed #e5e7eb;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .editable-section:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .edit-label {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #3b82f6;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin: 15px 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        .add-feature-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+        .remove-feature-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <!-- Editor Panel -->
+        <div class="editor-panel">
+            <div class="editor-header">
+                <span>📝 Editor de Contenido</span>
+                <button class="save-btn" onclick="saveContent()" id="saveBtn">
+                    💾 Guardar
+                </button>
+            </div>
+            
+            <div class="editor-content">
+                <div id="statusMessage"></div>
+                
+                <!-- Company Information Section -->
+                <div class="editable-section">
+                    <div class="edit-label">Información de la Empresa</div>
+                    
+                    <div class="form-group">
+                        <label for="companyName">Nombre de la Empresa:</label>
+                        <input type="text" id="companyName" value="VetGroom" placeholder="Nombre de la empresa">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="companySubtitle">Subtítulo:</label>
+                        <input type="text" id="companySubtitle" value="Plataforma de Gestión Veterinaria" placeholder="Subtítulo de la empresa">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="companyTagline">Eslogan:</label>
+                        <input type="text" id="companyTagline" value="Optimiza tu clínica veterinaria con tecnología de vanguardia" placeholder="Eslogan de la empresa">
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="editable-section">
+                    <div class="edit-label">Características Principales</div>
+                    <div id="featuresContainer">
+                        <!-- Features will be dynamically populated -->
+                    </div>
+                    <button class="add-feature-btn" onclick="addFeature()">+ Agregar Característica</button>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="editable-section">
+                    <div class="edit-label">Información de Contacto</div>
+                    
+                    <div class="form-group">
+                        <label for="contactEmail">Email:</label>
+                        <input type="email" id="contactEmail" value="info@vetgroom.com" placeholder="Email de contacto">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contactPhone">Teléfono:</label>
+                        <input type="text" id="contactPhone" value="+52 55 1234 5678" placeholder="Teléfono de contacto">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contactWebsite">Sitio Web:</label>
+                        <input type="url" id="contactWebsite" value="www.vetgroom.com" placeholder="Sitio web">
+                    </div>
+                </div>
+
+                <!-- Call to Action -->
+                <div class="editable-section">
+                    <div class="edit-label">Llamada a la Acción</div>
+                    
+                    <div class="form-group">
+                        <label for="ctaTitle">Título de CTA:</label>
+                        <input type="text" id="ctaTitle" value="¡Comienza Hoy!" placeholder="Título de llamada a la acción">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ctaDescription">Descripción de CTA:</label>
+                        <textarea id="ctaDescription" placeholder="Descripción de la llamada a la acción">Únete a cientos de veterinarias que ya confían en VetGroom para optimizar sus operaciones diarias.</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="preview-panel">
+            <div class="editor-header">
+                <span>👁️ Vista Previa</span>
+                <button class="save-btn" onclick="updatePreview()">
+                    🔄 Actualizar Vista
+                </button>
+            </div>
+            <iframe id="previewFrame" class="preview-frame" src="/marketing/brochure.html"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let features = [
+            {
+                title: "Gestión de Citas Inteligente",
+                description: "Sistema avanzado de programación con recordatorios automáticos y optimización de horarios."
+            },
+            {
+                title: "Expedientes Médicos Digitales", 
+                description: "Historial médico completo de mascotas con imágenes, tratamientos y seguimiento."
+            },
+            {
+                title: "Sistema de Facturación Integrado",
+                description: "Facturación automática, control de inventario y reportes financieros detallados."
+            },
+            {
+                title: "Comunicación con Clientes",
+                description: "WhatsApp integrado, recordatorios automáticos y portal de clientes."
+            }
+        ];
+
+        function initializeEditor() {
+            renderFeatures();
+            loadContent();
+        }
+
+        function renderFeatures() {
+            const container = document.getElementById('featuresContainer');
+            container.innerHTML = '';
+            
+            features.forEach((feature, index) => {
+                const featureDiv = document.createElement('div');
+                featureDiv.className = 'form-group';
+                featureDiv.innerHTML = `
+                    <div style="border: 1px solid #e5e7eb; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                        <button class="remove-feature-btn" onclick="removeFeature(${index})">×</button>
+                        <label>Título de Característica ${index + 1}:</label>
+                        <input type="text" id="featureTitle${index}" value="${feature.title}" placeholder="Título de la característica">
+                        <label style="margin-top: 10px;">Descripción:</label>
+                        <textarea id="featureDesc${index}" placeholder="Descripción de la característica">${feature.description}</textarea>
+                    </div>
+                `;
+                container.appendChild(featureDiv);
+            });
+        }
+
+        function addFeature() {
+            features.push({
+                title: "Nueva Característica",
+                description: "Descripción de la nueva característica"
+            });
+            renderFeatures();
+        }
+
+        function removeFeature(index) {
+            features.splice(index, 1);
+            renderFeatures();
+        }
+
+        function collectFormData() {
+            // Update features array with current form values
+            features.forEach((feature, index) => {
+                const titleElement = document.getElementById(`featureTitle${index}`);
+                const descElement = document.getElementById(`featureDesc${index}`);
+                if (titleElement && descElement) {
+                    features[index].title = titleElement.value;
+                    features[index].description = descElement.value;
+                }
+            });
+
+            return {
+                companyName: document.getElementById('companyName').value,
+                companySubtitle: document.getElementById('companySubtitle').value,
+                companyTagline: document.getElementById('companyTagline').value,
+                features: features,
+                contactEmail: document.getElementById('contactEmail').value,
+                contactPhone: document.getElementById('contactPhone').value,
+                contactWebsite: document.getElementById('contactWebsite').value,
+                ctaTitle: document.getElementById('ctaTitle').value,
+                ctaDescription: document.getElementById('ctaDescription').value
+            };
+        }
+
+        async function saveContent() {
+            const saveBtn = document.getElementById('saveBtn');
+            const statusDiv = document.getElementById('statusMessage');
+            
+            saveBtn.disabled = true;
+            saveBtn.textContent = '💾 Guardando...';
+            
+            try {
+                const formData = collectFormData();
+                
+                // Generate updated HTML content
+                const updatedHTML = generateBrochureHTML(formData);
+                
+                const response = await fetch('/api/marketing/brochure/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content: updatedHTML })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = '<div class="status-success">✅ Contenido guardado exitosamente</div>';
+                    updatePreview();
+                } else {
+                    statusDiv.innerHTML = `<div class="status-error">❌ Error: ${result.message}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status-error">❌ Error de conexión: ${error.message}</div>`;
+            }
+            
+            saveBtn.disabled = false;
+            saveBtn.textContent = '💾 Guardar';
+            
+            // Clear status message after 5 seconds
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function generateBrochureHTML(data) {
+            const featuresHTML = data.features.map(feature => `
+                <div class="feature-card">
+                    <h3>${feature.title}</h3>
+                    <p>${feature.description}</p>
+                </div>
+            `).join('');
+
+            return `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${data.companyName} - ${data.companySubtitle}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 20px;
+        }
+        
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .tagline {
+            font-size: 1em;
+            color: #888;
+            font-style: italic;
+        }
+        
+        h1 {
+            color: #3b82f6;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-left: 5px solid #3b82f6;
+            padding-left: 15px;
+        }
+        
+        h2 {
+            color: #2563eb;
+            font-size: 1.5em;
+            margin: 25px 0 15px 0;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 5px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        
+        .feature-card h3 {
+            color: #3b82f6;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .contact-section {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .cta-section h2 {
+            color: white;
+            border: none;
+            margin-bottom: 15px;
+        }
+        
+        @media print {
+            .page {
+                box-shadow: none;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <div class="logo">${data.companyName}</div>
+            <div class="subtitle">${data.companySubtitle}</div>
+            <div class="tagline">${data.companyTagline}</div>
+        </div>
+
+        <h1>Características Principales</h1>
+        
+        <div class="feature-grid">
+            ${featuresHTML}
+        </div>
+
+        <div class="contact-section">
+            <h2>Información de Contacto</h2>
+            <p><strong>Email:</strong> ${data.contactEmail}</p>
+            <p><strong>Teléfono:</strong> ${data.contactPhone}</p>
+            <p><strong>Sitio Web:</strong> ${data.contactWebsite}</p>
+        </div>
+
+        <div class="cta-section">
+            <h2>${data.ctaTitle}</h2>
+            <p>${data.ctaDescription}</p>
+        </div>
+    </div>
+</body>
+</html>`;
+        }
+
+        function updatePreview() {
+            const iframe = document.getElementById('previewFrame');
+            iframe.src = iframe.src; // Reload the iframe
+        }
+
+        async function loadContent() {
+            // Initialize with default values - could be loaded from server if needed
+            console.log('Editor initialized with default content');
+        }
+
+        // Initialize the editor when page loads
+        document.addEventListener('DOMContentLoaded', initializeEditor);
+    </script>
+</body>
+</html>

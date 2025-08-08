@@ -135,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Simple marketing brochure route that reads file content
+  // Marketing brochure editor routes
   app.get('/marketing/brochure.html', async (req, res) => {
     try {
       const fs = await import('fs');
@@ -146,6 +146,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error serving marketing brochure:', error);
       res.status(404).send('Marketing brochure not found');
+    }
+  });
+
+  // Marketing brochure editor interface
+  app.get('/marketing/editor', async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const editorPath = path.resolve(import.meta.dirname, '..', 'marketing', 'brochure-editor.html');
+      const content = await fs.promises.readFile(editorPath, 'utf-8');
+      res.setHeader('Content-Type', 'text/html');
+      res.send(content);
+    } catch (error) {
+      console.error('Error serving marketing editor:', error);
+      res.status(404).send('Marketing editor not found');
+    }
+  });
+
+  // API endpoint to save brochure content
+  app.post('/api/marketing/brochure/save', async (req: any, res) => {
+    try {
+      const { content } = req.body;
+      if (!content) {
+        return res.status(400).json({ message: 'Content is required' });
+      }
+
+      const fs = await import('fs');
+      const marketingPath = path.resolve(import.meta.dirname, '..', 'marketing', 'brochure.html');
+      await fs.promises.writeFile(marketingPath, content, 'utf-8');
+      
+      res.json({ success: true, message: 'Brochure saved successfully' });
+    } catch (error) {
+      console.error('Error saving marketing brochure:', error);
+      res.status(500).json({ message: 'Failed to save brochure' });
+    }
+  });
+
+  // API endpoint to get editable content
+  app.get('/api/marketing/brochure/content', async (req: any, res) => {
+    try {
+      const fs = await import('fs');
+      const marketingPath = path.resolve(import.meta.dirname, '..', 'marketing', 'brochure.html');
+      const content = await fs.promises.readFile(marketingPath, 'utf-8');
+      res.json({ content });
+    } catch (error) {
+      console.error('Error reading marketing brochure:', error);
+      res.status(500).json({ message: 'Failed to read brochure' });
     }
   });
 
