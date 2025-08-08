@@ -2247,7 +2247,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         companyId: companySubscriptions.companyId,
         companyName: companies.name,
-        companyEmail: companies.contactEmail,
+        companyEmail: companyOnboarding.email,
         planId: companySubscriptions.planId,
         status: companySubscriptions.status,
         currentPeriodEnd: companySubscriptions.currentPeriodEnd,
@@ -2255,6 +2255,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(companySubscriptions)
       .leftJoin(companies, eq(companySubscriptions.companyId, companies.id))
+      .leftJoin(companyOnboarding, eq(companySubscriptions.companyId, companyOnboarding.companyId))
       .leftJoin(subscriptionPlans, eq(companySubscriptions.planId, subscriptionPlans.id))
       .where(
         and(
