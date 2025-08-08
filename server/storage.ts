@@ -3130,12 +3130,12 @@ export class DatabaseStorage implements IStorage {
           autoRenewal: externalServiceSubscriptions.autoRenewEnabled,
           usagePercentage: sql<number>`
             CASE 
-              WHEN ${externalServiceSubscriptions.creditsLimit} > 0 
-              THEN ((${externalServiceSubscriptions.creditsLimit} - ${externalServiceSubscriptions.creditsRemaining})::decimal / ${externalServiceSubscriptions.creditsLimit}::decimal * 100)
+              WHEN COALESCE(${externalServiceSubscriptions.creditsLimit}, 0) > 0 
+              THEN ((COALESCE(${externalServiceSubscriptions.creditsLimit}, 0) - COALESCE(${externalServiceSubscriptions.creditsRemaining}, 0))::decimal / COALESCE(${externalServiceSubscriptions.creditsLimit}, 1)::decimal * 100)
               ELSE 0 
             END
           `,
-          usedAmount: sql<number>`(${externalServiceSubscriptions.creditsLimit} - ${externalServiceSubscriptions.creditsRemaining})`,
+          usedAmount: sql<number>`(COALESCE(${externalServiceSubscriptions.creditsLimit}, 0) - COALESCE(${externalServiceSubscriptions.creditsRemaining}, 0))`,
           monthlyLimit: externalServiceSubscriptions.creditsLimit,
         })
         .from(externalServiceSubscriptions)
