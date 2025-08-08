@@ -1857,7 +1857,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { advancedRouteOptimization } = await import('./routeOptimizer');
       const result = await advancedRouteOptimization({
         clinicLocation: clinicLocation || [25.6866, -100.3161],
-        appointments: routePoints,
+        completedAppointments: routePoints,
         vanCapacity: vanCapacity || 'medium',
         fraccionamientoWeights: fraccionamientoWeights || {},
         config
@@ -2195,7 +2195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const config = await storage.upsertCompanyBillingConfig(companyId, configData);
+      const config = await storage.upsertCompanyBillingConfig(configData);
       res.json(config);
     } catch (error) {
       console.error("Error updating billing config:", error);
@@ -2415,7 +2415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Get fraccionamiento weights
-      const fraccionamientos = await storage.getFraccionamientos(tenantId);
+      const fraccionamientos = await storage.getFraccionamientos();
       const fraccionamientoWeights = fraccionamientos.reduce((acc, frac) => {
         acc[frac.name] = frac.weight || 5.0;
         return acc;
@@ -2757,12 +2757,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const transactionData = {
         id: mockTransactionId,
-        amount: onboardingData.sitesRequested <= 3 ? 2999 : 4999,
+        amount: (onboardingData.sitesRequested <= 3 ? 2999 : 4999).toString(),
         currency: "MXN",
         status: "completed",
         paymentProvider: "demo",
         externalTransactionId: `demo_${Date.now()}`,
-        subscriptionPlan: onboardingData.sitesRequested <= 3 ? "medium" : "large",
+        subscriptionPlanId: onboardingData.sitesRequested <= 3 ? "medium" : "large",
+        companyId: 'temp',
+        billingCycle: 'monthly',
+        subscriptionStartDate: new Date(),
         subscriptionEndDate,
         paymentDate: new Date(),
       };
@@ -5498,18 +5501,20 @@ This password expires in 24 hours.
       const exportData = await Promise.all(
         salesData.map(async (sale) => {
           const items = await storage.getSaleItems(sale.id);
-          const client = sale.clientId ? await storage.getClient(sale.clientId) : null;
-          const pet = sale.petId ? await storage.getPet(sale.petId) : null;
+          const clients = await storage.getClients(tenantId);
+          const pets = await storage.getPets(tenantId);
+          const client = clients.find(c => c.id === (sale as any).clientId) || null;
+          const pet = pets.find(p => p.id === (sale as any).petId) || null;
           
           return {
-            Fecha: new Date(sale.createdAt).toLocaleDateString('es-MX'),
+            Fecha: sale.createdAt ? new Date(sale.createdAt).toLocaleDateString('es-MX') : 'N/A',
             Cliente: client?.name || 'Cliente General',
             Mascota: pet?.name || 'N/A',
             Servicio: items.map(item => item.name).join(', '),
-            Subtotal: parseFloat(sale.subtotal),
-            IVA: parseFloat(sale.taxAmount),
+            Subtotal: parseFloat((sale as any).subtotal || '0'),
+            IVA: parseFloat((sale as any).taxAmount || '0'),
             Total: parseFloat(sale.totalAmount),
-            Estado: sale.status === 'completed' ? 'Pagado' : 'Pendiente',
+            Estado: (sale as any).status === 'completed' ? 'Pagado' : 'Pendiente',
             'Método de Pago': sale.paymentMethod || 'Efectivo'
           };
         })
@@ -5570,7 +5575,7 @@ This password expires in 24 hours.
           return {
             id: company.id,
             name: company.name,
-            email: company.email,
+            contactEmail: 'N/A',
             subscriptionPlan: plan?.displayName || 'Sin Plan',
             subscriptionStatus: subscription?.status || 'inactive',
             vetsitesUsed: tenants.length,
@@ -5597,7 +5602,6 @@ This password expires in 24 hours.
       // Create company
       const company = await storage.createCompany({
         name,
-        email,
         subscriptionStatus: 'trial',
         subscriptionPlan: 'trial'
       });
@@ -5806,7 +5810,7 @@ This password expires in 24 hours.
         let errorMessage = error.message || "Unknown email provider error";
         let helpText = "";
         
-        if (error.name === 'validation_error' && error.error?.includes('domain is not verified')) {
+        if (error.name === 'validation_error' && (error as any).error?.includes('domain is not verified')) {
           errorMessage = "Domain verification required";
           helpText = "Please verify your domain at https://resend.com/domains or use a verified domain like your-domain@resend.dev";
         }
@@ -6893,7 +6897,7 @@ This password expires in 24 hours.
           "email-automation": { limit: null } // Unlimited
         };
         
-        const defaultLimit = serviceDefaults[serviceId]?.limit || 1000;
+        const defaultLimit = (serviceDefaults as any)[serviceId]?.limit || 1000;
         return res.json({
           used: 0,
           limit: defaultLimit,
