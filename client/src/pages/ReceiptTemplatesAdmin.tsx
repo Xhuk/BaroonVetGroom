@@ -535,9 +535,17 @@ export default function ReceiptTemplatesAdmin() {
         // Extract the object path from the GCS URL
         const pathMatch = logoPath.match(/\/([^/]+\/.+)$/);
         if (pathMatch) {
-          const objectPath = `/objects/${pathMatch[1].replace(/^[^/]+\//, '')}`;
-          console.log('Final logo URL:', objectPath);
-          setLogoUrl(objectPath);
+          // Remove bucket name and .private prefix to get the actual object path
+          let objectPath = pathMatch[1].replace(/^[^/]+\//, ''); // Remove bucket name
+          
+          // If the path starts with .private, remove that too since the backend handles it
+          if (objectPath.startsWith('.private/')) {
+            objectPath = objectPath.substring('.private/'.length);
+          }
+          
+          const finalLogoUrl = `/objects/${objectPath}`;
+          console.log('Final logo URL:', finalLogoUrl);
+          setLogoUrl(finalLogoUrl);
         } else {
           // Fallback: use the full upload URL temporarily
           console.log('Using fallback URL:', uploadUrl);
