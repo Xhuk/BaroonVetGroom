@@ -116,15 +116,15 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="pb-40">
         {/* Action Buttons - Responsive positioning */}
-        <div className="flex gap-4 mb-6 tablet-card" style={{ zIndex: 1000, position: 'relative', backgroundColor: 'rgba(255,0,0,0.1)', padding: '10px' }}>
+        <div className="flex gap-4 mb-6 tablet-card">
           <Link href="/booking">
-            <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800" style={{ border: '3px solid yellow' }}>
+            <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
               <Phone className="w-4 h-4 mr-2" />
               Nueva Cita por Teléfono
             </Button>
           </Link>
           <Link href="/appointments">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 shadow-md dark:bg-blue-700 dark:hover:bg-blue-800" style={{ border: '3px solid yellow' }}>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 shadow-md dark:bg-blue-700 dark:hover:bg-blue-800">
               <CalendarIcon className="w-4 h-4 mr-2" />
               Gestionar Citas
             </Button>
