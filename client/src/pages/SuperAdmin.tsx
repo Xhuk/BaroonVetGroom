@@ -68,15 +68,8 @@ export default function SuperAdmin() {
     maxStaff: 5
   });
   const [sharedCredentials, setSharedCredentials] = useState<any>(null);
-  const [showBillingDialog, setShowBillingDialog] = useState(false);
   const [showAddCreditsDialog, setShowAddCreditsDialog] = useState(false);
   const [creditAmount, setCreditAmount] = useState('');
-  const [billingSettings, setBillingSettings] = useState({
-    monthlyBudget: 100,
-    alertThreshold75: 75,
-    alertThreshold90: 90,
-    enableAlerts: true
-  });
 
   // Demo data seeding mutation
   const seedDemoDataMutation = useMutation({
@@ -180,38 +173,6 @@ export default function SuperAdmin() {
     },
   });
 
-  // Update billing settings mutation
-  const updateBillingMutation = useMutation({
-    mutationFn: async (settings: any) => {
-      const response = await fetch('/api/superadmin/billing-settings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(settings),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
-        throw new Error(errorData.message || `HTTP ${response.status}`);
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Billing Settings Updated",
-        description: "Your billing preferences have been saved successfully.",
-      });
-      setShowBillingDialog(false);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Update Failed",
-        description: error?.message || "Failed to update billing settings.",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Fetch dashboard statistics from the database cube
   const { data: dashboardStats, isLoading: isLoadingStats, error: statsError } = useQuery<any>({
@@ -374,14 +335,15 @@ export default function SuperAdmin() {
                   <span className="text-xs sm:text-sm font-medium text-center">Onboard Client</span>
                 </Button>
                 
-                <Button 
-                  variant="outline" 
-                  className="h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
-                  onClick={() => setShowBillingDialog(true)}
-                >
-                  <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                  <span className="text-xs sm:text-sm font-medium text-center">Billing</span>
-                </Button>
+                <Link href="/superadmin/subscriptions" className="block">
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-auto py-2 sm:py-3 px-2 sm:px-4 flex flex-col items-center space-y-1 sm:space-y-2 hover:bg-white bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+                  >
+                    <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                    <span className="text-xs sm:text-sm font-medium text-center">Subscriptions</span>
+                  </Button>
+                </Link>
                 
                 <Button 
                   variant="outline" 
@@ -1233,84 +1195,6 @@ export default function SuperAdmin() {
         </Dialog>
       )}
 
-      {/* Billing Settings Dialog */}
-      <Dialog open={showBillingDialog} onOpenChange={setShowBillingDialog}>
-        <DialogContent className="max-w-md mx-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-blue-600" />
-              Billing Settings
-            </DialogTitle>
-            <DialogDescription>
-              Configure your monthly budget and alert thresholds.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label>Monthly Budget ($)</Label>
-              <Input
-                type="number"
-                value={billingSettings.monthlyBudget}
-                onChange={(e) => setBillingSettings(prev => ({ ...prev, monthlyBudget: parseFloat(e.target.value) }))}
-                min="10"
-                max="10000"
-                step="10"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>75% Alert (%)</Label>
-                <Input
-                  type="number"
-                  value={billingSettings.alertThreshold75}
-                  onChange={(e) => setBillingSettings(prev => ({ ...prev, alertThreshold75: parseInt(e.target.value) }))}
-                  min="50"
-                  max="90"
-                />
-              </div>
-              <div>
-                <Label>90% Alert (%)</Label>
-                <Input
-                  type="number"
-                  value={billingSettings.alertThreshold90}
-                  onChange={(e) => setBillingSettings(prev => ({ ...prev, alertThreshold90: parseInt(e.target.value) }))}
-                  min="75"
-                  max="100"
-                />
-              </div>
-            </div>
-            
-            <div className="flex gap-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowBillingDialog(false)}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => updateBillingMutation.mutate(billingSettings)}
-                disabled={updateBillingMutation.isPending}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-              >
-                {updateBillingMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Update Settings
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Add Credits Dialog */}
       <Dialog open={showAddCreditsDialog} onOpenChange={setShowAddCreditsDialog}>
