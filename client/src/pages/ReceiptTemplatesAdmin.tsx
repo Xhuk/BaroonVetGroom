@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { 
   Upload, 
   Download, 
@@ -45,7 +46,9 @@ import {
   Maximize2,
   X,
   Image,
-  Percent
+  Percent,
+  QrCode,
+  Settings
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -72,7 +75,7 @@ interface ReceiptTemplate {
 export default function ReceiptTemplatesAdmin() {
   const [activeTab, setActiveTab] = useState("wizard");
   const [wizardStep, setWizardStep] = useState(1);
-  const [uploadMode, setUploadMode] = useState<"company" | "tenant">("company");
+  const [facturaType, setFacturaType] = useState<"empresarial" | "clinica">("empresarial");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [selectedTenantId, setSelectedTenantId] = useState<string>("");
   const [templateName, setTemplateName] = useState("");
@@ -85,19 +88,26 @@ export default function ReceiptTemplatesAdmin() {
   const [logoUrl, setLogoUrl] = useState<string>("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
   
-  // Only customizable options
+  // Step 2: Configuration options
   const [templateConfig, setTemplateConfig] = useState({
     colorScheme: "blue",
     logoPosition: "left",
     logoOpacity: 100,
     logoSize: "medium",
-    preserveLogoTransparency: true
+    preserveLogoTransparency: true,
+    enterpriseName: "Clínica Veterinaria San Marcos",
+    enterpriseSlogan: "Cuidamos a tu mejor amigo"
   });
 
-  // Hardcoded template data - not customizable
+  // Step 3: QR Code options
+  const [qrConfig, setQrConfig] = useState({
+    enabled: false,
+    position: "bottom-right", // bottom-right, bottom-left, bottom-center
+    size: "medium" // small, medium, large
+  });
+
+  // Hardcoded template data - not customizable (except enterprise info)
   const hardcodedData = {
-    empresaNombre: "Clínica Veterinaria San Marcos",
-    empresaEslogan: "Cuidamos a tu mejor amigo",
     empresaTelefono: "(555) 123-4567",
     empresaWeb: "www.vetclinica.com",
     empresaDireccion: "Av. Revolución 123, Ciudad de México",
@@ -143,6 +153,32 @@ export default function ReceiptTemplatesAdmin() {
     return colorMap[colorScheme] || '#3b82f6';
   };
 
+  // Generate QR Code HTML
+  const generateQrCodeHtml = () => {
+    if (!qrConfig.enabled) return '';
+    
+    const qrSize = {
+      small: '60px',
+      medium: '80px',
+      large: '100px'
+    }[qrConfig.size];
+
+    const positionStyle = {
+      'bottom-right': 'position: absolute; bottom: 20px; right: 20px;',
+      'bottom-left': 'position: absolute; bottom: 20px; left: 20px;',
+      'bottom-center': 'position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);'
+    }[qrConfig.position];
+
+    return `
+      <div style="${positionStyle}">
+        <div style="background: white; padding: 8px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
+          <div style="width: ${qrSize}; height: ${qrSize}; background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9IiMwMDAiLz4KPHJlY3QgeD0iNTYiIHk9IjgiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iIzAwMCIvPgo8cmVjdCB4PSI4IiB5PSI1NiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSIjMDAwIi8+CjxyZWN0IHg9IjMyIiB5PSIzMiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSIjMDAwIi8+CjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjgiIGhlaWdodD0iOCIgZmlsbD0iIzAwMCIvPgo8cmVjdCB4PSI0OCIgeT0iMTYiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiMwMDAiLz4KPHJlY3QgeD0iMTYiIHk9IjQ4IiB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMDAwIi8+CjwvdGc+Cjwvc3ZnPgo=') center/contain no-repeat; border: 1px solid #e5e7eb;"></div>
+          <p style="margin: 4px 0 0; font-size: 10px; text-align: center; color: #6b7280;">Recibo #${hardcodedData.numeroRecibo}</p>
+        </div>
+      </div>
+    `;
+  };
+
   // Fetch companies for selection
   const { data: companies = [] } = useQuery<any[]>({
     queryKey: ['/api/companies'],
@@ -151,16 +187,16 @@ export default function ReceiptTemplatesAdmin() {
   // Fetch tenants for selected company
   const { data: tenants = [] } = useQuery<any[]>({
     queryKey: ['/api/tenants', selectedCompanyId],
-    enabled: !!selectedCompanyId && uploadMode === "tenant",
+    enabled: !!selectedCompanyId && facturaType === "clinica",
   });
 
   // Fetch receipt templates
   const { data: templates = [], isLoading } = useQuery<ReceiptTemplate[]>({
     queryKey: ['/api/admin/receipt-templates', { 
-      companyId: uploadMode === "company" ? selectedCompanyId : undefined,
-      tenantId: uploadMode === "tenant" ? selectedTenantId : undefined 
+      companyId: facturaType === "empresarial" ? selectedCompanyId : undefined,
+      tenantId: facturaType === "clinica" ? selectedTenantId : undefined 
     }],
-    enabled: uploadMode === "company" ? !!selectedCompanyId : !!selectedTenantId,
+    enabled: facturaType === "empresarial" ? !!selectedCompanyId : !!selectedTenantId,
   });
 
   // Create template mutation
@@ -172,14 +208,14 @@ export default function ReceiptTemplatesAdmin() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/receipt-templates'] });
       toast({
         title: "Éxito",
-        description: "Plantilla de recibo subida correctamente",
+        description: "Plantilla de recibo creada correctamente",
       });
       resetForm();
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Error al subir la plantilla",
+        description: error.message || "Error al crear la plantilla",
         variant: "destructive",
       });
     },
@@ -211,7 +247,6 @@ export default function ReceiptTemplatesAdmin() {
     const template = preDesignedTemplates.find(t => t.id === templateId);
     if (!template?.htmlPreview) return false;
     
-    // Check if template contains logo-related variables or placeholders
     return template.htmlPreview.includes('logoUrl') || 
            template.htmlPreview.includes('${logoUrl') ||
            template.htmlPreview.includes('logo') ||
@@ -223,12 +258,12 @@ export default function ReceiptTemplatesAdmin() {
   const preDesignedTemplates = [
     {
       id: "header-professional",
-      name: "Estilo Profesional",
+      name: "Estilo Profesional con Logo",
       description: "Encabezado corporativo con logo personalizable y gradiente elegante",
       preview: "/assets/template-preview-1.png",
       features: ["Logo personalizable", "Gradiente dinámico", "Información estructurada", "Aspecto corporativo"],
       htmlPreview: `
-        <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; border: 1px solid ${getColorValue(templateConfig.colorScheme)}; border-radius: 8px; overflow: hidden; background: white;">
+        <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; border: 1px solid ${getColorValue(templateConfig.colorScheme)}; border-radius: 8px; overflow: hidden; background: white; position: relative;">
           <!-- Professional Header Style with Dynamic Color Scheme -->
           <div style="background: ${getColorValue(templateConfig.colorScheme)}; color: white; padding: 24px;">
             <!-- Dynamic Logo Position -->
@@ -239,8 +274,8 @@ export default function ReceiptTemplatesAdmin() {
                   `<img src="${logoUrl}" alt="Logo" style="width: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; height: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; object-fit: ${templateConfig.preserveLogoTransparency ? 'contain' : 'cover'}; margin-bottom: 12px; opacity: ${templateConfig.logoOpacity / 100}; border-radius: 4px;" />` :
                   '' // No logo placeholder when no logo is uploaded
                 }
-                <h1 style="margin: 0; font-size: 20px; font-weight: bold;">${hardcodedData.empresaNombre}</h1>
-                <p style="margin: 4px 0 0; font-size: 14px; opacity: 0.9;">${hardcodedData.empresaEslogan}</p>
+                <h1 style="margin: 0; font-size: 20px; font-weight: bold;">${templateConfig.enterpriseName}</h1>
+                <p style="margin: 4px 0 0; font-size: 14px; opacity: 0.9;">${templateConfig.enterpriseSlogan}</p>
               </div>
               <div style="text-align: right;">
                 <div style="background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 4px; margin-bottom: 8px;">
@@ -249,8 +284,8 @@ export default function ReceiptTemplatesAdmin() {
                 <p style="margin: 0; font-size: 14px;"># ${hardcodedData.numeroRecibo}</p>
               </div>` : `
               <div style="text-align: center; flex: 1;">
-                <h1 style="margin: 0; font-size: 20px; font-weight: bold;">${hardcodedData.empresaNombre}</h1>
-                <p style="margin: 4px 0 0; font-size: 14px; opacity: 0.9;">${hardcodedData.empresaEslogan}</p>
+                <h1 style="margin: 0; font-size: 20px; font-weight: bold;">${templateConfig.enterpriseName}</h1>
+                <p style="margin: 4px 0 0; font-size: 14px; opacity: 0.9;">${templateConfig.enterpriseSlogan}</p>
                 ${logoUrl ? 
                   `<img src="${logoUrl}" alt="Logo" style="width: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; height: ${templateConfig.logoSize === 'small' ? '40px' : templateConfig.logoSize === 'large' ? '70px' : '50px'}; object-fit: ${templateConfig.preserveLogoTransparency ? 'contain' : 'cover'}; margin: 12px auto; opacity: ${templateConfig.logoOpacity / 100}; border-radius: 4px; display: block;" />` :
                   '' // No logo placeholder when no logo is uploaded
@@ -326,6 +361,9 @@ export default function ReceiptTemplatesAdmin() {
               <p style="margin: 4px 0; font-size: 12px;">${hardcodedData.empresaDireccion}</p>
             </div>
           </div>
+          
+          <!-- QR Code -->
+          ${generateQrCodeHtml()}
         </div>
       `
     },
@@ -336,11 +374,11 @@ export default function ReceiptTemplatesAdmin() {
       preview: "/assets/template-preview-2.png",
       features: ["Sin logo requerido", "Diseño minimalista", "Solo colores personalizables", "Tipografía profesional"],
       htmlPreview: `
-        <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; border: 1px solid ${getColorValue(templateConfig.colorScheme)}; border-radius: 8px; overflow: hidden; background: white;">
+        <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; border: 1px solid ${getColorValue(templateConfig.colorScheme)}; border-radius: 8px; overflow: hidden; background: white; position: relative;">
           <!-- Simple Header without Logo -->
           <div style="background: ${getColorValue(templateConfig.colorScheme)}; color: white; padding: 24px; text-align: center;">
-            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">${hardcodedData.empresaNombre}</h1>
-            <p style="margin: 8px 0 0; font-size: 16px; opacity: 0.9;">${hardcodedData.empresaEslogan}</p>
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">${templateConfig.enterpriseName}</h1>
+            <p style="margin: 8px 0 0; font-size: 16px; opacity: 0.9;">${templateConfig.enterpriseSlogan}</p>
             <div style="margin-top: 16px; background: rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 6px; display: inline-block;">
               <span style="font-size: 20px; font-weight: bold;">RECIBO</span>
               <span style="margin-left: 12px; font-size: 16px;"># ${hardcodedData.numeroRecibo}</span>
@@ -408,6 +446,9 @@ export default function ReceiptTemplatesAdmin() {
               <p style="margin: 4px 0; font-size: 12px;">${hardcodedData.empresaDireccion}</p>
             </div>
           </div>
+          
+          <!-- QR Code -->
+          ${generateQrCodeHtml()}
         </div>
       `
     }
@@ -501,7 +542,14 @@ export default function ReceiptTemplatesAdmin() {
       logoPosition: "left",
       logoOpacity: 100,
       logoSize: "medium",
-      preserveLogoTransparency: true
+      preserveLogoTransparency: true,
+      enterpriseName: "Clínica Veterinaria San Marcos",
+      enterpriseSlogan: "Cuidamos a tu mejor amigo"
+    });
+    setQrConfig({
+      enabled: false,
+      position: "bottom-right",
+      size: "medium"
     });
   };
 
@@ -529,718 +577,527 @@ export default function ReceiptTemplatesAdmin() {
         metadata: {
           generatedFrom: selectedTemplate,
           customization: templateConfig,
+          qrConfig: qrConfig,
           hardcodedData: hardcodedData,
-          logo: logoUrl
+          facturaType: facturaType,
+          logoUrl: logoUrl
         },
-        htmlContent: generateTemplate(),
-        companyId: uploadMode === "company" ? selectedCompanyId : undefined,
-        tenantId: uploadMode === "tenant" ? selectedTenantId : undefined,
+        fileUrl: generateTemplate(),
+        fileName: `${templateName.replace(/\s+/g, '_').toLowerCase()}_template.html`,
+        version: "1.0",
+        isActive: true,
+        ...(facturaType === "empresarial" ? { companyId: selectedCompanyId } : { tenantId: selectedTenantId })
       };
 
       await createTemplateMutation.mutateAsync(newTemplateData);
     } catch (error) {
-      // Error handled by mutation
+      console.error('Error creating template:', error);
     } finally {
       setUploading(false);
     }
   };
 
-  const handleFileUpload = async (file: File) => {
-    if (!file) return;
-
-    try {
-      setUploading(true);
-
-      // Create FormData for file upload
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('name', templateName);
-      formData.append('description', templateDescription);
-      formData.append('templateType', 'upload');
-      
-      if (uploadMode === "company") {
-        formData.append('companyId', selectedCompanyId);
-      } else {
-        formData.append('tenantId', selectedTenantId);
-      }
-
-      await createTemplateMutation.mutateAsync(formData);
-    } catch (error) {
-      // Error handled by mutation
-    } finally {
-      setUploading(false);
+  const canProceedToNextStep = () => {
+    switch (wizardStep) {
+      case 1:
+        return selectedTemplate !== "";
+      case 2:
+        const requiresLogo = templateHasLogo(selectedTemplate);
+        return templateConfig.enterpriseName && templateConfig.enterpriseSlogan && (!requiresLogo || logoUrl);
+      case 3:
+        return true; // QR step is always optional
+      case 4:
+        return templateName && ((facturaType === "empresarial" && selectedCompanyId) || (facturaType === "clinica" && selectedTenantId));
+      default:
+        return false;
     }
   };
 
-  const handlePreview = () => {
-    const template = generateTemplate();
-    setPreviewTemplate(template);
-    setShowPreview(true);
-  };
+  const renderStepContent = () => {
+    switch (wizardStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Layout className="w-5 h-5 text-blue-600" />
+                Paso 1: Selecciona el Formato de Plantilla
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Elige el formato base para tu recibo. Cada plantilla tiene características específicas.
+              </p>
+            </div>
 
-  return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <Header />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-2">
-            <FileText className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Plantillas de Recibos</h1>
-          </div>
-          <p className="text-gray-600 dark:text-gray-400">
-            Gestiona y personaliza plantillas para recibos veterinarios
-          </p>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="wizard">
-              <Wand2 className="w-4 h-4 mr-2" />
-              Asistente Simplificado
-            </TabsTrigger>
-            <TabsTrigger value="manage">
-              <FileText className="w-4 h-4 mr-2" />
-              Gestionar Plantillas
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="wizard">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Zap className="w-5 h-5 text-yellow-500" />
-                      <span>Asistente de Plantillas Simplificado</span>
-                    </CardTitle>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                      Crea plantillas profesionales con solo 3 opciones: color, logo y posición
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-sm text-gray-500">
-                      Paso {wizardStep} de 3
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {preDesignedTemplates.map((template) => (
+                <Card 
+                  key={template.id} 
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                    selectedTemplate === template.id 
+                      ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950/20' 
+                      : 'hover:ring-1 hover:ring-blue-300'
+                  }`}
+                  onClick={() => setSelectedTemplate(template.id)}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg">{template.name}</CardTitle>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {template.description}
+                        </p>
+                      </div>
+                      {selectedTemplate === template.id && (
+                        <CheckCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+                      )}
                     </div>
-                    <Progress value={(wizardStep / 3) * 100} className="w-32" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        {template.features.map((feature, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {feature}
+                          </Badge>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewTemplate(template.htmlPreview);
+                          setShowPreview(true);
+                        }}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Vista Previa
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {selectedTemplate && templateHasLogo(selectedTemplate) && (
+              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                  <Info className="w-5 h-5" />
+                  <span className="font-medium">Plantilla con Logo</span>
+                </div>
+                <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
+                  Esta plantilla requiere que subas un logo en el siguiente paso.
+                </p>
+              </div>
+            )}
+
+            {selectedTemplate && !templateHasLogo(selectedTemplate) && (
+              <div className="mt-6 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="font-medium">Plantilla Solo Texto</span>
+                </div>
+                <p className="text-green-700 dark:text-green-300 text-sm mt-1">
+                  Esta plantilla no requiere logo. Solo podrás personalizar colores y texto.
+                </p>
+              </div>
+            )}
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-blue-600" />
+                Paso 2: Configuración y Personalización
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Personaliza los colores, logo, nombre de empresa y eslogan de tu plantilla.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Enterprise Information */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <Building className="w-4 h-4" />
+                  Información de Empresa
+                </h4>
+                
+                <div>
+                  <Label htmlFor="enterpriseName">Nombre de la Empresa</Label>
+                  <Input
+                    id="enterpriseName"
+                    value={templateConfig.enterpriseName}
+                    onChange={(e) => setTemplateConfig(prev => ({ ...prev, enterpriseName: e.target.value }))}
+                    placeholder="Ej: Clínica Veterinaria San Marcos"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="enterpriseSlogan">Eslogan</Label>
+                  <Input
+                    id="enterpriseSlogan"
+                    value={templateConfig.enterpriseSlogan}
+                    onChange={(e) => setTemplateConfig(prev => ({ ...prev, enterpriseSlogan: e.target.value }))}
+                    placeholder="Ej: Cuidamos a tu mejor amigo"
+                    className="mt-1"
+                  />
+                </div>
+
+                {/* Color Scheme */}
+                <div>
+                  <Label>Esquema de Colores</Label>
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {[
+                      { name: 'blue', color: '#3b82f6', label: 'Azul' },
+                      { name: 'green', color: '#10b981', label: 'Verde' },
+                      { name: 'purple', color: '#8b5cf6', label: 'Morado' },
+                      { name: 'red', color: '#ef4444', label: 'Rojo' },
+                      { name: 'orange', color: '#f97316', label: 'Naranja' },
+                      { name: 'indigo', color: '#6366f1', label: 'Índigo' },
+                      { name: 'teal', color: '#14b8a6', label: 'Verde Azulado' },
+                      { name: 'pink', color: '#ec4899', label: 'Rosa' }
+                    ].map((colorOption) => (
+                      <button
+                        key={colorOption.name}
+                        type="button"
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          templateConfig.colorScheme === colorOption.name
+                            ? 'border-gray-900 dark:border-gray-100'
+                            : 'border-gray-300 dark:border-gray-600'
+                        }`}
+                        style={{ backgroundColor: colorOption.color }}
+                        onClick={() => setTemplateConfig(prev => ({ ...prev, colorScheme: colorOption.name }))}
+                        title={colorOption.label}
+                      />
+                    ))}
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {wizardStep === 1 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4">Configuración de Destino</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <Label>Tipo de Subida</Label>
-                          <Select value={uploadMode} onValueChange={(value: "company" | "tenant") => setUploadMode(value)}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="company">Nivel Empresa</SelectItem>
-                              <SelectItem value="tenant">Nivel Clínica</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+              </div>
 
-                        <div>
-                          <Label>Empresa</Label>
-                          <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar empresa" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {companies.map((company) => (
-                                <SelectItem key={company.id} value={company.id}>
-                                  {company.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+              {/* Logo Configuration */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <FileImage className="w-4 h-4" />
+                  Configuración de Logo
+                  {!templateHasLogo(selectedTemplate) && (
+                    <Badge variant="secondary" className="text-xs">Opcional</Badge>
+                  )}
+                </h4>
 
-                        {uploadMode === "tenant" && (
-                          <div>
-                            <Label>Clínica</Label>
-                            <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar clínica" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {tenants.map((tenant) => (
-                                  <SelectItem key={tenant.id} value={tenant.id}>
-                                    {tenant.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                      </div>
+                {templateHasLogo(selectedTemplate) && !logoUrl && (
+                  <div className="p-4 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                    <div className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
+                      <AlertCircle className="w-5 h-5" />
+                      <span className="font-medium">Logo Requerido</span>
                     </div>
-
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4">Información de la Plantilla</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <Label>Nombre de la Plantilla</Label>
-                          <Input
-                            value={templateName}
-                            onChange={(e) => setTemplateName(e.target.value)}
-                            placeholder="Ej: Recibo Estándar Veterinaria"
-                            data-testid="input-template-name"
-                          />
-                        </div>
-                        <div>
-                          <Label>Descripción (Opcional)</Label>
-                          <Textarea
-                            value={templateDescription}
-                            onChange={(e) => setTemplateDescription(e.target.value)}
-                            placeholder="Descripción de la plantilla"
-                            rows={2}
-                            data-testid="textarea-template-description"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <Button
-                        onClick={() => setWizardStep(2)}
-                        disabled={!selectedCompanyId || (uploadMode === "tenant" && !selectedTenantId) || !templateName.trim()}
-                        data-testid="button-next-step"
-                      >
-                        Siguiente
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
+                    <p className="text-orange-700 dark:text-orange-300 text-sm mt-1">
+                      Esta plantilla requiere un logo para continuar.
+                    </p>
                   </div>
                 )}
 
-                {wizardStep === 2 && (
-                  <div className="space-y-8">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-xl font-semibold">Personalización Simple</h3>
-                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                        Solo 3 Opciones Personalizables
-                      </Badge>
-                    </div>
-
-                    {/* Essential Configuration - Only Color, Logo Position, and Logo Upload */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      <Card className="border-slate-200 dark:border-slate-700">
-                        <CardHeader className="pb-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                              <Palette className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">Esquema de Colores</CardTitle>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Selecciona la paleta de colores para tu recibo</p>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-4 gap-3">
-                            {[
-                              { name: "blue", color: "bg-blue-500", label: "Azul" },
-                              { name: "green", color: "bg-green-500", label: "Verde" },
-                              { name: "purple", color: "bg-purple-500", label: "Morado" },
-                              { name: "red", color: "bg-red-500", label: "Rojo" },
-                              { name: "orange", color: "bg-orange-500", label: "Naranja" },
-                              { name: "indigo", color: "bg-indigo-500", label: "Índigo" },
-                              { name: "teal", color: "bg-teal-500", label: "Verde Azul" },
-                              { name: "pink", color: "bg-pink-500", label: "Rosa" }
-                            ].map((colorOption) => (
-                              <button
-                                key={colorOption.name}
-                                type="button"
-                                onClick={() => setTemplateConfig(prev => ({ ...prev, colorScheme: colorOption.name }))}
-                                className={`group relative w-full h-16 rounded-lg ${colorOption.color} transition-all duration-200 hover:scale-105 ${
-                                  templateConfig.colorScheme === colorOption.name
-                                    ? 'ring-4 ring-blue-200 dark:ring-blue-400 shadow-lg'
-                                    : 'hover:shadow-md'
-                                }`}
-                              >
-                                <div className="absolute inset-0 bg-white/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                                {templateConfig.colorScheme === colorOption.name && (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <CheckCircle className="w-6 h-6 text-white" />
-                                  </div>
-                                )}
-                                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
-                                  <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{colorOption.label}</span>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-slate-200 dark:border-slate-700">
-                        <CardHeader className="pb-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                              <Layout className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">Posición del Logo</CardTitle>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Define dónde aparecerá tu logo en el recibo</p>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            {[
-                              { value: "left", label: "Izquierda", icon: "←" },
-                              { value: "center", label: "Centro", icon: "↔" }
-                            ].map((position) => (
-                              <button
-                                key={position.value}
-                                type="button"
-                                onClick={() => setTemplateConfig(prev => ({ ...prev, logoPosition: position.value }))}
-                                className={`group relative w-full h-20 rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
-                                  templateConfig.logoPosition === position.value
-                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 shadow-lg'
-                                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-800'
-                                }`}
-                              >
-                                <div className="flex flex-col items-center justify-center h-full space-y-2">
-                                  <div className="text-2xl font-bold text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300">
-                                    {position.icon}
-                                  </div>
-                                  <span className={`text-sm font-medium ${
-                                    templateConfig.logoPosition === position.value
-                                      ? 'text-blue-700 dark:text-blue-300'
-                                      : 'text-gray-600 dark:text-gray-300'
-                                  }`}>
-                                    {position.label}
-                                  </span>
-                                </div>
-                                {templateConfig.logoPosition === position.value && (
-                                  <div className="absolute top-2 right-2">
-                                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                                  </div>
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Logo Upload Section - Only Customizable Option */}
-                    <Card className="border-slate-200 dark:border-slate-700">
-                      <CardHeader className="pb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <FileImage className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">Logo de la Empresa</CardTitle>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Sube el logo de tu veterinaria con soporte para transparencias. El logo se ajustará automáticamente al tamaño de la plantilla.</p>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-6">
-                          {/* Logo Required Warning - Only show for templates that have logo placeholders */}
-                          {selectedTemplateHasLogo && !logoUrl && (
-                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                              <div className="flex items-center space-x-3">
-                                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                                <div>
-                                  <p className="text-amber-800 dark:text-amber-200 font-medium text-sm">
-                                    <strong>Logo Requerido:</strong> Esta plantilla requiere un logo para continuar.
-                                  </p>
-                                  <p className="text-amber-700 dark:text-amber-300 text-xs mt-1">
-                                    Sin el logo, solo podrás seleccionar el esquema de colores. Las demás opciones se habilitarán una vez que subas tu logo.
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Info for templates without logo */}
-                          {selectedTemplate && !selectedTemplateHasLogo && (
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                              <div className="flex items-center space-x-3">
-                                <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                                <div>
-                                  <p className="text-blue-800 dark:text-blue-200 font-medium text-sm">
-                                    <strong>Plantilla Sin Logo:</strong> Esta plantilla no incluye espacios para logo.
-                                  </p>
-                                  <p className="text-blue-700 dark:text-blue-300 text-xs mt-1">
-                                    Puedes personalizar solo el esquema de colores para esta plantilla.
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Logo Upload Area */}
-                          <div className="space-y-4">
-                            <div
-                              onDrop={handleLogoDrop}
-                              onDragOver={(e) => {
-                                e.preventDefault();
-                                setDragActive(true);
-                              }}
-                              onDragLeave={() => setDragActive(false)}
-                              className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
-                                dragActive
-                                  ? 'border-blue-400 bg-blue-50 dark:bg-blue-950/20 scale-102'
-                                  : selectedTemplateHasLogo && !logoUrl 
-                                    ? 'border-amber-300 dark:border-amber-600 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/10'
-                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/30'
-                              }`}
-                              onClick={() => document.getElementById('logo-upload')?.click()}
-                            >
-                              <input
-                                id="logo-upload"
-                                type="file"
-                                accept="image/*"
-                                onChange={handleLogoInputChange}
-                                className="hidden"
-                              />
-                              
-                              {logoUrl ? (
-                                <div className="space-y-4">
-                                  <div className="relative inline-block">
-                                    <img
-                                      src={logoUrl}
-                                      alt="Logo preview"
-                                      className={`w-20 h-20 object-${templateConfig.preserveLogoTransparency ? 'contain' : 'cover'} rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm`}
-                                      style={{ opacity: templateConfig.logoOpacity / 100 }}
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setLogoUrl("");
-                                        setLogoFile(null);
-                                      }}
-                                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-colors duration-200"
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </button>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <p className="text-sm font-medium text-green-600 dark:text-green-400 flex items-center justify-center space-x-2">
-                                      <CheckCircle className="w-4 h-4" />
-                                      <span>Logo cargado correctamente</span>
-                                    </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                      Haz clic para cambiar el logo
-                                    </p>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="space-y-4">
-                                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-xl flex items-center justify-center mx-auto">
-                                    <CloudUpload className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                      Arrastra y suelta tu logo aquí
-                                    </p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                                      o haz clic para seleccionar un archivo
-                                    </p>
-                                    <div className="text-xs text-gray-400 dark:text-gray-500 space-y-1">
-                                      <p>• Formatos soportados: PNG, JPG, SVG</p>
-                                      <p>• Tamaño máximo: 5MB</p>
-                                      <p>• Recomendado: PNG con transparencia</p>
-                                      <p>• El logo se ajustará automáticamente al tamaño de la plantilla</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {uploadingLogo && (
-                                <div className="absolute inset-0 bg-white/80 dark:bg-black/80 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                                  <div className="text-center space-y-3">
-                                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
-                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Subiendo logo...</p>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Simplified Logo Configuration - Only Opacity Control */}
-                          {logoUrl && (
-                            <div className="space-y-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                              {/* Logo Opacity */}
-                              <div className="space-y-3">
-                                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center justify-between">
-                                  <span className="flex items-center space-x-2">
-                                    <Percent className="w-4 h-4" />
-                                    <span>Opacidad del Logo</span>
-                                  </span>
-                                  <span className="text-blue-600 dark:text-blue-400 font-mono">{templateConfig.logoOpacity}%</span>
-                                </Label>
-                                <div className="space-y-3">
-                                  <input
-                                    type="range"
-                                    min="10"
-                                    max="100"
-                                    value={templateConfig.logoOpacity}
-                                    onChange={(e) => setTemplateConfig(prev => ({ ...prev, logoOpacity: parseInt(e.target.value) }))}
-                                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                                  />
-                                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                                    <span>10%</span>
-                                    <span>50%</span>
-                                    <span>100%</span>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Transparency Preservation - Auto-enabled for PNG */}
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                  <div className="space-y-1">
-                                    <Label className="text-sm font-semibold text-blue-900 dark:text-blue-100">Preservar Transparencia</Label>
-                                    <p className="text-xs text-blue-700 dark:text-blue-300">Mantiene los fondos transparentes del PNG</p>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => setTemplateConfig(prev => ({ ...prev, preserveLogoTransparency: !prev.preserveLogoTransparency }))}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                                      templateConfig.preserveLogoTransparency ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                                    }`}
-                                  >
-                                    <span
-                                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                                        templateConfig.preserveLogoTransparency ? 'translate-x-6' : 'translate-x-1'
-                                      }`}
-                                    />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Information Notice - All content is hardcoded */}
-                    <Card className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20">
-                      <CardHeader className="pb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
-                            <Info className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg font-semibold text-amber-900 dark:text-amber-100">Contenido Predeterminado</CardTitle>
-                            <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">Toda la información del recibo está preconfigurada para garantizar un diseño profesional</p>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          {/* Company Info Preview */}
-                          <div className="space-y-3">
-                            <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-3">Información de la Empresa</h4>
-                            <div className="space-y-2 text-sm text-amber-800 dark:text-amber-200">
-                              <div><strong>Nombre:</strong> {hardcodedData.empresaNombre}</div>
-                              <div><strong>Eslogan:</strong> {hardcodedData.empresaEslogan}</div>
-                              <div><strong>Teléfono:</strong> {hardcodedData.empresaTelefono}</div>
-                              <div><strong>Web:</strong> {hardcodedData.empresaWeb}</div>
-                              <div><strong>Dirección:</strong> {hardcodedData.empresaDireccion}</div>
-                            </div>
-                          </div>
-
-                          {/* Client & Service Info Preview */}
-                          <div className="space-y-3">
-                            <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-3">Información del Cliente y Servicios</h4>
-                            <div className="space-y-2 text-sm text-amber-800 dark:text-amber-200">
-                              <div><strong>Cliente:</strong> {hardcodedData.clienteNombre}</div>
-                              <div><strong>Mascota:</strong> {hardcodedData.mascotaNombre}</div>
-                              <div><strong>Veterinario:</strong> {hardcodedData.veterinario}</div>
-                              <div><strong>Servicios:</strong> {hardcodedData.articulos.length} servicios veterinarios</div>
-                              <div><strong>Total:</strong> <span className="font-bold">{hardcodedData.total}</span></div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-6 p-4 bg-amber-100 dark:bg-amber-900/30 rounded-lg border border-amber-300 dark:border-amber-700">
-                          <p className="text-sm text-amber-800 dark:text-amber-200">
-                            <strong>Nota:</strong> Solo puedes personalizar el esquema de colores, la posición del logo, y subir tu propio logo con transparencia. 
-                            El resto del contenido está optimizado para crear recibos profesionales de manera rápida y consistente.
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <div className="flex justify-between">
-                      <Button
-                        onClick={() => setWizardStep(1)}
-                        variant="outline"
-                        data-testid="button-previous-step"
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Anterior
-                      </Button>
-                      <Button
-                        onClick={() => setWizardStep(3)}
-                        disabled={selectedTemplateHasLogo && !logoUrl}
-                        className={`${selectedTemplateHasLogo && !logoUrl ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
-                        data-testid="button-next-step"
-                      >
-                        Seleccionar Plantilla
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
+                {/* Logo Upload */}
+                <div>
+                  <Label>Subir Logo</Label>
+                  <div 
+                    className={`mt-2 border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                      dragActive 
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20' 
+                        : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                    }`}
+                    onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
+                    onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={handleLogoDrop}
+                  >
+                    {uploadingLogo ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-2" />
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Subiendo logo...</p>
+                      </div>
+                    ) : logoUrl ? (
+                      <div className="flex flex-col items-center">
+                        <img 
+                          src={logoUrl} 
+                          alt="Logo preview" 
+                          className="w-16 h-16 object-contain mb-2 rounded border"
+                        />
+                        <p className="text-sm text-green-600 dark:text-green-400 font-medium">Logo subido exitosamente</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => {
+                            setLogoUrl("");
+                            setLogoFile(null);
+                          }}
+                        >
+                          Cambiar Logo
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <CloudUpload className="w-8 h-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          Arrastra tu logo aquí o haz clic para seleccionar
+                        </p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoInputChange}
+                          className="hidden"
+                          id="logo-upload"
+                        />
+                        <Button variant="outline" size="sm" asChild>
+                          <label htmlFor="logo-upload" className="cursor-pointer">
+                            Seleccionar Archivo
+                          </label>
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
-                {wizardStep === 3 && (
-                  <div className="space-y-6">
+                {/* Logo Configuration Options - Only if logo is uploaded */}
+                {logoUrl && (
+                  <>
                     <div>
-                      <h3 className="text-xl font-semibold mb-4">Seleccionar Plantilla Base</h3>
-                      <p className="text-gray-600 dark:text-gray-400 mb-6">
-                        Elige una plantilla base que se personalizará con tus configuraciones
+                      <Label>Posición del Logo</Label>
+                      <Select 
+                        value={templateConfig.logoPosition} 
+                        onValueChange={(value) => setTemplateConfig(prev => ({ ...prev, logoPosition: value }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="left">Izquierda</SelectItem>
+                          <SelectItem value="center">Centro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label>Tamaño del Logo</Label>
+                      <Select 
+                        value={templateConfig.logoSize} 
+                        onValueChange={(value) => setTemplateConfig(prev => ({ ...prev, logoSize: value }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="small">Pequeño</SelectItem>
+                          <SelectItem value="medium">Mediano</SelectItem>
+                          <SelectItem value="large">Grande</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label>Opacidad: {templateConfig.logoOpacity}%</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-gray-500">0%</span>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={templateConfig.logoOpacity}
+                          onChange={(e) => setTemplateConfig(prev => ({ ...prev, logoOpacity: parseInt(e.target.value) }))}
+                          className="flex-1"
+                        />
+                        <span className="text-xs text-gray-500">100%</span>
+                      </div>
+                    </div>
+
+                    {logoFile?.type === 'image/png' && (
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="transparency"
+                          checked={templateConfig.preserveLogoTransparency}
+                          onCheckedChange={(checked) => setTemplateConfig(prev => ({ ...prev, preserveLogoTransparency: checked }))}
+                        />
+                        <Label htmlFor="transparency" className="text-sm">
+                          Preservar transparencia (PNG)
+                        </Label>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-blue-600" />
+                Paso 3: Código QR (Opcional)
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Agrega un código QR a tus recibos para facilitar el acceso digital y verificación.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="qr-enabled"
+                    checked={qrConfig.enabled}
+                    onCheckedChange={(checked) => setQrConfig(prev => ({ ...prev, enabled: checked }))}
+                  />
+                  <Label htmlFor="qr-enabled" className="text-sm font-medium">
+                    Incluir Código QR en los recibos
+                  </Label>
+                </div>
+
+                {qrConfig.enabled && (
+                  <>
+                    <div>
+                      <Label>Posición del QR</Label>
+                      <Select 
+                        value={qrConfig.position} 
+                        onValueChange={(value) => setQrConfig(prev => ({ ...prev, position: value }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="bottom-right">Abajo Derecha</SelectItem>
+                          <SelectItem value="bottom-left">Abajo Izquierda</SelectItem>
+                          <SelectItem value="bottom-center">Abajo Centro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label>Tamaño del QR</Label>
+                      <Select 
+                        value={qrConfig.size} 
+                        onValueChange={(value) => setQrConfig(prev => ({ ...prev, size: value }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="small">Pequeño (60px)</SelectItem>
+                          <SelectItem value="medium">Mediano (80px)</SelectItem>
+                          <SelectItem value="large">Grande (100px)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex items-center justify-center">
+                <div className="text-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                  {qrConfig.enabled ? (
+                    <div className="space-y-2">
+                      <div className="w-20 h-20 mx-auto bg-gray-200 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded flex items-center justify-center">
+                        <QrCode className="w-12 h-12 text-gray-500" />
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Vista previa del QR
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Posición: {qrConfig.position} | Tamaño: {qrConfig.size}
                       </p>
                     </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-                      {preDesignedTemplates.map((template) => (
-                        <Card
-                          key={template.id}
-                          className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
-                            selectedTemplate === template.id
-                              ? 'ring-2 ring-blue-500 shadow-lg bg-blue-50 dark:bg-blue-950/20'
-                              : 'hover:shadow-md'
-                          }`}
-                          onClick={() => setSelectedTemplate(template.id)}
-                        >
-                          <CardContent className="p-6">
-                            <div className="flex items-start space-x-6">
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-4">
-                                  <div>
-                                    <h4 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                                      {template.name}
-                                    </h4>
-                                    <p className="text-gray-600 dark:text-gray-400">
-                                      {template.description}
-                                    </p>
-                                  </div>
-                                  {selectedTemplate === template.id && (
-                                    <CheckCircle className="w-8 h-8 text-blue-500" />
-                                  )}
-                                </div>
-                                
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                  {template.features.map((feature, index) => (
-                                    <Badge key={index} variant="secondary" className="text-xs">
-                                      {feature}
-                                    </Badge>
-                                  ))}
-                                </div>
-
-                                <div className="flex space-x-3">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedTemplate(template.id);
-                                      handlePreview();
-                                    }}
-                                    className="flex items-center space-x-2"
-                                  >
-                                    <Eye className="w-4 h-4" />
-                                    <span>Vista Previa</span>
-                                  </Button>
-                                </div>
-                              </div>
-
-                              <div className="w-64 h-48 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
-                                <div className="text-center text-gray-500 dark:text-gray-400">
-                                  <FileText className="w-12 h-12 mx-auto mb-2" />
-                                  <p className="text-sm">Vista previa dinámica</p>
-                                  <p className="text-xs">Se actualiza con tus cambios</p>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                  ) : (
+                    <div className="space-y-2">
+                      <QrCode className="w-16 h-16 text-gray-400 mx-auto" />
+                      <p className="text-sm text-gray-500">
+                        QR deshabilitado
+                      </p>
                     </div>
+                  )}
+                </div>
+              </div>
+            </div>
 
-                    <div className="flex justify-between">
-                      <Button
-                        onClick={() => setWizardStep(2)}
-                        variant="outline"
-                        data-testid="button-previous-step"
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Anterior
-                      </Button>
-                      <div className="space-x-3">
-                        <Button
-                          onClick={handlePreview}
-                          variant="outline"
-                          disabled={!selectedTemplate}
-                          data-testid="button-preview"
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          Vista Previa
-                        </Button>
-                        <Button
-                          onClick={handleCreateTemplate}
-                          disabled={!selectedTemplate || uploading}
-                          data-testid="button-create-template"
-                        >
-                          {uploading ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Creando...
-                            </>
-                          ) : (
-                            <>
-                              <Zap className="w-4 h-4 mr-2" />
-                              Crear Plantilla
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="flex items-start gap-2">
+                <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-blue-800 dark:text-blue-200 font-medium">Información del QR</p>
+                  <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
+                    El código QR contendrá el número de recibo y permitirá la verificación digital del documento. 
+                    Se posicionará automáticamente sin interferir con el contenido principal.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
 
-          <TabsContent value="manage">
-            <Card>
-              <CardHeader>
-                <CardTitle>Plantillas Existentes</CardTitle>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Gestiona las plantillas existentes para{" "}
-                  {uploadMode === "company" ? "nivel empresa" : "nivel clínica"}
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex space-x-4">
-                    <Select value={uploadMode} onValueChange={(value: "company" | "tenant") => setUploadMode(value)}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="company">Nivel Empresa</SelectItem>
-                        <SelectItem value="tenant">Nivel Clínica</SelectItem>
-                      </SelectContent>
-                    </Select>
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Package className="w-5 h-5 text-blue-600" />
+                Paso 4: Finalizar y Guardar
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Completa la información final y asigna la plantilla.
+              </p>
+            </div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="templateName">Nombre de la Plantilla *</Label>
+                  <Input
+                    id="templateName"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    placeholder="Ej: Recibo Profesional San Marcos"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="templateDescription">Descripción</Label>
+                  <Textarea
+                    id="templateDescription"
+                    value={templateDescription}
+                    onChange={(e) => setTemplateDescription(e.target.value)}
+                    placeholder="Describe las características de esta plantilla..."
+                    rows={3}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label>Tipo Factura *</Label>
+                  <Select value={facturaType} onValueChange={(value: "empresarial" | "clinica") => setFacturaType(value)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="empresarial">Empresarial</SelectItem>
+                      <SelectItem value="clinica">Clínica</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {facturaType === "empresarial" && (
+                  <div>
+                    <Label htmlFor="companySelect">Empresa *</Label>
                     <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                      <SelectTrigger className="w-64">
-                        <SelectValue placeholder="Seleccionar empresa" />
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Selecciona una empresa" />
                       </SelectTrigger>
                       <SelectContent>
                         {companies.map((company) => (
@@ -1250,107 +1107,298 @@ export default function ReceiptTemplatesAdmin() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                )}
 
-                    {uploadMode === "tenant" && (
-                      <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
-                        <SelectTrigger className="w-64">
-                          <SelectValue placeholder="Seleccionar clínica" />
+                {facturaType === "clinica" && (
+                  <>
+                    <div>
+                      <Label htmlFor="companySelect">Empresa *</Label>
+                      <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Selecciona una empresa" />
                         </SelectTrigger>
                         <SelectContent>
-                          {tenants.map((tenant) => (
-                            <SelectItem key={tenant.id} value={tenant.id}>
-                              {tenant.name}
+                          {companies.map((company) => (
+                            <SelectItem key={company.id} value={company.id}>
+                              {company.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    {selectedCompanyId && (
+                      <div>
+                        <Label htmlFor="tenantSelect">Clínica *</Label>
+                        <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Selecciona una clínica" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {tenants.map((tenant) => (
+                              <SelectItem key={tenant.id} value={tenant.id}>
+                                {tenant.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     )}
+                  </>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100">Resumen de Configuración</h4>
+                
+                <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Plantilla:</span>
+                    <span className="font-medium">{preDesignedTemplates.find(t => t.id === selectedTemplate)?.name}</span>
                   </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Empresa:</span>
+                    <span className="font-medium">{templateConfig.enterpriseName}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Eslogan:</span>
+                    <span className="font-medium">{templateConfig.enterpriseSlogan}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Color:</span>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-4 h-4 rounded border" 
+                        style={{ backgroundColor: getColorValue(templateConfig.colorScheme) }}
+                      />
+                      <span className="font-medium capitalize">{templateConfig.colorScheme}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Logo:</span>
+                    <span className="font-medium">{logoUrl ? 'Incluido' : 'No incluido'}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Código QR:</span>
+                    <span className="font-medium">{qrConfig.enabled ? 'Incluido' : 'No incluido'}</span>
+                  </div>
+                </div>
 
-                  {isLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                      <span>Cargando plantillas...</span>
-                    </div>
-                  ) : templates.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>No hay plantillas disponibles</p>
-                      <p className="text-sm">Crea tu primera plantilla usando el asistente</p>
-                    </div>
+                <Button
+                  onClick={() => {
+                    setPreviewTemplate(generateTemplate());
+                    setShowPreview(true);
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Vista Previa Final
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Header />
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Link href="/superadmin" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+              <ChevronLeft className="w-5 h-5" />
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              Gestión de Plantillas de Recibos
+            </h1>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400">
+            Crea y gestiona plantillas de recibos personalizadas para tus clínicas
+          </p>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="wizard" className="flex items-center gap-2">
+              <Wand2 className="w-4 h-4" />
+              Asistente de Plantillas
+            </TabsTrigger>
+            <TabsTrigger value="manage" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Gestionar Plantillas
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="wizard">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Wand2 className="w-5 h-5 text-blue-600" />
+                    Asistente de Creación de Plantillas
+                  </CardTitle>
+                  <Badge variant="outline">
+                    Paso {wizardStep} de 4
+                  </Badge>
+                </div>
+                <Progress value={(wizardStep / 4) * 100} className="w-full" />
+              </CardHeader>
+              <CardContent>
+                {renderStepContent()}
+
+                <div className="flex justify-between mt-8 pt-6 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => setWizardStep(prev => Math.max(1, prev - 1))}
+                    disabled={wizardStep === 1}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Anterior
+                  </Button>
+
+                  {wizardStep < 4 ? (
+                    <Button
+                      onClick={() => setWizardStep(prev => prev + 1)}
+                      disabled={!canProceedToNextStep()}
+                    >
+                      Siguiente
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {templates.map((template) => (
-                        <Card key={template.id} className="hover:shadow-lg transition-shadow">
-                          <CardContent className="p-6">
-                            <div className="flex items-start justify-between mb-4">
-                              <div>
-                                <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                  {template.name}
-                                </h4>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  {template.description || "Sin descripción"}
-                                </p>
-                              </div>
-                              <Badge
-                                variant={template.isActive ? "default" : "secondary"}
-                                className="text-xs"
-                              >
-                                {template.isActive ? "Activa" : "Inactiva"}
-                              </Badge>
-                            </div>
-
-                            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                              <div>Tipo: {template.templateType}</div>
-                              <div>Versión: {template.version}</div>
-                              <div>
-                                Creada: {new Date(template.createdAt).toLocaleDateString()}
-                              </div>
-                            </div>
-
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  if (template.metadata?.htmlContent) {
-                                    setPreviewTemplate(template.metadata.htmlContent);
-                                    setShowPreview(true);
-                                  }
-                                }}
-                                className="flex-1"
-                              >
-                                <Eye className="w-4 h-4 mr-1" />
-                                Ver
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  if (template.fileUrl) {
-                                    window.open(template.fileUrl, '_blank');
-                                  }
-                                }}
-                                className="flex-1"
-                              >
-                                <Download className="w-4 h-4 mr-1" />
-                                Descargar
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => deleteTemplateMutation.mutate(template.id)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                    <Button
+                      onClick={handleCreateTemplate}
+                      disabled={!canProceedToNextStep() || uploading}
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Creando...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Crear Plantilla
+                        </>
+                      )}
+                    </Button>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="manage">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  Plantillas Existentes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                  </div>
+                ) : templates.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                      No hay plantillas
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      Crea tu primera plantilla usando el asistente
+                    </p>
+                    <Button onClick={() => setActiveTab("wizard")}>
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      Crear Plantilla
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {templates.map((template) => (
+                      <Card key={template.id} className="hover:shadow-md transition-shadow">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-start justify-between">
+                            <CardTitle className="text-lg">{template.name}</CardTitle>
+                            <Badge 
+                              variant={template.isActive ? "default" : "secondary"}
+                              className="text-xs"
+                            >
+                              {template.isActive ? 'Activa' : 'Inactiva'}
+                            </Badge>
+                          </div>
+                          {template.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {template.description}
+                            </p>
+                          )}
+                        </CardHeader>
+                        <CardContent className="pt-2">
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600 dark:text-gray-400">Tipo:</span>
+                              <span className="font-medium">{template.templateType}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600 dark:text-gray-400">Versión:</span>
+                              <span className="font-medium">{template.version}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600 dark:text-gray-400">Creada:</span>
+                              <span className="font-medium">
+                                {new Date(template.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2 mt-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setPreviewTemplate(template.fileUrl);
+                                setShowPreview(true);
+                              }}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const blob = new Blob([template.fileUrl], { type: 'text/html' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = template.fileName;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }}
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteTemplateMutation.mutate(template.id)}
+                              disabled={deleteTemplateMutation.isPending}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1358,33 +1406,26 @@ export default function ReceiptTemplatesAdmin() {
 
         {/* Preview Modal */}
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <div className="flex items-center justify-between">
-                <DialogTitle className="flex items-center space-x-2">
-                  <Eye className="w-5 h-5 text-blue-600" />
-                  <span>Vista Previa de la Plantilla</span>
-                </DialogTitle>
+                <DialogTitle>Vista Previa de Plantilla</DialogTitle>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => setShowPreview(false)}
-                  className="ml-auto"
                 >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
             </DialogHeader>
-            <div className="w-full min-h-full flex items-start justify-center p-4">
-              {selectedTemplate && (() => {
-                const template = preDesignedTemplates.find(t => t.id === selectedTemplate);
-                if (!template) return null;
-                
-                // Create dynamic preview HTML with current config
-                let previewHtml = template.htmlPreview;
-                
-                return <div dangerouslySetInnerHTML={{ __html: previewHtml }} />;
-              })()}
+            <div className="mt-4">
+              {previewTemplate && (
+                <div 
+                  className="border rounded-lg p-4 bg-white"
+                  dangerouslySetInnerHTML={{ __html: previewTemplate }}
+                />
+              )}
             </div>
           </DialogContent>
         </Dialog>
