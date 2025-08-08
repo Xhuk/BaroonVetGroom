@@ -48,9 +48,9 @@ export default function SuperAdminReports() {
     console.log(`Generating ${type} report for last ${timeRange} days`);
   };
 
-  const openBrochureEditor = () => {
-    // Navigate to the brochure editor
-    window.location.href = '/superadmin/brochure-editor';
+  const openBrochure = () => {
+    // Open the marketing brochure in a new tab
+    window.open('/marketing/brochure.html', '_blank');
   };
 
   const generateBrochurePDF = () => {
@@ -223,10 +223,10 @@ export default function SuperAdminReports() {
                     <Button 
                       size="sm" 
                       variant="outline"
-                      onClick={openBrochureEditor}
+                      onClick={openBrochure}
                       className="flex-1"
                     >
-                      Editar Brochure
+                      Ver HTML
                     </Button>
                     <Button 
                       size="sm" 
