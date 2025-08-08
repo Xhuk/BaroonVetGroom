@@ -486,9 +486,16 @@ html.dark select option {
   pointer-events: none !important;
 }
 
-/* Ensure calendar card border is visible */
-.fixed.flex.flex-col {
-  border: 1px solid hsl(20, 5.9%, 78%) !important;
+/* Ensure calendar card border is visible with maximum specificity */
+.fixed.flex.flex-col.border.border-border {
+  border: 2px solid hsl(20, 5.9%, 78%) !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Additional fallback for calendar card */
+[style*="top: 140px"] {
+  border: 2px solid hsl(20, 5.9%, 78%) !important;
+  border-radius: 0.5rem !important;
 }
 
 @layer components {
