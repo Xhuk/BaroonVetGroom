@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
-import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   TrendingUp, 
@@ -83,7 +82,6 @@ export default function SuperAdminReports() {
       
       <main className="p-6">
         <div className="max-w-7xl mx-auto">
-          <BackButton className="mb-4" />
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Reportes del Sistema</h1>
             <p className="text-gray-600">Análisis detallado y reportes de la plataforma veterinaria</p>

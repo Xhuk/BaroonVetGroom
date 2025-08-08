@@ -1,6 +1,4 @@
 import type { Express, Request } from "express";
-import express from "express";
-import path from "path";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { and } from 'drizzle-orm';
@@ -134,9 +132,6 @@ const checkSubscriptionValidity = async (req: any, res: any, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
-
-  // Serve marketing static files
-  app.use('/marketing', express.static(path.resolve(process.cwd(), 'marketing')));
 
   // Enhanced in-memory cache for user data (valid for 15 minutes)
   const userCache = new Map<string, { data: any, timestamp: number }>();

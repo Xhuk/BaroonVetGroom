@@ -3,7 +3,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
-import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NewCompanyDialog } from "@/components/NewCompanyDialog";
 import { SuperAdminPetAgePanel } from "@/components/SuperAdminPetAgePanel";
@@ -275,7 +274,6 @@ export default function SuperAdmin() {
       
       <main className="p-2 sm:p-4 lg:p-6">
         <div className="max-w-7xl mx-auto">
-          <BackButton className="mb-4" />
           <div className="mb-4 sm:mb-6 lg:mb-8">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Super-Admin Dashboard</h1>
             <p className="text-sm sm:text-base text-gray-600">Gestión a nivel de plataforma: empresas, infraestructura y configuraciones globales</p>
