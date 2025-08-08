@@ -112,9 +112,9 @@ export default function Dashboard() {
   }
 
   return (
-    <ResponsiveLayout>
-      {/* Action Buttons - Fixed positioning above calendar */}
-      <div className="px-6 py-4 bg-background border-b border-border">
+    <>
+      {/* Action Buttons - Positioned between header and main content */}
+      <div className="fixed top-16 left-0 right-0 z-10 px-6 py-4 bg-background border-b border-border shadow-sm">
         <div className="flex gap-4 max-w-7xl mx-auto">
           <Link href="/booking">
             <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
@@ -131,8 +131,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="pb-40">
+      <ResponsiveLayout>
+        {/* Main Content - add extra top padding to account for fixed buttons */}
+        <div className="pt-20 pb-40">
 
         {/* Fast Calendar - positioned to end at same level as navigation */}
         {showCalendar ? (
@@ -149,25 +150,26 @@ export default function Dashboard() {
             <div className="text-muted-foreground">Cargando calendario...</div>
           </div>
         )}
-      </div>
+        </div>
 
-      {/* Fast Stats Ribbon - Hide in tablet portrait mode */}
-      {!shouldHideBottomRibbon && showStats ? (
-        <FastStatsRibbon stats={stats} />
-      ) : !shouldHideBottomRibbon ? (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 backdrop-blur-md border-t border-slate-600/50 z-20 shadow-2xl">
-          <div className="px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="h-6 bg-slate-600/50 animate-pulse rounded-lg w-32"></div>
-              <div className="flex items-center space-x-12">
-                {Array.from({ length: 7 }).map((_, index) => (
-                  <div key={index} className="h-5 bg-slate-600/50 animate-pulse rounded-lg w-20"></div>
-                ))}
+        {/* Fast Stats Ribbon - Hide in tablet portrait mode */}
+        {!shouldHideBottomRibbon && showStats ? (
+          <FastStatsRibbon stats={stats} />
+        ) : !shouldHideBottomRibbon ? (
+          <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 backdrop-blur-md border-t border-slate-600/50 z-20 shadow-2xl">
+            <div className="px-8 py-4">
+              <div className="flex items-center justify-between">
+                <div className="h-6 bg-slate-600/50 animate-pulse rounded-lg w-32"></div>
+                <div className="flex items-center space-x-12">
+                  {Array.from({ length: 7 }).map((_, index) => (
+                    <div key={index} className="h-5 bg-slate-600/50 animate-pulse rounded-lg w-20"></div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ) : null}
-    </ResponsiveLayout>
+        ) : null}
+      </ResponsiveLayout>
+    </>
   );
 }
