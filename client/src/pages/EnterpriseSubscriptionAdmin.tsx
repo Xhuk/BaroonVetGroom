@@ -61,18 +61,17 @@ const SubscriptionSkeleton = memo(() => (
 
 function EnterpriseSubscriptionAdmin() {
   const queryClient = useQueryClient();
-  const [selectedPlan, setSelectedPlan] = useState<string>("");
-  const [newClientDialog, setNewClientDialog] = useState(false);
   const [planConfigDialog, setPlanConfigDialog] = useState(false);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
-  const [newClientForm, setNewClientForm] = useState({
-    companyName: '',
-    adminEmail: '',
-    adminFirstName: '',
-    adminLastName: '',
-    planId: '',
-    vetsitesCount: 1,
-    trialDays: 14
+  const [newPlanForm, setNewPlanForm] = useState({
+    name: '',
+    displayName: '',
+    description: '',
+    maxTenants: 1,
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    features: [''],
+    isActive: true
   });
 
   // Fastload optimization: Fetch subscription plans with caching
@@ -82,68 +81,39 @@ function EnterpriseSubscriptionAdmin() {
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  // Fastload optimization: Fetch all TenantVet customers with stale-while-revalidate
-  const { data: tenantVets, isLoading: clientsLoading } = useQuery({
-    queryKey: ['/api/superadmin/tenant-customers'],
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes
-  });
-
-  // Fastload optimization: Fetch expiring subscriptions with real-time updates needed
-  const { data: expiringSubscriptions, isLoading: expiringLoading } = useQuery({
-    queryKey: ['/api/superadmin/subscriptions/expiring'],
-    staleTime: 30 * 1000, // 30 seconds for critical alerts
-    gcTime: 2 * 60 * 1000, // 2 minutes
-  });
-
-  // Create new TenantVet customer
-  const createCustomer = useMutation({
-    mutationFn: async (data: {
-      name: string;
-      email: string;
-      planId: string;
-      vetsitesCount?: number;
-      adminFirstName?: string;
-      adminLastName?: string;
-      trialDays?: number;
-    }) => {
-      const response = await fetch('/api/superadmin/tenant-customers', {
+  // Create new subscription plan
+  const createPlan = useMutation({
+    mutationFn: async (planData: Omit<SubscriptionPlan, 'id'>) => {
+      const response = await fetch('/api/superadmin/subscription-plans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(planData),
       });
-      if (!response.ok) throw new Error('Failed to create customer');
+      if (!response.ok) throw new Error('Failed to create plan');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/tenant-customers'] });
-      setNewClientDialog(false);
-      setNewClientForm({
-        companyName: '',
-        adminEmail: '',
-        adminFirstName: '',
-        adminLastName: '',
-        planId: '',
-        vetsitesCount: 1,
-        trialDays: 14
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/subscription-plans'] });
+      setPlanConfigDialog(false);
+      setNewPlanForm({
+        name: '',
+        displayName: '',
+        description: '',
+        maxTenants: 1,
+        monthlyPrice: 0,
+        yearlyPrice: 0,
+        features: [''],
+        isActive: true
       });
     },
   });
 
-  const handleCreateClient = () => {
-    if (!newClientForm.companyName || !newClientForm.adminEmail || !newClientForm.planId) {
+  const handleCreatePlan = () => {
+    if (!newPlanForm.name || !newPlanForm.displayName) {
       return;
     }
     
-    createCustomer.mutate({
-      name: newClientForm.companyName,
-      email: newClientForm.adminEmail,
-      planId: newClientForm.planId,
-      vetsitesCount: newClientForm.vetsitesCount,
-      adminFirstName: newClientForm.adminFirstName,
-      adminLastName: newClientForm.adminLastName,
-      trialDays: newClientForm.trialDays
-    });
+    createPlan.mutate(newPlanForm);
   };
 
   // Update subscription plan configuration
@@ -165,7 +135,7 @@ function EnterpriseSubscriptionAdmin() {
   });
 
   // Early return with skeleton for fastload optimization
-  if (plansLoading || clientsLoading) {
+  if (plansLoading) {
     return (
       <div className="min-h-screen bg-gray-900 text-white p-6">
         <div className="max-w-7xl mx-auto">
@@ -184,343 +154,303 @@ function EnterpriseSubscriptionAdmin() {
             <Link href="/superadmin" className="text-gray-400 hover:text-white transition-colors">
               <ArrowLeft className="w-6 h-6" />
             </Link>
-            <Building2 className="w-8 h-8 text-blue-400" />
+            <Settings className="w-8 h-8 text-purple-400" />
             <div>
-              <h1 className="text-3xl font-bold">EnterpriseVet - Gestión de Suscripciones</h1>
-              <p className="text-gray-400">Administra clientes TenantVet y sus suscripciones</p>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                Configurar Planes de Suscripción
+              </h1>
+              <p className="text-gray-400">Gestión global de planes y precios para todas las empresas</p>
             </div>
           </div>
           
           <div className="flex gap-2">
             <Dialog open={planConfigDialog} onOpenChange={setPlanConfigDialog}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="bg-gray-700 border-gray-600 hover:bg-gray-600" data-testid="button-config-plans">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Configurar Planes
+                <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700" data-testid="button-new-plan">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Plan
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl bg-gray-800 border-gray-700 text-white">
                 <DialogHeader>
-                  <DialogTitle className="text-blue-300">Configurar Planes de Suscripción</DialogTitle>
+                  <DialogTitle className="text-purple-300">
+                    {editingPlan ? 'Editar Plan de Suscripción' : 'Crear Nuevo Plan'}
+                  </DialogTitle>
                   <DialogDescription className="text-gray-400">
-                    Ajusta los límites de VetSites y precios de cada plan
+                    {editingPlan ? 'Modifica la configuración del plan' : 'Configura un nuevo plan de suscripción'}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
-                  {subscriptionPlans?.map((plan: SubscriptionPlan) => (
-                    <div key={plan.id} className="border border-gray-600 rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-white">{plan.displayName}</h3>
-                          <p className="text-sm text-gray-400">{plan.description}</p>
-                          <div className="mt-2 flex gap-4 text-sm">
-                            <span className="text-gray-300">Max VetSites: {plan.maxTenants}</span>
-                            <span className="text-gray-300">Precio: ${plan.monthlyPrice}/mes</span>
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setEditingPlan(plan);
-                            setPlanConfigDialog(true);
-                          }}
-                          className="bg-gray-700 border-gray-600 hover:bg-gray-600"
-                        >
-                          Editar
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={newClientDialog} onOpenChange={setNewClientDialog}>
-              <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700" data-testid="button-new-client">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nuevo Cliente
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-gray-800 border-gray-700 text-white">
-                <DialogHeader>
-                  <DialogTitle className="text-blue-300">Crear Nuevo Cliente TenantVet</DialogTitle>
-                  <DialogDescription className="text-gray-400">
-                    Registra un nuevo cliente con su suscripción inicial
-                  </DialogDescription>
-                </DialogHeader>
+                
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="company-name" className="text-gray-300">Nombre de la Empresa</Label>
+                      <Label htmlFor="planName" className="text-gray-300">Nombre del Plan</Label>
                       <Input
-                        id="company-name"
-                        placeholder="Ej: VetCorp Services"
+                        id="planName"
+                        value={editingPlan?.name || newPlanForm.name}
+                        onChange={(e) => editingPlan ? 
+                          setEditingPlan({...editingPlan, name: e.target.value}) : 
+                          setNewPlanForm({...newPlanForm, name: e.target.value})
+                        }
                         className="bg-gray-700 border-gray-600 text-white"
-                        data-testid="input-company-name"
-                        value={newClientForm.companyName}
-                        onChange={(e) => setNewClientForm({...newClientForm, companyName: e.target.value})}
+                        placeholder="basic, medium, large..."
                       />
                     </div>
                     <div>
-                      <Label htmlFor="admin-email" className="text-gray-300">Email del Administrador</Label>
+                      <Label htmlFor="displayName" className="text-gray-300">Nombre Mostrado</Label>
                       <Input
-                        id="admin-email"
-                        type="email"
-                        placeholder="admin@empresa.com"
+                        id="displayName"
+                        value={editingPlan?.displayName || newPlanForm.displayName}
+                        onChange={(e) => editingPlan ? 
+                          setEditingPlan({...editingPlan, displayName: e.target.value}) : 
+                          setNewPlanForm({...newPlanForm, displayName: e.target.value})
+                        }
                         className="bg-gray-700 border-gray-600 text-white"
-                        data-testid="input-admin-email"
-                        value={newClientForm.adminEmail}
-                        onChange={(e) => setNewClientForm({...newClientForm, adminEmail: e.target.value})}
+                        placeholder="Plan Básico, Plan Medium..."
                       />
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="admin-firstname" className="text-gray-300">Nombre</Label>
-                      <Input
-                        id="admin-firstname"
-                        placeholder="Juan"
-                        className="bg-gray-700 border-gray-600 text-white"
-                        data-testid="input-admin-firstname"
-                        value={newClientForm.adminFirstName}
-                        onChange={(e) => setNewClientForm({...newClientForm, adminFirstName: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="admin-lastname" className="text-gray-300">Apellido</Label>
-                      <Input
-                        id="admin-lastname"
-                        placeholder="García"
-                        className="bg-gray-700 border-gray-600 text-white"
-                        data-testid="input-admin-lastname"
-                        value={newClientForm.adminLastName}
-                        onChange={(e) => setNewClientForm({...newClientForm, adminLastName: e.target.value})}
-                      />
-                    </div>
-                  </div>
-
                   <div>
-                    <Label htmlFor="subscription-plan" className="text-gray-300">Plan de Suscripción</Label>
-                    <Select value={newClientForm.planId} onValueChange={(value) => setNewClientForm({...newClientForm, planId: value})}>
-                      <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                        <SelectValue placeholder="Selecciona un plan" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-700 border-gray-600">
-                        {subscriptionPlans?.map((plan: SubscriptionPlan) => (
-                          <SelectItem key={plan.id} value={plan.id} className="text-white hover:bg-gray-600">
-                            {plan.displayName} - ${plan.monthlyPrice}/mes ({plan.maxTenants} VetSites)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="description" className="text-gray-300">Descripción</Label>
+                    <Input
+                      id="description"
+                      value={editingPlan?.description || newPlanForm.description}
+                      onChange={(e) => editingPlan ? 
+                        setEditingPlan({...editingPlan, description: e.target.value}) : 
+                        setNewPlanForm({...newPlanForm, description: e.target.value})
+                      }
+                      className="bg-gray-700 border-gray-600 text-white"
+                      placeholder="Descripción del plan..."
+                    />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
+                  
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <Label htmlFor="vetsites-count" className="text-gray-300">Número de VetSites</Label>
+                      <Label htmlFor="maxTenants" className="text-gray-300">Max VetSites</Label>
                       <Input
-                        id="vetsites-count"
+                        id="maxTenants"
                         type="number"
+                        value={editingPlan?.maxTenants || newPlanForm.maxTenants}
+                        onChange={(e) => editingPlan ? 
+                          setEditingPlan({...editingPlan, maxTenants: parseInt(e.target.value)}) : 
+                          setNewPlanForm({...newPlanForm, maxTenants: parseInt(e.target.value)})
+                        }
+                        className="bg-gray-700 border-gray-600 text-white"
                         min="1"
-                        max="10"
-                        value={newClientForm.vetsitesCount}
-                        onChange={(e) => setNewClientForm({...newClientForm, vetsitesCount: parseInt(e.target.value) || 1})}
-                        className="bg-gray-700 border-gray-600 text-white"
-                        data-testid="input-vetsites-count"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="trial-days" className="text-gray-300">Días de Trial</Label>
+                      <Label htmlFor="monthlyPrice" className="text-gray-300">Precio Mensual</Label>
                       <Input
-                        id="trial-days"
+                        id="monthlyPrice"
                         type="number"
-                        min="0"
-                        max="30"
-                        value={newClientForm.trialDays}
-                        onChange={(e) => setNewClientForm({...newClientForm, trialDays: parseInt(e.target.value) || 14})}
+                        value={editingPlan?.monthlyPrice || newPlanForm.monthlyPrice}
+                        onChange={(e) => editingPlan ? 
+                          setEditingPlan({...editingPlan, monthlyPrice: parseFloat(e.target.value)}) : 
+                          setNewPlanForm({...newPlanForm, monthlyPrice: parseFloat(e.target.value)})
+                        }
                         className="bg-gray-700 border-gray-600 text-white"
-                        data-testid="input-trial-days"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="yearlyPrice" className="text-gray-300">Precio Anual</Label>
+                      <Input
+                        id="yearlyPrice"
+                        type="number"
+                        value={editingPlan?.yearlyPrice || newPlanForm.yearlyPrice}
+                        onChange={(e) => editingPlan ? 
+                          setEditingPlan({...editingPlan, yearlyPrice: parseFloat(e.target.value)}) : 
+                          setNewPlanForm({...newPlanForm, yearlyPrice: parseFloat(e.target.value)})
+                        }
+                        className="bg-gray-700 border-gray-600 text-white"
+                        min="0"
+                        step="0.01"
                       />
                     </div>
                   </div>
-
+                  
                   <div className="flex justify-end gap-2 pt-4">
                     <Button 
                       variant="outline" 
-                      onClick={() => setNewClientDialog(false)}
+                      onClick={() => {
+                        setPlanConfigDialog(false);
+                        setEditingPlan(null);
+                      }}
                       className="bg-gray-700 border-gray-600 hover:bg-gray-600"
-                      data-testid="button-cancel-new-client"
                     >
                       Cancelar
                     </Button>
                     <Button 
-                      className="bg-blue-600 hover:bg-blue-700"
-                      disabled={createCustomer.isPending || !newClientForm.companyName || !newClientForm.adminEmail || !newClientForm.planId}
-                      onClick={handleCreateClient}
-                      data-testid="button-create-client"
+                      onClick={editingPlan ? 
+                        () => updatePlan.mutate(editingPlan) : 
+                        handleCreatePlan
+                      }
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      disabled={editingPlan ? updatePlan.isPending : createPlan.isPending}
                     >
-                      {createCustomer.isPending ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                          Creando...
-                        </>
-                      ) : (
-                        "Crear Cliente"
-                      )}
+                      {editingPlan ? 'Actualizar' : 'Crear'} Plan
                     </Button>
                   </div>
                 </div>
               </DialogContent>
             </Dialog>
+
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Subscription Plans Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {subscriptionPlans?.map((plan: SubscriptionPlan) => (
+            <Card key={plan.id} className="bg-gray-800 border-gray-700 hover:border-purple-500 transition-all duration-200">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Settings className="w-5 h-5 text-purple-400" />
+                      {plan.displayName}
+                    </CardTitle>
+                    <CardDescription className="text-gray-400 mt-1">
+                      {plan.description}
+                    </CardDescription>
+                  </div>
+                  <Badge variant={plan.isActive ? "default" : "secondary"} className={plan.isActive ? "bg-green-600" : "bg-gray-600"}>
+                    {plan.isActive ? "Activo" : "Inactivo"}
+                  </Badge>
+                </div>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 bg-gray-700 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-400">${plan.monthlyPrice}</div>
+                      <div className="text-sm text-gray-400">por mes</div>
+                    </div>
+                    <div className="text-center p-3 bg-gray-700 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-400">${plan.yearlyPrice}</div>
+                      <div className="text-sm text-gray-400">por año</div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300">Max VetSites:</span>
+                      <span className="text-white font-semibold">{plan.maxTenants}</span>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <span className="text-gray-300 text-sm">Características:</span>
+                      {plan.features?.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-1">
+                          {plan.features.map((feature, index) => (
+                            <li key={index} className="text-sm text-gray-400">{feature}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">No hay características definidas</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <Button
+                    onClick={() => {
+                      setEditingPlan(plan);
+                      setPlanConfigDialog(true);
+                    }}
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    data-testid={`button-edit-plan-${plan.id}`}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Editar Plan
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Global Subscription Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">Total Clientes</CardTitle>
-              <Building2 className="h-4 w-4 text-blue-400" />
+              <CardTitle className="text-sm font-medium text-gray-300">Planes Totales</CardTitle>
+              <Settings className="h-4 w-4 text-purple-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{tenantVets?.length || 0}</div>
+              <div className="text-2xl font-bold text-white">{subscriptionPlans?.length || 0}</div>
               <p className="text-xs text-gray-400">
-                clientes activos
+                planes configurados
               </p>
             </CardContent>
           </Card>
 
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">Ingresos Mensuales</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-300">Planes Activos</CardTitle>
+              <Badge className="h-4 w-4 text-green-400 bg-transparent border-0 p-0" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">
+                {subscriptionPlans?.filter((plan: SubscriptionPlan) => plan.isActive).length || 0}
+              </div>
+              <p className="text-xs text-gray-400">
+                disponibles para venta
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Rango de Precios</CardTitle>
               <DollarSign className="h-4 w-4 text-green-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
-                ${tenantVets?.reduce((sum: number, tenant: TenantVet) => sum + (tenant.monthlyRevenue || 0), 0).toLocaleString()}
+                ${Math.min(...(subscriptionPlans?.map((p: SubscriptionPlan) => p.monthlyPrice) || [0]))} - 
+                ${Math.max(...(subscriptionPlans?.map((p: SubscriptionPlan) => p.monthlyPrice) || [0]))}
               </div>
               <p className="text-xs text-gray-400">
-                ingresos totales
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">VetSites Activos</CardTitle>
-              <Users className="h-4 w-4 text-purple-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {tenantVets?.reduce((sum: number, tenant: TenantVet) => sum + tenant.vetsitesUsed, 0) || 0}
-              </div>
-              <p className="text-xs text-gray-400">
-                sitios en uso
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">Expirando Pronto</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-yellow-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{expiringSubscriptions?.length || 0}</div>
-              <p className="text-xs text-gray-400">
-                próximos 7 días
+                rango mensual
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Expiring Subscriptions Alert */}
-        {expiringSubscriptions && expiringSubscriptions.length > 0 && (
-          <Card className="bg-yellow-900/20 border-yellow-600">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-yellow-400">
-                <AlertTriangle className="w-5 h-5" />
-                Suscripciones por Expirar
-              </CardTitle>
-              <CardDescription className="text-yellow-300">
-                {expiringSubscriptions.length} clientes con suscripciones expirando en los próximos 7 días
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {expiringSubscriptions.slice(0, 5).map((subscription: any) => (
-                  <div key={subscription.id} className="flex justify-between items-center p-2 bg-yellow-900/10 rounded">
-                    <div>
-                      <span className="font-medium text-white">{subscription.name}</span>
-                      <span className="text-sm text-yellow-300 ml-2">({subscription.subscriptionPlan})</span>
-                    </div>
-                    <span className="text-sm text-yellow-400">
-                      {format(new Date(subscription.subscriptionEnd), 'dd MMM yyyy', { locale: es })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Clients List */}
-        <Card className="bg-gray-800 border-gray-700">
+        {/* Plan Configuration Guidelines */}
+        <Card className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-600/30">
           <CardHeader>
-            <CardTitle className="text-blue-300">Clientes TenantVet</CardTitle>
-            <CardDescription className="text-gray-400">
-              Gestiona todos los clientes y sus suscripciones
+            <CardTitle className="flex items-center gap-2 text-purple-300">
+              <Settings className="w-5 h-5" />
+              Configuración de Planes - SuperAdmin
+            </CardTitle>
+            <CardDescription className="text-purple-200">
+              Gestión global de planes de suscripción para todas las empresas del sistema
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {clientsLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 w-full bg-gray-700" />
-                ))}
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-purple-400 rounded-full mt-1.5"></div>
+                <p className="text-gray-300">
+                  <strong className="text-white">Crear/Editar Planes:</strong> Configura nuevos planes o modifica existentes con precios y límites de VetSites
+                </p>
               </div>
-            ) : tenantVets && tenantVets.length > 0 ? (
-              <div className="space-y-3">
-                {tenantVets.map((tenant: TenantVet) => (
-                  <div key={tenant.id} className="flex items-center justify-between p-4 border border-gray-600 rounded-lg hover:bg-gray-700/50 transition-colors">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-white">{tenant.name}</h3>
-                        <Badge 
-                          variant={tenant.subscriptionStatus === 'active' ? 'default' : 'secondary'}
-                          className={tenant.subscriptionStatus === 'active' ? 'bg-green-600' : ''}
-                        >
-                          {tenant.subscriptionStatus === 'active' ? 'Activo' : 'Trial'}
-                        </Badge>
-                        <Badge variant="outline" className="border-gray-600 text-gray-300">
-                          {tenant.subscriptionPlan}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-400 mt-1">{tenant.email}</p>
-                      <div className="flex gap-4 text-sm text-gray-300 mt-2">
-                        <span>VetSites: {tenant.vetsitesUsed}/{tenant.vetsitesAllowed}</span>
-                        <span>Ingresos: ${tenant.monthlyRevenue?.toLocaleString()}/mes</span>
-                        <span>Expira: {format(new Date(tenant.subscriptionEnd), 'dd/MM/yyyy')}</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 hover:bg-gray-600">
-                        Gestionar
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-blue-400 rounded-full mt-1.5"></div>
+                <p className="text-gray-300">
+                  <strong className="text-white">Gestión Global:</strong> Los cambios aplican a todas las empresas y afectan nuevas suscripciones
+                </p>
               </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Building2 className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                <p>No hay clientes registrados</p>
-                <p className="text-sm">Crea el primer cliente para comenzar</p>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-green-400 rounded-full mt-1.5"></div>
+                <p className="text-gray-300">
+                  <strong className="text-white">Control de Precios:</strong> Establece precios mensuales y anuales para cada nivel de suscripción
+                </p>
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
       </div>
