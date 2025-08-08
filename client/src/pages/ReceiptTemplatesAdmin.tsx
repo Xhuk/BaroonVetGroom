@@ -1163,44 +1163,18 @@ export default function ReceiptTemplatesAdmin() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="templateName">Nombre de la Plantilla *</Label>
-                  <Select value={templateName} onValueChange={setTemplateName}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecciona una clínica" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {companies
-                        .find(company => company.id === selectedCompanyId)
-                        ?.tenants?.map((tenant: any) => (
-                          <SelectItem key={tenant.id} value={tenant.name}>
-                            {tenant.name}
-                          </SelectItem>
-                        )) || 
-                        tenants?.map((tenant: any) => (
-                          <SelectItem key={tenant.id} value={tenant.name}>
-                            {tenant.name}
-                          </SelectItem>
-                        ))
-                      }
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="templateDescription">Descripción</Label>
-                  <Textarea
-                    id="templateDescription"
-                    value={templateDescription}
-                    onChange={(e) => setTemplateDescription(e.target.value)}
-                    placeholder="Describe las características de esta plantilla..."
-                    rows={3}
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
                   <Label>Publicar a nivel: *</Label>
-                  <Select value={facturaType} onValueChange={(value: "empresarial" | "clinica") => setFacturaType(value)}>
+                  <Select value={facturaType} onValueChange={(value: "empresarial" | "clinica") => {
+                    setFacturaType(value);
+                    // Auto-set template name based on publication level
+                    if (value === "empresarial") {
+                      setTemplateName("Default");
+                      setSelectedCompanyId("");
+                      setSelectedTenantId("");
+                    } else {
+                      setTemplateName(""); // Will be set when clinic is selected
+                    }
+                  }}>
                     <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
@@ -1215,7 +1189,11 @@ export default function ReceiptTemplatesAdmin() {
                   <>
                     <div>
                       <Label htmlFor="companySelect">Empresa *</Label>
-                      <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                      <Select value={selectedCompanyId} onValueChange={(companyId) => {
+                        setSelectedCompanyId(companyId);
+                        setSelectedTenantId(""); // Reset tenant selection
+                        setTemplateName(""); // Reset template name
+                      }}>
                         <SelectTrigger className="mt-1">
                           <SelectValue placeholder="Selecciona una empresa" />
                         </SelectTrigger>
@@ -1231,23 +1209,65 @@ export default function ReceiptTemplatesAdmin() {
 
                     {selectedCompanyId && (
                       <div>
-                        <Label htmlFor="tenantSelect">Clínica *</Label>
-                        <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
+                        <Label htmlFor="tenantSelect">Clínica (Nombre de Plantilla) *</Label>
+                        <Select value={selectedTenantId} onValueChange={(tenantId) => {
+                          setSelectedTenantId(tenantId);
+                          // Auto-set template name to the selected clinic name
+                          const selectedTenant = tenants.find(t => t.id === tenantId);
+                          setTemplateName(selectedTenant?.name || "Default");
+                        }}>
                           <SelectTrigger className="mt-1">
                             <SelectValue placeholder="Selecciona una clínica" />
                           </SelectTrigger>
                           <SelectContent>
-                            {tenants.map((tenant) => (
-                              <SelectItem key={tenant.id} value={tenant.id}>
-                                {tenant.name}
+                            {tenants.length > 0 ? (
+                              tenants.map((tenant) => (
+                                <SelectItem key={tenant.id} value={tenant.id}>
+                                  {tenant.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="default" disabled>
+                                Default
                               </SelectItem>
-                            ))}
+                            )}
                           </SelectContent>
                         </Select>
+                        {tenants.length === 0 && (
+                          <p className="text-sm text-gray-500 mt-1">
+                            No hay clínicas disponibles para esta empresa. Se usará "Default" como nombre de plantilla.
+                          </p>
+                        )}
                       </div>
                     )}
                   </>
                 )}
+
+                {/* Display the derived template name */}
+                <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 text-blue-600 dark:text-blue-400">
+                      <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Nombre de Plantilla: {templateName || "(Se asignará automáticamente)"}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="templateDescription">Descripción</Label>
+                  <Textarea
+                    id="templateDescription"
+                    value={templateDescription}
+                    onChange={(e) => setTemplateDescription(e.target.value)}
+                    placeholder="Describe las características de esta plantilla..."
+                    rows={3}
+                    className="mt-1"
+                  />
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -1259,7 +1279,29 @@ export default function ReceiptTemplatesAdmin() {
                     <span className="font-medium">{preDesignedTemplates.find(t => t.id === selectedTemplate)?.name}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Empresa:</span>
+                    <span className="text-gray-600 dark:text-gray-400">Nombre:</span>
+                    <span className="font-medium">{templateName || "Default"}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Nivel:</span>
+                    <span className="font-medium capitalize">{facturaType}</span>
+                  </div>
+                  {facturaType === "clinica" && selectedCompanyId && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Empresa:</span>
+                        <span className="font-medium">{companies.find(c => c.id === selectedCompanyId)?.name || "Sin especificar"}</span>
+                      </div>
+                      {selectedTenantId && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">Clínica:</span>
+                          <span className="font-medium">{tenants.find(t => t.id === selectedTenantId)?.name || "Sin especificar"}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Configuración:</span>
                     <span className="font-medium">{templateConfig.enterpriseName}</span>
                   </div>
                   <div className="flex justify-between text-sm">
