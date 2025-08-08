@@ -1248,7 +1248,18 @@ export class DatabaseStorage implements IStorage {
   // Inventory operations
   async getInventoryItems(tenantId: string): Promise<InventoryItem[]> {
     const items = await db
-      .select()
+      .select({
+        id: inventoryItems.id,
+        tenantId: inventoryItems.tenantId,
+        name: inventoryItems.name,
+        description: inventoryItems.description,
+        category: inventoryItems.category,
+        sku: inventoryItems.sku,
+        unitPrice: inventoryItems.unitPrice,
+        currentStock: inventoryItems.currentStock,
+        unit: inventoryItems.unit,
+        isActive: inventoryItems.isActive,
+      })
       .from(inventoryItems)
       .where(eq(inventoryItems.tenantId, tenantId))
       .orderBy(inventoryItems.name);
@@ -2880,25 +2891,18 @@ export class DatabaseStorage implements IStorage {
 
   // Receipt Templates operations
   async getReceiptTemplates(companyId?: string, tenantId?: string): Promise<ReceiptTemplate[]> {
+    let query = db.select().from(receiptTemplates);
+    
     if (tenantId) {
-      const results = await db
-        .select()
-        .from(receiptTemplates)
-        .where(eq(receiptTemplates.tenantId, tenantId));
-      return results.filter(template => template.isActive);
+      query = query.where(eq(receiptTemplates.tenantId, tenantId));
     } else if (companyId) {
-      const results = await db
-        .select()
-        .from(receiptTemplates)
-        .where(and(
-          eq(receiptTemplates.companyId, companyId),
-          isNull(receiptTemplates.tenantId)
-        ));
-      return results.filter(template => template.isActive);
+      query = query.where(and(
+        eq(receiptTemplates.companyId, companyId),
+        isNull(receiptTemplates.tenantId)
+      ));
     }
     
-    const results = await db.select().from(receiptTemplates);
-    return results.filter(template => template.isActive);
+    return query.then(results => results.filter(template => template.isActive));
   }
 
   async getReceiptTemplate(templateId: string): Promise<ReceiptTemplate | undefined> {
@@ -3153,7 +3157,7 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(externalServiceSubscriptions.companyId, companyId),
-            sql`${externalServiceSubscriptions.serviceName} IS NOT NULL`
+            eq(externalServiceSubscriptions.status, 'active')
           )
         );
       
@@ -3183,7 +3187,7 @@ export class DatabaseStorage implements IStorage {
         .select({
           id: tenants.id,
           name: tenants.name,
-          location: sql<string>`'No location specified'`,
+          location: tenants.location,
         })
         .from(tenants)
         .where(eq(tenants.companyId, companyId));
@@ -3213,6 +3217,7 @@ export class DatabaseStorage implements IStorage {
       await db
         .update(externalServiceSubscriptions)
         .set({
+          autoRenewEnabled: autoRenewal,
           updatedAt: new Date(),
         })
         .where(
@@ -3245,14 +3250,14 @@ export class DatabaseStorage implements IStorage {
       const result = await db
         .select({
           creditsRemaining: externalServiceSubscriptions.creditsRemaining,
-          usageThisPeriod: externalServiceSubscriptions.usageThisPeriod,
+          creditsLimit: externalServiceSubscriptions.creditsLimit,
         })
         .from(externalServiceSubscriptions)
         .where(
           and(
             eq(externalServiceSubscriptions.companyId, companyId),
             eq(externalServiceSubscriptions.serviceName, serviceName),
-            sql`${externalServiceSubscriptions.serviceName} = ${serviceName}`
+            eq(externalServiceSubscriptions.status, 'active')
           )
         )
         .limit(1);
@@ -3261,9 +3266,9 @@ export class DatabaseStorage implements IStorage {
         return null;
       }
       
-      const { creditsRemaining, usageThisPeriod } = result[0];
-      const used = usageThisPeriod || 0;
-      const limit = 1000;
+      const { creditsRemaining, creditsLimit } = result[0];
+      const used = (creditsLimit || 0) - (creditsRemaining || 0);
+      const limit = creditsLimit || 1000;
       const percentage = limit > 0 ? (used / limit) * 100 : 0;
       
       return {
