@@ -5689,6 +5689,99 @@ This password expires in 24 hours.
     }
   });
 
+  // Bulk import features from JSON
+  app.post('/api/superadmin/features/bulk-import', isSuperAdmin, async (req, res) => {
+    try {
+      const { features } = req.body;
+      
+      if (!features || !Array.isArray(features)) {
+        return res.status(400).json({ message: "Invalid JSON structure. Expected 'features' array." });
+      }
+
+      const importResults = {
+        created: 0,
+        updated: 0,
+        skipped: 0,
+        errors: []
+      };
+
+      // Check if we need to implement database storage for features
+      // For now, we'll simulate the import and provide feedback
+      for (const featureConfig of features) {
+        try {
+          // Validate required fields
+          const requiredFields = ['key', 'nombre', 'descripcion'];
+          const missingFields = requiredFields.filter(field => !featureConfig.hasOwnProperty(field));
+          
+          if (missingFields.length > 0) {
+            importResults.errors.push(`Feature '${featureConfig.key}': Missing required fields: ${missingFields.join(', ')}`);
+            continue;
+          }
+
+          // Transform to internal feature format
+          const featureData = {
+            id: featureConfig.key,
+            name: featureConfig.nombre,
+            description: featureConfig.descripcion,
+            category: featureConfig.category || 'subscription_management',
+            minimumTier: featureConfig.minimumTier || 'basic',
+            enabled: featureConfig.enabled !== undefined ? featureConfig.enabled : true,
+            spanishName: featureConfig.nombre,
+            spanishDescription: featureConfig.descripcion
+          };
+
+          // Check if feature exists and if it's used in any subscription plan
+          const { FEATURE_DEFINITIONS } = await import('../shared/deploymentFeatures.js');
+          const existingFeature = FEATURE_DEFINITIONS[featureConfig.key];
+          
+          if (existingFeature) {
+            // Check if the feature is used in any subscription plan
+            const subscriptionPlans = await storage.getAllSubscriptionPlans();
+            const isFeatureUsed = subscriptionPlans.some(plan => 
+              plan.features && plan.features.includes(featureConfig.key)
+            );
+            
+            if (isFeatureUsed) {
+              importResults.skipped++;
+              importResults.errors.push(`Feature '${featureConfig.key}' is used in subscription plans and cannot be overwritten`);
+              continue;
+            } else {
+              // Feature exists but is not used, can be updated
+              importResults.updated++;
+            }
+          } else {
+            // New feature
+            importResults.created++;
+          }
+
+          // TODO: When database storage is implemented, actually save the feature here
+          // await storage.upsertFeature(featureData);
+
+        } catch (featureError: any) {
+          importResults.errors.push(`Feature '${featureConfig.key}': ${featureError.message}`);
+        }
+      }
+
+      const totalProcessed = importResults.created + importResults.updated + importResults.skipped;
+      const message = `Import simulation completed: ${importResults.created} would be created, ${importResults.updated} would be updated, ${importResults.skipped} skipped (in use)`;
+
+      res.json({
+        success: true,
+        message: message,
+        note: "Features are currently managed via deploymentFeatures.ts. Database storage coming soon.",
+        results: importResults
+      });
+
+    } catch (error) {
+      console.error("Error importing features:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to import features",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Get all TenantVet customers (companies) for enterprise management
   app.get('/api/superadmin/tenant-customers', isSuperAdmin, async (req, res) => {
     try {
