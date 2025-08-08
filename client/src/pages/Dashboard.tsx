@@ -116,7 +116,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="pb-40">
         {/* Action Buttons - Aligned with calendar card left edge */}
-        <div className="absolute top-[94px] left-[298px] flex gap-4 mb-6 z-10">
+        <div className="absolute top-[95px] left-[298px] flex gap-4 mb-6 z-10">
           <Link href="/booking">
             <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
               <Phone className="w-4 h-4 mr-2" />
