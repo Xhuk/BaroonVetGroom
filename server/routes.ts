@@ -97,7 +97,7 @@ const checkSubscriptionValidity = async (req: any, res: any, next: any) => {
       
       // Update subscription status to expired
       await storage.updateCompanySubscription(tenant.companyId, { 
-        status: 'cancelled' as any 
+        status: 'expired' 
       });
       
       return res.status(403).json({ 
@@ -377,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getMedicalAppointments(tenantId),
         storage.getPetsByTenant(tenantId),
         storage.getClients(tenantId),
-        storage.getStaffByRole(tenantId, 'veterinarian'),
+        storage.getStaff(tenantId, 'veterinarian'),
         storage.getRooms(tenantId)
       ]);
 
@@ -1857,7 +1857,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { advancedRouteOptimization } = await import('./routeOptimizer');
       const result = await advancedRouteOptimization({
         clinicLocation: clinicLocation || [25.6866, -100.3161],
-        completedAppointments: routePoints,
+        appointments: routePoints,
         vanCapacity: vanCapacity || 'medium',
         fraccionamientoWeights: fraccionamientoWeights || {},
         config
@@ -2195,7 +2195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const config = await storage.upsertCompanyBillingConfig(configData);
+      const config = await storage.upsertCompanyBillingConfig(companyId, configData);
       res.json(config);
     } catch (error) {
       console.error("Error updating billing config:", error);
@@ -2415,7 +2415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Get fraccionamiento weights
-      const fraccionamientos = await storage.getFraccionamientos();
+      const fraccionamientos = await storage.getFraccionamientos(tenantId);
       const fraccionamientoWeights = fraccionamientos.reduce((acc, frac) => {
         acc[frac.name] = frac.weight || 5.0;
         return acc;
@@ -2579,7 +2579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user access info
   app.get('/api/auth/access-info', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = req.user?.claims?.sub;
       const cacheKey = `access_${userId}`;
       
       // Check cache first
@@ -2757,15 +2757,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const transactionData = {
         id: mockTransactionId,
-        amount: (onboardingData.sitesRequested <= 3 ? 2999 : 4999).toString(),
+        amount: onboardingData.sitesRequested <= 3 ? 2999 : 4999,
         currency: "MXN",
         status: "completed",
         paymentProvider: "demo",
         externalTransactionId: `demo_${Date.now()}`,
-        subscriptionPlanId: onboardingData.sitesRequested <= 3 ? "medium" : "large",
-        companyId: 'temp',
-        billingCycle: 'monthly',
-        subscriptionStartDate: new Date(),
+        subscriptionPlan: onboardingData.sitesRequested <= 3 ? "medium" : "large",
         subscriptionEndDate,
         paymentDate: new Date(),
       };
@@ -4326,7 +4323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/temp-links/qr/:petId", isAuthenticated, async (req, res) => {
     try {
       const { petId } = req.params;
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = req.user?.claims?.sub;
       const { tenantId } = req.body;
       
       if (!userId || !tenantId) {
@@ -4335,7 +4332,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Verify pet exists and user has access
       const pet = await storage.getPetById(petId);
-      if (!pet || (pet as any).tenantId !== tenantId) {
+      if (!pet || pet.tenantId !== tenantId) {
         return res.status(404).json({ error: "Pet not found" });
       }
 
@@ -4365,7 +4362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create temporary link for file sharing
   app.post("/api/temp-links/file-share", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = req.user?.claims?.sub;
       const { tenantId, expirationHours = 24, maxAccess = 10 } = req.body;
       
       if (!userId || !tenantId) {
@@ -4441,7 +4438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db.update(tempLinks)
         .set({ 
           metadata: { 
-            ...(result.link!.metadata as Record<string, any>), 
+            ...result.link!.metadata, 
             fileUrl,
             uploadedAt: new Date().toISOString()
           } 
@@ -4524,8 +4521,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Link user to company
-      // createUserCompany expects userId and companyId parameters
-      // await storage.createUserCompany(adminUser.id, company.id);
+      await storage.createUserCompany({
+        userId: adminUser.id,
+        companyId: company.id,
+        role: "admin",
+        isActive: true
+      });
 
       // Create company subscription
       const subscription = await storage.createCompanySubscription({
@@ -4611,8 +4612,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (extendTrialDays) {
         const currentSub = await storage.getCompanySubscription(companyId);
-        if (currentSub?.trialEndsAt) {
-          (updates as any).trialEndsAt = new Date(currentSub.trialEndsAt.getTime() + extendTrialDays * 24 * 60 * 60 * 1000);
+        if (currentSub?.trialEndDate) {
+          updates.trialEndDate = new Date(currentSub.trialEndDate.getTime() + extendTrialDays * 24 * 60 * 60 * 1000);
         }
       }
 
@@ -4655,16 +4656,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentUsage = {
         tenants: tenants.length,
         staff: staff.length,
-        maxTenants: (subscription as any).maxTenants,
-        maxStaff: (subscription as any).maxStaff || 50
+        maxTenants: subscription.maxTenants,
+        maxStaff: subscription.maxStaff || 50
       };
 
       const trialInfo = subscription.status === 'trial' ? {
         isOnTrial: true,
-        trialStartDate: (subscription as any).trialStartDate,
-        trialEndDate: subscription.trialEndsAt,
-        daysRemaining: subscription.trialEndsAt ? 
-          Math.max(0, Math.ceil((subscription.trialEndsAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000))) : 0
+        trialStartDate: subscription.trialStartDate,
+        trialEndDate: subscription.trialEndDate,
+        daysRemaining: subscription.trialEndDate ? 
+          Math.max(0, Math.ceil((subscription.trialEndDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000))) : 0
       } : { isOnTrial: false };
 
       res.json({
@@ -4683,9 +4684,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             monthlyPrice: plan.monthlyPrice
           } : null,
           limits: {
-            maxTenants: (subscription as any).maxTenants,
-            maxStaff: (subscription as any).maxStaff,
-            customLimits: (subscription as any).customLimits
+            maxTenants: subscription.maxTenants,
+            maxStaff: subscription.maxStaff,
+            customLimits: subscription.customLimits
           },
           usage: currentUsage,
           trial: trialInfo
@@ -5056,7 +5057,7 @@ This password expires in 24 hours.
             Math.round((stats.totalCompanies / (config.maxTenants || 1)) * 100)
         },
         recommendations,
-        featuresByCategory: {} as Record<string, any[]>
+        featuresByCategory: {}
       };
 
       // Group features by category
@@ -5159,7 +5160,7 @@ This password expires in 24 hours.
 
       if (format === 'waze') {
         // Generate Waze-compatible URLs
-        const wazeUrls = waypoints.map((wp: any) => 
+        const wazeUrls = waypoints.map(wp => 
           `https://waze.com/ul?navigate=yes&ll=${wp.lat},${wp.lng}&address=${encodeURIComponent(wp.address)}`
         );
         res.json({ 
@@ -5171,7 +5172,7 @@ This password expires in 24 hours.
         });
       } else if (format === 'googlemaps') {
         // Generate Google Maps URLs
-        const googleUrls = waypoints.map((wp: any) => 
+        const googleUrls = waypoints.map(wp => 
           `https://www.google.com/maps/dir/?api=1&destination=${wp.lat},${wp.lng}&destination_place_id=${encodeURIComponent(wp.address)}`
         );
         res.json({ 
@@ -5221,7 +5222,7 @@ This password expires in 24 hours.
       const updatedAppointment = await storage.updateAppointment(appointmentId, {
         status: 'completed',
         notes: notes || `Completed by driver ${driverId}`,
-        // completedAt field removed as it doesn't exist in the schema
+        completedAt: completedAt || new Date().toISOString()
       });
 
       res.json({
@@ -5335,7 +5336,7 @@ This password expires in 24 hours.
       res.json({
         enabled: true,
         provider: gatewayConfig.gatewayType,
-        publicKey: (gatewayConfig.config as any)?.publicKey || null
+        publicKey: gatewayConfig.config?.publicKey || null
       });
     } catch (error) {
       console.error("Error fetching payment gateway config:", error);
@@ -5445,14 +5446,14 @@ This password expires in 24 hours.
       }
       
       const filteredSales = salesData.filter(sale => {
-        const saleDate = new Date(sale.createdAt || new Date());
+        const saleDate = new Date(sale.createdAt);
         return saleDate >= startDate && saleDate <= endDate;
       });
       
       const totalRevenue = filteredSales.reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0);
       const monthlyRevenue = period === 'current_month' ? totalRevenue : 
         salesData.filter(sale => {
-          const saleDate = new Date(sale.createdAt || new Date());
+          const saleDate = new Date(sale.createdAt);
           return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
         }).reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0);
       
@@ -5460,8 +5461,8 @@ This password expires in 24 hours.
       const recentTransactions = await Promise.all(
         filteredSales.slice(-10).map(async (sale) => {
           const items = await storage.getSaleItems(sale.id);
-          const client = (sale as any).clientId ? await storage.getClients((sale as any).tenantId).then(clients => clients.find(c => c.id === (sale as any).clientId)) : null;
-          const pet = (sale as any).petId ? await storage.getPetById((sale as any).petId) : null;
+          const client = sale.clientId ? await storage.getClient(sale.clientId) : null;
+          const pet = sale.petId ? await storage.getPet(sale.petId) : null;
           
           return {
             id: sale.id,
@@ -5470,7 +5471,7 @@ This password expires in 24 hours.
             petName: pet?.name || 'N/A',
             service: items.map(item => item.name).join(', ') || 'Venta general',
             amount: parseFloat(sale.totalAmount),
-            status: (sale as any).status === 'completed' ? 'paid' : 'pending'
+            status: sale.status === 'completed' ? 'paid' : 'pending'
           };
         })
       );
@@ -5478,7 +5479,7 @@ This password expires in 24 hours.
       res.json({
         totalRevenue,
         monthlyRevenue,
-        outstandingInvoices: filteredSales.filter(sale => (sale as any).status === 'pending').length,
+        outstandingInvoices: filteredSales.filter(sale => sale.status === 'pending').length,
         totalTransactions: filteredSales.length,
         recentTransactions: recentTransactions.reverse()
       });
@@ -5501,20 +5502,18 @@ This password expires in 24 hours.
       const exportData = await Promise.all(
         salesData.map(async (sale) => {
           const items = await storage.getSaleItems(sale.id);
-          const clients = await storage.getClients(tenantId);
-          const pets = await storage.getPets(tenantId);
-          const client = clients.find(c => c.id === (sale as any).clientId) || null;
-          const pet = pets.find(p => p.id === (sale as any).petId) || null;
+          const client = sale.clientId ? await storage.getClient(sale.clientId) : null;
+          const pet = sale.petId ? await storage.getPet(sale.petId) : null;
           
           return {
-            Fecha: sale.createdAt ? new Date(sale.createdAt).toLocaleDateString('es-MX') : 'N/A',
+            Fecha: new Date(sale.createdAt).toLocaleDateString('es-MX'),
             Cliente: client?.name || 'Cliente General',
             Mascota: pet?.name || 'N/A',
             Servicio: items.map(item => item.name).join(', '),
-            Subtotal: parseFloat((sale as any).subtotal || '0'),
-            IVA: parseFloat((sale as any).taxAmount || '0'),
+            Subtotal: parseFloat(sale.subtotal),
+            IVA: parseFloat(sale.taxAmount),
             Total: parseFloat(sale.totalAmount),
-            Estado: (sale as any).status === 'completed' ? 'Pagado' : 'Pendiente',
+            Estado: sale.status === 'completed' ? 'Pagado' : 'Pendiente',
             'Método de Pago': sale.paymentMethod || 'Efectivo'
           };
         })
@@ -5575,7 +5574,7 @@ This password expires in 24 hours.
           return {
             id: company.id,
             name: company.name,
-            contactEmail: 'N/A',
+            email: company.email,
             subscriptionPlan: plan?.displayName || 'Sin Plan',
             subscriptionStatus: subscription?.status || 'inactive',
             vetsitesUsed: tenants.length,
@@ -5602,6 +5601,7 @@ This password expires in 24 hours.
       // Create company
       const company = await storage.createCompany({
         name,
+        email,
         subscriptionStatus: 'trial',
         subscriptionPlan: 'trial'
       });
@@ -5810,7 +5810,7 @@ This password expires in 24 hours.
         let errorMessage = error.message || "Unknown email provider error";
         let helpText = "";
         
-        if (error.name === 'validation_error' && (error as any).error?.includes('domain is not verified')) {
+        if (error.name === 'validation_error' && error.error?.includes('domain is not verified')) {
           errorMessage = "Domain verification required";
           helpText = "Please verify your domain at https://resend.com/domains or use a verified domain like your-domain@resend.dev";
         }
@@ -5984,7 +5984,7 @@ This password expires in 24 hours.
 
   app.post('/api/admin/receipt-templates', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = req.user?.claims?.sub;
       if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
@@ -6897,7 +6897,7 @@ This password expires in 24 hours.
           "email-automation": { limit: null } // Unlimited
         };
         
-        const defaultLimit = (serviceDefaults as any)[serviceId]?.limit || 1000;
+        const defaultLimit = serviceDefaults[serviceId]?.limit || 1000;
         return res.json({
           used: 0,
           limit: defaultLimit,

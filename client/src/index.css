@@ -409,7 +409,7 @@ html.dark select option {
   --popover-foreground: hsl(20, 14.3%, 4.1%);
   --card: hsl(0, 0%, 100%);
   --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 78%);
+  --border: hsl(20, 5.9%, 90%);
   --input: hsl(20, 5.9%, 90%);
   --primary: hsl(207, 90%, 54%);
   --primary-foreground: hsl(211, 100%, 99%);
@@ -467,35 +467,6 @@ html.dark select option {
     @apply font-sans antialiased bg-background text-foreground;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
-}
-
-/* Force header border using pseudo-element - cannot be overridden */
-.force-header-border {
-  position: relative !important;
-}
-
-.force-header-border::after {
-  content: '' !important;
-  position: absolute !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  height: 2px !important;
-  background-color: hsl(20, 5.9%, 78%) !important;
-  z-index: 999 !important;
-  pointer-events: none !important;
-}
-
-/* Ensure calendar card border is visible with maximum specificity */
-.fixed.flex.flex-col.border.border-border {
-  border: 2px solid hsl(20, 5.9%, 78%) !important;
-  border-radius: 0.5rem !important;
-}
-
-/* Additional fallback for calendar card */
-[style*="top: 140px"] {
-  border: 2px solid hsl(20, 5.9%, 78%) !important;
-  border-radius: 0.5rem !important;
 }
 
 @layer components {

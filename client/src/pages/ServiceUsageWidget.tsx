@@ -6,21 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, TrendingUp, CheckCircle } from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
 
-interface UsageSummary {
-  used: number;
-  limit: number;
-  percentage: number;
-}
-
 interface ServiceUsageWidgetProps {
   serviceId: string;
   serviceName: string;
 }
 
-function ServiceUsageWidget({ serviceId, serviceName }: ServiceUsageWidgetProps) {
+export function ServiceUsageWidget({ serviceId, serviceName }: ServiceUsageWidgetProps) {
   const { currentTenant } = useTenant();
   
-  const { data: usageSummary, isLoading } = useQuery<UsageSummary>({
+  const { data: usageSummary, isLoading } = useQuery({
     queryKey: ['/api/store/usage-summary', currentTenant?.id, serviceId],
     enabled: !!currentTenant?.id && !!serviceId,
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -42,7 +36,7 @@ function ServiceUsageWidget({ serviceId, serviceName }: ServiceUsageWidgetProps)
     );
   }
 
-  const { used, limit, percentage } = usageSummary || { used: 0, limit: 0, percentage: 0 };
+  const { used, limit, percentage } = usageSummary;
   const isNearLimit = percentage >= 85;
   const isOverLimit = percentage >= 100;
 
@@ -110,5 +104,3 @@ function ServiceUsageWidget({ serviceId, serviceName }: ServiceUsageWidgetProps)
     </Card>
   );
 }
-
-export default ServiceUsageWidget;

@@ -49,7 +49,7 @@ export function InventorySelector({
                          item.sku?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
     const notAlreadySelected = !selectedItems.find(selected => selected.itemId === item.id);
-    return matchesSearch && matchesCategory && notAlreadySelected && (item.currentStock || 0) > 0;
+    return matchesSearch && matchesCategory && notAlreadySelected && item.currentStock > 0;
   });
 
   const getCategoryIcon = (category: string) => {
@@ -207,14 +207,14 @@ export function InventorySelector({
                             <Input
                               type="number"
                               min="1"
-                              max={item.currentStock ?? 0}
+                              max={item.currentStock}
                               placeholder="Qty"
                               className="w-16 text-center"
                               data-testid={`input-add-quantity-${item.id}`}
                               onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
                                   const quantity = parseInt((e.target as HTMLInputElement).value) || 1;
-                                  addItem(item, Math.min(quantity, item.currentStock ?? 0));
+                                  addItem(item, Math.min(quantity, item.currentStock));
                                   (e.target as HTMLInputElement).value = '';
                                 }
                               }}
@@ -224,7 +224,7 @@ export function InventorySelector({
                               onClick={() => {
                                 const quantityInput = document.querySelector(`[data-testid="input-add-quantity-${item.id}"]`) as HTMLInputElement;
                                 const quantity = parseInt(quantityInput?.value) || 1;
-                                addItem(item, Math.min(quantity, item.currentStock ?? 0));
+                                addItem(item, Math.min(quantity, item.currentStock));
                                 if (quantityInput) quantityInput.value = '';
                               }}
                               data-testid={`button-add-item-${item.id}`}

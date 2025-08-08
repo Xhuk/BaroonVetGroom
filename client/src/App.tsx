@@ -1,202 +1,152 @@
 import { Switch, Route } from "wouter";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import { TimezoneProvider } from "./contexts/TimezoneContext";
-import { TenantProvider } from "./contexts/TenantContext";
-import { DeviceBlocker } from "./components/DeviceBlocker";
-import { useAuth } from "./hooks/useAuth";
-import { useScreenSize } from "./hooks/useScreenSize";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { TenantProvider } from "@/contexts/TenantContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { RoleImpersonationProvider } from "@/hooks/useRoleImpersonation";
+import { useAuth } from "@/hooks/useAuth";
+import NotFound from "@/pages/not-found";
+import Landing from "@/pages/Landing";
+import Dashboard from "@/pages/Dashboard";
+import Admin from "@/pages/Admin";
+import SuperAdmin from "@/pages/SuperAdmin";
+import SuperAdminMonitoring from "@/pages/SuperAdminMonitoring";
+import SuperAdminRouteConfig from "@/pages/SuperAdminRouteConfig";
+import SuperAdminRBAC from "@/pages/SuperAdminRBAC";
+import SuperAdminReports from "@/pages/SuperAdminReports";
+import BrochureEditor from "@/pages/BrochureEditor";
+import EnterpriseSubscriptionAdmin from "@/pages/EnterpriseSubscriptionAdmin";
+import MobileAdmin from "@/pages/MobileAdmin";
+import AdminSettings from "@/pages/AdminSettings";
+import AdminBusinessHours from "@/pages/AdminBusinessHours";
+import AdminBillingConfig from "@/pages/AdminBillingConfig";
+import Appointments from "@/pages/Appointments";
+import BookingWizard from "@/pages/BookingWizard";
+import Clients from "@/pages/Clients";
+import Inventory from "@/pages/Inventory";
+import DeliveryPlan from "@/pages/DeliveryPlan";
+import RoutePlanMap from "@/pages/RoutePlanMap";
+import DeliveryTracking from "@/pages/DeliveryTracking";
+import AdminVanConfig from "@/pages/AdminVanConfig";
+import Billing from "@/pages/Billing";
+import Cashier from "@/pages/Cashier";
+import MedicalRecords from "@/pages/MedicalRecords";
+import MedicalAppointments from "@/pages/MedicalAppointments";
+import GroomingServices from "@/pages/GroomingServices";
+import MobileUpload from "@/pages/MobileUpload";
+import FollowUpTasks from "@/pages/FollowUpTasks";
+import AdminPaymentGateways from "@/pages/AdminPaymentGateways";
+import AdminFollowUpConfig from "@/pages/AdminFollowUpConfig";
+import AdminExternalServices from "@/pages/AdminExternalServices";
+import BillingManagement from "@/pages/BillingManagement";
+import { VersionedSuperAdminDashboard } from "@/components/VersionedSuperAdminDashboard";
+import EmailConfigurationAdmin from "@/pages/EmailConfigurationAdmin";
+import SubscriptionCheckout from "@/pages/SubscriptionCheckout";
+import CompanyOnboarding from "@/pages/CompanyOnboarding";
+import ServiceStore from "@/pages/ServiceStore";
 
-// Pages
-import Landing from "./pages/Landing";
-import Dashboard from "./pages/Dashboard";
-import Appointments from "./pages/Appointments";
-import Clients from "./pages/Clients";
-import MedicalAppointments from "./pages/MedicalAppointments";
-import GroomingServices from "./pages/GroomingServices";
-import Inventory from "./pages/Inventory";
-import FollowUpTasks from "./pages/FollowUpTasks";
-import DeliveryPlan from "./pages/DeliveryPlan";
-import Cashier from "./pages/Cashier";
-import Admin from "./pages/Admin";
-import SuperAdmin from "./pages/SuperAdmin";
-import NotFound from "./pages/not-found";
+import WebhookIntegrations from "@/pages/WebhookIntegrations";
+import SubscriptionLanding from "@/pages/SubscriptionLanding";
+import TempLinkHandler from "@/pages/TempLinkHandler";
+import DriverRoute from "@/pages/DriverRoute";
+import DriverMobile from "@/pages/DriverMobile";
+import SalesDelivery from "@/pages/SalesDelivery";
+import ReceiptTemplatesAdmin from "@/pages/ReceiptTemplatesAdmin";
+import CompanyClinicAdmin from "@/pages/CompanyClinicAdmin";
+import { InstantNavigation } from "@/components/InstantNavigation";
+import { DebugBanner } from "@/components/DebugBanner";
+import { DeviceBlocker } from "@/components/DeviceBlocker";
 
-// Admin Pages
-import AdminSettings from "./pages/AdminSettings";
-import AdminBusinessHours from "./pages/AdminBusinessHours";
-import AdminVanConfig from "./pages/AdminVanConfig";
-import AdminFollowUpConfig from "./pages/AdminFollowUpConfig";
-import AdminPaymentGateways from "./pages/AdminPaymentGateways";
-import AdminBillingConfig from "./pages/AdminBillingConfig";
-import AdminExternalServices from "./pages/AdminExternalServices";
-
-// SuperAdmin Pages
-import SuperAdminMonitoring from "./pages/SuperAdminMonitoring";
-import SuperAdminRBAC from "./pages/SuperAdminRBAC";
-import SuperAdminReports from "./pages/SuperAdminReports";
-import SuperAdminRouteConfig from "./pages/SuperAdminRouteConfig";
-import EnterpriseSubscriptionAdmin from "./pages/EnterpriseSubscriptionAdmin";
-import TenantBillingAdmin from "./pages/TenantBillingAdmin";
-import EmailConfigurationAdmin from "./pages/EmailConfigurationAdmin";
-
-// Other specialized pages
-import BookingWizard from "./pages/BookingWizard";
-import BillingManagement from "./pages/BillingManagement";
-import Billing from "./pages/Billing";
-import MedicalRecords from "./pages/MedicalRecords";
-import CompanyOnboarding from "./pages/CompanyOnboarding";
-import CompanyClinicAdmin from "./pages/CompanyClinicAdmin";
-import SubscriptionCheckout from "./pages/SubscriptionCheckout";
-import SubscriptionLanding from "./pages/SubscriptionLanding";
-import MobileAdmin from "./pages/MobileAdmin";
-import DriverMobile from "./pages/DriverMobile";
-import DriverRoute from "./pages/DriverRoute";
-import DeliveryTracking from "./pages/DeliveryTracking";
-import SalesDelivery from "./pages/SalesDelivery";
-import ServiceStore from "./pages/ServiceStore";
-import WebhookIntegrations from "./pages/WebhookIntegrations";
-import ReceiptTemplatesAdmin from "./pages/ReceiptTemplatesAdmin";
-import BrochureEditor from "./pages/BrochureEditor";
-import MobileUpload from "./pages/MobileUpload";
-import TempLinkHandler from "./pages/TempLinkHandler";
-import RoutePlanMap from "./pages/RoutePlanMap";
-import ServiceUsageWidget from "./pages/ServiceUsageWidget";
-
-// Layout Components
-import { ResponsiveNavigation } from "./components/ResponsiveNavigation";
-import { ResponsiveLayout } from "./components/ResponsiveLayout";
-import { Header } from "./components/Header";
-import { RibbonNavigation } from "./components/RibbonNavigation";
-import { Toaster } from "./components/ui/toaster";
-import { DebugBanner } from "./components/DebugBanner";
-
-// Router component with authentication and responsive layout
 function Router() {
-  const { user, isLoading, isAuthenticated } = useAuth();
-  const { isTabletLandscape } = useScreenSize();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  // NEVER show loading spinner on route changes - always render instantly
+  // Only show auth loading on initial app load when no route is detected
 
-  // Show landing page for unauthenticated users
-  if (!isAuthenticated) {
-    return <Landing />;
-  }
-
-  // Main authenticated app with responsive layout
   return (
-    <div className="min-h-screen bg-background">
+    <DeviceBlocker>
       <DebugBanner />
-      <Header />
-      
-      {/* Tablet landscape ribbon navigation */}
-      {isTabletLandscape && <RibbonNavigation />}
-      
-      {/* Desktop/tablet portrait navigation */}
-      <ResponsiveNavigation />
-      
-      <ResponsiveLayout>
-        <Switch>
-          {/* Main Dashboard */}
-          <Route path="/" component={Dashboard} />
-          
-          {/* Core Modules */}
-          <Route path="/appointments" component={Appointments} />
+      <Switch>
+      {/* INSTANT ROUTING - All routes available immediately, no auth blocking */}
+      <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
+      <Route path="/plans" component={SubscriptionLanding} />
+      <Route path="/checkout" component={SubscriptionCheckout} />
+      <Route path="/onboarding" component={CompanyOnboarding} />
+      <Route path="/temp/:token" component={TempLinkHandler} />
+      <Route path="/driver-route/:routeId" component={DriverRoute} />
+      <Route path="/appointments" component={Appointments} />
+      {isAuthenticated && (
+        <>
+          <Route path="/booking" component={BookingWizard} />
+          <Route path="/booking-wizard" component={BookingWizard} />
           <Route path="/clients" component={Clients} />
+          <Route path="/medical-records" component={MedicalRecords} />
           <Route path="/medical-appointments" component={MedicalAppointments} />
           <Route path="/grooming-services" component={GroomingServices} />
-          <Route path="/inventory" component={Inventory} />
           <Route path="/follow-up-tasks" component={FollowUpTasks} />
+          <Route path="/upload/:type/:appointmentId" component={MobileUpload} />
+          <Route path="/inventory" component={Inventory} />
           <Route path="/delivery-plan" component={DeliveryPlan} />
-          <Route path="/cashier" component={Cashier} />
-          
-          {/* Booking and Billing */}
-          <Route path="/booking-wizard" component={BookingWizard} />
+          <Route path="/route-map" component={RoutePlanMap} />
+          <Route path="/sales-delivery" component={SalesDelivery} />
           <Route path="/billing" component={Billing} />
-          <Route path="/billing-management" component={BillingManagement} />
-          <Route path="/medical-records" component={MedicalRecords} />
-          
-          {/* Admin Routes */}
+          <Route path="/cashier" component={Cashier} />
           <Route path="/admin" component={Admin} />
           <Route path="/admin/settings" component={AdminSettings} />
           <Route path="/admin/business-hours" component={AdminBusinessHours} />
-          <Route path="/admin/van-config" component={AdminVanConfig} />
-          <Route path="/admin/follow-up-config" component={AdminFollowUpConfig} />
-          <Route path="/admin/payment-gateways" component={AdminPaymentGateways} />
           <Route path="/admin/billing-config" component={AdminBillingConfig} />
+          <Route path="/admin/payment-gateways" component={AdminPaymentGateways} />
+          <Route path="/admin/follow-up-config" component={AdminFollowUpConfig} />
+          <Route path="/admin/van-config" component={AdminVanConfig} />
           <Route path="/admin/external-services" component={AdminExternalServices} />
-          
-          {/* SuperAdmin Routes */}
+          <Route path="/admin/receipt-templates" component={ReceiptTemplatesAdmin} />
+          <Route path="/admin/company-clinic" component={CompanyClinicAdmin} />
+          <Route path="/store" component={ServiceStore} />
           <Route path="/superadmin" component={SuperAdmin} />
           <Route path="/superadmin/monitoring" component={SuperAdminMonitoring} />
-          <Route path="/superadmin/rbac" component={SuperAdminRBAC} />
-          <Route path="/superadmin/reports" component={SuperAdminReports} />
           <Route path="/superadmin/route-config" component={SuperAdminRouteConfig} />
-          <Route path="/superadmin/enterprise-subscription" component={EnterpriseSubscriptionAdmin} />
-          <Route path="/superadmin/tenant-billing" component={TenantBillingAdmin} />
+          <Route path="/superadmin/rbac" component={SuperAdminRBAC} />
+          <Route path="/superadmin/webhook-integrations" component={WebhookIntegrations} />
+          <Route path="/superadmin/billing" component={BillingManagement} />
           <Route path="/superadmin/email-config" component={EmailConfigurationAdmin} />
-          
-          {/* Company Management */}
-          <Route path="/company-onboarding" component={CompanyOnboarding} />
-          <Route path="/company-clinic-admin" component={CompanyClinicAdmin} />
-          
-          {/* Subscription Management */}
-          <Route path="/subscription-checkout" component={SubscriptionCheckout} />
-          <Route path="/subscription-landing" component={SubscriptionLanding} />
-          
-          {/* Mobile Routes */}
-          <Route path="/mobile-admin" component={MobileAdmin} />
-          <Route path="/driver-mobile" component={DriverMobile} />
-          <Route path="/driver-route" component={DriverRoute} />
-          <Route path="/mobile-upload" component={MobileUpload} />
-          
-          {/* Delivery and Transportation */}
-          <Route path="/delivery-tracking" component={DeliveryTracking} />
-          <Route path="/sales-delivery" component={SalesDelivery} />
-          <Route path="/route-plan-map" component={RoutePlanMap} />
-          
-          {/* Service Management */}
-          <Route path="/service-store" component={ServiceStore} />
-          <Route path="/service-usage-widget" component={ServiceUsageWidget} />
-          
-          {/* Configuration and Templates */}
-          <Route path="/webhook-integrations" component={WebhookIntegrations} />
-          <Route path="/receipt-templates-admin" component={ReceiptTemplatesAdmin} />
-          <Route path="/brochure-editor" component={BrochureEditor} />
-          
-          {/* Temporary and Utility Routes */}
-          <Route path="/temp-link-handler" component={TempLinkHandler} />
-          
-          {/* Catch-all 404 */}
-          <Route component={NotFound} />
-        </Switch>
-      </ResponsiveLayout>
-      
-      <Toaster />
-    </div>
+          <Route path="/superadmin/reports" component={SuperAdminReports} />
+          <Route path="/superadmin/brochure-editor" component={BrochureEditor} />
+          <Route path="/superadmin/subscriptions" component={EnterpriseSubscriptionAdmin} />
+          <Route path="/superadmin/deployment" component={() => <VersionedSuperAdminDashboard />} />
+        </>
+      )}
+      <Route path="/mobile-admin" component={MobileAdmin} />
+      <Route path="/driver-mobile" component={DriverMobile} />
+      <Route path="/driver-dashboard/:driverId" component={DriverMobile} />
+      <Route path="/temp/:token" component={TempLinkHandler} />
+      <Route component={NotFound} />
+      </Switch>
+    </DeviceBlocker>
   );
 }
 
-// Main App component with all providers
-export default function App() {
+import { TimezoneProvider } from "@/contexts/TimezoneContext";
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TimezoneProvider>
-          <TenantProvider>
-            <DeviceBlocker>
-              <Router />
-            </DeviceBlocker>
-          </TenantProvider>
-        </TimezoneProvider>
-      </ThemeProvider>
+      <TooltipProvider>
+        <ThemeProvider>
+          <TimezoneProvider>
+            <InstantNavigation />
+            <TenantProvider>
+              <RoleImpersonationProvider>
+                <Toaster />
+                <Router />
+              </RoleImpersonationProvider>
+            </TenantProvider>
+          </TimezoneProvider>
+        </ThemeProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
+
+export default App;

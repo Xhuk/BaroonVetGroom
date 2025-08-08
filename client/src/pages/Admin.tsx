@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
+import { Header } from "@/components/Header";
 import { Navigation } from "@/components/Navigation";
 import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -113,12 +114,12 @@ function Admin() {
   });
 
   useEffect(() => {
-    if (roomsData) setRooms(Array.isArray(roomsData) ? roomsData : []);
-    if (servicesData) setServices(Array.isArray(servicesData) ? servicesData : []);
-    if (rolesData) setRoles(Array.isArray(rolesData) ? rolesData : []);
-    if (staffData) setStaff(Array.isArray(staffData) ? staffData : []);
+    if (roomsData) setRooms(roomsData);
+    if (servicesData) setServices(servicesData);
+    if (rolesData) setRoles(rolesData);
+    if (staffData) setStaff(staffData);
     if (deliveryConfigData) {
-      setDeliveryConfig(deliveryConfigData || {});
+      setDeliveryConfig(deliveryConfigData);
     }
   }, [roomsData, servicesData, rolesData, staffData, deliveryConfigData]);
 
@@ -178,7 +179,7 @@ function Admin() {
     freeEndTime: '20:00'
   });
   
-  const [editingStaff, setEditingStaff] = useState<any>(null);
+  const [editingStaff, setEditingStaff] = useState(null);
   const [editStaffData, setEditStaffData] = useState({
     name: '',
     role: '',
@@ -189,8 +190,8 @@ function Admin() {
   const [replacementStaffId, setReplacementStaffId] = useState('');
   
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [availableRoles, setAvailableRoles] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [availableRoles, setAvailableRoles] = useState([]);
   const [newRoleData, setNewRoleData] = useState({
     name: '',
     displayName: '',
@@ -423,7 +424,7 @@ function Admin() {
   // Handle create role
   const handleCreateRole = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
+    const formData = new FormData(e.target);
     
     const data = {
       name: formData.get('name'),
@@ -448,7 +449,7 @@ function Admin() {
   // Handle create staff
   const handleCreateStaff = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
+    const formData = new FormData(e.target);
     
     const data = {
       name: formData.get('name'),
@@ -622,7 +623,7 @@ function Admin() {
   // Handle create service
   const handleCreateService = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
+    const formData = new FormData(e.target);
     const data = {
       name: formData.get('name'),
       type: formData.get('type'),
@@ -728,13 +729,13 @@ function Admin() {
   });
 
   // Handle edit role
-  const handleEditRole = (role: any) => {
+  const handleEditRole = (role) => {
     setEditingRole(role);
     setEditRoleData({
       name: role.name,
       displayName: role.displayName,
       department: role.department,
-      permissions: [...(role.permissions || [])]
+      permissions: [...role.permissions]
     });
   };
 
@@ -756,14 +757,14 @@ function Admin() {
   };
 
   // Handle user role assignment
-  const handleAssignRole = (user: any) => {
+  const handleAssignRole = (user) => {
     setSelectedUser(user);
     setAvailableRoles(roles);
     setIsAssignDialogOpen(true);
   };
 
   // Handle save user role assignment
-  const handleSaveRoleAssignment = (newRoleName: any) => {
+  const handleSaveRoleAssignment = (newRoleName) => {
     if (selectedUser && newRoleName) {
       // Update user's current role
       setUsers(prev => prev.map(user => 
@@ -990,6 +991,8 @@ function Admin() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans">
+      <Header />
+      
       <main className="p-6 pb-40">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">

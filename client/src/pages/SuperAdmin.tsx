@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { Header } from "@/components/Header";
 import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NewCompanyDialog } from "@/components/NewCompanyDialog";
@@ -270,6 +271,8 @@ export default function SuperAdmin() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header />
+      
       <main className="p-2 sm:p-4 lg:p-6">
         <div className="max-w-7xl mx-auto">
           <BackButton className="mb-4" />

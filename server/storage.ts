@@ -389,7 +389,7 @@ export interface IStorage {
   // Missing methods used in routes
   getAppointmentsByDate(tenantId: string, date: string): Promise<Appointment[]>;
   getFraccionamientos(): Promise<any[]>;
-  getDeliveryRoutes(tenantId: string, date?: string): Promise<any[]>;
+  getDeliveryRoutes(tenantId: string): Promise<any[]>;
   createUser(userData: any): Promise<User>;
   createUserCompany(userId: string, companyId: string): Promise<any>;
   getCompany(companyId: string): Promise<Company | undefined>;
@@ -2818,7 +2818,7 @@ export class DatabaseStorage implements IStorage {
     return [];
   }
 
-  async getDeliveryRoutes(tenantId: string, date?: string): Promise<any[]> {
+  async getDeliveryRoutes(tenantId: string): Promise<any[]> {
     // Return empty array for now - delivery routes functionality
     return [];
   }

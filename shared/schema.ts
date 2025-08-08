@@ -1602,21 +1602,3 @@ export type InsertExternalServiceSubscription = typeof externalServiceSubscripti
 export type ReceiptTemplate = typeof receiptTemplates.$inferSelect;
 export type InsertReceiptTemplate = typeof receiptTemplates.$inferInsert;
 
-// Dashboard Stats Interface
-export interface DashboardStats {
-  appointmentsToday: number;
-  groomingAppointments: number;
-  medicalAppointments: number;
-  vaccinationAppointments: number;
-  scheduledDeliveries: number;
-  activeStaffToday: number;
-  teamMembers: number;
-  roomUtilization: number;
-  totalClients?: number;
-  totalPets?: number;
-  pendingPayments?: number;
-  entriesDelivered?: number;
-  deliveriesToday?: number;
-  serviciosServidos?: number;
-}
-
