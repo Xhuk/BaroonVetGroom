@@ -6048,7 +6048,7 @@ This password expires in 24 hours.
   });
 
   // Helper function to generate QR code data URL with actual transaction data
-  function generateQRCodeDataUrl(sale: any, totalAmount: number) {
+  function generateQRCodeDataUrl(sale: any, totalAmount: number, company?: any, tenant?: any) {
     // QR Code contains actual receipt data
     const qrData = {
       receiptId: sale.receiptId,
@@ -6057,7 +6057,10 @@ This password expires in 24 hours.
       total: totalAmount.toFixed(2),
       date: new Date(sale.createdAt).toLocaleDateString('es-ES'),
       paymentStatus: sale.paymentStatus,
-      deliveryStatus: sale.deliveryStatus
+      deliveryStatus: sale.deliveryStatus,
+      company: company?.name || '',
+      clinic: tenant?.name || '',
+      website: company?.website || ''
     };
     
     // Generate QR code as SVG (simplified version for demonstration)
@@ -6118,7 +6121,7 @@ This password expires in 24 hours.
     }).join('');
     
     // Generate QR code with actual transaction data
-    const qrCodeDataUrl = generateQRCodeDataUrl(sale, totalAmount);
+    const qrCodeDataUrl = generateQRCodeDataUrl(sale, totalAmount, company, tenant);
     
     // Use template configuration or default styling
     const logoHtml = template?.logoUrl ? 
@@ -6129,8 +6132,11 @@ This password expires in 24 hours.
     const clinicName = tenant?.name || 'Clínica';
     const companyAddress = company?.address || '';
     const companyPhone = company?.phone || '';
+    const companyWebsite = company?.website || '';
+    const companyEmail = company?.email || '';
     const clinicAddress = tenant?.address || '';
     const clinicPhone = tenant?.phone || '';
+    const clinicEmail = tenant?.email || '';
     const primaryColor = template?.primaryColor || '#3b82f6';
     const accentColor = template?.accentColor || '#1e40af';
     
@@ -6241,11 +6247,14 @@ This password expires in 24 hours.
                   <p style="margin: 0; font-weight: 600; color: ${primaryColor};">${companyName}</p>
                   ${companyAddress ? `<p style="margin: 2px 0; font-size: 0.9em;">${companyAddress}</p>` : ''}
                   ${companyPhone ? `<p style="margin: 2px 0; font-size: 0.9em;">Tel: ${companyPhone}</p>` : ''}
+                  ${companyEmail ? `<p style="margin: 2px 0; font-size: 0.9em;">Email: ${companyEmail}</p>` : ''}
+                  ${companyWebsite ? `<p style="margin: 2px 0; font-size: 0.9em;"><a href="${companyWebsite}" style="color: ${primaryColor}; text-decoration: none;">${companyWebsite}</a></p>` : ''}
                 </div>
                 <div style="flex: 1; text-align: right;">
                   <p style="margin: 0; font-weight: 600; color: ${accentColor};">${clinicName}</p>
                   ${clinicAddress ? `<p style="margin: 2px 0; font-size: 0.9em;">${clinicAddress}</p>` : ''}
                   ${clinicPhone ? `<p style="margin: 2px 0; font-size: 0.9em;">Tel: ${clinicPhone}</p>` : ''}
+                  ${clinicEmail ? `<p style="margin: 2px 0; font-size: 0.9em;">Email: ${clinicEmail}</p>` : ''}
                 </div>
               </div>
             </div>
