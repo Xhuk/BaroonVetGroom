@@ -107,16 +107,21 @@ export default function Dashboard() {
             </p>
             <div className="flex gap-4 justify-center">
               <Button 
-                onClick={() => window.location.href = "/api/logout"}
+                onClick={() => {
+                  // Clear all auth data and go to landing page
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  window.location.href = "/";
+                }}
                 variant="outline"
               >
-                Cerrar Sesión
+                Ir a Inicio
               </Button>
               <Button 
-                onClick={() => window.location.reload()}
+                onClick={() => window.location.href = "/api/logout"}
                 variant="default"
               >
-                Recargar
+                Cerrar Sesión
               </Button>
             </div>
           </div>
