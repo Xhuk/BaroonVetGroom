@@ -1,6 +1,5 @@
 import { ResponsiveNavigation } from "@/components/ResponsiveNavigation";
 import { RibbonNavigation } from "@/components/RibbonNavigation";
-import { Header } from "@/components/Header";
 import { useScreenSize } from "@/hooks/useScreenSize";
 import { cn } from "@/lib/utils";
 
@@ -39,8 +38,7 @@ export function ResponsiveLayout({ children, showNavigation = true }: Responsive
   console.log(`📱 ResponsiveLayout: Device ${deviceType}, landscape: ${isTabletLandscape}, useRibbon: ${shouldUseRibbonNavigation}, hideRibbon: ${shouldHideBottomRibbon}`);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div>
       {showNavigation && <ResponsiveNavigation />}
       <main className={cn(
         "transition-all duration-300",
