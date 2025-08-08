@@ -102,7 +102,7 @@ export default function ReceiptTemplatesAdmin() {
   // Step 3: QR Code options
   const [qrConfig, setQrConfig] = useState({
     enabled: false,
-    position: "bottom-right", // bottom-right, bottom-left, bottom-center
+    position: "left", // left, right
     size: "medium" // small, medium, large
   });
 
@@ -153,27 +153,21 @@ export default function ReceiptTemplatesAdmin() {
     return colorMap[colorScheme] || '#3b82f6';
   };
 
-  // Generate QR Code HTML
+  // Generate QR Code HTML for footer integration
   const generateQrCodeHtml = () => {
     if (!qrConfig.enabled) return '';
     
     const qrSize = {
-      small: '60px',
-      medium: '80px',
-      large: '100px'
+      small: '50px',
+      medium: '60px',
+      large: '70px'
     }[qrConfig.size];
 
-    const positionStyle = {
-      'bottom-right': 'position: absolute; bottom: 20px; right: 20px;',
-      'bottom-left': 'position: absolute; bottom: 20px; left: 20px;',
-      'bottom-center': 'position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);'
-    }[qrConfig.position];
-
     return `
-      <div style="${positionStyle}">
-        <div style="background: white; padding: 8px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
+      <div style="display: flex; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 6px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
           <div style="width: ${qrSize}; height: ${qrSize}; background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9IiMwMDAiLz4KPHJlY3QgeD0iNTYiIHk9IjgiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iIzAwMCIvPgo8cmVjdCB4PSI4IiB5PSI1NiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSIjMDAwIi8+CjxyZWN0IHg9IjMyIiB5PSIzMiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSIjMDAwIi8+CjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjgiIGhlaWdodD0iOCIgZmlsbD0iIzAwMCIvPgo8cmVjdCB4PSI0OCIgeT0iMTYiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiMwMDAiLz4KPHJlY3QgeD0iMTYiIHk9IjQ4IiB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMDAwIi8+CjwvdGc+Cjwvc3ZnPgo=') center/contain no-repeat; border: 1px solid #e5e7eb;"></div>
-          <p style="margin: 4px 0 0; font-size: 10px; text-align: center; color: #6b7280;">Recibo #${hardcodedData.numeroRecibo}</p>
+          <p style="margin: 4px 0 0; font-size: 9px; text-align: center; color: #6b7280; white-space: nowrap;">Recibo #${hardcodedData.numeroRecibo}</p>
         </div>
       </div>
     `;
@@ -343,15 +337,18 @@ export default function ReceiptTemplatesAdmin() {
               </div>
             </div>
 
-            <!-- Footer -->
-            <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280;">
-              <p style="margin: 4px 0; font-size: 13px;">${hardcodedData.empresaWeb} | ${hardcodedData.empresaTelefono}</p>
-              <p style="margin: 4px 0; font-size: 12px;">${hardcodedData.empresaDireccion}</p>
+            <!-- Footer with QR Code -->
+            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                ${qrConfig.position === 'left' ? generateQrCodeHtml() : ''}
+                <div style="text-align: center; flex: 1;">
+                  <p style="margin: 4px 0; font-size: 13px;">${hardcodedData.empresaWeb} | ${hardcodedData.empresaTelefono}</p>
+                  <p style="margin: 4px 0; font-size: 12px;">${hardcodedData.empresaDireccion}</p>
+                </div>
+                ${qrConfig.position === 'right' ? generateQrCodeHtml() : ''}
+              </div>
             </div>
           </div>
-          
-          <!-- QR Code -->
-          ${generateQrCodeHtml()}
         </div>
       `
     },
@@ -428,15 +425,18 @@ export default function ReceiptTemplatesAdmin() {
               </div>
             </div>
 
-            <!-- Footer -->
-            <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280;">
-              <p style="margin: 4px 0; font-size: 13px;">${hardcodedData.empresaWeb} | ${hardcodedData.empresaTelefono}</p>
-              <p style="margin: 4px 0; font-size: 12px;">${hardcodedData.empresaDireccion}</p>
+            <!-- Footer with QR Code -->
+            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                ${qrConfig.position === 'left' ? generateQrCodeHtml() : ''}
+                <div style="text-align: center; flex: 1;">
+                  <p style="margin: 4px 0; font-size: 13px;">${hardcodedData.empresaWeb} | ${hardcodedData.empresaTelefono}</p>
+                  <p style="margin: 4px 0; font-size: 12px;">${hardcodedData.empresaDireccion}</p>
+                </div>
+                ${qrConfig.position === 'right' ? generateQrCodeHtml() : ''}
+              </div>
             </div>
           </div>
-          
-          <!-- QR Code -->
-          ${generateQrCodeHtml()}
         </div>
       `
     }
@@ -484,10 +484,31 @@ export default function ReceiptTemplatesAdmin() {
       }
 
       // Set the logo URL (extract from the upload URL)
-      const url = new URL(response.uploadURL);
-      const logoPath = url.pathname;
-      setLogoUrl(`/objects${logoPath.replace(/^\/[^\/]+/, '')}`);
-      setLogoFile(file);
+      const uploadUrl = response.uploadURL;
+      console.log('Upload URL received:', uploadUrl);
+      
+      try {
+        const url = new URL(uploadUrl);
+        const logoPath = url.pathname;
+        console.log('Extracted path:', logoPath);
+        
+        // Extract the object path from the GCS URL
+        const pathMatch = logoPath.match(/\/([^/]+\/.+)$/);
+        if (pathMatch) {
+          const objectPath = `/objects/${pathMatch[1].replace(/^[^/]+\//, '')}`;
+          console.log('Final logo URL:', objectPath);
+          setLogoUrl(objectPath);
+        } else {
+          // Fallback: use the full upload URL temporarily
+          setLogoUrl(uploadUrl);
+        }
+        setLogoFile(file);
+      } catch (error) {
+        console.error('Error parsing upload URL:', error);
+        // Use the upload URL directly as fallback
+        setLogoUrl(uploadUrl);
+        setLogoFile(file);
+      }
 
       toast({
         title: "Logo subido",
@@ -1012,9 +1033,8 @@ export default function ReceiptTemplatesAdmin() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="bottom-right">Abajo Derecha</SelectItem>
-                          <SelectItem value="bottom-left">Abajo Izquierda</SelectItem>
-                          <SelectItem value="bottom-center">Abajo Centro</SelectItem>
+                          <SelectItem value="left">Izquierda del Pie</SelectItem>
+                          <SelectItem value="right">Derecha del Pie</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
