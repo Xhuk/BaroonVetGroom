@@ -2991,6 +2991,121 @@ export class DatabaseStorage implements IStorage {
     return undefined;
   }
 
+  // Mobile Admin specific methods
+  async getSubscriptionStatistics(): Promise<{
+    active: number;
+    trial: number;
+    expired: number;
+    inactive: number;
+    total: number;
+    recentlyActivated: number;
+  }> {
+    try {
+      // Get all subscription counts
+      const [active] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(companySubscriptions)
+        .where(eq(companySubscriptions.status, 'active'));
+      
+      const [trial] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(companySubscriptions)
+        .where(eq(companySubscriptions.status, 'trial'));
+      
+      const [expired] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(companySubscriptions)
+        .where(eq(companySubscriptions.status, 'expired'));
+      
+      const [inactive] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(companySubscriptions)
+        .where(eq(companySubscriptions.status, 'inactive'));
+      
+      const [total] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(companySubscriptions);
+      
+      // Get recently activated (last 24 hours)
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const [recentlyActivated] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(companySubscriptions)
+        .where(
+          and(
+            eq(companySubscriptions.status, 'active'),
+            gte(companySubscriptions.createdAt, yesterday)
+          )
+        );
+      
+      return {
+        active: active?.count || 0,
+        trial: trial?.count || 0,
+        expired: expired?.count || 0,
+        inactive: inactive?.count || 0,
+        total: total?.count || 0,
+        recentlyActivated: recentlyActivated?.count || 0,
+      };
+    } catch (error) {
+      console.error('Error fetching subscription statistics:', error);
+      return {
+        active: 0,
+        trial: 0,
+        expired: 0,
+        inactive: 0,
+        total: 0,
+        recentlyActivated: 0,
+      };
+    }
+  }
+
+  async getRecentCriticalActivities(): Promise<Array<{
+    id: string;
+    type: string;
+    description: string;
+    timestamp: string;
+    status: 'success' | 'warning' | 'error';
+  }>> {
+    try {
+      // Get recent subscription changes (last 48 hours)
+      const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+      
+      const subscriptionActivities = await db
+        .select({
+          id: companySubscriptions.id,
+          companyName: companies.name,
+          status: companySubscriptions.status,
+          createdAt: companySubscriptions.createdAt,
+          updatedAt: companySubscriptions.updatedAt,
+        })
+        .from(companySubscriptions)
+        .leftJoin(companies, eq(companySubscriptions.companyId, companies.id))
+        .where(
+          or(
+            gte(companySubscriptions.createdAt, twoDaysAgo),
+            gte(companySubscriptions.updatedAt, twoDaysAgo)
+          )
+        )
+        .orderBy(desc(companySubscriptions.updatedAt))
+        .limit(10);
+      
+      const activities = subscriptionActivities.map(sub => ({
+        id: sub.id,
+        type: 'subscription',
+        description: `${sub.companyName || 'Unknown Company'} - Subscription ${sub.status}`,
+        timestamp: (sub.updatedAt || sub.createdAt || new Date()).toISOString(),
+        status: sub.status === 'active' ? 'success' as const :
+                sub.status === 'expired' ? 'error' as const :
+                'warning' as const,
+      }));
+      
+      return activities;
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+      return [];
+    }
+  }
+
 }
 
 export const storage = new DatabaseStorage();

@@ -17,6 +17,7 @@ import SuperAdminRouteConfig from "@/pages/SuperAdminRouteConfig";
 import SuperAdminRBAC from "@/pages/SuperAdminRBAC";
 import SuperAdminReports from "@/pages/SuperAdminReports";
 import EnterpriseSubscriptionAdmin from "@/pages/EnterpriseSubscriptionAdmin";
+import MobileAdmin from "@/pages/MobileAdmin";
 import AdminSettings from "@/pages/AdminSettings";
 import AdminBusinessHours from "@/pages/AdminBusinessHours";
 import AdminBillingConfig from "@/pages/AdminBillingConfig";
@@ -112,6 +113,7 @@ function Router() {
           <Route path="/superadmin/deployment" component={() => <VersionedSuperAdminDashboard />} />
         </>
       )}
+      <Route path="/mobile-admin" component={MobileAdmin} />
       <Route path="/driver-mobile" component={DriverMobile} />
       <Route path="/driver-dashboard/:driverId" component={DriverMobile} />
       <Route path="/temp/:token" component={TempLinkHandler} />

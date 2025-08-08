@@ -1,0 +1,40 @@
+{
+  "name": "VetAdmin Mobile",
+  "short_name": "VetAdmin",
+  "description": "Mobile administration dashboard for veterinary management system",
+  "start_url": "/mobile-admin",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e293b",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg", 
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "medical"],
+  "shortcuts": [
+    {
+      "name": "Mobile Admin",
+      "short_name": "Admin",
+      "description": "Access mobile admin dashboard",
+      "url": "/mobile-admin",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

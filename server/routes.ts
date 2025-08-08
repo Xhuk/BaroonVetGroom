@@ -6312,6 +6312,59 @@ This password expires in 24 hours.
     }
   });
 
+  // Mobile Admin API endpoints - restricted to admin account only
+  const isMobileAdmin = async (req: any, res: any, next: any) => {
+    try {
+      const user = req.user;
+      if (!user || user.claims?.sub !== '45804040') { // Your specific user ID
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      next();
+    } catch (error) {
+      console.error("Error checking mobile admin access:", error);
+      res.status(403).json({ message: "Admin access required" });
+    }
+  };
+
+  // Get subscription statistics for mobile admin
+  app.get('/api/mobile-admin/subscription-stats', isAuthenticated, isMobileAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getSubscriptionStatistics();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching subscription stats:", error);
+      res.status(500).json({ message: "Failed to fetch subscription statistics" });
+    }
+  });
+
+  // Get recent critical activities
+  app.get('/api/mobile-admin/recent-activities', isAuthenticated, isMobileAdmin, async (req, res) => {
+    try {
+      const activities = await storage.getRecentCriticalActivities();
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching recent activities:", error);
+      res.status(500).json({ message: "Failed to fetch recent activities" });
+    }
+  });
+
+  // Restart application endpoint
+  app.post('/api/mobile-admin/restart-app', isAuthenticated, isMobileAdmin, async (req, res) => {
+    try {
+      console.log("App restart initiated by mobile admin");
+      res.json({ message: "Restart initiated", timestamp: new Date().toISOString() });
+      
+      // Restart the application after sending response
+      setTimeout(() => {
+        console.log("Restarting application...");
+        process.exit(0); // This will cause the app to restart if using a process manager
+      }, 1000);
+    } catch (error) {
+      console.error("Error restarting app:", error);
+      res.status(500).json({ message: "Failed to restart application" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
