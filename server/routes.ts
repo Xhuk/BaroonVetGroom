@@ -6319,23 +6319,26 @@ This password expires in 24 hours.
         {
           id: "whatsapp-integration",
           name: "WhatsApp Integration",
-          description: "Complete WhatsApp messaging integration with automated appointment confirmations and reminders",
+          description: "Paquete de 1,000 mensajes WhatsApp – $40 USD / $720 MXN",
           category: "Communication",
-          baseCost: 15, // USD per month per clinic (Latenode cost approximation)
-          sellingPrice: 25, // USD per month per clinic (67% markup)
-          profitMargin: 0.40, // 40% profit margin
-          pricingModel: "per_clinic", // Price multiplied by number of active clinics
+          baseCost: 20, // USD per month (Updated cost basis)
+          sellingPrice: 40, // USD per month - $40 USD / $720 MXN
+          profitMargin: 0.50, // 50% profit margin
+          pricingModel: "per_package", // Fixed price per package, not per clinic
           features: [
-            "1,000 messages per month total across all clinics",
-            "Automated appointment confirmations",
-            "Reminder notifications",
-            "Two-way messaging support",
-            "Message templates",
-            "Delivery reports",
-            "Shared message pool across all company locations"
+            "Paquete de 1,000 mensajes WhatsApp",
+            "Mensajes confirmación, recordatorios y seguimiento",
+            "Disponible para todas tus clínicas",
+            "Sin cortes, sin interrupciones",
+            "Visibilidad en tiempo real del uso",
+            "Recarga automática opcional al llegar al 85% de uso",
+            "Entrega garantizada y reportes detallados"
           ],
-          setupFee: 50,
-          status: "available"
+          setupFee: 0, // No setup fee for WhatsApp
+          status: "available",
+          monthlyLimit: 1000, // 1,000 messages per package
+          usageTracking: true,
+          autoRenewalThreshold: 85 // Auto-renewal at 85% usage
         },
         {
           id: "sms-notifications",
@@ -6668,6 +6671,243 @@ This password expires in 24 hours.
     } catch (error) {
       console.error("Error restarting app:", error);
       res.status(500).json({ message: "Failed to restart application" });
+    }
+  });
+
+  // Customer-Facing Service Store API Endpoints
+  // ========================================
+  
+  // Get available services for customers with active service status
+  app.get("/api/store/services/:tenantId", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      // Get tenant and company info
+      const tenant = await storage.getTenant(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ error: "Tenant not found" });
+      }
+      
+      // Get active services for this company
+      const activeServices = await storage.getCompanyActiveServices(tenant.companyId);
+      
+      // Service catalog (same as superadmin but formatted for customers)
+      const servicesCatalog = [
+        {
+          id: "whatsapp-integration",
+          name: "WhatsApp Integration",
+          description: "Paquete de 1,000 mensajes WhatsApp – $40 USD / $720 MXN",
+          category: "Communication",
+          sellingPrice: 40, // Fixed price per package
+          features: [
+            "Paquete de 1,000 mensajes WhatsApp",
+            "Mensajes confirmación, recordatorios y seguimiento",
+            "Disponible para todas tus clínicas",
+            "Sin cortes, sin interrupciones",
+            "Visibilidad en tiempo real del uso",
+            "Recarga automática opcional al llegar al 85% de uso",
+            "Entrega garantizada y reportes detallados"
+          ],
+          setupFee: 0,
+          status: "available",
+          monthlyLimit: 1000,
+          usageTracking: true,
+          autoRenewalThreshold: 85
+        },
+        {
+          id: "sms-notifications",
+          name: "SMS Notifications", 
+          description: "Sistema de notificaciones SMS para recordatorios",
+          category: "Communication",
+          sellingPrice: 15,
+          features: [
+            "500 SMS por mes total",
+            "Recordatorios automáticos",
+            "Plantillas personalizadas",
+            "Seguimiento de entrega"
+          ],
+          setupFee: 25,
+          status: "available",
+          monthlyLimit: 500,
+          usageTracking: true,
+          autoRenewalThreshold: 85
+        },
+        {
+          id: "email-automation",
+          name: "Email Marketing & Automation",
+          description: "Marketing por email y automatización avanzada",
+          category: "Marketing",
+          sellingPrice: 20,
+          features: [
+            "Emails ilimitados",
+            "Workflows automatizados",
+            "Segmentación de clientes",
+            "Análisis y reportes"
+          ],
+          setupFee: 35,
+          status: "available",
+          monthlyLimit: null, // Unlimited
+          usageTracking: false,
+          autoRenewalThreshold: null
+        }
+      ];
+      
+      // Mark services as active and add usage info
+      const servicesWithStatus = servicesCatalog.map(service => {
+        const activeService = activeServices.find(as => as.serviceId === service.id);
+        if (activeService) {
+          return {
+            ...service,
+            isActive: true,
+            activatedAt: activeService.activatedAt,
+            autoRenewal: activeService.autoRenewal,
+            usagePercentage: activeService.usagePercentage || 0,
+            usedAmount: activeService.usedAmount || 0,
+            monthlyLimit: service.monthlyLimit,
+            renewalThreshold: service.autoRenewalThreshold
+          };
+        }
+        return service;
+      });
+      
+      res.json({
+        services: servicesWithStatus,
+        activeServices: activeServices
+      });
+    } catch (error) {
+      console.error("Error fetching store services:", error);
+      res.status(500).json({ error: "Failed to fetch services" });
+    }
+  });
+  
+  // Get clinic count for pricing calculation
+  app.get("/api/store/clinics-count/:tenantId", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      const tenant = await storage.getTenant(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ error: "Tenant not found" });
+      }
+      
+      const clinics = await storage.getCompanyClinics(tenant.companyId);
+      res.json({ count: clinics.length });
+    } catch (error) {
+      console.error("Error fetching clinics count:", error);
+      res.status(500).json({ error: "Failed to fetch clinics count" });
+    }
+  });
+  
+  // Create payment intent for service purchase
+  app.post("/api/store/create-payment-intent", isAuthenticated, async (req, res) => {
+    try {
+      const { serviceId, tenantId } = req.body;
+      
+      if (!serviceId || !tenantId) {
+        return res.status(400).json({ error: "Service ID and Tenant ID are required" });
+      }
+      
+      // Find the service in catalog
+      const servicesCatalog = [
+        {
+          id: "whatsapp-integration",
+          sellingPrice: 40,
+          setupFee: 0
+        },
+        {
+          id: "sms-notifications",
+          sellingPrice: 15,
+          setupFee: 25
+        },
+        {
+          id: "email-automation",
+          sellingPrice: 20,
+          setupFee: 35
+        }
+      ];
+      
+      const service = servicesCatalog.find(s => s.id === serviceId);
+      if (!service) {
+        return res.status(404).json({ error: "Service not found" });
+      }
+      
+      // For now, return a mock client secret
+      // In production, you would integrate with Stripe here
+      const totalAmount = service.sellingPrice + service.setupFee;
+      
+      res.json({
+        clientSecret: `pi_mock_${serviceId}_${Date.now()}`,
+        amount: totalAmount,
+        currency: 'usd',
+        serviceId: serviceId
+      });
+    } catch (error) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ error: "Failed to create payment intent" });
+    }
+  });
+  
+  // Toggle auto-renewal for a service
+  app.post("/api/store/toggle-auto-renewal", isAuthenticated, async (req, res) => {
+    try {
+      const { serviceId, tenantId, autoRenewal } = req.body;
+      
+      if (!serviceId || !tenantId) {
+        return res.status(400).json({ error: "Service ID and Tenant ID are required" });
+      }
+      
+      const tenant = await storage.getTenant(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ error: "Tenant not found" });
+      }
+      
+      // Update auto-renewal setting
+      await storage.updateServiceAutoRenewal(tenant.companyId, serviceId, autoRenewal);
+      
+      res.json({ success: true, message: "Auto-renewal setting updated" });
+    } catch (error) {
+      console.error("Error toggling auto-renewal:", error);
+      res.status(500).json({ error: "Failed to update auto-renewal setting" });
+    }
+  });
+  
+  // Get usage summary for a specific service
+  app.get("/api/store/usage-summary/:tenantId/:serviceId", isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId, serviceId } = req.params;
+      
+      const tenant = await storage.getTenant(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ error: "Tenant not found" });
+      }
+      
+      // Get usage data for the service
+      const usageData = await storage.getServiceUsageData(tenant.companyId, serviceId);
+      
+      if (!usageData) {
+        // Return default usage data if service is not active
+        const serviceDefaults = {
+          "whatsapp-integration": { limit: 1000 },
+          "sms-notifications": { limit: 500 },
+          "email-automation": { limit: null } // Unlimited
+        };
+        
+        const defaultLimit = serviceDefaults[serviceId]?.limit || 1000;
+        return res.json({
+          used: 0,
+          limit: defaultLimit,
+          percentage: 0
+        });
+      }
+      
+      res.json({
+        used: usageData.used || 0,
+        limit: usageData.limit || 1000,
+        percentage: usageData.percentage || 0
+      });
+    } catch (error) {
+      console.error("Error fetching usage summary:", error);
+      res.status(500).json({ error: "Failed to fetch usage summary" });
     }
   });
 

@@ -56,6 +56,7 @@ import {
   saleItems,
   salesOrders,
   salesOrderItems,
+  externalServiceSubscriptions,
   type User,
   type UpsertUser,
   type Company,
@@ -3106,6 +3107,162 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching recent activities:', error);
       return [];
+    }
+  }
+
+  // Service Store Management Methods
+  // ===============================
+  
+  async getCompanyActiveServices(companyId: string): Promise<Array<{
+    serviceId: string;
+    activatedAt: string;
+    autoRenewal: boolean;
+    usagePercentage: number;
+    usedAmount: number;
+    monthlyLimit: number;
+  }>> {
+    try {
+      const result = await db
+        .select({
+          serviceId: externalServiceSubscriptions.serviceName,
+          activatedAt: externalServiceSubscriptions.createdAt,
+          autoRenewal: externalServiceSubscriptions.autoRenewEnabled,
+          usagePercentage: sql<number>`
+            CASE 
+              WHEN ${externalServiceSubscriptions.creditsLimit} > 0 
+              THEN ((${externalServiceSubscriptions.creditsLimit} - ${externalServiceSubscriptions.creditsRemaining})::decimal / ${externalServiceSubscriptions.creditsLimit}::decimal * 100)
+              ELSE 0 
+            END
+          `,
+          usedAmount: sql<number>`(${externalServiceSubscriptions.creditsLimit} - ${externalServiceSubscriptions.creditsRemaining})`,
+          monthlyLimit: externalServiceSubscriptions.creditsLimit,
+        })
+        .from(externalServiceSubscriptions)
+        .where(
+          and(
+            eq(externalServiceSubscriptions.companyId, companyId),
+            eq(externalServiceSubscriptions.status, 'active')
+          )
+        );
+      
+      return result.map(item => ({
+        serviceId: item.serviceId === 'whatsapp' ? 'whatsapp-integration' : 
+                  item.serviceId === 'sms' ? 'sms-notifications' :
+                  item.serviceId === 'email' ? 'email-automation' : item.serviceId,
+        activatedAt: item.activatedAt?.toISOString() || new Date().toISOString(),
+        autoRenewal: item.autoRenewal || false,
+        usagePercentage: Number(item.usagePercentage) || 0,
+        usedAmount: Number(item.usedAmount) || 0,
+        monthlyLimit: item.monthlyLimit || 1000,
+      }));
+    } catch (error) {
+      console.error('Error fetching company active services:', error);
+      return [];
+    }
+  }
+  
+  async getCompanyClinics(companyId: string): Promise<Array<{
+    id: string;
+    name: string;
+    location: string;
+  }>> {
+    try {
+      const result = await db
+        .select({
+          id: tenants.id,
+          name: tenants.name,
+          location: tenants.location,
+        })
+        .from(tenants)
+        .where(eq(tenants.companyId, companyId));
+      
+      return result.map(clinic => ({
+        id: clinic.id,
+        name: clinic.name || 'Unnamed Clinic',
+        location: clinic.location || 'No location specified',
+      }));
+    } catch (error) {
+      console.error('Error fetching company clinics:', error);
+      return [];
+    }
+  }
+  
+  async updateServiceAutoRenewal(companyId: string, serviceId: string, autoRenewal: boolean): Promise<void> {
+    try {
+      // Convert service ID to internal service name
+      const serviceNameMap: Record<string, string> = {
+        'whatsapp-integration': 'whatsapp',
+        'sms-notifications': 'sms',
+        'email-automation': 'email'
+      };
+      
+      const serviceName = serviceNameMap[serviceId] || serviceId;
+      
+      await db
+        .update(externalServiceSubscriptions)
+        .set({
+          autoRenewEnabled: autoRenewal,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(externalServiceSubscriptions.companyId, companyId),
+            eq(externalServiceSubscriptions.serviceName, serviceName)
+          )
+        );
+    } catch (error) {
+      console.error('Error updating service auto-renewal:', error);
+      throw error;
+    }
+  }
+  
+  async getServiceUsageData(companyId: string, serviceId: string): Promise<{
+    used: number;
+    limit: number;
+    percentage: number;
+  } | null> {
+    try {
+      // Convert service ID to internal service name
+      const serviceNameMap: Record<string, string> = {
+        'whatsapp-integration': 'whatsapp',
+        'sms-notifications': 'sms',
+        'email-automation': 'email'
+      };
+      
+      const serviceName = serviceNameMap[serviceId] || serviceId;
+      
+      const result = await db
+        .select({
+          creditsRemaining: externalServiceSubscriptions.creditsRemaining,
+          creditsLimit: externalServiceSubscriptions.creditsLimit,
+        })
+        .from(externalServiceSubscriptions)
+        .where(
+          and(
+            eq(externalServiceSubscriptions.companyId, companyId),
+            eq(externalServiceSubscriptions.serviceName, serviceName),
+            eq(externalServiceSubscriptions.status, 'active')
+          )
+        )
+        .limit(1);
+      
+      if (!result.length) {
+        return null;
+      }
+      
+      const { creditsRemaining, creditsLimit } = result[0];
+      const used = (creditsLimit || 0) - (creditsRemaining || 0);
+      const limit = creditsLimit || 1000;
+      const percentage = limit > 0 ? (used / limit) * 100 : 0;
+      
+      return {
+        used: Math.max(0, used),
+        limit,
+        percentage: Math.min(100, Math.max(0, percentage)),
+      };
+    } catch (error) {
+      console.error('Error fetching service usage data:', error);
+      return null;
     }
   }
 
