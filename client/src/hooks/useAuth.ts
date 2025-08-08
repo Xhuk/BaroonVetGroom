@@ -46,15 +46,7 @@ export function useAuth() {
   });
 
   const logout = () => {
-    // Mark user as explicitly logged out
-    localStorage.setItem('auth_logged_out', 'true');
-    // Clear all authentication cache
-    localStorage.removeItem('auth_user_cache');
-    localStorage.removeItem('auth_cache_time');
-    // Clear tenant cache as well
-    localStorage.removeItem('tenant_cache');
-    localStorage.removeItem('tenant_cache_time');
-    // Redirect to logout endpoint which will handle session cleanup
+    // Redirect immediately to logout endpoint which will handle all cleanup
     window.location.href = '/api/logout';
   };
 
