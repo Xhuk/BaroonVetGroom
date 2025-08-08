@@ -32,11 +32,10 @@ import {
   AlertTriangle
 } from "lucide-react";
 
-// Load Stripe
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+// Load Stripe (optional)
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+  : null;
 
 interface ServiceItem {
   id: string;
@@ -598,7 +597,7 @@ export default function ServiceStore() {
                   )}
                 </DialogTitle>
               </DialogHeader>
-              {clientSecret && (
+              {clientSecret && stripePromise ? (
                 <Elements stripe={stripePromise} options={{ clientSecret }}>
                   <CheckoutForm
                     serviceId={selectedService?.id || ''}
@@ -606,7 +605,24 @@ export default function ServiceStore() {
                     onCancel={handlePaymentCancel}
                   />
                 </Elements>
-              )}
+              ) : clientSecret && !stripePromise ? (
+                <div className="p-6 text-center space-y-4">
+                  <div className="text-yellow-600 dark:text-yellow-400">
+                    <AlertTriangle className="h-12 w-12 mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold">Stripe no configurado</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                      Los pagos no están disponibles en este momento. Por favor contacta al administrador.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handlePaymentCancel}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    Cerrar
+                  </Button>
+                </div>
+              ) : null}
             </DialogContent>
           </Dialog>
         </main>
