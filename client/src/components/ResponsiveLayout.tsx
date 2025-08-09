@@ -7,11 +7,9 @@ import { cn } from "@/lib/utils";
 interface ResponsiveLayoutProps {
   children: React.ReactNode;
   showNavigation?: boolean;
-  selectedDate?: string;
-  onDateChange?: (date: string) => void;
 }
 
-export function ResponsiveLayout({ children, showNavigation = true, selectedDate, onDateChange }: ResponsiveLayoutProps) {
+export function ResponsiveLayout({ children, showNavigation = true }: ResponsiveLayoutProps) {
   const { shouldCollapseNavigation, deviceType, isSmallTablet, isTabletLandscape, shouldUseRibbonNavigation, shouldHideBottomRibbon } = useScreenSize();
 
   const getMainContentClasses = () => {
@@ -43,7 +41,7 @@ export function ResponsiveLayout({ children, showNavigation = true, selectedDate
 
   return (
     <div className="min-h-screen bg-background">
-      <Header selectedDate={selectedDate} onDateChange={onDateChange} />
+      <Header />
       {showNavigation && <ResponsiveNavigation />}
       <main className={cn(
         "transition-all duration-300",

@@ -8,8 +8,6 @@ import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
 import { getTodayCST1, addDaysCST1, formatCST1Date, getCurrentTimeCST1, getCurrentTimeInUserTimezone, getTodayInUserTimezone, addDaysInUserTimezone } from "@shared/timeUtils";
 import { useTimezone } from "@/contexts/TimezoneContext";
-import { useScreenSize } from "@/hooks/useScreenSize";
-import { Phone, CalendarIcon } from "lucide-react";
 
 interface FastCalendarProps {
   appointments: Appointment[];
@@ -17,13 +15,12 @@ interface FastCalendarProps {
   selectedDate?: string;
   onDateChange?: (date: string) => void;
   tenantId?: string;
-  showActionButtons?: boolean;
+
 }
 
-export function FastCalendar({ appointments, className, selectedDate, onDateChange, tenantId, showActionButtons = false }: FastCalendarProps) {
+export function FastCalendar({ appointments, className, selectedDate, onDateChange, tenantId }: FastCalendarProps) {
   const [, setLocation] = useLocation();
   const { timezone } = useTimezone();
-  const { isTabletLandscape } = useScreenSize();
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone(timezone));
   const [isScrolling, setIsScrolling] = useState(false);
   const [displayDate, setDisplayDate] = useState(() => {
@@ -354,90 +351,36 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   
   const redLineStyle = getRedLineStyle();
 
-  // Calendar positioning - restore backup configuration with tablet landscape support
-  const getCalendarStyle = () => {
-    if (isTabletLandscape) {
-      return {
-        top: '70px', // Compact tablet header
-        bottom: 'calc(10px + 96px)', // Account for ribbon navigation 
-        right: '12px', 
-        left: '12px', // Full width for tablet
-        marginLeft: '0px'
-      };
-    }
-    // Desktop positioning - exact backup configuration
-    return {
-      position: 'fixed' as const,
-      top: '140px', // Action buttons at 95px, calendar at 140px
-      bottom: 'calc(100vh - 10px - 96px)', // Stats ribbon height
-      right: '24px',
-      left: '298px', // Navigation width 288px + 10px margin
-      marginLeft: '0px'
-    };
-  };
-
-  const calendarStyle = getCalendarStyle();
-  
   return (
-    <Card 
-      className={cn(
-        "flex flex-col shadow-lg tablet-card",
-        !isTabletLandscape && "fixed", // Only fixed position on desktop
-        className
-      )} 
-      style={calendarStyle}
-    >
+    <Card className={cn("fixed flex flex-col", className)} style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
       <CardHeader className="flex-shrink-0">
-        {/* Navigation Controls - Hide date in tablet landscape, show in desktop/portrait */}
-        {!isTabletLandscape && (
-          <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center mb-2">
+          <button
+            onClick={handlePreviousDay}
+            className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
+          >
+            ← Día Anterior
+          </button>
+          <h2 className="text-xl font-semibold text-foreground flex-1 text-center mx-2">
+            {formatCST1Date(displayDate)} - {getAppointmentCount()} citas
+          </h2>
+          <div className="flex gap-2">
+            {displayDate !== getTodayInUserTimezone() && (
+              <button
+                onClick={goToToday}
+                className="px-3 py-1 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 transition duration-300 text-sm"
+              >
+                Hoy
+              </button>
+            )}
             <button
-              onClick={handlePreviousDay}
+              onClick={handleNextDay}
               className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
             >
-              ← Día Anterior
+              Día Siguiente →
             </button>
-            <h2 className="text-xl font-semibold text-foreground flex-1 text-center mx-2">
-              {formatCST1Date(displayDate)} - {getAppointmentCount()} citas
-            </h2>
-            <div className="flex gap-2">
-              {displayDate !== getTodayInUserTimezone() && (
-                <button
-                  onClick={goToToday}
-                  className="px-3 py-1 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 transition duration-300 text-sm"
-                >
-                  Hoy
-                </button>
-              )}
-              <button
-                onClick={handleNextDay}
-                className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
-              >
-                Día Siguiente →
-              </button>
-            </div>
           </div>
-        )}
-        
-        {/* Action Buttons - Only show in tablet landscape mode */}
-        {showActionButtons && isTabletLandscape && (
-          <div className="flex justify-center gap-3 mt-3 mb-2">
-            <a
-              href="/booking"
-              className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-md transition-colors text-sm"
-            >
-              <Phone className="w-4 h-4 mr-2" />
-              Nueva Cita por Teléfono
-            </a>
-            <a
-              href="/appointments"
-              className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition-colors text-sm"
-            >
-              <CalendarIcon className="w-4 h-4 mr-2" />
-              Gestionar Citas
-            </a>
-          </div>
-        )}
+        </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
@@ -463,9 +406,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
             ref={scrollContainerRef}
             className="overflow-y-auto h-full scroll-smooth relative"
             onScroll={handleScroll}
-            style={{ 
-              maxHeight: isTabletLandscape ? 'calc(100vh - 120px)' : 'calc(100vh - 200px)' 
-            }}
+            style={{ maxHeight: 'calc(100vh - 200px)' }}
           >
           
 
@@ -484,28 +425,24 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                 key={slot} 
                 className={cn(
                   "flex items-center border-b border-border last:border-b-0 relative",
-                  isTabletLandscape ? "h-[60px]" : "h-[80px]" // Reduced height for tablet to show more slots
+                  "h-[80px]" // Bigger container height for all slots to end at same pixel
                 )}
               >
 
                 
-                {/* Time label - Compact for tablet */}
-                <div className={cn(
-                  "text-center text-muted-foreground font-medium z-10 relative border-r border-border mr-4",
-                  isTabletLandscape ? "w-12 text-xs" : "w-16 text-sm"
-                )}>
+                {/* Time label */}
+                <div className="w-20 text-right pr-4 text-sm text-muted-foreground font-medium z-10 relative">
                   {slot}
                 </div>
                 
-                {/* Appointment content - Properly aligned */}
-                <div className="flex-1 z-10 relative">
+                {/* Appointment content */}
+                <div className="flex-1 pl-4 z-10 relative">
                   {slotAppointments.length > 0 ? (
                     slotAppointments.map(appointment => (
                       <div
                         key={appointment.id}
                         className={cn(
-                          "rounded-lg shadow-sm border-l-4 cursor-pointer hover:shadow-md transition-shadow mx-1",
-                          isTabletLandscape ? "p-1 mb-1 text-xs" : "p-2 mb-1", // Compact padding for tablet
+                          "p-3 mb-2 rounded-lg shadow-sm border-l-4 cursor-pointer hover:shadow-md transition-shadow",
                           getAppointmentStyle(appointment)
                         )}
                       >
@@ -515,18 +452,12 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                               {appointment.type === 'grooming' ? '🐾' : '🩺'}
                             </span>
                             <div>
-                              <p className={cn(
-                                "font-semibold text-card-foreground",
-                                isTabletLandscape ? "text-xs" : "text-sm"
-                              )}>
+                              <p className="font-semibold text-sm text-card-foreground">
                                 Cliente - {appointment.type}
                               </p>
-                              <p className={cn(
-                                "text-muted-foreground",
-                                isTabletLandscape ? "text-[10px]" : "text-xs"
-                              )}>
+                              <p className="text-xs text-muted-foreground">
                                 Mascota #{appointment.petId}
-                                {isOngoing(appointment) && <span className="ml-1 text-red-600 font-bold text-[10px]">🔴 EN CURSO</span>}
+                                {isOngoing(appointment) && <span className="ml-2 text-red-600 font-bold">🔴 EN CURSO</span>}
                               </p>
                             </div>
                           </div>
@@ -544,10 +475,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                   ) : (
                     <button
                       onClick={() => handleSlotClick(slot)}
-                      className={cn(
-                        "text-muted-foreground italic hover:text-primary hover:bg-muted/50 rounded transition-colors w-full text-left",
-                        isTabletLandscape ? "text-xs p-1" : "text-sm p-2"
-                      )}
+                      className="text-muted-foreground text-sm italic hover:text-primary hover:bg-muted/50 p-2 rounded transition-colors w-full text-left"
                       data-testid={`button-book-slot-${slot.replace(':', '-')}`}
                     >
                       Libre - Click para reservar

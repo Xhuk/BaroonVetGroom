@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, Truck, Phone, CalendarIcon } from "lucide-react";
 import { Link } from "wouter";
-import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
 import { getTodayInUserTimezone } from "@shared/timeUtils";
 
@@ -20,7 +19,7 @@ export default function Dashboard() {
   const { isAuthenticated, isLoading } = useAuth();
   const { currentTenant, isLoading: tenantLoading, isDebugMode } = useTenant();
   const { isInstant, startBackgroundLoad, completeLoad } = useFastLoad();
-  const { shouldHideBottomRibbon, shouldUseRibbonNavigation } = useScreenSize();
+  const { shouldHideBottomRibbon } = useScreenSize();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -132,42 +131,46 @@ export default function Dashboard() {
   }
 
   return (
-    <ResponsiveLayout selectedDate={selectedDate} onDateChange={setSelectedDate}>
+    <ResponsiveLayout>
       {/* Main Content */}
       <div className="pb-40">
-        {/* Action Buttons - Desktop positioned per backup (top: 95px, left: 298px) */}
-        {!shouldUseRibbonNavigation && (
-          <div className="fixed top-[95px] left-[298px] flex gap-4 z-10">
-            <Link href="/booking">
-              <Button className="bg-green-600 hover:bg-green-700 text-white shadow-md dark:bg-green-700 dark:hover:bg-green-800">
-                <Phone className="w-4 h-4 mr-2" />
-                Nueva Cita por Teléfono
-              </Button>
-            </Link>
-            <Link href="/appointments">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md dark:bg-blue-700 dark:hover:bg-blue-800">
-                <CalendarIcon className="w-4 h-4 mr-2" />
-                Gestionar Citas
-              </Button>
-            </Link>
+        {/* Action Buttons - Aligned with calendar card left edge */}
+        <div className="absolute top-[95px] left-[298px] flex gap-4 mb-6 z-10">
+          <Link href="/booking">
+            <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
+              <Phone className="w-4 h-4 mr-2" />
+              Nueva Cita por Teléfono
+            </Button>
+          </Link>
+          <Link href="/appointments">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 shadow-md dark:bg-blue-700 dark:hover:bg-blue-800">
+              <CalendarIcon className="w-4 h-4 mr-2" />
+              Gestionar Citas
+            </Button>
+          </Link>
+        </div>
+
+        {/* Fast Calendar - positioned to end at same level as navigation */}
+        {showCalendar ? (
+          <FastCalendar 
+            appointments={appointmentData?.appointments || []} 
+            className="shadow-lg"
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            tenantId={currentTenant?.id}
+
+          />
+        ) : (
+          <div className="bg-card rounded-lg shadow-lg animate-pulse flex items-center justify-center h-96 tablet-card">
+            <div className="text-muted-foreground">Cargando calendario...</div>
           </div>
         )}
-
-        {/* Fast Calendar - Always render, positioned according to screen size */}
-        <FastCalendar 
-          appointments={appointmentData?.appointments || []} 
-          className="shadow-lg"
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          tenantId={currentTenant?.id}
-          showActionButtons={shouldUseRibbonNavigation}
-        />
       </div>
 
-      {/* Fast Stats Ribbon - Hide when navigation ribbon is shown OR in tablet portrait mode */}
-      {!shouldHideBottomRibbon && !shouldUseRibbonNavigation && showStats ? (
+      {/* Fast Stats Ribbon - Hide in tablet portrait mode */}
+      {!shouldHideBottomRibbon && showStats ? (
         <FastStatsRibbon stats={stats} />
-      ) : !shouldHideBottomRibbon && !shouldUseRibbonNavigation ? (
+      ) : !shouldHideBottomRibbon ? (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 backdrop-blur-md border-t border-slate-600/50 z-20 shadow-2xl">
           <div className="px-8 py-4">
             <div className="flex items-center justify-between">
