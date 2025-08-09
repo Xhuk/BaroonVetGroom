@@ -73,9 +73,9 @@ export function Header() {
           <div className="flex items-center space-x-2">
             <VetGroomLogo className="w-8 h-8" />
             <div>
-              <h1 className="text-lg font-semibold text-primary">VetGroom</h1>
+              <h1 className="text-[18px] md:text-[18px] lg:text-[18px] font-semibold text-primary">VetGroom</h1>
               {!isSmallTablet && (
-                <span className="text-xs text-muted-foreground">Gestión Veterinaria</span>
+                <span className="text-[12px] md:text-[12px] lg:text-[12px] text-muted-foreground">Gestión Veterinaria</span>
               )}
             </div>
           </div>
@@ -83,12 +83,12 @@ export function Header() {
           {/* Compact User Info */}
           <div className="flex items-center space-x-2">
             <div className="text-right">
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+              <div className="flex items-center space-x-1 text-[12px] md:text-[12px] lg:text-[12px] text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span>{currentTime}</span>
               </div>
               {!isSmallTablet && (
-                <div className="text-xs text-muted-foreground">
+                <div className="text-[12px] md:text-[12px] lg:text-[12px] text-muted-foreground">
                   {currentDate.split(',')[0]} {/* Show only day and date, not full date */}
                 </div>
               )}
@@ -115,11 +115,11 @@ export function Header() {
           <div className="flex items-center space-x-3">
             <VetGroomLogo className="w-10 h-10" />
             <div>
-              <h1 className="text-2xl font-semibold text-primary">VetGroom</h1>
-              <span className="text-sm text-muted-foreground">Gestión Veterinaria</span>
+              <h1 className="text-[24px] md:text-[24px] lg:text-[24px] font-semibold text-primary">VetGroom</h1>
+              <span className="text-[14px] md:text-[14px] lg:text-[14px] text-muted-foreground">Gestión Veterinaria</span>
             </div>
           </div>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-[14px] md:text-[14px] lg:text-[14px] text-muted-foreground">
             <div className="flex items-center mb-1">
               <Calendar className="inline w-4 h-4 mr-2" />
               {currentDate}
@@ -132,7 +132,7 @@ export function Header() {
         </div>
         
         <div className="flex items-center space-x-6">
-          <div className="text-sm">
+          <div className="text-[14px] md:text-[14px] lg:text-[14px]">
             <div className="text-muted-foreground">
               Usuario: <span className="font-medium text-foreground">{user?.email}</span>
             </div>
@@ -145,7 +145,7 @@ export function Header() {
             {/* Debug Controls */}
             <DebugControls />
             
-            <button className="text-sm text-primary hover:text-primary/80 font-medium">
+            <button className="text-[14px] md:text-[14px] lg:text-[14px] text-primary hover:text-primary/80 font-medium">
               English
             </button>
             <div className="flex space-x-2">
