@@ -357,25 +357,25 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
         <div className="flex justify-between items-center mb-2">
           <button
             onClick={handlePreviousDay}
-            className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
+            className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-[14px] md:text-[14px] lg:text-[14px]"
           >
             ← Día Anterior
           </button>
-          <h2 className="text-xl font-semibold text-foreground flex-1 text-center mx-2">
+          <h2 className="text-[20px] md:text-[20px] lg:text-[20px] font-semibold text-foreground flex-1 text-center mx-2">
             {formatCST1Date(displayDate)} - {getAppointmentCount()} citas
           </h2>
           <div className="flex gap-2">
             {displayDate !== getTodayInUserTimezone() && (
               <button
                 onClick={goToToday}
-                className="px-3 py-1 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 transition duration-300 text-sm"
+                className="px-3 py-1 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 transition duration-300 text-[14px] md:text-[14px] lg:text-[14px]"
               >
                 Hoy
               </button>
             )}
             <button
               onClick={handleNextDay}
-              className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
+              className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-[14px] md:text-[14px] lg:text-[14px]"
             >
               Día Siguiente →
             </button>
