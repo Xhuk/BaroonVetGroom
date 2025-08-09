@@ -260,43 +260,6 @@ html.dark select option {
   }
 }
 
-/* 14-inch monitor optimizations */
-@media screen and (min-width: 1280px) and (max-width: 1920px) {
-  /* Calendar slot optimization for 14-inch monitors */
-  .calendar-slot-14inch {
-    height: 40px !important; /* Reduced to 40px to guarantee 5+ slots visible */
-    min-height: 40px !important;
-  }
-  
-  /* Icon size adjustments for 14-inch monitors */
-  .icon-14inch {
-    width: 18px !important;
-    height: 18px !important;
-  }
-  
-  /* Navigation icon optimization */
-  .nav-icon-14inch {
-    width: 20px !important;
-    height: 20px !important;
-  }
-  
-  /* Calendar container optimization */
-  .calendar-container-14inch {
-    max-height: 80vh !important; /* Increased height to show more slots */
-  }
-  
-  /* Header optimization for 14-inch */
-  .header-14inch {
-    padding: 12px 20px !important;
-  }
-  
-  /* Button optimization */
-  .button-14inch {
-    padding: 8px 12px !important;
-    font-size: 14px !important;
-  }
-}
-
 /* Heartbeat animation for follow-up notifications */
 @keyframes heartbeat {
   0% {

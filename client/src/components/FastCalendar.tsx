@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
 import { getTodayCST1, addDaysCST1, formatCST1Date, getCurrentTimeCST1, getCurrentTimeInUserTimezone, getTodayInUserTimezone, addDaysInUserTimezone } from "@shared/timeUtils";
 import { useTimezone } from "@/contexts/TimezoneContext";
-import { useScreenSize } from "@/hooks/useScreenSize";
 
 interface FastCalendarProps {
   appointments: Appointment[];
@@ -22,7 +21,6 @@ interface FastCalendarProps {
 export function FastCalendar({ appointments, className, selectedDate, onDateChange, tenantId }: FastCalendarProps) {
   const [, setLocation] = useLocation();
   const { timezone } = useTimezone();
-  const { is14InchMonitor } = useScreenSize();
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone(timezone));
   const [isScrolling, setIsScrolling] = useState(false);
   const [displayDate, setDisplayDate] = useState(() => {
@@ -233,7 +231,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     });
     
     if (currentSlotIndex !== -1) {
-      const slotHeight = is14InchMonitor ? 40 : 80; // 40px for 14-inch monitors, 80px for others
+      const slotHeight = 80; // Each slot is 80px
       const containerHeight = scrollContainerRef.current.clientHeight;
       
       // Position current slot at exact 50% of card container height
@@ -384,10 +382,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
           </div>
         </div>
       </CardHeader>
-      <CardContent className={cn(
-        "flex-1 overflow-hidden p-6",
-        is14InchMonitor && "calendar-container-14inch"
-      )}>
+      <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
           
           {/* Fixed red line at 50% of card container */}
@@ -430,7 +425,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                 key={slot} 
                 className={cn(
                   "flex items-center border-b border-border last:border-b-0 relative",
-                  is14InchMonitor ? "calendar-slot-14inch" : "h-[80px]" // Optimized height for 14-inch monitors
+                  "h-[80px]" // Bigger container height for all slots to end at same pixel
                 )}
               >
 
