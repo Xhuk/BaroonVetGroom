@@ -1921,7 +1921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { advancedRouteOptimization } = await import('./routeOptimizer');
       const result = await advancedRouteOptimization({
         clinicLocation: clinicLocation || [25.6866, -100.3161],
-        appointments: routePoints,
+        completedAppointments: routePoints,
         vanCapacity: vanCapacity || 'medium',
         fraccionamientoWeights: fraccionamientoWeights || {},
         config
@@ -5156,15 +5156,26 @@ This password expires in 24 hours.
       const { driverId } = req.params;
       
       // Get driver info (assuming driver is a staff member)
-      const drivers = await storage.getStaff(driverId); // This should get staff for that tenant
-      const driver = drivers.find((s: any) => s.id === driverId);
+      // Since we need to find the driver across all tenants, we'll implement a proper lookup
+      let driver: any = null;
+      
+      // Get all tenants and search for the driver across them
+      const allTenants = await storage.getAllTenants();
+      for (const tenant of allTenants) {
+        const staffMembers = await storage.getStaff(tenant.id);
+        const foundDriver = staffMembers.find((s: any) => s.id === driverId);
+        if (foundDriver) {
+          driver = foundDriver;
+          break;
+        }
+      }
       if (!driver) {
         return res.status(404).json({ message: "Driver not found" });
       }
 
       // Get today's routes for the driver's tenant
       const today = new Date().toISOString().split('T')[0];
-      const routes = await storage.getDeliveryRoutes(driver.tenantId, today);
+      const routes = await storage.getDeliveryRoutes(driver.tenantId);
       const activeRoutes = routes.filter((route: any) => route.driverId === driverId);
       
       // Get today's appointments for delivery/pickup
