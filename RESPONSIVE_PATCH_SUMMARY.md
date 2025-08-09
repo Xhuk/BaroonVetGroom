@@ -13,7 +13,7 @@
 - **client/src/components/ResponsiveLayout.tsx** - Enhanced with global responsive typography scaling
 
 ### ✓ Step 4: Dynamic Component Sizing
-- **client/src/pages/Dashboard.tsx** - Replaced absolute positioning with flexible button layout using flex-wrap
+- **client/src/pages/Dashboard.tsx** - Added responsive absolute positioning (lg:absolute lg:top-[95px] lg:left-[298px]) with flex-wrap fallback
 - **client/src/pages/RoutePlanMap.tsx** - Made map height responsive using clamp(420px, 70vh, 700px)
 
 ### ✓ Step 5: Table Overflow Protection
@@ -57,7 +57,7 @@ If rollback is needed:
    ```
 
 2. **Revert component edits**:
-   - **Dashboard.tsx**: Restore absolute positioning for button bar
+   - **Dashboard.tsx**: Remove responsive classes, keep simple absolute positioning
    - **RoutePlanMap.tsx**: Change map height back to fixed `h-[600px]`
    - **ResponsiveLayout.tsx**: Remove global responsive typography
    - **Billing.tsx**: Revert useQuery import changes (if needed)

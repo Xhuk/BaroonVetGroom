@@ -135,7 +135,10 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="pb-40 responsive-typography">
         {/* Action Buttons - Responsive positioning */}
-        <div className="flex flex-wrap gap-3 mb-4 items-center">
+        <div className="
+          flex flex-wrap gap-3 mb-4 items-center
+          lg:absolute lg:top-[95px] lg:left-[298px] lg:mb-6 lg:flex-nowrap
+        ">
           <Link href="/booking">
             <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
               <Phone className="w-4 h-4 mr-2" />
