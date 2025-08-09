@@ -354,23 +354,23 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   
   const redLineStyle = getRedLineStyle();
 
-  // Calendar positioning - full width in tablet landscape, sidebar space otherwise
+  // Calendar positioning - restore backup configuration with tablet landscape support
   const getCalendarStyle = () => {
     if (isTabletLandscape) {
       return {
-        top: '70px', // Reduced top for compact tablet header
+        top: '70px', // Compact tablet header
         bottom: 'calc(10px + 96px)', // Account for ribbon navigation 
-        right: '12px', // Reduced margins for tablet
-        left: '12px', // Full width with small margins
+        right: '12px', 
+        left: '12px', // Full width for tablet
         marginLeft: '0px'
       };
     }
-    // Default desktop positioning
+    // Desktop positioning - from backup (DASHBOARD_FINAL_BACKUP.md)
     return {
-      top: '140px',
-      bottom: 'calc(10px + 96px)',
+      top: '140px', // Action buttons at 95px, calendar at 140px
+      bottom: 'calc(100vh - 10px - 96px)', // Match backup positioning
       right: '24px',
-      left: '298px', // Account for sidebar
+      left: '298px', // Navigation width 288px + margin
       marginLeft: '0px'
     };
   };
@@ -477,19 +477,20 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
               >
 
                 
-                {/* Time label */}
-                <div className="w-20 text-right pr-4 text-sm text-muted-foreground font-medium z-10 relative">
+                {/* Time label - Left aligned with proper spacing */}
+                <div className="w-16 text-center text-sm text-muted-foreground font-medium z-10 relative border-r border-border mr-4">
                   {slot}
                 </div>
                 
-                {/* Appointment content */}
-                <div className="flex-1 pl-4 z-10 relative">
+                {/* Appointment content - Properly aligned */}
+                <div className="flex-1 z-10 relative">
                   {slotAppointments.length > 0 ? (
                     slotAppointments.map(appointment => (
                       <div
                         key={appointment.id}
                         className={cn(
-                          "p-3 mb-2 rounded-lg shadow-sm border-l-4 cursor-pointer hover:shadow-md transition-shadow",
+                          "p-2 mb-1 rounded-lg shadow-sm border-l-4 cursor-pointer hover:shadow-md transition-shadow",
+                          "mx-1", // Add horizontal margin for better alignment
                           getAppointmentStyle(appointment)
                         )}
                       >

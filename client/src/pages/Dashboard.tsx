@@ -135,17 +135,20 @@ export default function Dashboard() {
     <ResponsiveLayout selectedDate={selectedDate} onDateChange={setSelectedDate}>
       {/* Main Content */}
       <div className="pb-40">
-        {/* Action Buttons - Only show when NOT in tablet landscape mode */}
+        {/* Action Buttons - Restore backup positioning (desktop: absolute, tablet: hidden) */}
         {!shouldUseRibbonNavigation && (
-          <div className="flex gap-2 mb-6 z-10 justify-center mt-4">
+          <div className={cn(
+            "flex gap-2 z-10",
+            "fixed top-[95px] left-[298px]" // Backup positioning: top 95px, left 298px
+          )}>
             <Link href="/booking">
-              <Button className="bg-green-600 hover:bg-green-700 text-white shadow-md dark:bg-green-700 dark:hover:bg-green-800 px-4 py-2 text-sm">
+              <Button className="bg-green-600 hover:bg-green-700 text-white shadow-md dark:bg-green-700 dark:hover:bg-green-800 px-6 py-3">
                 <Phone className="w-4 h-4 mr-2" />
                 Nueva Cita por Teléfono
               </Button>
             </Link>
             <Link href="/appointments">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md dark:bg-blue-700 dark:hover:bg-blue-800 px-4 py-2 text-sm">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md dark:bg-blue-700 dark:hover:bg-blue-800 px-6 py-3">
                 <CalendarIcon className="w-4 h-4 mr-2" />
                 Gestionar Citas
               </Button>
