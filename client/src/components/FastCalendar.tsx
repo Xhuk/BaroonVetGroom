@@ -354,18 +354,16 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   
   const redLineStyle = getRedLineStyle();
 
-  // Calendar positioning - restore backup configuration with tablet landscape support
+  // Calendar positioning - force desktop positioning for debugging
   const getCalendarStyle = () => {
-    if (isTabletLandscape) {
-      return {
-        top: '70px', // Compact tablet header
-        bottom: 'calc(10px + 96px)', // Account for ribbon navigation 
-        right: '12px', 
-        left: '12px', // Full width for tablet
-        marginLeft: '0px'
-      };
-    }
-    // Desktop positioning - exact backup configuration
+    console.log('🗓️ Calendar Style Debug:', { 
+      isTabletLandscape, 
+      deviceType: screenSize.device,
+      width: screenSize.width,
+      height: screenSize.height 
+    });
+    
+    // Always use desktop positioning for now to debug
     return {
       position: 'fixed' as const,
       top: '140px', // Action buttons at 95px, calendar at 140px
@@ -373,17 +371,20 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
       right: '24px',
       left: '298px', // Navigation width 288px + 10px margin
       marginLeft: '0px',
-      zIndex: 1 // Ensure visibility
+      zIndex: 10, // Higher z-index for visibility
+      border: '2px solid red', // Debug border to see positioning
+      backgroundColor: 'rgba(0,255,0,0.1)' // Debug background
     };
   };
 
   const calendarStyle = getCalendarStyle();
   
+  console.log('🗓️ FastCalendar rendering with style:', calendarStyle);
+  
   return (
     <Card 
       className={cn(
         "flex flex-col shadow-lg tablet-card",
-        !isTabletLandscape && "fixed", // Only fixed position on desktop
         className
       )} 
       style={calendarStyle}
