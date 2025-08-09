@@ -53,9 +53,9 @@ export function ResponsiveNavigation({ className }: ResponsiveNavigationProps) {
     enabled: !!currentTenant?.companyId,
   });
 
-  // Hide navigation in tablet landscape mode (ribbon takes over)
-  // Move early return AFTER all hooks are called
-  if (isTabletLandscape) {
+  // Hide navigation completely in tablet landscape mode (ribbon takes over)
+  // Also hide in ANY tablet horizontal orientation regardless of device detection
+  if (isTabletLandscape || (deviceType.includes('tablet') && window.innerWidth > window.innerHeight)) {
     return null;
   }
 

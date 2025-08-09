@@ -95,13 +95,13 @@ export function RibbonNavigation({ className }: RibbonNavigationProps) {
       "fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-800/95 via-slate-700/95 to-slate-800/95 backdrop-blur-md border-t border-slate-600/50 z-30 shadow-2xl",
       className
     )}>
-      <div className="px-2 py-2">
-        <div className="flex items-center justify-between max-w-full overflow-x-auto">
+      <div className="px-1 py-1">
+        <div className="flex items-center justify-evenly max-w-full overflow-x-auto gap-1">
           {allItems.map((item) => (
             <a
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center justify-center p-2 flex-1 max-w-[90px] text-muted-foreground hover:text-primary hover:bg-muted/20 transition-colors rounded-lg group tablet-touch"
+              className="flex flex-col items-center justify-center p-1 flex-1 min-w-[70px] max-w-[85px] text-muted-foreground hover:text-primary hover:bg-muted/20 transition-colors rounded-lg group tablet-touch"
               title={item.label}
             >
               {item.label === "Seguimientos" ? (
@@ -121,7 +121,7 @@ export function RibbonNavigation({ className }: RibbonNavigationProps) {
               ) : (
                 <item.icon className="w-5 h-5 mb-1 group-hover:scale-110 transition-transform" />
               )}
-              <span className="text-[10px] font-medium text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+              <span className="text-[9px] font-medium text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
                 {item.label}
               </span>
             </a>

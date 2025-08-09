@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, Truck, Phone, CalendarIcon } from "lucide-react";
 import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
 import { getTodayInUserTimezone } from "@shared/timeUtils";
 
@@ -134,16 +135,25 @@ export default function Dashboard() {
     <ResponsiveLayout>
       {/* Main Content */}
       <div className="pb-40">
-        {/* Action Buttons - Aligned with calendar card left edge */}
-        <div className="absolute top-[95px] left-[298px] flex gap-4 mb-6 z-10">
+        {/* Action Buttons - Responsive positioning */}
+        <div className={cn(
+          "flex gap-2 mb-6 z-10",
+          shouldHideBottomRibbon ? "absolute top-[95px] left-[298px]" : "relative top-0 left-0 justify-center mt-4"
+        )}>
           <Link href="/booking">
-            <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 shadow-md dark:bg-green-700 dark:hover:bg-green-800">
+            <Button className={cn(
+              "bg-green-600 hover:bg-green-700 text-white shadow-md dark:bg-green-700 dark:hover:bg-green-800",
+              shouldHideBottomRibbon ? "px-6 py-3" : "px-4 py-2 text-sm"
+            )}>
               <Phone className="w-4 h-4 mr-2" />
               Nueva Cita por Teléfono
             </Button>
           </Link>
           <Link href="/appointments">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 shadow-md dark:bg-blue-700 dark:hover:bg-blue-800">
+            <Button className={cn(
+              "bg-blue-600 hover:bg-blue-700 text-white shadow-md dark:bg-blue-700 dark:hover:bg-blue-800",
+              shouldHideBottomRibbon ? "px-6 py-3" : "px-4 py-2 text-sm"
+            )}>
               <CalendarIcon className="w-4 h-4 mr-2" />
               Gestionar Citas
             </Button>
