@@ -44,7 +44,7 @@ export function ResponsiveLayout({ children, showNavigation = true }: Responsive
       <Header />
       {showNavigation && <ResponsiveNavigation />}
       <main className={cn(
-        "transition-all duration-300 container-fluid responsive-typography",
+        "transition-all duration-300",
         getMainContentClasses(),
         getContentPadding(),
         "tablet-container" // Apply responsive padding classes

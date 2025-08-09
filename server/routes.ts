@@ -1921,7 +1921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { advancedRouteOptimization } = await import('./routeOptimizer');
       const result = await advancedRouteOptimization({
         clinicLocation: clinicLocation || [25.6866, -100.3161],
-        completedAppointments: routePoints,
+        appointments: routePoints,
         vanCapacity: vanCapacity || 'medium',
         fraccionamientoWeights: fraccionamientoWeights || {},
         config
@@ -5155,30 +5155,30 @@ This password expires in 24 hours.
     try {
       const { driverId } = req.params;
       
-      // Get driver info from database directly using staff table
-      const driver = await db.select().from(staff).where(eq(staff.id, driverId)).limit(1);
-      if (!driver || driver.length === 0) {
+      // Get driver info (assuming driver is a staff member)
+      const drivers = await storage.getStaff(driverId); // This should get staff for that tenant
+      const driver = drivers.find((s: any) => s.id === driverId);
+      if (!driver) {
         return res.status(404).json({ message: "Driver not found" });
       }
-      const driverData = driver[0];
 
       // Get today's routes for the driver's tenant
       const today = new Date().toISOString().split('T')[0];
-      const routes = await storage.getDeliveryRoutes(driverData.tenantId);
-      const activeRoutes = routes.filter((route: any) => route.driverId === driverId && route.date === today);
+      const routes = await storage.getDeliveryRoutes(driver.tenantId, today);
+      const activeRoutes = routes.filter((route: any) => route.driverId === driverId);
       
       // Get today's appointments for delivery/pickup
-      const appointments = await storage.getAppointments(driverData.tenantId, today);
+      const appointments = await storage.getAppointments(driver.tenantId, today);
       const driverAppointments = appointments.filter((apt: any) => 
         apt.logistics && (apt.logistics === 'pickup' || apt.logistics === 'delivery')
       );
 
       res.json({
         driver: {
-          id: driverData.id,
-          name: driverData.name,
-          role: driverData.role,
-          tenantId: driverData.tenantId
+          id: driver.id,
+          name: driver.name,
+          role: driver.role,
+          tenantId: driver.tenantId
         },
         activeRoutes: activeRoutes.map((route: any) => ({
           ...route,
