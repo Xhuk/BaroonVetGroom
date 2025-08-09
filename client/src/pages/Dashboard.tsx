@@ -132,7 +132,7 @@ export default function Dashboard() {
   }
 
   return (
-    <ResponsiveLayout selectedDate={selectedDate} onDateChange={setSelectedDate}>
+    <ResponsiveLayout>
       {/* Main Content */}
       <div className="pb-40">
         {/* Action Buttons - Restore backup positioning (desktop: absolute, tablet: hidden) */}
