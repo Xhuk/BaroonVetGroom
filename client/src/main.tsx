@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import "./responsive.css";
 import { initializeErrorSuppression } from "./lib/errorSuppression";
 
 // Ultra-aggressive global error handlers for join errors

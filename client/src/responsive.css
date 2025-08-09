@@ -1,0 +1,15 @@
+/* client/src/responsive.css */
+.container-fluid { margin-inline:auto; width:100%; max-width:1440px; padding-inline:clamp(12px,2vw,32px); }
+img, video { max-width:100%; height:auto; }
+.wrap-anywhere { overflow-wrap:anywhere; word-break:break-word; }
+.responsive-typography {
+  --t-body:clamp(14px,1.1vw + 10px,16px);
+  --t-h2:clamp(20px,1.8vw + 12px,28px);
+  --t-h1:clamp(26px,2.4vw + 14px,36px);
+  font-size:var(--t-body);
+}
+.responsive-typography h1 { font-size:var(--t-h1); }
+.responsive-typography h2 { font-size:var(--t-h2); }
+.auto-grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(min(100%,280px),1fr)); }
+@media (max-width:1024px){ .show-desktop{ display:none !important; } }
+@media (min-width:1025px){ .show-mobile{ display:none !important; } }
