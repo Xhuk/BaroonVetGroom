@@ -135,30 +135,23 @@ export default function Dashboard() {
     <ResponsiveLayout>
       {/* Main Content */}
       <div className="pb-40">
-        {/* Action Buttons - Responsive positioning */}
-        <div className={cn(
-          "flex gap-2 mb-6 z-10",
-          shouldHideBottomRibbon ? "absolute top-[95px] left-[298px]" : "relative top-0 left-0 justify-center mt-4"
-        )}>
-          <Link href="/booking">
-            <Button className={cn(
-              "bg-green-600 hover:bg-green-700 text-white shadow-md dark:bg-green-700 dark:hover:bg-green-800",
-              shouldHideBottomRibbon ? "px-6 py-3" : "px-4 py-2 text-sm"
-            )}>
-              <Phone className="w-4 h-4 mr-2" />
-              Nueva Cita por Teléfono
-            </Button>
-          </Link>
-          <Link href="/appointments">
-            <Button className={cn(
-              "bg-blue-600 hover:bg-blue-700 text-white shadow-md dark:bg-blue-700 dark:hover:bg-blue-800",
-              shouldHideBottomRibbon ? "px-6 py-3" : "px-4 py-2 text-sm"
-            )}>
-              <CalendarIcon className="w-4 h-4 mr-2" />
-              Gestionar Citas
-            </Button>
-          </Link>
-        </div>
+        {/* Action Buttons - Only show when NOT in tablet landscape mode */}
+        {!shouldUseRibbonNavigation && (
+          <div className="flex gap-2 mb-6 z-10 justify-center mt-4">
+            <Link href="/booking">
+              <Button className="bg-green-600 hover:bg-green-700 text-white shadow-md dark:bg-green-700 dark:hover:bg-green-800 px-4 py-2 text-sm">
+                <Phone className="w-4 h-4 mr-2" />
+                Nueva Cita por Teléfono
+              </Button>
+            </Link>
+            <Link href="/appointments">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md dark:bg-blue-700 dark:hover:bg-blue-800 px-4 py-2 text-sm">
+                <CalendarIcon className="w-4 h-4 mr-2" />
+                Gestionar Citas
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* Fast Calendar - positioned to end at same level as navigation */}
         {showCalendar ? (
@@ -168,7 +161,7 @@ export default function Dashboard() {
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             tenantId={currentTenant?.id}
-
+            showActionButtons={shouldUseRibbonNavigation}
           />
         ) : (
           <div className="bg-card rounded-lg shadow-lg animate-pulse flex items-center justify-center h-96 tablet-card">

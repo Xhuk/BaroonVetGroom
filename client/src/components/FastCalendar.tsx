@@ -9,6 +9,7 @@ import type { Appointment } from "@shared/schema";
 import { getTodayCST1, addDaysCST1, formatCST1Date, getCurrentTimeCST1, getCurrentTimeInUserTimezone, getTodayInUserTimezone, addDaysInUserTimezone } from "@shared/timeUtils";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import { useScreenSize } from "@/hooks/useScreenSize";
+import { Phone, CalendarIcon } from "lucide-react";
 
 interface FastCalendarProps {
   appointments: Appointment[];
@@ -16,10 +17,10 @@ interface FastCalendarProps {
   selectedDate?: string;
   onDateChange?: (date: string) => void;
   tenantId?: string;
-
+  showActionButtons?: boolean;
 }
 
-export function FastCalendar({ appointments, className, selectedDate, onDateChange, tenantId }: FastCalendarProps) {
+export function FastCalendar({ appointments, className, selectedDate, onDateChange, tenantId, showActionButtons = false }: FastCalendarProps) {
   const [, setLocation] = useLocation();
   const { timezone } = useTimezone();
   const { isTabletLandscape } = useScreenSize();
@@ -377,6 +378,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   return (
     <Card className={cn("fixed flex flex-col", className)} style={getCalendarStyle()}>
       <CardHeader className="flex-shrink-0">
+        {/* Navigation Controls */}
         <div className="flex justify-between items-center mb-2">
           <button
             onClick={handlePreviousDay}
@@ -384,7 +386,10 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
           >
             ← Día Anterior
           </button>
-          <h2 className="text-xl font-semibold text-foreground flex-1 text-center mx-2">
+          <h2 className={cn(
+            "font-semibold text-foreground flex-1 text-center mx-2",
+            isTabletLandscape ? "text-lg" : "text-xl"
+          )}>
             {formatCST1Date(displayDate)} - {getAppointmentCount()} citas
           </h2>
           <div className="flex gap-2">
@@ -404,6 +409,26 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
             </button>
           </div>
         </div>
+        
+        {/* Action Buttons - Only show in tablet landscape mode */}
+        {showActionButtons && isTabletLandscape && (
+          <div className="flex justify-center gap-3 mt-3 mb-2">
+            <a
+              href="/booking"
+              className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-md transition-colors text-sm"
+            >
+              <Phone className="w-4 h-4 mr-2" />
+              Nueva Cita por Teléfono
+            </a>
+            <a
+              href="/appointments"
+              className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition-colors text-sm"
+            >
+              <CalendarIcon className="w-4 h-4 mr-2" />
+              Gestionar Citas
+            </a>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-6">
         <div className="relative h-full overflow-hidden">
