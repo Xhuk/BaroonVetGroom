@@ -6,7 +6,7 @@ import { Calendar, Phone, Mail, LogOut, Moon, Sun, Settings, Clock } from "lucid
 import { VetGroomLogo } from "./VetGroomLogo";
 import { DebugControls } from "./DebugControls";
 import { TimezoneSettings } from "./TimezoneSettings";
-import { getCurrentTimeCST1, getTodayCST1, getCurrentTimeInUserTimezone } from "@shared/timeUtils";
+import { getCurrentTimeCST1, getTodayCST1, getCurrentTimeInUserTimezone, getTodayInUserTimezone, formatCST1Date, addDaysInUserTimezone } from "@shared/timeUtils";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import { useScreenSize } from "@/hooks/useScreenSize";
 import { useState, useEffect } from "react";
@@ -16,7 +16,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-export function Header() {
+interface HeaderProps {
+  selectedDate?: string;
+  onDateChange?: (date: string) => void;
+}
+
+export function Header({ selectedDate, onDateChange }: HeaderProps = {}) {
   const { user } = useAuth();
   const { currentTenant, isDebugMode } = useTenant();
   const { theme, toggleTheme } = useTheme();
@@ -64,11 +69,63 @@ export function Header() {
     logout();
   };
 
+  // Date navigation handlers
+  const handlePreviousDay = () => {
+    if (onDateChange) {
+      const currentDate = selectedDate || getTodayInUserTimezone(timezone);
+      const previousDay = addDaysInUserTimezone(currentDate, -1, timezone);
+      onDateChange(previousDay);
+    }
+  };
+
+  const handleNextDay = () => {
+    if (onDateChange) {
+      const currentDate = selectedDate || getTodayInUserTimezone(timezone);
+      const nextDay = addDaysInUserTimezone(currentDate, 1, timezone);
+      onDateChange(nextDay);
+    }
+  };
+
+  const goToToday = () => {
+    if (onDateChange) {
+      onDateChange(getTodayInUserTimezone(timezone));
+    }
+  };
+
   // Tablet-specific header layout
   if (isTabletLandscape || isSmallTablet) {
     return (
       <header className="bg-card shadow-sm border-b border-border px-4 py-2">
         <div className="flex items-center justify-between">
+          {/* Date Navigation for Tablet Landscape */}
+          {isTabletLandscape && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePreviousDay}
+                className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
+              >
+                ← Día Anterior
+              </button>
+              <span className="text-sm font-medium text-foreground min-w-[120px] text-center">
+                {formatCST1Date(selectedDate || getTodayInUserTimezone(timezone))}
+              </span>
+              {selectedDate !== getTodayInUserTimezone(timezone) && (
+                <button
+                  onClick={goToToday}
+                  className="px-2 py-1 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 transition duration-300 text-xs"
+                >
+                  Hoy
+                </button>
+              )}
+              <button
+                onClick={handleNextDay}
+                className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
+              >
+                Día Siguiente →
+              </button>
+            </div>
+          )}
+          
           {/* Compact Logo and Title */}
           <div className="flex items-center space-x-2">
             <VetGroomLogo className="w-8 h-8" />

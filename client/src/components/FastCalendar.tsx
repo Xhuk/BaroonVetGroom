@@ -378,37 +378,36 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   return (
     <Card className={cn("fixed flex flex-col", className)} style={getCalendarStyle()}>
       <CardHeader className="flex-shrink-0">
-        {/* Navigation Controls */}
-        <div className="flex justify-between items-center mb-2">
-          <button
-            onClick={handlePreviousDay}
-            className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
-          >
-            ← Día Anterior
-          </button>
-          <h2 className={cn(
-            "font-semibold text-foreground flex-1 text-center mx-2",
-            isTabletLandscape ? "text-lg" : "text-xl"
-          )}>
-            {formatCST1Date(displayDate)} - {getAppointmentCount()} citas
-          </h2>
-          <div className="flex gap-2">
-            {displayDate !== getTodayInUserTimezone() && (
-              <button
-                onClick={goToToday}
-                className="px-3 py-1 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 transition duration-300 text-sm"
-              >
-                Hoy
-              </button>
-            )}
+        {/* Navigation Controls - Hide date in tablet landscape, show in desktop/portrait */}
+        {!isTabletLandscape && (
+          <div className="flex justify-between items-center mb-2">
             <button
-              onClick={handleNextDay}
+              onClick={handlePreviousDay}
               className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
             >
-              Día Siguiente →
+              ← Día Anterior
             </button>
+            <h2 className="text-xl font-semibold text-foreground flex-1 text-center mx-2">
+              {formatCST1Date(displayDate)} - {getAppointmentCount()} citas
+            </h2>
+            <div className="flex gap-2">
+              {displayDate !== getTodayInUserTimezone() && (
+                <button
+                  onClick={goToToday}
+                  className="px-3 py-1 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 transition duration-300 text-sm"
+                >
+                  Hoy
+                </button>
+              )}
+              <button
+                onClick={handleNextDay}
+                className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg shadow hover:bg-accent transition duration-300 text-sm"
+              >
+                Día Siguiente →
+              </button>
+            </div>
           </div>
-        </div>
+        )}
         
         {/* Action Buttons - Only show in tablet landscape mode */}
         {showActionButtons && isTabletLandscape && (
@@ -473,7 +472,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                 key={slot} 
                 className={cn(
                   "flex items-center border-b border-border last:border-b-0 relative",
-                  "h-[80px]" // Bigger container height for all slots to end at same pixel
+                  isTabletLandscape ? "h-[120px]" : "h-[80px]" // Expanded height for tablet landscape
                 )}
               >
 

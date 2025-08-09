@@ -132,7 +132,7 @@ export default function Dashboard() {
   }
 
   return (
-    <ResponsiveLayout>
+    <ResponsiveLayout selectedDate={selectedDate} onDateChange={setSelectedDate}>
       {/* Main Content */}
       <div className="pb-40">
         {/* Action Buttons - Only show when NOT in tablet landscape mode */}
