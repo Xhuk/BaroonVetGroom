@@ -366,7 +366,7 @@ export default function RoutePlanMap() {
         <div className="lg:col-span-2">
           <Card>
             <CardContent className="p-0">
-              <div className="h-[600px] w-full rounded-lg overflow-hidden">
+              <div className="min-h-[420px] w-full rounded-lg overflow-hidden" style={{ height: 'clamp(420px, 70vh, 700px)' }}>
                 <MapContainer
                   center={clinicLocation}
                   zoom={12}
