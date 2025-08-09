@@ -1,5 +1,5 @@
 /* Opt-in fluid container to stop ultrawide stretching */
-.container-fluid { margin-inline:auto; width:100%; max-width:1280px; padding-inline:clamp(12px,2vw,32px); }
+.container-fluid { margin-inline:auto; width:100%; max-width:1440px; padding-inline:clamp(12px,2vw,32px); }
 /* Media scale down */
 img, video { max-width:100%; height:auto; }
 /* Long text/URLs won't blow layouts */
