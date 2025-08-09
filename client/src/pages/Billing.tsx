@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { useFastLoad, useFastFetch } from "@/hooks/useFastLoad";
 import { BackButton } from "@/components/BackButton";
@@ -159,22 +159,22 @@ export default function Billing() {
     apt.status === "completed" && apt.paymentStatus === "pending"
   ) || [];
 
-  const totalRevenue = billingInvoices?.filter((p: BillingInvoice) => p.status === "paid")
-    .reduce((sum: number, invoice: BillingInvoice) => sum + parseFloat(invoice.totalAmount.toString()), 0) || 0;
+  const totalRevenue = billingInvoices?.filter(p => p.status === "paid")
+    .reduce((sum, invoice) => sum + parseFloat(invoice.totalAmount.toString()), 0) || 0;
 
-  const pendingPayments = billingInvoices?.filter((p: BillingInvoice) => p.status === "pending") || [];
-  const todayPayments = billingInvoices?.filter((p: BillingInvoice) => 
+  const pendingPayments = billingInvoices?.filter(p => p.status === "pending") || [];
+  const todayPayments = billingInvoices?.filter(p => 
     p.createdAt && new Date(p.createdAt).toDateString() === new Date().toDateString()
   ) || [];
 
-  const filteredPayments = billingInvoices?.filter((invoice: BillingInvoice) => {
+  const filteredPayments = billingInvoices?.filter(invoice => {
     if (paymentFilter === "all") return true;
     return invoice.status === paymentFilter;
   }) || [];
 
   return (
     <div className="min-h-screen bg-background dark:bg-gray-900">
-      <div className="p-6 container-fluid responsive-typography">
+      <div className="p-6 max-w-7xl mx-auto">
         <BackButton className="mb-4" />
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Facturación y Pagos</h1>
@@ -194,7 +194,7 @@ export default function Billing() {
         </div>
 
       {/* Statistics */}
-      <div className="auto-grid mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -559,7 +559,7 @@ export default function Billing() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="auto-grid">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="p-4 bg-green-50 rounded-lg">
                     <h4 className="font-medium text-green-800 mb-2">Ingresos del Mes</h4>
                     <p className="text-2xl font-bold text-green-700">${totalRevenue.toLocaleString()}</p>

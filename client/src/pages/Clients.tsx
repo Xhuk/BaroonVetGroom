@@ -307,7 +307,7 @@ export default function Clients() {
   }, [clients, searchQuery]);
 
   return (
-    <div className="p-6 container-fluid responsive-typography">
+    <div className="p-6 max-w-7xl mx-auto">
       <BackButton className="mb-4" />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-blue-800 dark:text-blue-300">Gestión de Clientes y Mascotas - Actualización de Información</h1>
@@ -464,7 +464,7 @@ export default function Clients() {
         </Card>
       )}
 
-      <div className="auto-grid">
+      <div className="grid gap-6">
         {filteredClients.length === 0 && searchQuery ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">

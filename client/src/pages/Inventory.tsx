@@ -127,11 +127,11 @@ export default function Inventory() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background dark:bg-gray-900">
-          <div className="p-6 container-fluid responsive-typography">
+          <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Inventario</h1>
           </div>
-          <div className="auto-grid">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {[1,2].map(i => (
               <Card key={i} className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <CardContent className="p-6">
@@ -235,7 +235,7 @@ export default function Inventory() {
 
   return (
     <div className="min-h-screen bg-background dark:bg-gray-900">
-      <div className="p-6 container-fluid responsive-typography">
+      <div className="p-6 max-w-7xl mx-auto">
         <BackButton className="mb-4" />
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Gestión de Inventario</h1>
@@ -312,7 +312,7 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
         </div>
 
       {/* Statistics Cards */}
-      <div className="auto-grid mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">

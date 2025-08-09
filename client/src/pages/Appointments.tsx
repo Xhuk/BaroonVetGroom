@@ -101,7 +101,7 @@ const Appointments = memo(function Appointments() {
 
   // INSTANT UI - Always render immediately with skeleton
   return (
-    <div className="p-6 container-fluid responsive-typography">
+    <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-4">
         <BackButton href="/" text="Volver al Dashboard" />
       </div>
