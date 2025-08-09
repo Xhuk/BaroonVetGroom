@@ -1,0 +1,93 @@
+Do not refactor or remove existing code.
+Your task is to:
+
+A) Add opt-in responsive helpers (non-breaking)
+
+Create src/responsive.css with these utilities (exact content):
+
+css
+Copiar
+Editar
+/* Opt-in fluid container to stop ultrawide stretching */
+.container-fluid { margin-inline:auto; width:100%; max-width:1280px; padding-inline:clamp(12px,2vw,32px); }
+/* Media scale down */
+img, video { max-width:100%; height:auto; }
+/* Long text/URLs won’t blow layouts */
+.wrap-anywhere { overflow-wrap:anywhere; word-break:break-word; }
+/* Responsive typography (opt-in) */
+.responsive-typography { --t-body:clamp(14px,1.1vw + 10px,16px); --t-h2:clamp(20px,1.8vw + 12px,28px); --t-h1:clamp(26px,2.4vw + 14px,36px); font-size:var(--t-body); }
+.responsive-typography h1 { font-size:var(--t-h1); } .responsive-typography h2 { font-size:var(--t-h2); }
+/* Drop-in adaptive grid */
+.auto-grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(min(100%,280px),1fr)); }
+/* Quick show/hide helpers */
+@media (max-width:1024px){ .show-desktop{ display:none !important; } }
+@media (min-width:1025px){ .show-mobile{ display:none !important; } }
+Import it once in the app entry (src/main.jsx or src/index.jsx): import './responsive.css'.
+
+Create src/useBreakpoint.js:
+
+js
+Copiar
+Editar
+import { useEffect, useState } from 'react';
+export function useBreakpoint(query='(max-width: 1024px)'){
+  const [match,setMatch] = useState(false);
+  useEffect(()=>{ const m = window.matchMedia(query); const on = ()=>setMatch(m.matches);
+    on(); m.addEventListener('change', on); return ()=>m.removeEventListener('change', on);
+  },[query]); return match;
+}
+B) Analyze my codebase and SUGGEST minimal, surgical fixes (don’t auto-apply)
+
+Search for common anti-patterns:
+
+Fixed widths/heights likely to break on laptops: width: ####px, min-width: ####px, inline styles with large px, containers > 1440px.
+
+Grids/lists with hard column counts or fixed item widths (e.g., grid-template-columns: 4 with px widths).
+
+Images or media lacking max-width: 100%.
+
+Typography with large px (≥18px body text) or no scaling on headings.
+
+Tables that overflow horizontally.
+
+For each hit, propose one of these non-breaking suggestions:
+
+Wrap the top-level page container with className="container-fluid responsive-typography".
+
+For card/list wrappers: add className="auto-grid".
+
+For specific components that must differ on small screens: use useBreakpoint('(max-width: 1024px)') to conditionally render a compact variant.
+
+Add className="wrap-anywhere" where long strings/URLs overflow.
+
+Add img, video { max-width: 100%; height: auto; } already covered by the global CSS (call out where it matters).
+
+C) Deliverables (as files — do not modify app code without my OK)
+
+RESPONSIVE_SUGGESTIONS.md — a checklist with:
+
+File & component names, line ranges, and the issue found.
+
+Recommended change (one-liner), why it’s safe, and screenshot width to test (1280 / 1024 / 768 / 390).
+
+SUGGESTED_PATCHES.diff — unified diff suggestions only, using the new classes/hook. Keep each hunk tiny and reversible. Do not touch business logic.
+
+README_Responsive_Quickstart.md — short “how to apply” guide (3 steps), plus rollback note (remove the class to revert).
+
+D) Guardrails
+
+Do not install new UI libraries.
+
+Do not change existing CSS files; only add the new opt-in CSS and hook.
+
+Do not alter behavior/state/props. Suggestions only.
+
+Prefer the least invasive fix first (container → grid → hook).
+
+E) Testing note (include in README)
+
+In Chrome DevTools, test widths 1280, 1024, 768, 390.
+
+Check headers, sidebars, lists, tables, and images for overflow or cramped spacing.
+
+When done, output a short summary and links to the three files.
