@@ -233,7 +233,7 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
     });
     
     if (currentSlotIndex !== -1) {
-      const slotHeight = is14InchMonitor ? 50 : 80; // 50px for 14-inch monitors, 80px for others
+      const slotHeight = is14InchMonitor ? 40 : 80; // 40px for 14-inch monitors, 80px for others
       const containerHeight = scrollContainerRef.current.clientHeight;
       
       // Position current slot at exact 50% of card container height

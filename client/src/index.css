@@ -264,8 +264,8 @@ html.dark select option {
 @media screen and (min-width: 1280px) and (max-width: 1920px) {
   /* Calendar slot optimization for 14-inch monitors */
   .calendar-slot-14inch {
-    height: 50px !important; /* Further reduced to ensure 5+ slots visible */
-    min-height: 50px !important;
+    height: 40px !important; /* Reduced to 40px to guarantee 5+ slots visible */
+    min-height: 40px !important;
   }
   
   /* Icon size adjustments for 14-inch monitors */
@@ -282,7 +282,7 @@ html.dark select option {
   
   /* Calendar container optimization */
   .calendar-container-14inch {
-    max-height: 75vh !important; /* Ensure more slots are visible */
+    max-height: 80vh !important; /* Increased height to show more slots */
   }
   
   /* Header optimization for 14-inch */
