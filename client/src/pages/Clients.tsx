@@ -18,7 +18,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Client, Pet, Appointment } from "@shared/schema";
 
 // Status translation utilities
-const getStatusTranslation = (status: string) => {
+const getStatusTranslation = (status: string | null) => {
+  if (status === null || status === undefined) {
+    return "Sin estado";
+  }
+  
   const translations: Record<string, string> = {
     'scheduled': 'Programada',
     'in_progress': 'En Proceso',
@@ -30,7 +34,11 @@ const getStatusTranslation = (status: string) => {
   return translations[status] || status;
 };
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string | null) => {
+  if (status === null || status === undefined) {
+    return "bg-gray-100 text-gray-600 dark:bg-gray-700/50 dark:text-gray-400";
+  }
+  
   switch (status) {
     case "scheduled": return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
     case "in_progress": return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
