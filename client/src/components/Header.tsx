@@ -6,7 +6,8 @@ import { Calendar, Phone, Mail, LogOut, Moon, Sun, Settings, Clock } from "lucid
 import { VetGroomLogo } from "./VetGroomLogo";
 import { DebugControls } from "./DebugControls";
 import { TimezoneSettings } from "./TimezoneSettings";
-import { getCurrentTimeCST1, getTodayCST1, getCurrentTimeInUserTimezone, getTodayInUserTimezone, formatCST1Date, addDaysInUserTimezone } from "@shared/timeUtils";
+import { getCurrentTimeCST1, getTodayCST1, getCurrentTimeInUserTimezone, getTodayInUserTimezone, formatCST1Date } from "@shared/timeUtils";
+import { TabletCalendarNavigation } from "./TabletCalendarNavigation";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import { useScreenSize } from "@/hooks/useScreenSize";
 import { useState, useEffect } from "react";
@@ -16,7 +17,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-export function Header() {
+interface HeaderProps {
+  selectedDate?: string;
+  onDateChange?: (date: string) => void;
+}
+
+export function Header({ selectedDate, onDateChange }: HeaderProps = {}) {
   const { user } = useAuth();
   const { currentTenant, isDebugMode } = useTenant();
   const { theme, toggleTheme } = useTheme();
@@ -69,6 +75,13 @@ export function Header() {
     return (
       <header className="bg-card shadow-sm border-b border-border px-4 py-2">
         <div className="flex items-center justify-between">
+          {/* Tablet Calendar Navigation - only show if props are provided */}
+          {selectedDate && onDateChange && (
+            <TabletCalendarNavigation 
+              selectedDate={selectedDate} 
+              onDateChange={onDateChange} 
+            />
+          )}
           
           {/* Compact Logo and Title */}
           <div className="flex items-center space-x-2">
