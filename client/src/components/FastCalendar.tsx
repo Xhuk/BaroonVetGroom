@@ -453,7 +453,9 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
             ref={scrollContainerRef}
             className="overflow-y-auto h-full scroll-smooth relative"
             onScroll={handleScroll}
-            style={{ maxHeight: 'calc(100vh - 200px)' }}
+            style={{ 
+              maxHeight: isTabletLandscape ? 'calc(100vh - 120px)' : 'calc(100vh - 200px)' 
+            }}
           >
           
 
@@ -472,13 +474,16 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                 key={slot} 
                 className={cn(
                   "flex items-center border-b border-border last:border-b-0 relative",
-                  isTabletLandscape ? "h-[120px]" : "h-[80px]" // Expanded height for tablet landscape
+                  isTabletLandscape ? "h-[60px]" : "h-[80px]" // Reduced height for tablet to show more slots
                 )}
               >
 
                 
-                {/* Time label - Left aligned with proper spacing */}
-                <div className="w-16 text-center text-sm text-muted-foreground font-medium z-10 relative border-r border-border mr-4">
+                {/* Time label - Compact for tablet */}
+                <div className={cn(
+                  "text-center text-muted-foreground font-medium z-10 relative border-r border-border mr-4",
+                  isTabletLandscape ? "w-12 text-xs" : "w-16 text-sm"
+                )}>
                   {slot}
                 </div>
                 
@@ -489,8 +494,8 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                       <div
                         key={appointment.id}
                         className={cn(
-                          "p-2 mb-1 rounded-lg shadow-sm border-l-4 cursor-pointer hover:shadow-md transition-shadow",
-                          "mx-1", // Add horizontal margin for better alignment
+                          "rounded-lg shadow-sm border-l-4 cursor-pointer hover:shadow-md transition-shadow mx-1",
+                          isTabletLandscape ? "p-1 mb-1 text-xs" : "p-2 mb-1", // Compact padding for tablet
                           getAppointmentStyle(appointment)
                         )}
                       >
@@ -500,12 +505,18 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                               {appointment.type === 'grooming' ? '🐾' : '🩺'}
                             </span>
                             <div>
-                              <p className="font-semibold text-sm text-card-foreground">
+                              <p className={cn(
+                                "font-semibold text-card-foreground",
+                                isTabletLandscape ? "text-xs" : "text-sm"
+                              )}>
                                 Cliente - {appointment.type}
                               </p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className={cn(
+                                "text-muted-foreground",
+                                isTabletLandscape ? "text-[10px]" : "text-xs"
+                              )}>
                                 Mascota #{appointment.petId}
-                                {isOngoing(appointment) && <span className="ml-2 text-red-600 font-bold">🔴 EN CURSO</span>}
+                                {isOngoing(appointment) && <span className="ml-1 text-red-600 font-bold text-[10px]">🔴 EN CURSO</span>}
                               </p>
                             </div>
                           </div>
@@ -523,7 +534,10 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
                   ) : (
                     <button
                       onClick={() => handleSlotClick(slot)}
-                      className="text-muted-foreground text-sm italic hover:text-primary hover:bg-muted/50 p-2 rounded transition-colors w-full text-left"
+                      className={cn(
+                        "text-muted-foreground italic hover:text-primary hover:bg-muted/50 rounded transition-colors w-full text-left",
+                        isTabletLandscape ? "text-xs p-1" : "text-sm p-2"
+                      )}
                       data-testid={`button-book-slot-${slot.replace(':', '-')}`}
                     >
                       Libre - Click para reservar
