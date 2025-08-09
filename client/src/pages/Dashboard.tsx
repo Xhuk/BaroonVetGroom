@@ -153,21 +153,15 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Fast Calendar - positioned to end at same level as navigation */}
-        {showCalendar ? (
-          <FastCalendar 
-            appointments={appointmentData?.appointments || []} 
-            className="shadow-lg"
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            tenantId={currentTenant?.id}
-            showActionButtons={shouldUseRibbonNavigation}
-          />
-        ) : (
-          <div className="bg-card rounded-lg shadow-lg animate-pulse flex items-center justify-center h-96 tablet-card">
-            <div className="text-muted-foreground">Cargando calendario...</div>
-          </div>
-        )}
+        {/* Fast Calendar - Always render, positioned according to screen size */}
+        <FastCalendar 
+          appointments={appointmentData?.appointments || []} 
+          className="shadow-lg"
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          tenantId={currentTenant?.id}
+          showActionButtons={shouldUseRibbonNavigation}
+        />
       </div>
 
       {/* Fast Stats Ribbon - Hide when navigation ribbon is shown OR in tablet portrait mode */}

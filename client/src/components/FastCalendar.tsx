@@ -372,7 +372,8 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
       bottom: 'calc(100vh - 10px - 96px)', // Stats ribbon height
       right: '24px',
       left: '298px', // Navigation width 288px + 10px margin
-      marginLeft: '0px'
+      marginLeft: '0px',
+      zIndex: 1 // Ensure visibility
     };
   };
 
