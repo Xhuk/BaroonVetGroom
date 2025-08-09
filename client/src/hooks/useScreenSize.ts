@@ -28,10 +28,10 @@ export function useScreenSize(): ScreenSizeInfo {
         isSmallTablet: false,
         isMediumTablet: false,
         isLargeTablet: false,
-        isDesktop: true,
+        isDesktop: false,
         isMobilePhone: false,
-        is14InchMonitor: false,
-        deviceType: 'desktop',
+        is14InchMonitor: true,
+        deviceType: '14inch-monitor',
         shouldCollapseNavigation: false,
         orientationLandscape: true,
         isTabletLandscape: false,
@@ -60,8 +60,8 @@ export function useScreenSize(): ScreenSizeInfo {
                          (width >= 768 && width <= 1024 && screenDiagonal < 1500);
     const isMediumTablet = isTablet && isMediumScreen && !isSmallTablet;
     const isLargeTablet = isTablet && isLargeScreen;
-    const is14InchMonitor = isBrowser && !isTablet && !isMobile && width >= 1280 && width <= 1440;
-    const isDesktop = isBrowser && !isTablet && !isMobile && width > 1024;
+    const is14InchMonitor = isBrowser && !isTablet && !isMobile && width >= 1280 && width <= 1920;
+    const isDesktop = isBrowser && !isTablet && !isMobile && width > 1920; // Desktop only for larger than 1920px
     const isMobilePhone = isMobile && width < 768;
     
     // Tablet orientation logic
@@ -74,14 +74,15 @@ export function useScreenSize(): ScreenSizeInfo {
     const shouldHideBottomRibbon = isTabletPortrait; // Hide ribbon in portrait
     const shouldCollapseNavigation = isTabletPortrait; // Collapse sidebar in portrait
     
-    let deviceType: ScreenSizeInfo['deviceType'] = 'desktop';
+    let deviceType: ScreenSizeInfo['deviceType'] = '14inch-monitor'; // Default for 1920x1080
     if (isMobilePhone) deviceType = 'mobile';
     else if (isSmallTablet) deviceType = 'small-tablet';
     else if (isMediumTablet) deviceType = 'medium-tablet';
     else if (isLargeTablet) deviceType = 'large-tablet';
     else if (is14InchMonitor) deviceType = '14inch-monitor';
+    else if (isDesktop) deviceType = 'desktop';
     
-    console.log(`📱 Device Detection: ${deviceType}, landscape: ${orientationLandscape}, useRibbon: ${shouldUseRibbonNavigation}, hideSidebar: ${isTabletLandscape}`);
+    console.log(`📱 Device Detection: ${deviceType} (14inch: ${is14InchMonitor}, desktop: ${isDesktop}, width: ${width}), landscape: ${orientationLandscape}, useRibbon: ${shouldUseRibbonNavigation}, hideSidebar: ${isTabletLandscape}`);
     
     return {
       screenWidth: width,
