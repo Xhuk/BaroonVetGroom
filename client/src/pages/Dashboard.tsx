@@ -135,9 +135,9 @@ export default function Dashboard() {
     <ResponsiveLayout selectedDate={selectedDate} onDateChange={setSelectedDate}>
       {/* Main Content */}
       <div className="pb-40">
-        {/* Action Buttons - Desktop only (hidden on tablet) */}
+        {/* Action Buttons - Desktop positioned per backup (top: 95px, left: 298px) */}
         {!shouldUseRibbonNavigation && (
-          <div className="flex gap-4 mb-6 justify-start">
+          <div className="fixed top-[95px] left-[298px] flex gap-4 z-10">
             <Link href="/booking">
               <Button className="bg-green-600 hover:bg-green-700 text-white shadow-md dark:bg-green-700 dark:hover:bg-green-800">
                 <Phone className="w-4 h-4 mr-2" />

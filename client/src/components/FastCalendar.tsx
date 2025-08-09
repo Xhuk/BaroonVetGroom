@@ -365,18 +365,28 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
         marginLeft: '0px'
       };
     }
-    // Desktop positioning - from backup (DASHBOARD_FINAL_BACKUP.md)
+    // Desktop positioning - exact backup configuration
     return {
+      position: 'fixed' as const,
       top: '140px', // Action buttons at 95px, calendar at 140px
-      bottom: 'calc(100vh - 10px - 96px)', // Match backup positioning
+      bottom: 'calc(100vh - 10px - 96px)', // Stats ribbon height
       right: '24px',
-      left: '298px', // Navigation width 288px + margin
+      left: '298px', // Navigation width 288px + 10px margin
       marginLeft: '0px'
     };
   };
 
+  const calendarStyle = getCalendarStyle();
+  
   return (
-    <Card className={cn("fixed flex flex-col", className)} style={getCalendarStyle()}>
+    <Card 
+      className={cn(
+        "flex flex-col shadow-lg tablet-card",
+        !isTabletLandscape && "fixed", // Only fixed position on desktop
+        className
+      )} 
+      style={calendarStyle}
+    >
       <CardHeader className="flex-shrink-0">
         {/* Navigation Controls - Hide date in tablet landscape, show in desktop/portrait */}
         {!isTabletLandscape && (
