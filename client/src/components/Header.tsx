@@ -9,6 +9,7 @@ import { TimezoneSettings } from "./TimezoneSettings";
 import { getCurrentTimeCST1, getTodayCST1, getCurrentTimeInUserTimezone } from "@shared/timeUtils";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import { useScreenSize } from "@/hooks/useScreenSize";
+import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { 
   Popover,
@@ -21,7 +22,7 @@ export function Header() {
   const { currentTenant, isDebugMode } = useTenant();
   const { theme, toggleTheme } = useTheme();
   const { timezone } = useTimezone();
-  const { isTabletLandscape, isSmallTablet } = useScreenSize();
+  const { isTabletLandscape, isSmallTablet, is14InchMonitor } = useScreenSize();
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
 
@@ -109,11 +110,17 @@ export function Header() {
 
   // Desktop header layout
   return (
-    <header className="bg-card shadow-sm border-b border-border px-6 py-4">
+    <header className={cn(
+      "bg-card shadow-sm border-b border-border px-6 py-4",
+      is14InchMonitor && "header-14inch"
+    )}>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-3">
-            <VetGroomLogo className="w-10 h-10" />
+            <VetGroomLogo className={cn(
+              "w-10 h-10",
+              is14InchMonitor && "w-8 h-8"
+            )} />
             <div>
               <h1 className="text-2xl font-semibold text-primary">VetGroom</h1>
               <span className="text-sm text-muted-foreground">Gestión Veterinaria</span>
@@ -121,11 +128,17 @@ export function Header() {
           </div>
           <div className="text-sm text-muted-foreground">
             <div className="flex items-center mb-1">
-              <Calendar className="inline w-4 h-4 mr-2" />
+              <Calendar className={cn(
+                "inline w-4 h-4 mr-2",
+                is14InchMonitor && "icon-14inch mr-1"
+              )} />
               {currentDate}
             </div>
             <div className="flex items-center text-primary font-medium">
-              <Clock className="inline w-4 h-4 mr-2" />
+              <Clock className={cn(
+                "inline w-4 h-4 mr-2",
+                is14InchMonitor && "icon-14inch mr-1"
+              )} />
               {currentTime}
             </div>
           </div>
@@ -151,15 +164,27 @@ export function Header() {
             <div className="flex space-x-2">
               <Button
                 size="sm"
-                className="w-8 h-8 rounded-full bg-green-500 hover:bg-green-600 text-white p-0"
+                className={cn(
+                  "w-8 h-8 rounded-full bg-green-500 hover:bg-green-600 text-white p-0",
+                  is14InchMonitor && "button-14inch"
+                )}
               >
-                <Phone className="w-3 h-3" />
+                <Phone className={cn(
+                  "w-3 h-3",
+                  is14InchMonitor && "icon-14inch"
+                )} />
               </Button>
               <Button
                 size="sm" 
-                className="w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white p-0"
+                className={cn(
+                  "w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white p-0",
+                  is14InchMonitor && "button-14inch"
+                )}
               >
-                <Mail className="w-3 h-3" />
+                <Mail className={cn(
+                  "w-3 h-3",
+                  is14InchMonitor && "icon-14inch"
+                )} />
               </Button>
             </div>
 
@@ -167,9 +192,15 @@ export function Header() {
               onClick={toggleTheme}
               variant="outline"
               size="sm"
-              className="w-8 h-8 rounded-full p-0"
+              className={cn(
+                "w-8 h-8 rounded-full p-0",
+                is14InchMonitor && "button-14inch"
+              )}
             >
-              {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              {theme === "light" ? 
+                <Moon className={cn("w-4 h-4", is14InchMonitor && "icon-14inch")} /> : 
+                <Sun className={cn("w-4 h-4", is14InchMonitor && "icon-14inch")} />
+              }
             </Button>
             <Popover>
               <PopoverTrigger asChild>

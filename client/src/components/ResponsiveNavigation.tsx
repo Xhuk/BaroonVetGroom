@@ -26,7 +26,7 @@ interface ResponsiveNavigationProps {
 export function ResponsiveNavigation({ className }: ResponsiveNavigationProps) {
   const { canAccessAdmin, canAccessSuperAdmin } = useAccessControl();
   const { currentTenant } = useTenant();
-  const { deviceType, shouldCollapseNavigation, isSmallTablet, isTabletLandscape } = useScreenSize();
+  const { deviceType, shouldCollapseNavigation, isSmallTablet, isTabletLandscape, is14InchMonitor } = useScreenSize();
 
   console.log(`📱 ResponsiveNavigation: Device ${deviceType}, shouldCollapse: ${shouldCollapseNavigation}, landscape: ${isTabletLandscape}`);
 
@@ -151,7 +151,8 @@ export function ResponsiveNavigation({ className }: ResponsiveNavigationProps) {
                     <Heart 
                       className={cn(
                         "w-5 h-5 text-red-500", 
-                        getHeartBeatClass()
+                        getHeartBeatClass(),
+                        is14InchMonitor && "nav-icon-14inch"
                       )} 
                     />
                     {config.followUpShowCount && followUpCount > 0 && (
@@ -166,7 +167,10 @@ export function ResponsiveNavigation({ className }: ResponsiveNavigationProps) {
                     )}
                   </div>
                 ) : (
-                  <item.icon className="w-5 h-5" />
+                  <item.icon className={cn(
+                    "w-5 h-5",
+                    is14InchMonitor && "nav-icon-14inch"
+                  )} />
                 )}
                 
                 {!shouldCollapseNavigation && <span>{item.label}</span>}
@@ -191,7 +195,10 @@ export function ResponsiveNavigation({ className }: ResponsiveNavigationProps) {
                   )}
                   title={shouldCollapseNavigation ? item.label : undefined}
                 >
-                  <item.icon className="w-5 h-5" />
+                  <item.icon className={cn(
+                    "w-5 h-5",
+                    is14InchMonitor && "nav-icon-14inch"
+                  )} />
                   {!shouldCollapseNavigation && <span>{item.label}</span>}
                 </a>
               ))}
