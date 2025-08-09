@@ -95,20 +95,20 @@ export function RibbonNavigation({ className }: RibbonNavigationProps) {
       "fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-800/95 via-slate-700/95 to-slate-800/95 backdrop-blur-md border-t border-slate-600/50 z-30 shadow-2xl",
       className
     )}>
-      <div className="px-4 py-3">
-        <div className="flex items-center justify-center space-x-2 overflow-x-auto">
+      <div className="px-2 py-2">
+        <div className="flex items-center justify-between max-w-full overflow-x-auto">
           {allItems.map((item) => (
             <a
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center justify-center p-3 min-w-[80px] text-muted-foreground hover:text-primary hover:bg-muted/20 transition-colors rounded-lg group tablet-touch"
+              className="flex flex-col items-center justify-center p-2 flex-1 max-w-[90px] text-muted-foreground hover:text-primary hover:bg-muted/20 transition-colors rounded-lg group tablet-touch"
               title={item.label}
             >
               {item.label === "Seguimientos" ? (
                 <div className="relative flex items-center justify-center">
                   <Heart 
                     className={cn(
-                      "w-6 h-6 text-red-500 mb-1", 
+                      "w-5 h-5 text-red-500 mb-1", 
                       getHeartBeatClass()
                     )} 
                   />
@@ -119,9 +119,9 @@ export function RibbonNavigation({ className }: RibbonNavigationProps) {
                   )}
                 </div>
               ) : (
-                <item.icon className="w-6 h-6 mb-1 group-hover:scale-110 transition-transform" />
+                <item.icon className="w-5 h-5 mb-1 group-hover:scale-110 transition-transform" />
               )}
-              <span className="text-xs font-medium text-center leading-tight">
+              <span className="text-[10px] font-medium text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
                 {item.label}
               </span>
             </a>

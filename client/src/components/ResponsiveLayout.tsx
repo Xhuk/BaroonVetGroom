@@ -16,8 +16,9 @@ export function ResponsiveLayout({ children, showNavigation = true }: Responsive
     if (!showNavigation) return "";
     
     // In tablet landscape, no sidebar navigation (ribbon takes over)
+    // Calendar should expand full width
     if (isTabletLandscape) {
-      return "pl-0";
+      return "pl-0 pr-0"; // Full width for calendar in tablet mode
     }
     
     if (shouldCollapseNavigation) {
@@ -28,10 +29,10 @@ export function ResponsiveLayout({ children, showNavigation = true }: Responsive
 
   const getContentPadding = () => {
     if (isTabletLandscape) {
-      return "pt-20 pb-20"; // Padding for ribbon at bottom
+      return "pt-16 pb-20 px-2"; // Compact padding for full-width calendar, reduced top padding for tablet header
     }
     if (isSmallTablet) {
-      return "pt-20 pb-4"; // Reduced padding for small tablets
+      return "pt-16 pb-4 px-4"; // Reduced padding for small tablets, compact header
     }
     return "pt-24 pb-6"; // Original padding for larger screens
   };

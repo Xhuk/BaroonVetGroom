@@ -8,6 +8,7 @@ import { DebugControls } from "./DebugControls";
 import { TimezoneSettings } from "./TimezoneSettings";
 import { getCurrentTimeCST1, getTodayCST1, getCurrentTimeInUserTimezone } from "@shared/timeUtils";
 import { useTimezone } from "@/contexts/TimezoneContext";
+import { useScreenSize } from "@/hooks/useScreenSize";
 import { useState, useEffect } from "react";
 import { 
   Popover,
@@ -20,6 +21,7 @@ export function Header() {
   const { currentTenant, isDebugMode } = useTenant();
   const { theme, toggleTheme } = useTheme();
   const { timezone } = useTimezone();
+  const { isTabletLandscape, isSmallTablet } = useScreenSize();
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
 
@@ -62,6 +64,50 @@ export function Header() {
     logout();
   };
 
+  // Tablet-specific header layout
+  if (isTabletLandscape || isSmallTablet) {
+    return (
+      <header className="bg-card shadow-sm border-b border-border px-4 py-2">
+        <div className="flex items-center justify-between">
+          {/* Compact Logo and Title */}
+          <div className="flex items-center space-x-2">
+            <VetGroomLogo className="w-8 h-8" />
+            <div>
+              <h1 className="text-lg font-semibold text-primary">VetGroom</h1>
+              {!isSmallTablet && (
+                <span className="text-xs text-muted-foreground">Gestión Veterinaria</span>
+              )}
+            </div>
+          </div>
+
+          {/* Compact User Info */}
+          <div className="flex items-center space-x-2">
+            <div className="text-right">
+              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                <span>{currentTime}</span>
+              </div>
+              {!isSmallTablet && (
+                <div className="text-xs text-muted-foreground">
+                  {currentDate.split(',')[0]} {/* Show only day and date, not full date */}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center space-x-1">
+              <Button variant="ghost" size="sm" onClick={toggleTheme}>
+                {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // Desktop header layout
   return (
     <header className="bg-card shadow-sm border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">

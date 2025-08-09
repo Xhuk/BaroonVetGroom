@@ -62,6 +62,33 @@ select.dark,
   border-color: rgb(75 85 99) !important; /* gray-600 */
 }
 
+/* Tablet-optimized calendar container */
+.tablet-container {
+  /* Full width calendar for tablet landscape mode */
+  @media (min-width: 640px) and (max-width: 1024px) and (orientation: landscape) {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    max-width: 100% !important;
+  }
+  
+  /* Small tablet optimizations */
+  @media (min-width: 640px) and (max-width: 768px) {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+/* Touch-friendly tablet navigation */
+.tablet-touch {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tablet-touch:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease-in-out;
+}
+
 /* Override any possible conflicting styles */
 .dark textarea[style],
 .dark input[style],
