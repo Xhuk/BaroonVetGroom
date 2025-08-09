@@ -20,7 +20,7 @@ export default function Dashboard() {
   const { isAuthenticated, isLoading } = useAuth();
   const { currentTenant, isLoading: tenantLoading, isDebugMode } = useTenant();
   const { isInstant, startBackgroundLoad, completeLoad } = useFastLoad();
-  const { shouldHideBottomRibbon } = useScreenSize();
+  const { shouldHideBottomRibbon, shouldUseRibbonNavigation } = useScreenSize();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -177,10 +177,10 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Fast Stats Ribbon - Hide in tablet portrait mode */}
-      {!shouldHideBottomRibbon && showStats ? (
+      {/* Fast Stats Ribbon - Hide when navigation ribbon is shown OR in tablet portrait mode */}
+      {!shouldHideBottomRibbon && !shouldUseRibbonNavigation && showStats ? (
         <FastStatsRibbon stats={stats} />
-      ) : !shouldHideBottomRibbon ? (
+      ) : !shouldHideBottomRibbon && !shouldUseRibbonNavigation ? (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 backdrop-blur-md border-t border-slate-600/50 z-20 shadow-2xl">
           <div className="px-8 py-4">
             <div className="flex items-center justify-between">

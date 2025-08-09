@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import type { Appointment } from "@shared/schema";
 import { getTodayCST1, addDaysCST1, formatCST1Date, getCurrentTimeCST1, getCurrentTimeInUserTimezone, getTodayInUserTimezone, addDaysInUserTimezone } from "@shared/timeUtils";
 import { useTimezone } from "@/contexts/TimezoneContext";
+import { useScreenSize } from "@/hooks/useScreenSize";
 
 interface FastCalendarProps {
   appointments: Appointment[];
@@ -21,6 +22,7 @@ interface FastCalendarProps {
 export function FastCalendar({ appointments, className, selectedDate, onDateChange, tenantId }: FastCalendarProps) {
   const [, setLocation] = useLocation();
   const { timezone } = useTimezone();
+  const { isTabletLandscape } = useScreenSize();
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInUserTimezone(timezone));
   const [isScrolling, setIsScrolling] = useState(false);
   const [displayDate, setDisplayDate] = useState(() => {
@@ -351,8 +353,29 @@ export function FastCalendar({ appointments, className, selectedDate, onDateChan
   
   const redLineStyle = getRedLineStyle();
 
+  // Calendar positioning - full width in tablet landscape, sidebar space otherwise
+  const getCalendarStyle = () => {
+    if (isTabletLandscape) {
+      return {
+        top: '70px', // Reduced top for compact tablet header
+        bottom: 'calc(10px + 96px)', // Account for ribbon navigation 
+        right: '12px', // Reduced margins for tablet
+        left: '12px', // Full width with small margins
+        marginLeft: '0px'
+      };
+    }
+    // Default desktop positioning
+    return {
+      top: '140px',
+      bottom: 'calc(10px + 96px)',
+      right: '24px',
+      left: '298px', // Account for sidebar
+      marginLeft: '0px'
+    };
+  };
+
   return (
-    <Card className={cn("fixed flex flex-col", className)} style={{ top: '140px', bottom: 'calc(10px + 96px)', right: '24px', left: '298px', marginLeft: '0px' }}>
+    <Card className={cn("fixed flex flex-col", className)} style={getCalendarStyle()}>
       <CardHeader className="flex-shrink-0">
         <div className="flex justify-between items-center mb-2">
           <button
