@@ -207,7 +207,7 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
 
       {/* Calendar Dialog */}
       <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="max-w-full sm:max-w-full md:max-w-2xl lg:max-w-4xl w-full mx-4">
           <DialogHeader>
             <DialogTitle>Seleccionar Fecha</DialogTitle>
           </DialogHeader>
@@ -216,7 +216,7 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
               mode="single"
               selected={selectedDate}
               onSelect={handleDateSelect}
-              className="rounded-md border"
+              className="rounded-md border w-full"
               data-testid="calendar-picker"
             />
             <div className="flex justify-end space-x-2">
