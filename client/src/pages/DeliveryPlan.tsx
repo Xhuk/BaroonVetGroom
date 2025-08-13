@@ -311,7 +311,7 @@ export default function DeliveryPlan() {
             />
             <div className="border-l border-gray-300 dark:border-gray-600 pl-4">
               <h1 className="text-3xl font-bold text-blue-800 dark:text-blue-300 mb-1">
-                Pickup & Delivery System
+                Planificador de Entregas
               </h1>
               <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
                 Gestión de recolección y entrega de mascotas con ondas programadas
