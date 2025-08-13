@@ -786,8 +786,28 @@ export const routeOptimizationConfig = pgTable("route_optimization_config", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Fraccionamientos management for route optimization
+export const fraccionamientos = pgTable("fraccionamientos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  name: varchar("name").notNull(),
+  displayName: varchar("display_name").notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 8 }),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  weight: decimal("weight", { precision: 4, scale: 2 }).default("1.0"), // Route optimization weight (1.0 = normal, higher = priority)
+  priority: integer("priority").default(1), // Delivery priority (1 = highest)
+  isActive: boolean("is_active").default(true),
+  postalCode: varchar("postal_code"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export type RouteOptimizationConfig = typeof routeOptimizationConfig.$inferSelect;
 export type InsertRouteOptimizationConfig = typeof routeOptimizationConfig.$inferInsert;
+
+export type Fraccionamiento = typeof fraccionamientos.$inferSelect;
+export type InsertFraccionamiento = typeof fraccionamientos.$inferInsert;
 
 // Delivery routes for actual driver route management
 export const deliveryRoutes = pgTable("delivery_routes", {

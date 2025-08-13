@@ -11,7 +11,7 @@ import { TempLinkService } from "./tempLinkService";
 import { tempLinkTypes } from "../shared/tempLinks";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
-import { pets, companies, tempLinks } from "@shared/schema";
+import { pets, companies, tempLinks, fraccionamientos } from "@shared/schema";
 import { gt } from "drizzle-orm";
 import { subscriptionService } from "./subscriptionService";
 import express from "express";
@@ -3107,6 +3107,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching company calendar config:", error);
       res.status(500).json({ message: "Failed to fetch calendar configuration" });
+    }
+  });
+
+  // Fraccionamientos Management Routes (Admin)
+  app.get('/api/admin/fraccionamientos/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      const fraccionamientosList = await db.select()
+        .from(fraccionamientos)
+        .where(eq(fraccionamientos.tenantId, tenantId))
+        .orderBy(fraccionamientos.displayName);
+      
+      res.json(fraccionamientosList);
+    } catch (error) {
+      console.error("Error fetching fraccionamientos:", error);
+      res.status(500).json({ message: "Failed to fetch fraccionamientos" });
+    }
+  });
+
+  app.post('/api/admin/fraccionamientos/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const fraccionamientoData = { ...req.body, tenantId };
+      
+      const newFraccionamiento = await db.insert(fraccionamientos)
+        .values(fraccionamientoData)
+        .returning();
+      
+      res.json(newFraccionamiento[0]);
+    } catch (error) {
+      console.error("Error creating fraccionamiento:", error);
+      res.status(500).json({ message: "Failed to create fraccionamiento" });
+    }
+  });
+
+  app.put('/api/admin/fraccionamientos/:id', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const updatedFraccionamiento = await db.update(fraccionamientos)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(fraccionamientos.id, id))
+        .returning();
+        
+      if (updatedFraccionamiento.length === 0) {
+        return res.status(404).json({ message: "Fraccionamiento not found" });
+      }
+      
+      res.json(updatedFraccionamiento[0]);
+    } catch (error) {
+      console.error("Error updating fraccionamiento:", error);
+      res.status(500).json({ message: "Failed to update fraccionamiento" });
+    }
+  });
+
+  app.delete('/api/admin/fraccionamientos/:id', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      await db.delete(fraccionamientos)
+        .where(eq(fraccionamientos.id, id));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting fraccionamiento:", error);
+      res.status(500).json({ message: "Failed to delete fraccionamiento" });
     }
   });
 

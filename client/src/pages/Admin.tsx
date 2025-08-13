@@ -1051,7 +1051,7 @@ function Admin() {
           </div>
 
           <Tabs defaultValue="rooms" className="w-full">
-            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-7' : 'grid-cols-6'}`}>
+            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-8' : 'grid-cols-7'}`}>
               <TabsTrigger value="rooms" className="flex items-center gap-2">
                 <DoorOpen className="w-4 h-4" />
                 Salas
@@ -1071,6 +1071,10 @@ function Admin() {
               <TabsTrigger value="delivery-config" className="flex items-center gap-2">
                 <Truck className="w-4 h-4" />
                 Entregas
+              </TabsTrigger>
+              <TabsTrigger value="fraccionamientos" className="flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Fraccionamientos
               </TabsTrigger>
               <TabsTrigger value="stats" className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
@@ -2376,6 +2380,51 @@ function Admin() {
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">Vanes de Entrega</div>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Fraccionamientos Tab */}
+            <TabsContent value="fraccionamientos" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                  Gestión de Fraccionamientos
+                </h2>
+                <Button 
+                  onClick={() => window.location.href = '/admin/fraccionamientos'}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  data-testid="button-open-fraccionamientos"
+                >
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Abrir Editor Completo
+                </Button>
+              </div>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    Configuración de Fraccionamientos
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Gestiona los fraccionamientos y sus configuraciones de peso para optimizar las rutas de entrega.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <MapPin className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                    <p className="text-lg font-medium mb-2">Editor de Fraccionamientos</p>
+                    <p className="text-sm mb-4">
+                      Utiliza el editor completo para gestionar fraccionamientos, configurar pesos y coordenadas.
+                    </p>
+                    <Button 
+                      onClick={() => window.location.href = '/admin/fraccionamientos'}
+                      variant="outline"
+                      className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900"
+                    >
+                      Abrir Editor de Fraccionamientos
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

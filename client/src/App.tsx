@@ -42,6 +42,7 @@ import FollowUpTasks from "@/pages/FollowUpTasks";
 import AdminPaymentGateways from "@/pages/AdminPaymentGateways";
 import AdminFollowUpConfig from "@/pages/AdminFollowUpConfig";
 import AdminExternalServices from "@/pages/AdminExternalServices";
+import AdminFraccionamientos from "@/pages/AdminFraccionamientos";
 import BillingManagement from "@/pages/BillingManagement";
 import { VersionedSuperAdminDashboard } from "@/components/VersionedSuperAdminDashboard";
 import EmailConfigurationAdmin from "@/pages/EmailConfigurationAdmin";
@@ -124,6 +125,7 @@ function Router() {
           <Route path="/admin/follow-up-config" component={AdminFollowUpConfig} />
           <Route path="/admin/van-config" component={AdminVanConfig} />
           <Route path="/admin/external-services" component={AdminExternalServices} />
+          <Route path="/admin/fraccionamientos" component={AdminFraccionamientos} />
           <Route path="/admin/receipt-templates" component={ReceiptTemplatesAdmin} />
           <Route path="/admin/company-clinic" component={CompanyClinicAdmin} />
           <Route path="/store" component={ServiceStore} />
