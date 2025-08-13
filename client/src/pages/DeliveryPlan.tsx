@@ -297,9 +297,8 @@ export default function DeliveryPlan() {
     <div className="p-6 max-w-7xl mx-auto">
       {/* Professional Header with Clean White Background */}
       <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-        {/* Top Row: Title and Action Buttons */}
-        <div className="flex items-center justify-between mb-4">
-          {/* Left: Title and Description */}
+        <div className="flex items-center justify-between">
+          {/* Left: Title, Description and Date Selector */}
           <div className="flex items-start gap-4">
             <BackButton 
               href="/"
@@ -310,9 +309,34 @@ export default function DeliveryPlan() {
               testId="button-back-to-dashboard"
             />
             <div className="border-l border-gray-300 dark:border-gray-600 pl-4">
-              <h1 className="text-3xl font-bold text-blue-800 dark:text-blue-300">
-                Pickup & Delivery System
-              </h1>
+              <div className="flex items-center gap-6 mb-2">
+                <h1 className="text-3xl font-bold text-blue-800 dark:text-blue-300">
+                  Pickup & Delivery System
+                </h1>
+                {/* Date Selector */}
+                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha:</label>
+                  <select
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="ml-2 bg-transparent border-0 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 cursor-pointer"
+                    data-testid="select-delivery-date"
+                  >
+                    <option value="2025-08-25">25 Ago 2025 (Con datos)</option>
+                    {next7Days.map(date => {
+                      const dateObj = new Date(date);
+                      const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' });
+                      const dateStr = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+                      return (
+                        <option key={date} value={date}>
+                          {dayName}, {dateStr}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              </div>
               <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
                 Gestión de recolección y entrega de mascotas con ondas programadas
               </p>
@@ -361,30 +385,6 @@ export default function DeliveryPlan() {
               {optimizeRouteMutation.isPending ? "Optimizando..." : "Optimizar VRP"}
             </Button>
           </div>
-        </div>
-        
-        {/* Bottom Row: Date Selector */}
-        <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 w-fit">
-          <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha:</label>
-          <select
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="ml-2 bg-transparent border-0 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 cursor-pointer"
-            data-testid="select-delivery-date"
-          >
-            <option value="2025-08-25">25 Ago 2025 (Con datos)</option>
-            {next7Days.map(date => {
-              const dateObj = new Date(date);
-              const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' });
-              const dateStr = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-              return (
-                <option key={date} value={date}>
-                  {dayName}, {dateStr}
-                </option>
-              );
-            })}
-          </select>
         </div>
       </div>
 
