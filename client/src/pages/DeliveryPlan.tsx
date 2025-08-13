@@ -305,10 +305,10 @@ export default function DeliveryPlan() {
             className="text-gray-600 hover:text-gray-900"
             testId="button-back-to-dashboard"
           />
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-blue-800">Pickup & Delivery System</h1>
-            <div className="hidden md:block text-gray-300">|</div>
-            <p className="text-sm text-gray-600 hidden md:block">Gestión de recolección y entrega de mascotas con ondas programadas</p>
+          <div className="flex flex-row items-center gap-4 whitespace-nowrap">
+            <h1 className="text-2xl font-bold text-blue-800 inline">Pickup & Delivery System</h1>
+            <div className="text-gray-300 inline">•</div>
+            <p className="text-sm text-gray-600 inline">Gestión de recolección y entrega de mascotas con ondas programadas</p>
           </div>
         </div>
         <div className="flex gap-3 items-center">
