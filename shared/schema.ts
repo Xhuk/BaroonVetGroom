@@ -453,6 +453,11 @@ export const slotReservations = pgTable("slot_reservations", {
 export type SlotReservation = typeof slotReservations.$inferSelect;
 export type InsertSlotReservation = typeof slotReservations.$inferInsert;
 
+export type VanCage = typeof vanCages.$inferSelect;
+export type InsertVanCage = typeof vanCages.$inferInsert;
+export type CageAssignment = typeof cageAssignments.$inferSelect;
+export type InsertCageAssignment = typeof cageAssignments.$inferInsert;
+
 // Webhook Error Logs for Super Admin Monitoring
 export const webhookErrorLogs = pgTable("webhook_error_logs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -504,8 +509,44 @@ export const vans = pgTable("vans", {
   maxWeight: integer("max_weight").notNull().default(100), // kg
   dailyRoutes: integer("daily_routes").notNull().default(2),
   isActive: boolean("is_active").notNull().default(true),
+  // Cage layout configuration
+  cageLayout: jsonb("cage_layout"), // JSON structure for cage positions and sizes
+  totalCages: integer("total_cages").default(0),
+  layoutWidth: integer("layout_width").default(3), // Grid width (columns)
+  layoutHeight: integer("layout_height").default(5), // Grid height (rows)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Individual cage configurations within vans
+export const vanCages = pgTable("van_cages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vanId: varchar("van_id").notNull().references(() => vans.id),
+  cageNumber: integer("cage_number").notNull(), // Unique number within the van
+  size: varchar("size").notNull().default("medium"), // small, medium, large
+  type: varchar("type").notNull().default("mixed"), // cat, dog, mixed
+  position: jsonb("position").notNull(), // {x: 0, y: 0, width: 1, height: 1}
+  maxWeight: integer("max_weight").default(25), // kg per cage
+  isOccupied: boolean("is_occupied").default(false),
+  occupantPetId: varchar("occupant_pet_id").references(() => pets.id),
+  notes: text("notes"), // Special instructions or cage details
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Cage assignment history for tracking
+export const cageAssignments = pgTable("cage_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  cageId: varchar("cage_id").notNull().references(() => vanCages.id),
+  petId: varchar("pet_id").notNull().references(() => pets.id),
+  appointmentId: varchar("appointment_id").references(() => appointments.id),
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  unassignedAt: timestamp("unassigned_at"),
+  assignedBy: varchar("assigned_by").references(() => staff.id), // Staff member who made assignment
+  reason: varchar("reason").default("transport"), // transport, medical, isolation
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Medical Appointments - comprehensive appointment-based workflow

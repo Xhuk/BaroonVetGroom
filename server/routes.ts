@@ -7224,5 +7224,111 @@ This password expires in 24 hours.
   });
 
   const httpServer = createServer(app);
+  // Van Cage Management API
+  app.get('/api/van-cages/:vanId', isAuthenticated, async (req, res) => {
+    try {
+      const { vanId } = req.params;
+      const cages = await storage.getVanCages(vanId);
+      res.json(cages);
+    } catch (error) {
+      console.error("Error fetching van cages:", error);
+      res.status(500).json({ message: "Failed to fetch van cages" });
+    }
+  });
+
+  app.post('/api/van-cages', isAuthenticated, async (req, res) => {
+    try {
+      const cageData = req.body;
+      const cage = await storage.createVanCage(cageData);
+      
+      // Update van total cages count
+      const cages = await storage.getVanCages(cage.vanId);
+      await storage.updateVan(cage.vanId, { totalCages: cages.length });
+      
+      res.json(cage);
+    } catch (error) {
+      console.error("Error creating van cage:", error);
+      res.status(500).json({ message: "Failed to create van cage" });
+    }
+  });
+
+  app.patch('/api/van-cages/:cageId', isAuthenticated, async (req, res) => {
+    try {
+      const { cageId } = req.params;
+      const updates = req.body;
+      const cage = await storage.updateVanCage(cageId, updates);
+      res.json(cage);
+    } catch (error) {
+      console.error("Error updating van cage:", error);
+      res.status(500).json({ message: "Failed to update van cage" });
+    }
+  });
+
+  app.delete('/api/van-cages/:cageId', isAuthenticated, async (req, res) => {
+    try {
+      const { cageId } = req.params;
+      const cage = await storage.getVanCage(cageId);
+      if (!cage) {
+        return res.status(404).json({ message: "Van cage not found" });
+      }
+      
+      await storage.deleteVanCage(cageId);
+      
+      // Update van total cages count
+      const remainingCages = await storage.getVanCages(cage.vanId);
+      await storage.updateVan(cage.vanId, { totalCages: remainingCages.length });
+      
+      res.json({ success: true, message: "Van cage deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting van cage:", error);
+      res.status(500).json({ message: "Failed to delete van cage" });
+    }
+  });
+
+  // Cage Assignment API
+  app.post('/api/cage-assignments', isAuthenticated, async (req, res) => {
+    try {
+      const assignmentData = req.body;
+      const assignment = await storage.createCageAssignment(assignmentData);
+      
+      // Update cage occupancy status
+      await storage.updateVanCage(assignmentData.cageId, {
+        isOccupied: true,
+        occupantPetId: assignmentData.petId
+      });
+      
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error creating cage assignment:", error);
+      res.status(500).json({ message: "Failed to create cage assignment" });
+    }
+  });
+
+  app.patch('/api/cage-assignments/:assignmentId/unassign', isAuthenticated, async (req, res) => {
+    try {
+      const { assignmentId } = req.params;
+      const assignment = await storage.getCageAssignment(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ message: "Cage assignment not found" });
+      }
+      
+      // Mark assignment as unassigned
+      await storage.updateCageAssignment(assignmentId, {
+        unassignedAt: new Date()
+      });
+      
+      // Update cage occupancy status
+      await storage.updateVanCage(assignment.cageId, {
+        isOccupied: false,
+        occupantPetId: null
+      });
+      
+      res.json({ success: true, message: "Pet unassigned from cage successfully" });
+    } catch (error) {
+      console.error("Error unassigning cage:", error);
+      res.status(500).json({ message: "Failed to unassign cage" });
+    }
+  });
+
   return httpServer;
 }

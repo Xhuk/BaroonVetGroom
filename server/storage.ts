@@ -18,6 +18,8 @@ import {
   webhookErrorLogs,
   webhookMonitoring,
   vans,
+  vanCages,
+  cageAssignments,
   routeOptimizationConfig,
   savedRoutes,
   betaFeatureUsage,
@@ -89,6 +91,10 @@ import {
   type InsertWebhookMonitoring,
   type Van,
   type InsertVan,
+  type VanCage,
+  type InsertVanCage,
+  type CageAssignment,
+  type InsertCageAssignment,
   type RouteOptimizationConfig,
   type InsertRouteOptimizationConfig,
   type DeliveryTracking,
@@ -3196,6 +3202,128 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching company clinics:', error);
       return [];
+    }
+  }
+
+  // Van Cage Management Methods
+  async getVanCages(vanId: string): Promise<VanCage[]> {
+    try {
+      const result = await db
+        .select()
+        .from(vanCages)
+        .where(and(eq(vanCages.vanId, vanId), eq(vanCages.isActive, true)))
+        .orderBy(asc(vanCages.cageNumber));
+      return result;
+    } catch (error) {
+      console.error('Error fetching van cages:', error);
+      throw error;
+    }
+  }
+
+  async getVanCage(cageId: string): Promise<VanCage | null> {
+    try {
+      const [result] = await db
+        .select()
+        .from(vanCages)
+        .where(eq(vanCages.id, cageId));
+      return result || null;
+    } catch (error) {
+      console.error('Error fetching van cage:', error);
+      throw error;
+    }
+  }
+
+  async createVanCage(cageData: InsertVanCage): Promise<VanCage> {
+    try {
+      const [result] = await db
+        .insert(vanCages)
+        .values(cageData)
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating van cage:', error);
+      throw error;
+    }
+  }
+
+  async updateVanCage(cageId: string, updates: Partial<VanCage>): Promise<VanCage> {
+    try {
+      const [result] = await db
+        .update(vanCages)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(vanCages.id, cageId))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating van cage:', error);
+      throw error;
+    }
+  }
+
+  async deleteVanCage(cageId: string): Promise<void> {
+    try {
+      await db
+        .update(vanCages)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(vanCages.id, cageId));
+    } catch (error) {
+      console.error('Error deleting van cage:', error);
+      throw error;
+    }
+  }
+
+  // Cage Assignment Methods
+  async getCageAssignment(assignmentId: string): Promise<CageAssignment | null> {
+    try {
+      const [result] = await db
+        .select()
+        .from(cageAssignments)
+        .where(eq(cageAssignments.id, assignmentId));
+      return result || null;
+    } catch (error) {
+      console.error('Error fetching cage assignment:', error);
+      throw error;
+    }
+  }
+
+  async createCageAssignment(assignmentData: InsertCageAssignment): Promise<CageAssignment> {
+    try {
+      const [result] = await db
+        .insert(cageAssignments)
+        .values(assignmentData)
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating cage assignment:', error);
+      throw error;
+    }
+  }
+
+  async updateCageAssignment(assignmentId: string, updates: Partial<CageAssignment>): Promise<CageAssignment> {
+    try {
+      const [result] = await db
+        .update(cageAssignments)
+        .set(updates)
+        .where(eq(cageAssignments.id, assignmentId))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating cage assignment:', error);
+      throw error;
+    }
+  }
+
+  async updateVan(vanId: string, updates: Partial<Van>): Promise<Van> {
+    try {
+      const [result] = await db
+        .update(vans)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(vans.id, vanId))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating van:', error);
+      throw error;
     }
   }
   
