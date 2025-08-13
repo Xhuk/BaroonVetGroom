@@ -312,35 +312,34 @@ export default function DeliveryPlan() {
               <h1 className="text-3xl font-bold text-blue-800 dark:text-blue-300 mb-2">
                 Pickup & Delivery System
               </h1>
-              <div className="flex items-center justify-between">
-                <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
-                  Gestión de recolección y entrega de mascotas con ondas programadas
-                </p>
-                {/* Date Selector aligned with description */}
-                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 ml-8">
-                  <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha:</label>
-                  <select
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="ml-2 bg-transparent border-0 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 cursor-pointer"
-                    data-testid="select-delivery-date"
-                  >
-                    <option value="2025-08-25">25 Ago 2025 (Con datos)</option>
-                    {next7Days.map(date => {
-                      const dateObj = new Date(date);
-                      const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' });
-                      const dateStr = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-                      return (
-                        <option key={date} value={date}>
-                          {dayName}, {dateStr}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              </div>
+              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
+                Gestión de recolección y entrega de mascotas con ondas programadas
+              </p>
             </div>
+          </div>
+          
+          {/* Center Section: Date Selector */}
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600">
+            <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha:</label>
+            <select
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="ml-2 bg-transparent border-0 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 cursor-pointer"
+              data-testid="select-delivery-date"
+            >
+              <option value="2025-08-25">25 Ago 2025 (Con datos)</option>
+              {next7Days.map(date => {
+                const dateObj = new Date(date);
+                const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' });
+                const dateStr = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+                return (
+                  <option key={date} value={date}>
+                    {dayName}, {dateStr}
+                  </option>
+                );
+              })}
+            </select>
           </div>
           
           {/* Right Section: Action Buttons */}
