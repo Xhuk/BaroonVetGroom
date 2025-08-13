@@ -117,7 +117,7 @@ export async function seedFraccionamientosData() {
 }
 
 // Allow direct execution
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   seedFraccionamientosData()
     .then(() => {
       console.log("✅ Seeding completed");

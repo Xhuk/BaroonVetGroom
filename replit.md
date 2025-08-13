@@ -18,6 +18,7 @@ A high-performance Software-as-a-Service (SaaS) platform for veterinary clinic m
 - Block phone access except for SuperAdmin role for administrative tasks
 - Comprehensive responsive breakpoints for different tablet sizes
 - Spanish localization support with "Caja" instead of "Facturación"
+- Calendar widget with full-width days for optimal container utilization
 - Ethereal pulse effect for current time red line with adjustable transparency and thickness
 - **SuperAdmin Architecture:** SuperAdmin role must be completely tenant-independent, acting as the "ruler over all" companies and services without any tenant:id dependency
 
@@ -57,6 +58,7 @@ The system is built on a modern stack emphasizing speed, scalability, and mainta
 - **Comprehensive Pickup & Delivery System:** Redesigned interface with separate Inbound (Pickup) and Outbound (Delivery) tabs, mobile driver dashboard (`/driver-mobile`) with real-time GPS tracking, navigation app export, and appointment completion workflow.
 - **Advanced Responsive Design System:** Intelligent device detection using `useScreenSize` hook. `ResponsiveNavigation` component for adaptive navigation. `DeviceBlocker` component restricts phone access (except SuperAdmin). `ResponsiveLayout` component for consistent tablet-friendly layouts.
 - **Complete Billing & Subscription Management SaaS:** Full enterprise billing system with three-tier structure (EnterpriseVet, TenantVet, VetSites). Features smart product search, TenantBillingAdmin dashboard with Excel export, EnterpriseSubscriptionAdmin for plan management, API endpoints for billing summaries, real-time revenue tracking, and automated invoice generation. Supports Trial/Basic, Medium, Large, and Extra Large tiers.
+- **Comprehensive Fraccionamiento Management System:** Complete fraccionamiento management system with database-backed weight configuration (1.0-10.0), full CRUD operations via AdminFraccionamientos page, Spanish localization, and integrated navigation. Includes realistic Mexican city seeding data for delivery route optimization.
 - **Subscription Expiration Validation System:** Automatic subscription monitoring with `checkSubscriptionValidity` middleware that enforces expiration dates and VetSite limits. Includes alerts, status display components, and APIs for renewals. SuperAdmin maintains full access.
 - **Intelligent Email Reminder System:** Subscription expiration email reminder system with Resend provider support, automatic daily monitoring, smart reminders, professional HTML email templates in Spanish, SuperAdmin configuration interface, and automatic email logging.
 - **Tenant-Independent SuperAdmin System:** Complete architectural implementation of SuperAdmin as a global system administrator operating without any tenant:id dependencies. SuperAdmin routes (`/api/superadmin/*`) use `isSuperAdmin` middleware and access system-wide data. All SuperAdmin pages (`/superadmin/*`) are decoupled from tenant context.
