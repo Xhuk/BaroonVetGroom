@@ -3045,6 +3045,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Calendar Configuration Routes (SuperAdmin)
+  app.get('/api/superadmin/calendar-config', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      // Get all companies with calendar settings
+      const companiesList = await db.select({
+        id: companies.id,
+        name: companies.name,
+        calendarAutoReturnEnabled: companies.calendarAutoReturnEnabled,
+        calendarAutoReturnTimeout: companies.calendarAutoReturnTimeout
+      }).from(companies);
+      
+      res.json(companiesList);
+    } catch (error) {
+      console.error("Error fetching calendar config:", error);
+      res.status(500).json({ message: "Failed to fetch calendar configuration" });
+    }
+  });
+
+  app.put('/api/superadmin/calendar-config/:companyId', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const { calendarAutoReturnEnabled, calendarAutoReturnTimeout } = req.body;
+      
+      const updatedCompany = await db.update(companies)
+        .set({
+          calendarAutoReturnEnabled,
+          calendarAutoReturnTimeout,
+          updatedAt: new Date()
+        })
+        .where(eq(companies.id, companyId))
+        .returning();
+        
+      if (updatedCompany.length === 0) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      res.json(updatedCompany[0]);
+    } catch (error) {
+      console.error("Error updating calendar config:", error);
+      res.status(500).json({ message: "Failed to update calendar configuration" });
+    }
+  });
+
+  // Get calendar settings for a specific company (used by clients)
+  app.get('/api/company/:companyId/calendar-config', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      
+      const [company] = await db.select({
+        calendarAutoReturnEnabled: companies.calendarAutoReturnEnabled,
+        calendarAutoReturnTimeout: companies.calendarAutoReturnTimeout
+      }).from(companies)
+        .where(eq(companies.id, companyId));
+        
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      res.json(company);
+    } catch (error) {
+      console.error("Error fetching company calendar config:", error);
+      res.status(500).json({ message: "Failed to fetch calendar configuration" });
+    }
+  });
+
   // Object Storage Routes - simplified for logo uploads
   app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
     try {

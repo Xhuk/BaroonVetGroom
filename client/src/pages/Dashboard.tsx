@@ -42,6 +42,65 @@ export default function Dashboard() {
     console.log(`Dashboard initialized with today: ${today}`);
     return today;
   });
+
+  // Auto-return to today functionality with configurable timeout
+  useEffect(() => {
+    const today = getTodayInUserTimezone();
+    
+    // Only set auto-return if we're not already on today's date
+    if (selectedDate !== today && currentTenant) {
+      console.log(`Setting auto-return timer for date: ${selectedDate}`);
+      
+      // Fetch calendar configuration from company settings
+      fetch(`/api/company/${currentTenant.companyId}/calendar-config`)
+        .then(response => response.json())
+        .then(config => {
+          const isEnabled = config.calendarAutoReturnEnabled !== false;
+          const timeoutSeconds = config.calendarAutoReturnTimeout || 60;
+          const timeoutMs = timeoutSeconds * 1000;
+          
+          if (!isEnabled) {
+            console.log('Calendar auto-return is disabled for this company');
+            return;
+          }
+          
+          console.log(`Auto-return timer set for ${timeoutSeconds} seconds`);
+          
+          const autoReturnTimer = setTimeout(() => {
+            console.log(`Auto-returning from ${selectedDate} to today: ${today} after ${timeoutSeconds}s`);
+            const newLocation = window.location.pathname;
+            window.history.pushState(null, '', newLocation);
+            setSelectedDate(today);
+            window.location.reload(); // Refresh to ensure clean state
+          }, timeoutMs);
+
+          // Store timer ID for cleanup
+          (window as any)._autoReturnTimer = autoReturnTimer;
+        })
+        .catch(error => {
+          console.warn('Failed to fetch calendar config, using default timeout:', error);
+          // Fallback to default 60 seconds
+          const autoReturnTimer = setTimeout(() => {
+            console.log(`Auto-returning from ${selectedDate} to today: ${today} (fallback)`);
+            const newLocation = window.location.pathname;
+            window.history.pushState(null, '', newLocation);
+            setSelectedDate(today);
+            window.location.reload();
+          }, 60000);
+          
+          (window as any)._autoReturnTimer = autoReturnTimer;
+        });
+    }
+
+    // Cleanup function
+    return () => {
+      if ((window as any)._autoReturnTimer) {
+        console.log('Clearing auto-return timer');
+        clearTimeout((window as any)._autoReturnTimer);
+        (window as any)._autoReturnTimer = null;
+      }
+    };
+  }, [selectedDate, currentTenant]);
   
   // Fast fetch data after UI is shown - now date-specific
   const { data: appointmentData } = useFastFetch<{appointments: Appointment[]}>(

@@ -26,6 +26,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { Header } from '@/components/Header';
 import { BackButton } from '@/components/BackButton';
 import { useToast } from '@/hooks/use-toast';
+import { CalendarConfigPanel } from '@/components/CalendarConfigPanel';
 
 interface ServiceCatalogItem {
   id: string;
@@ -264,6 +265,9 @@ export function VersionedSuperAdminDashboard() {
             </CardContent>
           </Card>
         )}
+
+        {/* Calendar Auto-Return Configuration Panel */}
+        <CalendarConfigPanel />
 
         {/* Category Filter */}
         <div className="flex flex-wrap gap-2">

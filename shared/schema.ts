@@ -68,6 +68,9 @@ export const companies = pgTable("companies", {
   petAgeUpdateEnabled: boolean("pet_age_update_enabled").default(true), // Enable/disable automatic pet age updates
   petAgeUpdateInterval: integer("pet_age_update_interval").default(1440), // Check interval in minutes (24 hours)
   petAgeUpdateLastRun: timestamp("pet_age_update_last_run"),
+  // Calendar Auto-Return Settings
+  calendarAutoReturnEnabled: boolean("calendar_auto_return_enabled").default(true), // Enable/disable calendar auto-return to today
+  calendarAutoReturnTimeout: integer("calendar_auto_return_timeout").default(60), // Timeout in seconds (default: 60 seconds = 1 minute)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
