@@ -329,7 +329,6 @@ export default function DeliveryPlan() {
               setShowRouteForm(true);
             }}>
               <SelectTrigger className="w-[140px] bg-purple-600 hover:bg-purple-700 text-white border-purple-600 shadow-md transition-colors [&>span]:text-white">
-                <Plus className="w-4 h-4 mr-2 text-white" />
                 <SelectValue placeholder="Crear Ruta" className="text-white" />
               </SelectTrigger>
               <SelectContent>
