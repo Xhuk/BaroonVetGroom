@@ -10,7 +10,7 @@ import { FastStatsRibbon } from "@/components/FastStatsRibbon";
 import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, Truck, Phone, CalendarIcon } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import type { Appointment } from "@shared/schema";
 import { getTodayInUserTimezone } from "@shared/timeUtils";
 
@@ -20,9 +20,23 @@ export default function Dashboard() {
   const { currentTenant, isLoading: tenantLoading, isDebugMode } = useTenant();
   const { isInstant, startBackgroundLoad, completeLoad } = useFastLoad();
   const { shouldHideBottomRibbon } = useScreenSize();
+  const searchString = useSearch();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
+    // Check if date is provided in URL parameters
+    const urlParams = new URLSearchParams(searchString);
+    const dateParam = urlParams.get('date');
+    
+    if (dateParam) {
+      // Validate the date format (YYYY-MM-DD)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (dateRegex.test(dateParam)) {
+        console.log(`Dashboard initialized with URL date: ${dateParam}`);
+        return dateParam;
+      }
+    }
+    
     // Use timezone-aware today calculation to prevent tomorrow's date
     const today = getTodayInUserTimezone();
     console.log(`Dashboard initialized with today: ${today}`);
@@ -39,6 +53,20 @@ export default function Dashboard() {
     `/api/dashboard/stats/${currentTenant?.id}`,
     !!currentTenant?.id && !isInstant
   );
+
+  // Handle URL date changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams(searchString);
+    const dateParam = urlParams.get('date');
+    
+    if (dateParam) {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (dateRegex.test(dateParam) && dateParam !== selectedDate) {
+        console.log(`Updating dashboard date from URL: ${dateParam}`);
+        setSelectedDate(dateParam);
+      }
+    }
+  }, [searchString, selectedDate]);
 
   // Progressive enhancement: show calendar and stats after UI loads
   useEffect(() => {
