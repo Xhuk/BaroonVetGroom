@@ -295,9 +295,9 @@ export default function DeliveryPlan() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* Professional Header with Visual Hierarchy */}
-      <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 mb-6 border border-blue-200 dark:border-gray-600">
-        <div className="flex items-start justify-between">
+      {/* Professional Header with Clean White Background */}
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="flex items-start justify-between mb-4">
           {/* Left Section: Navigation & Title */}
           <div className="flex items-start gap-4">
             <BackButton 
@@ -318,75 +318,74 @@ export default function DeliveryPlan() {
             </div>
           </div>
           
-          {/* Right Section: Controls */}
-          <div className="flex flex-col items-end gap-3">
-            <div className="flex items-center gap-2">
-              <DebugControls />
-            </div>
-            <div className="flex items-center gap-3">
-              {/* Date Selector */}
-              <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
-                <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha:</label>
-                <select
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="ml-2 bg-transparent border-0 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 cursor-pointer"
-                  data-testid="select-delivery-date"
-                >
-                  <option value="2025-08-25">25 Ago 2025 (Con datos)</option>
-                  {next7Days.map(date => {
-                    const dateObj = new Date(date);
-                    const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' });
-                    const dateStr = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-                    return (
-                      <option key={date} value={date}>
-                        {dayName}, {dateStr}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-              
-              {/* Route Creation Dropdown */}
-              <Select onValueChange={(value) => {
-                setRouteType(value as "inbound" | "outbound");
-                setShowRouteForm(true);
-              }}>
-                <SelectTrigger className="w-[140px] bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-md">
-                  <Plus className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Crear Ruta" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="inbound" className="text-green-600 font-medium">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      Ruta Inbound
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="outbound" className="text-orange-600 font-medium">
-                    <div className="flex items-center gap-2">
-                      <Navigation className="w-4 h-4" />
-                      Ruta Outbound
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              
-              {/* Optimize VRP Button */}
-              <Button 
-                onClick={() => optimizeRouteMutation.mutate({ 
-                  date: selectedDate, 
-                  vanCapacity: 'medium' 
-                })}
-                disabled={optimizeRouteMutation.isPending}
-                className="bg-green-600 hover:bg-green-700 shadow-md"
-                data-testid="button-optimize-route"
-              >
-                <Route className="w-4 h-4 mr-2" />
-                {optimizeRouteMutation.isPending ? "Optimizando..." : "Optimizar VRP"}
-              </Button>
-            </div>
+          {/* Right Section: Action Buttons */}
+          <div className="flex items-center gap-3">
+            <DebugControls />
+            
+            {/* Route Creation Dropdown */}
+            <Select onValueChange={(value) => {
+              setRouteType(value as "inbound" | "outbound");
+              setShowRouteForm(true);
+            }}>
+              <SelectTrigger className="w-[140px] bg-gray-700 hover:bg-gray-800 text-white border-gray-700 shadow-md">
+                <Plus className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Crear Ruta" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="inbound" className="text-green-600 font-medium">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Ruta Inbound
+                  </div>
+                </SelectItem>
+                <SelectItem value="outbound" className="text-orange-600 font-medium">
+                  <div className="flex items-center gap-2">
+                    <Navigation className="w-4 h-4" />
+                    Ruta Outbound
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {/* Optimize VRP Button */}
+            <Button 
+              onClick={() => optimizeRouteMutation.mutate({ 
+                date: selectedDate, 
+                vanCapacity: 'medium' 
+              })}
+              disabled={optimizeRouteMutation.isPending}
+              className="bg-green-600 hover:bg-green-700 text-white shadow-md"
+              data-testid="button-optimize-route"
+            >
+              <Route className="w-4 h-4 mr-2" />
+              {optimizeRouteMutation.isPending ? "Optimizando..." : "Optimizar VRP"}
+            </Button>
+          </div>
+        </div>
+        
+        {/* Date Selector Row */}
+        <div className="flex justify-end pt-3 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600">
+            <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha:</label>
+            <select
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="ml-2 bg-transparent border-0 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 cursor-pointer"
+              data-testid="select-delivery-date"
+            >
+              <option value="2025-08-25">25 Ago 2025 (Con datos)</option>
+              {next7Days.map(date => {
+                const dateObj = new Date(date);
+                const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' });
+                const dateStr = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+                return (
+                  <option key={date} value={date}>
+                    {dayName}, {dateStr}
+                  </option>
+                );
+              })}
+            </select>
           </div>
         </div>
       </div>
