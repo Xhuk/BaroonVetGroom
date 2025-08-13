@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { 
   Scissors, 
   Stethoscope, 
@@ -9,6 +10,10 @@ import {
   Receipt
 } from "lucide-react";
 import { useAccessControl } from "@/hooks/useAccessControl";
+import { useLocation } from "wouter";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 interface DashboardStats {
   appointmentsToday: number;
   groomingToday: number;
@@ -27,6 +32,21 @@ interface FastStatsRibbonProps {
 
 export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
   const accessControl = useAccessControl();
+  const [, navigate] = useLocation();
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      const dateString = date.toISOString().split('T')[0];
+      navigate(`/?date=${dateString}`);
+      setShowCalendar(false);
+    }
+  };
+
+  const handleCalendarClick = () => {
+    setShowCalendar(true);
+  };
   
   if (!stats) {
     return (
@@ -145,8 +165,8 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
     <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-white/95 via-gray-50/95 to-white/95 dark:from-slate-900/95 dark:via-slate-800/95 dark:to-slate-900/95 backdrop-blur-xl border-t border-gray-200/80 dark:border-slate-700/50 z-20 shadow-2xl">
       <div className="px-6 py-5">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          {/* Enhanced Date Section */}
-          <div className="flex items-center space-x-4 group">
+          {/* Enhanced Date Section - Clickable */}
+          <div className="flex items-center space-x-4 group cursor-pointer" onClick={handleCalendarClick} data-testid="button-date-selector">
             <div className="relative">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
                 <Calendar className="w-6 h-6 text-white" />
@@ -154,8 +174,8 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white dark:border-slate-900"></div>
             </div>
             <div className="space-y-1">
-              <div className="font-bold text-xl text-gray-800 dark:text-gray-100 leading-none tracking-tight">{dayName}</div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">{day} {month}</div>
+              <div className="font-bold text-xl text-gray-800 dark:text-gray-100 leading-none tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{dayName}</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium group-hover:text-blue-500 dark:group-hover:text-blue-300 transition-colors">{day} {month}</div>
             </div>
           </div>
 
@@ -184,6 +204,39 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
           </div>
         </div>
       </div>
+
+      {/* Calendar Dialog */}
+      <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Seleccionar Fecha</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col space-y-4">
+            <CalendarPicker
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleDateSelect}
+              className="rounded-md border"
+              data-testid="calendar-picker"
+            />
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowCalendar(false)}
+                data-testid="button-cancel"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => handleDateSelect(new Date())}
+                data-testid="button-today"
+              >
+                Hoy
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
