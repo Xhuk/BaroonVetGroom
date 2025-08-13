@@ -65,10 +65,7 @@ function Admin() {
   const { isAuthenticated, isLoading } = useAuth();
   const { currentTenant, isLoading: tenantLoading } = useTenant();
   
-  // Data from database
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [services, setServices] = useState<any[]>([]);
-  const [staff, setStaff] = useState<any[]>([]);
+  // Removed duplicate state declarations - defined below with proper initialization
   
   // Fetch data from database
   const { data: roomsData, isLoading: roomsLoading } = useQuery({
@@ -113,6 +110,24 @@ function Admin() {
     enabled: !!currentTenant?.id,
   });
 
+  // State management with proper types
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
+  const [staff, setStaff] = useState<any[]>([]);
+  const [deliveryConfig, setDeliveryConfig] = useState({
+    mode: 'wave',
+    totalWaves: 3,
+    pickupVans: 2,
+    deliveryVans: 2,
+    pickupStartTime: '08:00',
+    pickupEndTime: '12:00',
+    deliveryStartTime: '14:00',
+    deliveryEndTime: '18:00',
+    freeStartTime: '08:00',
+    freeEndTime: '18:00',
+  });
+
   useEffect(() => {
     if (roomsData) setRooms(roomsData);
     if (servicesData) setServices(servicesData);
@@ -122,9 +137,6 @@ function Admin() {
       setDeliveryConfig(deliveryConfigData);
     }
   }, [roomsData, servicesData, rolesData, staffData, deliveryConfigData]);
-
-  // State for roles (loaded from database)
-  const [roles, setRoles] = useState<any[]>([]);
 
   // State for users
   const [users, setUsers] = useState([
@@ -162,22 +174,10 @@ function Admin() {
     name: '',
     displayName: '',
     department: '',
-    permissions: []
+    permissions: [] as string[]
   });
 
-  // Delivery configuration state
-  const [deliveryConfig, setDeliveryConfig] = useState({
-    mode: 'wave', // 'wave' or 'free'
-    totalWaves: 10,
-    pickupVans: 2,
-    deliveryVans: 6,
-    pickupStartTime: '08:00',
-    pickupEndTime: '12:00',
-    deliveryStartTime: '13:00',
-    deliveryEndTime: '17:00',
-    freeStartTime: '08:00',
-    freeEndTime: '20:00'
-  });
+
   
   const [editingStaff, setEditingStaff] = useState(null);
   const [editStaffData, setEditStaffData] = useState({
@@ -2326,6 +2326,21 @@ function Admin() {
                         <div>🚚 <strong>Mediano:</strong> 15 mascotas</div>
                         <div>🚛 <strong>Grande:</strong> 25 mascotas</div>
                       </div>
+                    </div>
+
+                    {/* Van Configuration Button */}
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <Button
+                        onClick={() => window.location.href = '/admin/van-config'}
+                        className="w-full flex items-center gap-2"
+                        variant="outline"
+                      >
+                        <Truck className="w-4 h-4" />
+                        Configurar Vanes y Jaulas
+                      </Button>
+                      <p className="text-xs text-gray-500 mt-2 text-center">
+                        Gestiona el diseño de jaulas, capacidades y configuración avanzada de vanes
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
