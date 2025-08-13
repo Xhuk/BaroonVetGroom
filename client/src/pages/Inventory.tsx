@@ -304,7 +304,7 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
                 data-testid="menu-item-mass-import"
               >
                 <Zap className="w-4 h-4 mr-2" />
-                Importación con IA
+                Importación Bulk CSV
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -770,10 +770,10 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-blue-600" />
-              Importación Masiva con IA
+              Importación Bulk CSV
             </DialogTitle>
             <DialogDescription>
-              Describe tus productos de forma natural y la IA los procesará automáticamente. O descarga el CSV de ejemplo para formato estructurado.
+              Describe tus productos de forma natural o descarga el CSV de ejemplo para formato estructurado.
             </DialogDescription>
           </DialogHeader>
           
@@ -799,7 +799,7 @@ Juguete,Ratón de tela para gato,Con catnip natural,12,30,JUG-002,120,Pieza,CatJ
               />
               <p className="text-sm text-gray-500 mt-2">
                 Describe medicamentos, vacunas, suministros, accesorios o cualquier producto veterinario. 
-                La IA interpretará la información y creará el inventario automáticamente.
+                El sistema procesará la información y creará el inventario automáticamente.
               </p>
             </div>
           </div>
