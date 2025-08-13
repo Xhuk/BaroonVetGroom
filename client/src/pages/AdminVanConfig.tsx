@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -276,6 +277,7 @@ export default function AdminVanConfig() {
   return (
     <div className="min-h-screen bg-background dark:bg-gray-900">
       <div className="p-6 max-w-6xl mx-auto">
+        <BackButton className="mb-4" />
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Configuración de Vans</h1>
