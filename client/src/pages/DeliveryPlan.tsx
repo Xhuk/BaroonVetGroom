@@ -295,77 +295,92 @@ export default function DeliveryPlan() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <BackButton 
-            href="/"
-            text="Volver al Dashboard"
-            variant="ghost"
-            size="sm"
-            className="text-gray-600 hover:text-gray-900"
-            testId="button-back-to-dashboard"
-          />
-          <div>
-            <h1 className="text-2xl font-bold text-blue-800">Pickup & Delivery System</h1>
-            <p className="text-sm text-gray-600 mt-1">Gestión de recolección y entrega de mascotas con ondas programadas</p>
+      {/* Professional Header with Visual Hierarchy */}
+      <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 mb-6 border border-blue-200 dark:border-gray-600">
+        <div className="flex items-start justify-between">
+          {/* Left Section: Navigation & Title */}
+          <div className="flex items-start gap-4">
+            <BackButton 
+              href="/"
+              text="Volver al Dashboard"
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white mt-1"
+              testId="button-back-to-dashboard"
+            />
+            <div className="border-l border-gray-300 dark:border-gray-600 pl-4">
+              <h1 className="text-3xl font-bold text-blue-800 dark:text-blue-300 mb-2">
+                Pickup & Delivery System
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
+                Gestión de recolección y entrega de mascotas con ondas programadas
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-3 items-center">
-          <DebugControls />
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha:</label>
-            <select
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-3 py-2 border border-input bg-background dark:bg-gray-800 text-foreground dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48 dark:border-gray-600"
-              data-testid="select-delivery-date"
-            >
-              <option value="2025-08-25">25 Ago 2025 (Con datos)</option>
-              {next7Days.map(date => {
-                const dateObj = new Date(date);
-                const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' });
-                const dateStr = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-                return (
-                  <option key={date} value={date}>
-                    {dayName}, {dateStr}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-          <Button 
-            onClick={() => optimizeRouteMutation.mutate({ 
-              date: selectedDate, 
-              vanCapacity: 'medium' 
-            })}
-            disabled={optimizeRouteMutation.isPending}
-            className="bg-green-600 hover:bg-green-700"
-            data-testid="button-optimize-route"
-          >
-            <Route className="w-4 h-4 mr-2" />
-            {optimizeRouteMutation.isPending ? "Optimizando..." : "Optimizar VRP"}
-          </Button>
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => {
-                setRouteType("inbound");
-                setShowRouteForm(true);
-              }}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Ruta Inbound
-            </Button>
-            <Button 
-              onClick={() => {
-                setRouteType("outbound");
-                setShowRouteForm(true);
-              }}
-              className="bg-orange-600 hover:bg-orange-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Ruta Outbound
-            </Button>
+          
+          {/* Right Section: Controls */}
+          <div className="flex flex-col gap-3 items-end">
+            <div className="flex gap-2 items-center">
+              <DebugControls />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
+                <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha:</label>
+                <select
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="ml-2 bg-transparent border-0 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 cursor-pointer"
+                  data-testid="select-delivery-date"
+                >
+                  <option value="2025-08-25">25 Ago 2025 (Con datos)</option>
+                  {next7Days.map(date => {
+                    const dateObj = new Date(date);
+                    const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' });
+                    const dateStr = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+                    return (
+                      <option key={date} value={date}>
+                        {dayName}, {dateStr}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+              <Button 
+                onClick={() => optimizeRouteMutation.mutate({ 
+                  date: selectedDate, 
+                  vanCapacity: 'medium' 
+                })}
+                disabled={optimizeRouteMutation.isPending}
+                className="bg-green-600 hover:bg-green-700 shadow-md"
+                data-testid="button-optimize-route"
+              >
+                <Route className="w-4 h-4 mr-2" />
+                {optimizeRouteMutation.isPending ? "Optimizando..." : "Optimizar VRP"}
+              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => {
+                    setRouteType("inbound");
+                    setShowRouteForm(true);
+                  }}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ruta Inbound
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setRouteType("outbound");
+                    setShowRouteForm(true);
+                  }}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ruta Outbound
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
