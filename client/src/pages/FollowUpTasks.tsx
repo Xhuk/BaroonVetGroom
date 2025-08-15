@@ -12,7 +12,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, AlertCircle, CheckCircle, Clock, Trash2, Edit } from 'lucide-react';
+import { Plus, AlertCircle, CheckCircle, Clock, Trash2, Edit, Stethoscope, Scissors } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import type { FollowUpTask, InsertFollowUpTask } from '@shared/schema';
 
@@ -164,12 +164,13 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
     },
   });
 
-  // Auto-generate tasks mutation
-  const autoGenerateMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch(`/api/follow-up-tasks/auto-generate/${tenantId}`, {
+  // Auto-generate tasks mutation with appointment type
+  const autoGenerateTasksMutation = useMutation({
+    mutationFn: async ({ appointmentType }: { appointmentType: string }) => {
+      const response = await fetch(`/api/follow-up-tasks/${tenantId}/auto-generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appointmentType }),
       });
       if (!response.ok) throw new Error('Failed to auto-generate tasks');
       return response.json();
@@ -178,7 +179,14 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/follow-up-tasks'] });
       toast({
         title: 'Tareas generadas',
-        description: `Se generaron ${response.generated} tareas de seguimiento automáticamente.`,
+        description: `Se generaron ${response.generatedCount} tareas de seguimiento automáticamente.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'No se pudieron generar las tareas automáticamente.',
+        variant: 'destructive',
       });
     },
   });
@@ -220,12 +228,22 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={() => autoGenerateMutation.mutate()}
-            disabled={autoGenerateMutation.isPending}
+            onClick={() => autoGenerateTasksMutation.mutate({ appointmentType: 'medical' })}
+            disabled={autoGenerateTasksMutation.isPending}
             variant="outline"
-            data-testid="button-auto-generate"
+            data-testid="button-auto-generate-medical"
           >
-            Generar Automático
+            <Stethoscope className="h-4 w-4 mr-2" />
+            Auto-Generar Médicos
+          </Button>
+          <Button
+            onClick={() => autoGenerateTasksMutation.mutate({ appointmentType: 'grooming' })}
+            disabled={autoGenerateTasksMutation.isPending}
+            variant="outline"
+            data-testid="button-auto-generate-grooming"
+          >
+            <Scissors className="h-4 w-4 mr-2" />
+            Auto-Generar Estética
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>

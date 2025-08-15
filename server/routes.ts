@@ -7523,6 +7523,43 @@ This password expires in 24 hours.
     }
   });
 
+  // Check if invoice can be generated (no pending follow-ups)
+  app.get('/api/follow-up-validation/:tenantId/:appointmentId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId, appointmentId } = req.params;
+      const pendingTasks = await storage.getPendingFollowUpsByAppointment(tenantId, appointmentId);
+      
+      res.json({
+        canGenerateInvoice: pendingTasks.length === 0,
+        pendingFollowUps: pendingTasks,
+        blockingMessage: pendingTasks.length > 0 ? 
+          `No se puede generar la factura. Hay ${pendingTasks.length} seguimiento(s) pendiente(s) que deben completarse primero.` : null
+      });
+    } catch (error) {
+      console.error('Error validating follow-ups for invoice:', error);
+      res.status(500).json({ error: 'Failed to validate follow-ups' });
+    }
+  });
+
+  // Auto-generate follow-up tasks from medical/grooming records
+  app.post('/api/follow-up-tasks/:tenantId/auto-generate', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { appointmentType } = req.body; // 'medical' or 'grooming'
+      
+      const generatedTasks = await storage.autoGenerateFollowUpTasks(tenantId, appointmentType);
+      
+      res.json({
+        success: true,
+        generatedCount: generatedTasks.length,
+        tasks: generatedTasks
+      });
+    } catch (error) {
+      console.error('Error auto-generating follow-up tasks:', error);
+      res.status(500).json({ error: 'Failed to auto-generate follow-up tasks' });
+    }
+  });
+
   app.delete('/api/follow-up-tasks/:taskId', isAuthenticated, async (req, res) => {
     try {
       const { taskId } = req.params;
@@ -7534,21 +7571,7 @@ This password expires in 24 hours.
     }
   });
 
-  // Auto-generate follow-up tasks based on incomplete records
-  app.post('/api/follow-up-tasks/auto-generate/:tenantId', isAuthenticated, async (req, res) => {
-    try {
-      const { tenantId } = req.params;
-      const generatedTasks = await storage.generateFollowUpTasks(tenantId);
-      res.json({
-        success: true,
-        generated: generatedTasks.length,
-        tasks: generatedTasks
-      });
-    } catch (error) {
-      console.error("Error auto-generating follow-up tasks:", error);
-      res.status(500).json({ message: "Failed to auto-generate follow-up tasks" });
-    }
-  });
+
 
   return httpServer;
 }

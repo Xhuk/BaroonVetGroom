@@ -3463,82 +3463,117 @@ export class DatabaseStorage implements IStorage {
     await db.delete(followUpTasks).where(eq(followUpTasks.id, taskId));
   }
 
-  async generateFollowUpTasks(tenantId: string): Promise<FollowUpTask[]> {
+  async getPendingFollowUpsByAppointment(tenantId: string, appointmentId: string): Promise<FollowUpTask[]> {
+    try {
+      return await db
+        .select()
+        .from(followUpTasks)
+        .where(
+          and(
+            eq(followUpTasks.tenantId, tenantId),
+            or(
+              eq(followUpTasks.appointmentId, appointmentId),
+              eq(followUpTasks.medicalAppointmentId, appointmentId),
+              eq(followUpTasks.groomingRecordId, appointmentId)
+            ),
+            eq(followUpTasks.status, 'pending')
+          )
+        )
+        .orderBy(desc(followUpTasks.createdAt));
+    } catch (error) {
+      console.error('Error fetching pending follow-ups by appointment:', error);
+      return [];
+    }
+  }
+
+  async autoGenerateFollowUpTasks(tenantId: string, appointmentType: string): Promise<FollowUpTask[]> {
     try {
       const generatedTasks: FollowUpTask[] = [];
       
-      // Check for medical appointments missing diagnosis
-      const medicalAppointmentsNoDiagnosis = await db
-        .select()
-        .from(medicalAppointments)
-        .where(
-          and(
-            eq(medicalAppointments.tenantId, tenantId),
-            eq(medicalAppointments.status, 'completed'),
-            or(
-              isNull(medicalAppointments.diagnosis),
-              eq(medicalAppointments.diagnosis, '')
+      if (appointmentType === 'medical') {
+        // Check for medical appointments missing diagnosis
+        const medicalAppointmentsNoDiagnosis = await db
+          .select()
+          .from(medicalAppointments)
+          .where(
+            and(
+              eq(medicalAppointments.tenantId, tenantId),
+              eq(medicalAppointments.status, 'completed'),
+              or(
+                isNull(medicalAppointments.diagnosis),
+                eq(medicalAppointments.diagnosis, '')
+              )
             )
-          )
-        );
+          );
 
-      for (const appointment of medicalAppointmentsNoDiagnosis) {
-        const taskData: InsertFollowUpTask = {
-          tenantId,
-          medicalAppointmentId: appointment.id,
-          clientId: appointment.clientId,
-          petId: appointment.petId,
-          taskType: 'missing_diagnosis',
-          priority: 'high',
-          title: 'Diagnóstico faltante',
-          description: `La cita médica completada requiere diagnóstico`,
-          missingFields: ['diagnosis'],
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7 days from now
-        };
-        
-        const newTask = await this.createFollowUpTask(taskData);
-        generatedTasks.push(newTask);
+        for (const appointment of medicalAppointmentsNoDiagnosis) {
+          const taskData: InsertFollowUpTask = {
+            tenantId,
+            medicalAppointmentId: appointment.id,
+            clientId: appointment.clientId,
+            petId: appointment.petId,
+            taskType: 'missing_diagnosis',
+            priority: 'high',
+            title: 'Diagnóstico faltante',
+            description: `La cita médica completada requiere diagnóstico`,
+            missingFields: ['diagnosis'],
+            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          };
+          
+          const newTask = await this.createFollowUpTask(taskData);
+          generatedTasks.push(newTask);
+        }
       }
 
-      // Check for grooming records missing prices
-      const groomingRecordsNoPrice = await db
-        .select()
-        .from(groomingRecords)
-        .where(
-          and(
-            eq(groomingRecords.tenantId, tenantId),
-            eq(groomingRecords.status, 'completed'),
-            or(
-              isNull(groomingRecords.totalPrice),
-              eq(groomingRecords.totalPrice, '0')
+      if (appointmentType === 'grooming') {
+        // Check for grooming records missing prices
+        const groomingRecordsNoPrice = await db
+          .select({
+            groomingRecord: groomingRecords,
+            pet: pets
+          })
+          .from(groomingRecords)
+          .leftJoin(pets, eq(groomingRecords.petId, pets.id))
+          .where(
+            and(
+              eq(groomingRecords.tenantId, tenantId),
+              eq(groomingRecords.status, 'completed'),
+              or(
+                isNull(groomingRecords.totalCost),
+                eq(groomingRecords.totalCost, '0')
+              )
             )
-          )
-        );
+          );
 
-      for (const record of groomingRecordsNoPrice) {
-        const taskData: InsertFollowUpTask = {
-          tenantId,
-          groomingRecordId: record.id,
-          clientId: record.clientId,
-          petId: record.petId,
-          taskType: 'missing_price',
-          priority: 'normal',
-          title: 'Precio faltante - Grooming',
-          description: `El servicio de grooming completado requiere precio`,
-          missingFields: ['totalPrice'],
-          dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 3 days from now
-        };
-        
-        const newTask = await this.createFollowUpTask(taskData);
-        generatedTasks.push(newTask);
+        for (const { groomingRecord, pet } of groomingRecordsNoPrice) {
+          if (pet) {
+            const taskData: InsertFollowUpTask = {
+              tenantId,
+              groomingRecordId: groomingRecord.id,
+              clientId: pet.clientId,
+              petId: groomingRecord.petId,
+              taskType: 'missing_price',
+              priority: 'normal',
+              title: 'Precio faltante',
+              description: `El servicio de estética completado requiere precio`,
+              missingFields: ['totalCost'],
+              dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            };
+            
+            const newTask = await this.createFollowUpTask(taskData);
+            generatedTasks.push(newTask);
+          }
+        }
       }
 
       return generatedTasks;
     } catch (error) {
-      console.error('Error generating follow-up tasks:', error);
+      console.error('Error auto-generating follow-up tasks:', error);
       return [];
     }
   }
+
+
 
 }
 

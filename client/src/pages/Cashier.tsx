@@ -257,11 +257,41 @@ export default function Cashier() {
     },
   });
 
+  // Check for pending follow-ups before invoice generation
+  const checkFollowUpsValidation = useMutation({
+    mutationFn: async (appointmentId: string) => {
+      const response = await apiRequest(`/api/follow-up-validation/vetgroom1/${appointmentId}`, "GET");
+      return response.json();
+    },
+    onSuccess: (data, appointmentId) => {
+      if (data.canGenerateInvoice) {
+        // No pending follow-ups, proceed with receipt generation
+        const saleId = appointmentId; // Assuming appointmentId maps to saleId for this demo
+        setPendingCompletionSaleId(saleId);
+        setIsGeneratingReceipt(true);
+        generateReceiptMutation.mutate(saleId);
+      } else {
+        // Block invoice generation due to pending follow-ups
+        toast({
+          title: "Factura Bloqueada",
+          description: data.blockingMessage,
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error de Validación",
+        description: "No se pudo validar los seguimientos pendientes",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Handle completion with receipt generation
   const handleCompleteWithReceipt = (saleId: string) => {
-    setPendingCompletionSaleId(saleId);
-    setIsGeneratingReceipt(true);
-    generateReceiptMutation.mutate(saleId);
+    // First check for pending follow-ups
+    checkFollowUpsValidation.mutate(saleId);
   };
 
   // Confirm completion after receipt preview
