@@ -20,6 +20,7 @@ interface FollowUpConfig {
   followUpUrgentThreshold: number;
   followUpHeartBeatEnabled: boolean;
   followUpShowCount: boolean;
+  followUpAutoGenerationInterval: number; // Minutes between auto-generation checks
 }
 
 export default function AdminFollowUpConfig() {
@@ -39,6 +40,7 @@ export default function AdminFollowUpConfig() {
     followUpUrgentThreshold: 20,
     followUpHeartBeatEnabled: true,
     followUpShowCount: true,
+    followUpAutoGenerationInterval: 15, // Default 15 minutes
   });
 
   // Update form data when config loads
@@ -92,6 +94,15 @@ export default function AdminFollowUpConfig() {
       toast({
         title: "Error de validación",
         description: "Los umbrales deben ser números positivos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.followUpAutoGenerationInterval < 1 || formData.followUpAutoGenerationInterval > 240) {
+      toast({
+        title: "Error de validación",
+        description: "El intervalo de auto-generación debe estar entre 1 y 240 minutos.",
         variant: "destructive",
       });
       return;
@@ -182,6 +193,36 @@ export default function AdminFollowUpConfig() {
                 />
                 <p className="text-sm text-muted-foreground">
                   Número de seguimientos pendientes para palpitación rápida
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center space-x-2">
+                <Settings className="h-5 w-5" />
+                <span>Auto-Generación de Seguimientos</span>
+              </h3>
+
+              <div className="space-y-2">
+                <Label htmlFor="autoGenerationInterval">Intervalo de Auto-Generación (Minutos)</Label>
+                <Input
+                  id="autoGenerationInterval"
+                  type="number"
+                  min="1"
+                  max="240"
+                  value={formData.followUpAutoGenerationInterval}
+                  onChange={(e) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      followUpAutoGenerationInterval: parseInt(e.target.value) || 15,
+                    }))
+                  }
+                  data-testid="input-auto-generation-interval"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Frecuencia en minutos para verificar automáticamente expedientes médicos y de grooming incompletos (1-240 minutos)
                 </p>
               </div>
             </div>

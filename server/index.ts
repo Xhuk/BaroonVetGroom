@@ -95,8 +95,8 @@ app.use((req, res, next) => {
     });
 
     // Start follow-up auto-generator
-    import('./followUpAutoGenerator').then(({ followUpAutoGenerator }) => {
-      followUpAutoGenerator.start();
+    import('./followUpAutoGenerator').then(async ({ followUpAutoGenerator }) => {
+      await followUpAutoGenerator.start();
       log('Follow-up auto-generator service started');
     });
 

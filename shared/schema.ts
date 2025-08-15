@@ -357,6 +357,12 @@ export const companyBillingConfig = pgTable("company_billing_config", {
   groomingFollowUpDays: integer("grooming_follow_up_days").default(30), // Default days for next grooming appointment
   groomingFollowUpVariance: integer("grooming_follow_up_variance").default(7), // ± days for follow-up reminders
   enableGroomingFollowUp: boolean("enable_grooming_follow_up").default(true),
+  // Follow-up Configuration
+  followUpNormalThreshold: integer("follow_up_normal_threshold").default(10),
+  followUpUrgentThreshold: integer("follow_up_urgent_threshold").default(20),
+  followUpHeartBeatEnabled: boolean("follow_up_heart_beat_enabled").default(true),
+  followUpShowCount: boolean("follow_up_show_count").default(true),
+  followUpAutoGenerationInterval: integer("follow_up_auto_generation_interval").default(15), // Minutes between auto-generation checks
   // Clinical Intervention Pricing Configuration
   clinicalInterventionPricing: varchar("clinical_intervention_pricing", { 
     enum: ["operation_plus_items", "flat_price"] 

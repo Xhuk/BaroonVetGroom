@@ -9,8 +9,9 @@ import { storage } from './storage';
 class FollowUpAutoGenerator {
   private intervalId: NodeJS.Timeout | null = null;
   private isRunning = false;
+  private currentInterval = 15; // Default 15 minutes
 
-  start(): void {
+  async start(): Promise<void> {
     if (this.isRunning) {
       console.log('Follow-up auto-generator is already running');
       return;
@@ -18,16 +19,56 @@ class FollowUpAutoGenerator {
 
     console.log('🔄 Starting follow-up auto-generator service...');
     
+    // Get initial configuration
+    await this.updateConfiguration();
+    
     // Run immediately on start
     this.runAutoGeneration();
 
-    // Set up 15-minute interval
-    this.intervalId = setInterval(() => {
-      this.runAutoGeneration();
-    }, 15 * 60 * 1000); // 15 minutes
+    // Set up interval with configurable time
+    this.scheduleNextRun();
 
     this.isRunning = true;
-    console.log('📅 Follow-up auto-generator scheduled - running every 15 minutes');
+    console.log(`📅 Follow-up auto-generator scheduled - running every ${this.currentInterval} minutes`);
+  }
+
+  private scheduleNextRun(): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+
+    this.intervalId = setInterval(async () => {
+      // Update configuration before each run
+      await this.updateConfiguration();
+      await this.runAutoGeneration();
+      
+      // Reschedule if interval changed
+      if (this.intervalId) {
+        const currentIntervalMs = this.currentInterval * 60 * 1000;
+        // @ts-ignore - accessing internal timer property
+        if (this.intervalId._idleTimeout !== currentIntervalMs) {
+          console.log(`🔄 Rescheduling follow-up auto-generator with new interval: ${this.currentInterval} minutes`);
+          this.scheduleNextRun();
+        }
+      }
+    }, this.currentInterval * 60 * 1000);
+  }
+
+  private async updateConfiguration(): Promise<void> {
+    try {
+      // Get configuration from any company (use first available company)
+      const configs = await storage.getFollowUpConfigurations();
+      if (configs.length > 0) {
+        const newInterval = configs[0].followUpAutoGenerationInterval || 15;
+        if (newInterval !== this.currentInterval) {
+          console.log(`📝 Updating follow-up auto-generation interval from ${this.currentInterval} to ${newInterval} minutes`);
+          this.currentInterval = newInterval;
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error updating follow-up configuration:', error);
+      // Keep current interval on error
+    }
   }
 
   stop(): void {
@@ -41,9 +82,9 @@ class FollowUpAutoGenerator {
 
   private async runAutoGeneration(): Promise<void> {
     try {
-      console.log('🔍 Running follow-up auto-generation check...');
+      console.log(`🔍 Running follow-up auto-generation check (interval: ${this.currentInterval} min)...`);
       
-      // Get all active tenants (you may need to implement this if it doesn't exist)
+      // Get all active tenants
       const tenants = await this.getActiveTenants();
       
       let totalGenerated = 0;

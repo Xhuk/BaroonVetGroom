@@ -425,6 +425,7 @@ export interface IStorage {
   updateFollowUpTask(taskId: string, updates: Partial<InsertFollowUpTask>): Promise<FollowUpTask>;
   deleteFollowUpTask(taskId: string): Promise<void>;
   generateFollowUpTasks(tenantId: string): Promise<FollowUpTask[]>;
+  getFollowUpConfigurations(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2353,14 +2354,29 @@ export class DatabaseStorage implements IStorage {
   async getCompanyFollowUpConfig(companyId: string): Promise<any> {
     const [company] = await db
       .select({
-        followUpNormalThreshold: companies.followUpNormalThreshold,
-        followUpUrgentThreshold: companies.followUpUrgentThreshold,
-        followUpHeartBeatEnabled: companies.followUpHeartBeatEnabled,
-        followUpShowCount: companies.followUpShowCount,
+        followUpNormalThreshold: companyBillingConfig.followUpNormalThreshold,
+        followUpUrgentThreshold: companyBillingConfig.followUpUrgentThreshold,
+        followUpHeartBeatEnabled: companyBillingConfig.followUpHeartBeatEnabled,
+        followUpShowCount: companyBillingConfig.followUpShowCount,
+        followUpAutoGenerationInterval: companyBillingConfig.followUpAutoGenerationInterval,
       })
-      .from(companies)
-      .where(eq(companies.id, companyId));
+      .from(companyBillingConfig)
+      .where(eq(companyBillingConfig.companyId, companyId));
     return company;
+  }
+
+  async getFollowUpConfigurations(): Promise<any[]> {
+    const configs = await db
+      .select({
+        companyId: companyBillingConfig.companyId,
+        followUpNormalThreshold: companyBillingConfig.followUpNormalThreshold,
+        followUpUrgentThreshold: companyBillingConfig.followUpUrgentThreshold,
+        followUpHeartBeatEnabled: companyBillingConfig.followUpHeartBeatEnabled,
+        followUpShowCount: companyBillingConfig.followUpShowCount,
+        followUpAutoGenerationInterval: companyBillingConfig.followUpAutoGenerationInterval,
+      })
+      .from(companyBillingConfig);
+    return configs;
   }
 
   async getCompanyAutoStatusConfig(companyId: string): Promise<any> {
@@ -2393,23 +2409,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCompanyFollowUpConfig(companyId: string, config: any): Promise<any> {
-    const [updatedCompany] = await db
-      .update(companies)
+    const [updatedConfig] = await db
+      .update(companyBillingConfig)
       .set({
         followUpNormalThreshold: config.followUpNormalThreshold,
         followUpUrgentThreshold: config.followUpUrgentThreshold,
         followUpHeartBeatEnabled: config.followUpHeartBeatEnabled,
         followUpShowCount: config.followUpShowCount,
+        followUpAutoGenerationInterval: config.followUpAutoGenerationInterval,
         updatedAt: new Date(),
       })
-      .where(eq(companies.id, companyId))
+      .where(eq(companyBillingConfig.companyId, companyId))
       .returning({
-        followUpNormalThreshold: companies.followUpNormalThreshold,
-        followUpUrgentThreshold: companies.followUpUrgentThreshold,
-        followUpHeartBeatEnabled: companies.followUpHeartBeatEnabled,
-        followUpShowCount: companies.followUpShowCount,
+        followUpNormalThreshold: companyBillingConfig.followUpNormalThreshold,
+        followUpUrgentThreshold: companyBillingConfig.followUpUrgentThreshold,
+        followUpHeartBeatEnabled: companyBillingConfig.followUpHeartBeatEnabled,
+        followUpShowCount: companyBillingConfig.followUpShowCount,
+        followUpAutoGenerationInterval: companyBillingConfig.followUpAutoGenerationInterval,
       });
-    return updatedCompany;
+    return updatedConfig;
   }
 
   // Tax configuration operations
