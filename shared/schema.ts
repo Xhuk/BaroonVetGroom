@@ -809,6 +809,34 @@ export type InsertRouteOptimizationConfig = typeof routeOptimizationConfig.$infe
 export type Fraccionamiento = typeof fraccionamientos.$inferSelect;
 export type InsertFraccionamiento = typeof fraccionamientos.$inferInsert;
 
+// Follow-up tasks for tracking missing information and required actions
+export const followUpTasks = pgTable("follow_up_tasks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  appointmentId: varchar("appointment_id").references(() => appointments.id),
+  medicalAppointmentId: varchar("medical_appointment_id").references(() => medicalAppointments.id),
+  groomingRecordId: varchar("grooming_record_id").references(() => groomingRecords.id),
+  clientId: varchar("client_id").notNull().references(() => clients.id),
+  petId: varchar("pet_id").notNull().references(() => pets.id),
+  taskType: varchar("task_type").notNull(), // medical_follow_up, grooming_follow_up, missing_diagnosis, missing_treatment, missing_price, missing_medicine, incomplete_record
+  priority: varchar("priority", { enum: ["low", "normal", "high", "urgent"] }).default("normal"),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  missingFields: text("missing_fields").array().default(sql`ARRAY[]::text[]`), // Array of missing field names
+  dueDate: date("due_date"),
+  assignedTo: varchar("assigned_to").references(() => staff.id),
+  status: varchar("status", { enum: ["pending", "in_progress", "completed", "cancelled"] }).default("pending"),
+  completedBy: varchar("completed_by").references(() => staff.id),
+  completedAt: timestamp("completed_at"),
+  notes: text("notes"),
+  metadata: jsonb("metadata"), // Additional context or custom data
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type FollowUpTask = typeof followUpTasks.$inferSelect;
+export type InsertFollowUpTask = typeof followUpTasks.$inferInsert;
+
 // Delivery routes for actual driver route management
 export const deliveryRoutes = pgTable("delivery_routes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

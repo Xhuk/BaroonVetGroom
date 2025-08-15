@@ -1,418 +1,474 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { 
-  Eye, 
-  Clock, 
-  User, 
-  Calendar as CalendarIcon, 
-  AlertTriangle,
-  CheckCircle,
-  Filter,
-  Search,
-  Heart
-} from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { useTenant } from "@/contexts/TenantContext";
-import { BackButton } from "@/components/BackButton";
-import { DebugControls } from "@/components/DebugControls";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import type { MedicalAppointment, Pet, Client, Staff } from "@shared/schema";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useToast } from '@/hooks/use-toast';
+import { Plus, AlertCircle, CheckCircle, Clock, Trash2, Edit } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
+import type { FollowUpTask, InsertFollowUpTask } from '@shared/schema';
 
-interface FollowUpTask extends MedicalAppointment {
-  pet?: Pet;
-  client?: Client;
-  veterinarian?: Staff;
-  daysOverdue?: number;
-  priority?: "high" | "medium" | "low";
+const followUpTaskSchema = z.object({
+  title: z.string().min(1, 'Título es requerido'),
+  description: z.string().optional(),
+  priority: z.enum(['low', 'normal', 'high', 'urgent']),
+  taskType: z.string().min(1, 'Tipo de tarea es requerido'),
+  dueDate: z.string().optional(),
+  assignedTo: z.string().optional(),
+});
+
+type FollowUpTaskFormData = z.infer<typeof followUpTaskSchema>;
+
+const priorityColors = {
+  low: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  normal: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  high: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  urgent: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+};
+
+const statusColors = {
+  pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  in_progress: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+};
+
+interface FollowUpTasksProps {
+  tenantId: string;
 }
 
-export default function FollowUpTasks() {
-  const { currentTenant } = useTenant();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDate, setSelectedDate] = useState<Date>();
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("pending");
+export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<FollowUpTask | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get all medical appointments that require follow-up with fast loading
-  const { data: followUpResponse, isLoading } = useQuery<{followUpTasks: FollowUpTask[]}>({
-    queryKey: ["/api/medical-appointments/follow-up-fast", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+  const form = useForm<FollowUpTaskFormData>({
+    resolver: zodResolver(followUpTaskSchema),
+    defaultValues: {
+      priority: 'normal',
+      taskType: 'general',
+    },
   });
 
-  const followUpTasks = followUpResponse?.followUpTasks || [];
-
-  const { data: pets = [] } = useQuery<Pet[]>({
-    queryKey: ["/api/pets", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
-
-  const { data: clients = [] } = useQuery<Client[]>({
-    queryKey: ["/api/clients", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-  });
-
-  const { data: veterinarians = [] } = useQuery<Staff[]>({
-    queryKey: ["/api/staff", currentTenant?.id, "veterinarian"],
-    enabled: !!currentTenant?.id,
-  });
-
-  // Mark follow-up as completed
-  const completeFollowUpMutation = useMutation({
-    mutationFn: async (appointmentId: string) => {
-      return apiRequest(`/api/medical-appointments/${appointmentId}/complete-followup`, {
-        method: "PUT",
+  // Fetch follow-up tasks
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ['/api/follow-up-tasks', tenantId, statusFilter, priorityFilter],
+    queryFn: async (): Promise<FollowUpTask[]> => {
+      const params = new URLSearchParams({ 
+        ...(statusFilter !== 'all' && { status: statusFilter }),
+        ...(priorityFilter !== 'all' && { priority: priorityFilter })
       });
+      const response = await fetch(`/api/follow-up-tasks/${tenantId}?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch tasks');
+      return response.json();
+    },
+  });
+
+  // Create task mutation
+  const createTaskMutation = useMutation({
+    mutationFn: async (taskData: InsertFollowUpTask) => {
+      const response = await fetch('/api/follow-up-tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(taskData),
+      });
+      if (!response.ok) throw new Error('Failed to create task');
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/medical-appointments/follow-up-fast", currentTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/follow-up-tasks'] });
+      setIsCreateDialogOpen(false);
+      form.reset();
       toast({
-        title: "Seguimiento completado",
-        description: "El seguimiento ha sido marcado como completado",
+        title: 'Tarea creada',
+        description: 'La tarea de seguimiento ha sido creada exitosamente.',
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "No se pudo completar el seguimiento",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudo crear la tarea de seguimiento.',
+        variant: 'destructive',
       });
     },
   });
 
-  // Schedule follow-up appointment
-  const scheduleFollowUpMutation = useMutation({
-    mutationFn: async ({ appointmentId, followUpDate }: { appointmentId: string; followUpDate: string }) => {
-      return apiRequest(`/api/medical-appointments/${appointmentId}/schedule-followup`, {
-        method: "PUT",
-        body: JSON.stringify({ followUpDate }),
+  // Update task mutation
+  const updateTaskMutation = useMutation({
+    mutationFn: async ({ taskId, updates }: { taskId: string; updates: Partial<InsertFollowUpTask> }) => {
+      const response = await fetch(`/api/follow-up-tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
       });
+      if (!response.ok) throw new Error('Failed to update task');
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/medical-appointments/follow-up-fast", currentTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/follow-up-tasks'] });
+      setEditingTask(null);
       toast({
-        title: "Seguimiento programado",
-        description: "La fecha de seguimiento ha sido actualizada",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "No se pudo programar el seguimiento",
-        variant: "destructive",
+        title: 'Tarea actualizada',
+        description: 'La tarea de seguimiento ha sido actualizada exitosamente.',
       });
     },
   });
 
-  // Enhanced follow-up tasks with additional data
-  const enrichedTasks = followUpTasks.map(task => {
-    const pet = pets.find(p => p.id === task.petId);
-    const client = clients.find(c => c.id === task.clientId);
-    const veterinarian = veterinarians.find(v => v.id === task.veterinarianId);
-    
-    // Calculate days overdue
-    let daysOverdue = 0;
-    let priority: "high" | "medium" | "low" = "low";
-    
-    if (task.followUpDate) {
-      const followUpDate = new Date(task.followUpDate);
-      const today = new Date();
-      const diffTime = today.getTime() - followUpDate.getTime();
-      daysOverdue = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (daysOverdue > 7) priority = "high";
-      else if (daysOverdue > 3) priority = "medium";
-      else if (daysOverdue >= 0) priority = "low";
-    }
+  // Complete task mutation
+  const completeTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      const response = await fetch(`/api/follow-up-tasks/${taskId}/complete`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completedBy: 'current-user' }),
+      });
+      if (!response.ok) throw new Error('Failed to complete task');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/follow-up-tasks'] });
+      toast({
+        title: 'Tarea completada',
+        description: 'La tarea de seguimiento ha sido marcada como completada.',
+      });
+    },
+  });
 
-    return {
-      ...task,
-      pet,
-      client,
-      veterinarian,
-      daysOverdue,
-      priority,
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      const response = await fetch(`/api/follow-up-tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Failed to delete task');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/follow-up-tasks'] });
+      toast({
+        title: 'Tarea eliminada',
+        description: 'La tarea de seguimiento ha sido eliminada exitosamente.',
+      });
+    },
+  });
+
+  // Auto-generate tasks mutation
+  const autoGenerateMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/follow-up-tasks/auto-generate/${tenantId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Failed to auto-generate tasks');
+      return response.json();
+    },
+    onSuccess: (response: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/follow-up-tasks'] });
+      toast({
+        title: 'Tareas generadas',
+        description: `Se generaron ${response.generated} tareas de seguimiento automáticamente.`,
+      });
+    },
+  });
+
+  const onSubmit = (data: FollowUpTaskFormData) => {
+    const taskData: InsertFollowUpTask = {
+      ...data,
+      tenantId,
+      clientId: 'temp-client', // This would need to be selected from a dropdown
+      petId: 'temp-pet', // This would need to be selected from a dropdown
     };
-  });
 
-  // Filter tasks
-  const filteredTasks = enrichedTasks.filter(task => {
-    const matchesSearch = 
-      !searchTerm ||
-      task.pet?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.client?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesPriority = 
-      priorityFilter === "all" || task.priority === priorityFilter;
-    
-    const matchesStatus = 
-      statusFilter === "all" ||
-      (statusFilter === "pending" && task.followUpRequired && !task.isConfirmed) ||
-      (statusFilter === "overdue" && task.daysOverdue && task.daysOverdue > 0) ||
-      (statusFilter === "completed" && task.isConfirmed);
-
-    return matchesSearch && matchesPriority && matchesStatus;
-  });
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high": return "bg-red-100 text-red-800";
-      case "medium": return "bg-yellow-100 text-yellow-800";
-      case "low": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
+    if (editingTask) {
+      updateTaskMutation.mutate({ taskId: editingTask.id, updates: taskData });
+    } else {
+      createTaskMutation.mutate(taskData);
     }
   };
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
-      case "high": return <AlertTriangle className="w-4 h-4" />;
-      case "medium": return <Clock className="w-4 h-4" />;
-      case "low": return <CheckCircle className="w-4 h-4" />;
-      default: return <Eye className="w-4 h-4" />;
+      case 'urgent': return <AlertCircle className="h-4 w-4" />;
+      case 'high': return <AlertCircle className="h-4 w-4" />;
+      default: return <Clock className="h-4 w-4" />;
     }
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <BackButton />
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <Heart className="w-8 h-8 text-pink-600" />
-              Tareas de Seguimiento
-            </h1>
-            <p className="text-muted-foreground">
-              Gestión de seguimientos médicos pendientes
-            </p>
-          </div>
+    <div className="space-y-6" data-testid="follow-up-tasks-page">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Tareas de Seguimiento
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Gestiona las tareas de seguimiento y información faltante
+          </p>
         </div>
-        <DebugControls />
+        <div className="flex gap-2">
+          <Button
+            onClick={() => autoGenerateMutation.mutate()}
+            disabled={autoGenerateMutation.isPending}
+            variant="outline"
+            data-testid="button-auto-generate"
+          >
+            Generar Automático
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-create-task">
+                <Plus className="h-4 w-4 mr-2" />
+                Nueva Tarea
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>{editingTask ? 'Editar Tarea' : 'Nueva Tarea de Seguimiento'}</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Título</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ingresa el título de la tarea" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descripción</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Describe la tarea..." {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prioridad</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona prioridad" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="low">Baja</SelectItem>
+                            <SelectItem value="normal">Normal</SelectItem>
+                            <SelectItem value="high">Alta</SelectItem>
+                            <SelectItem value="urgent">Urgente</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="taskType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tipo de Tarea</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona tipo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="medical_follow_up">Seguimiento Médico</SelectItem>
+                            <SelectItem value="grooming_follow_up">Seguimiento Grooming</SelectItem>
+                            <SelectItem value="missing_diagnosis">Diagnóstico Faltante</SelectItem>
+                            <SelectItem value="missing_treatment">Tratamiento Faltante</SelectItem>
+                            <SelectItem value="missing_price">Precio Faltante</SelectItem>
+                            <SelectItem value="incomplete_record">Registro Incompleto</SelectItem>
+                            <SelectItem value="general">General</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="dueDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Fecha Límite</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsCreateDialogOpen(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createTaskMutation.isPending || updateTaskMutation.isPending}
+                    >
+                      {editingTask ? 'Actualizar' : 'Crear'} Tarea
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5" />
-            Filtros
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              <Input
-                placeholder="Buscar mascota o cliente..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64"
-                data-testid="input-search-followup"
-              />
-            </div>
-            
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-3 py-2 border border-input bg-background dark:bg-gray-800 text-foreground dark:text-gray-100 rounded-md text-sm dark:border-gray-600"
-              data-testid="select-priority-filter"
-            >
-              <option value="all">Todas las prioridades</option>
-              <option value="high">Alta prioridad</option>
-              <option value="medium">Prioridad media</option>
-              <option value="low">Baja prioridad</option>
-            </select>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-input bg-background dark:bg-gray-800 text-foreground dark:text-gray-100 rounded-md text-sm dark:border-gray-600"
-              data-testid="select-status-filter"
-            >
-              <option value="pending">Pendientes</option>
-              <option value="overdue">Vencidos</option>
-              <option value="completed">Completados</option>
-              <option value="all">Todos</option>
-            </select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{enrichedTasks.length}</p>
-              </div>
-              <Eye className="w-8 h-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Pendientes</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {enrichedTasks.filter(t => t.followUpRequired && !t.isConfirmed).length}
-                </p>
-              </div>
-              <Clock className="w-8 h-8 text-yellow-600" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Vencidos</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {enrichedTasks.filter(t => t.daysOverdue && t.daysOverdue > 0).length}
-                </p>
-              </div>
-              <AlertTriangle className="w-8 h-8 text-red-600" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Completados</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {enrichedTasks.filter(t => t.isConfirmed).length}
-                </p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              <SelectItem value="pending">Pendiente</SelectItem>
+              <SelectItem value="in_progress">En Progreso</SelectItem>
+              <SelectItem value="completed">Completada</SelectItem>
+              <SelectItem value="cancelled">Cancelada</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex-1">
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por prioridad" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las prioridades</SelectItem>
+              <SelectItem value="urgent">Urgente</SelectItem>
+              <SelectItem value="high">Alta</SelectItem>
+              <SelectItem value="normal">Normal</SelectItem>
+              <SelectItem value="low">Baja</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Tasks List */}
-      <div className="space-y-4">
+      {/* Tasks Grid */}
+      <div className="grid gap-4">
         {isLoading ? (
+          <div className="text-center py-8">Cargando tareas...</div>
+        ) : tasks.length === 0 ? (
           <Card>
-            <CardContent className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-              <p>Cargando tareas de seguimiento...</p>
-            </CardContent>
-          </Card>
-        ) : filteredTasks.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No hay tareas de seguimiento</h3>
-              <p className="text-muted-foreground">
-                No se encontraron tareas con los filtros seleccionados.
+            <CardContent className="text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400">
+                No hay tareas de seguimiento disponibles.
               </p>
             </CardContent>
           </Card>
         ) : (
-          filteredTasks.map((task) => (
-            <Card key={task.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Badge className={getPriorityColor(task.priority!)}>
-                        {getPriorityIcon(task.priority!)}
-                        <span className="ml-1 capitalize">{task.priority}</span>
-                      </Badge>
-                      
-                      {task.daysOverdue! > 0 && (
-                        <Badge variant="destructive">
-                          {task.daysOverdue} días vencido
-                        </Badge>
-                      )}
-                      
-                      <Badge variant="outline">
-                        {task.visitType}
-                      </Badge>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-semibold text-lg">
-                        {task.pet?.name} - {task.client?.name}
-                      </h3>
-                      <p className="text-muted-foreground">
-                        Veterinario: {task.veterinarian?.name}
+          tasks.map((task) => (
+            <Card key={task.id} className="p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-start gap-3">
+                  {getPriorityIcon(task.priority || 'normal')}
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      {task.title}
+                    </h3>
+                    {task.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        {task.description}
                       </p>
-                    </div>
-                    
-                    <div className="text-sm space-y-1">
-                      <p><strong>Diagnóstico:</strong> {task.diagnosis || "No especificado"}</p>
-                      <p><strong>Instrucciones:</strong> {task.followUpInstructions || "No especificado"}</p>
-                      {task.followUpDate && (
-                        <p>
-                          <strong>Fecha programada:</strong> {" "}
-                          {format(new Date(task.followUpDate), "PPP", { locale: es })}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col gap-2 ml-4">
-                    {!task.followUpDate && (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" size="sm" data-testid="button-schedule-followup">
-                            <CalendarIcon className="w-4 h-4 mr-2" />
-                            Programar
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="end">
-                          <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={(date) => {
-                              if (date) {
-                                setSelectedDate(date);
-                                scheduleFollowUpMutation.mutate({
-                                  appointmentId: task.id,
-                                  followUpDate: date.toISOString(),
-                                });
-                              }
-                            }}
-                            disabled={(date) => date < new Date()}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
                     )}
-                    
-                    {!task.isConfirmed && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => completeFollowUpMutation.mutate(task.id)}
-                        disabled={completeFollowUpMutation.isPending}
-                        data-testid="button-complete-followup"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Completar
-                      </Button>
+                    <div className="flex gap-2 mb-2">
+                      <Badge className={priorityColors[task.priority as keyof typeof priorityColors]}>
+                        {task.priority === 'low' ? 'Baja' : 
+                         task.priority === 'normal' ? 'Normal' :
+                         task.priority === 'high' ? 'Alta' : 'Urgente'}
+                      </Badge>
+                      <Badge className={statusColors[task.status as keyof typeof statusColors]}>
+                        {task.status === 'pending' ? 'Pendiente' :
+                         task.status === 'in_progress' ? 'En Progreso' :
+                         task.status === 'completed' ? 'Completada' : 'Cancelada'}
+                      </Badge>
+                    </div>
+                    {task.dueDate && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Fecha límite: {new Date(task.dueDate).toLocaleDateString()}
+                      </p>
                     )}
                   </div>
                 </div>
-              </CardContent>
+                <div className="flex gap-2">
+                  {task.status !== 'completed' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => completeTaskMutation.mutate(task.id)}
+                      disabled={completeTaskMutation.isPending}
+                      data-testid={`button-complete-${task.id}`}
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingTask(task);
+                      form.reset({
+                        title: task.title,
+                        description: task.description || '',
+                        priority: task.priority as any,
+                        taskType: task.taskType,
+                        dueDate: task.dueDate || '',
+                      });
+                      setIsCreateDialogOpen(true);
+                    }}
+                    data-testid={`button-edit-${task.id}`}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => deleteTaskMutation.mutate(task.id)}
+                    disabled={deleteTaskMutation.isPending}
+                    data-testid={`button-delete-${task.id}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </Card>
           ))
         )}

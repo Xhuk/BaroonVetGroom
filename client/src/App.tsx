@@ -109,7 +109,7 @@ function Router() {
           <Route path="/medical-records" component={MedicalRecords} />
           <Route path="/medical-appointments" component={MedicalAppointments} />
           <Route path="/grooming-services" component={GroomingServices} />
-          <Route path="/follow-up-tasks" component={FollowUpTasks} />
+          <Route path="/follow-up-tasks" component={() => <FollowUpTasks tenantId="vetgroom1" />} />
           <Route path="/upload/:type/:appointmentId" component={MobileUpload} />
           <Route path="/inventory" component={Inventory} />
           <Route path="/delivery-plan" component={DeliveryPlan} />

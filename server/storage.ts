@@ -60,6 +60,7 @@ import {
   salesOrders,
   salesOrderItems,
   externalServiceSubscriptions,
+  followUpTasks,
   type User,
   type UpsertUser,
   type Company,
@@ -170,6 +171,8 @@ import {
   receiptTemplates,
   type ReceiptTemplate,
   type InsertReceiptTemplate,
+  type FollowUpTask,
+  type InsertFollowUpTask,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
@@ -415,6 +418,13 @@ export interface IStorage {
   
   // Receipt numbering operations
   generateReceiptNumber(tenantId: string): Promise<string>;
+  
+  // Follow-up Tasks operations
+  getFollowUpTasks(filters: any): Promise<FollowUpTask[]>;
+  createFollowUpTask(task: InsertFollowUpTask): Promise<FollowUpTask>;
+  updateFollowUpTask(taskId: string, updates: Partial<InsertFollowUpTask>): Promise<FollowUpTask>;
+  deleteFollowUpTask(taskId: string): Promise<void>;
+  generateFollowUpTasks(tenantId: string): Promise<FollowUpTask[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3402,6 +3412,131 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching service usage data:', error);
       return null;
+    }
+  }
+
+  // Follow-up Tasks operations
+  async getFollowUpTasks(filters: any): Promise<FollowUpTask[]> {
+    try {
+      let query = db.select().from(followUpTasks);
+      
+      const conditions = [];
+      if (filters.tenantId) {
+        conditions.push(eq(followUpTasks.tenantId, filters.tenantId));
+      }
+      if (filters.status) {
+        conditions.push(eq(followUpTasks.status, filters.status));
+      }
+      if (filters.priority) {
+        conditions.push(eq(followUpTasks.priority, filters.priority));
+      }
+      if (filters.taskType) {
+        conditions.push(eq(followUpTasks.taskType, filters.taskType));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      return await query.orderBy(desc(followUpTasks.createdAt));
+    } catch (error) {
+      console.error('Error fetching follow-up tasks:', error);
+      return [];
+    }
+  }
+
+  async createFollowUpTask(task: InsertFollowUpTask): Promise<FollowUpTask> {
+    const [newTask] = await db.insert(followUpTasks).values(task).returning();
+    return newTask;
+  }
+
+  async updateFollowUpTask(taskId: string, updates: Partial<InsertFollowUpTask>): Promise<FollowUpTask> {
+    const [updatedTask] = await db
+      .update(followUpTasks)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(followUpTasks.id, taskId))
+      .returning();
+    return updatedTask;
+  }
+
+  async deleteFollowUpTask(taskId: string): Promise<void> {
+    await db.delete(followUpTasks).where(eq(followUpTasks.id, taskId));
+  }
+
+  async generateFollowUpTasks(tenantId: string): Promise<FollowUpTask[]> {
+    try {
+      const generatedTasks: FollowUpTask[] = [];
+      
+      // Check for medical appointments missing diagnosis
+      const medicalAppointmentsNoDiagnosis = await db
+        .select()
+        .from(medicalAppointments)
+        .where(
+          and(
+            eq(medicalAppointments.tenantId, tenantId),
+            eq(medicalAppointments.status, 'completed'),
+            or(
+              isNull(medicalAppointments.diagnosis),
+              eq(medicalAppointments.diagnosis, '')
+            )
+          )
+        );
+
+      for (const appointment of medicalAppointmentsNoDiagnosis) {
+        const taskData: InsertFollowUpTask = {
+          tenantId,
+          medicalAppointmentId: appointment.id,
+          clientId: appointment.clientId,
+          petId: appointment.petId,
+          taskType: 'missing_diagnosis',
+          priority: 'high',
+          title: 'Diagnóstico faltante',
+          description: `La cita médica completada requiere diagnóstico`,
+          missingFields: ['diagnosis'],
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7 days from now
+        };
+        
+        const newTask = await this.createFollowUpTask(taskData);
+        generatedTasks.push(newTask);
+      }
+
+      // Check for grooming records missing prices
+      const groomingRecordsNoPrice = await db
+        .select()
+        .from(groomingRecords)
+        .where(
+          and(
+            eq(groomingRecords.tenantId, tenantId),
+            eq(groomingRecords.status, 'completed'),
+            or(
+              isNull(groomingRecords.totalPrice),
+              eq(groomingRecords.totalPrice, '0')
+            )
+          )
+        );
+
+      for (const record of groomingRecordsNoPrice) {
+        const taskData: InsertFollowUpTask = {
+          tenantId,
+          groomingRecordId: record.id,
+          clientId: record.clientId,
+          petId: record.petId,
+          taskType: 'missing_price',
+          priority: 'normal',
+          title: 'Precio faltante - Grooming',
+          description: `El servicio de grooming completado requiere precio`,
+          missingFields: ['totalPrice'],
+          dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 3 days from now
+        };
+        
+        const newTask = await this.createFollowUpTask(taskData);
+        generatedTasks.push(newTask);
+      }
+
+      return generatedTasks;
+    } catch (error) {
+      console.error('Error generating follow-up tasks:', error);
+      return [];
     }
   }
 

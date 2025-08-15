@@ -7462,5 +7462,93 @@ This password expires in 24 hours.
     }
   });
 
+  // Follow-up Tasks API Endpoints
+  app.get('/api/follow-up-tasks/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { status, priority, taskType } = req.query;
+      
+      // Build filter conditions
+      const filters: any = { tenantId };
+      if (status) filters.status = status;
+      if (priority) filters.priority = priority;
+      if (taskType) filters.taskType = taskType;
+      
+      const tasks = await storage.getFollowUpTasks(filters);
+      res.json(tasks);
+    } catch (error) {
+      console.error("Error fetching follow-up tasks:", error);
+      res.status(500).json({ message: "Failed to fetch follow-up tasks" });
+    }
+  });
+
+  app.post('/api/follow-up-tasks', isAuthenticated, async (req, res) => {
+    try {
+      const taskData = req.body;
+      const newTask = await storage.createFollowUpTask(taskData);
+      res.json(newTask);
+    } catch (error) {
+      console.error("Error creating follow-up task:", error);
+      res.status(500).json({ message: "Failed to create follow-up task" });
+    }
+  });
+
+  app.patch('/api/follow-up-tasks/:taskId', isAuthenticated, async (req, res) => {
+    try {
+      const { taskId } = req.params;
+      const updates = req.body;
+      const updatedTask = await storage.updateFollowUpTask(taskId, updates);
+      res.json(updatedTask);
+    } catch (error) {
+      console.error("Error updating follow-up task:", error);
+      res.status(500).json({ message: "Failed to update follow-up task" });
+    }
+  });
+
+  app.patch('/api/follow-up-tasks/:taskId/complete', isAuthenticated, async (req, res) => {
+    try {
+      const { taskId } = req.params;
+      const { notes, completedBy } = req.body;
+      
+      const updatedTask = await storage.updateFollowUpTask(taskId, {
+        status: 'completed',
+        completedBy,
+        completedAt: new Date(),
+        notes
+      });
+      res.json(updatedTask);
+    } catch (error) {
+      console.error("Error completing follow-up task:", error);
+      res.status(500).json({ message: "Failed to complete follow-up task" });
+    }
+  });
+
+  app.delete('/api/follow-up-tasks/:taskId', isAuthenticated, async (req, res) => {
+    try {
+      const { taskId } = req.params;
+      await storage.deleteFollowUpTask(taskId);
+      res.json({ message: "Follow-up task deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting follow-up task:", error);
+      res.status(500).json({ message: "Failed to delete follow-up task" });
+    }
+  });
+
+  // Auto-generate follow-up tasks based on incomplete records
+  app.post('/api/follow-up-tasks/auto-generate/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const generatedTasks = await storage.generateFollowUpTasks(tenantId);
+      res.json({
+        success: true,
+        generated: generatedTasks.length,
+        tasks: generatedTasks
+      });
+    } catch (error) {
+      console.error("Error auto-generating follow-up tasks:", error);
+      res.status(500).json({ message: "Failed to auto-generate follow-up tasks" });
+    }
+  });
+
   return httpServer;
 }
