@@ -12,7 +12,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, AlertCircle, CheckCircle, Clock, Trash2, Edit } from 'lucide-react';
+import { Plus, AlertCircle, CheckCircle, Clock, Trash2, Edit, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import type { FollowUpTask, InsertFollowUpTask } from '@shared/schema';
 
@@ -48,10 +48,15 @@ interface FollowUpTasksProps {
 export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('createdAt');
+  const [sortOrder, setSortOrder] = useState<string>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<FollowUpTask | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  const TASKS_PER_PAGE = 50;
 
   const form = useForm<FollowUpTaskFormData>({
     resolver: zodResolver(followUpTaskSchema),
@@ -61,13 +66,17 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
     },
   });
 
-  // Fetch follow-up tasks
-  const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ['/api/follow-up-tasks', tenantId, statusFilter, priorityFilter],
-    queryFn: async (): Promise<FollowUpTask[]> => {
+  // Fetch follow-up tasks with pagination
+  const { data: tasksResponse, isLoading } = useQuery({
+    queryKey: ['/api/follow-up-tasks', tenantId, statusFilter, priorityFilter, sortBy, sortOrder, currentPage],
+    queryFn: async (): Promise<{ tasks: FollowUpTask[], total: number, totalPages: number }> => {
       const params = new URLSearchParams({ 
         ...(statusFilter !== 'all' && { status: statusFilter }),
-        ...(priorityFilter !== 'all' && { priority: priorityFilter })
+        ...(priorityFilter !== 'all' && { priority: priorityFilter }),
+        sortBy,
+        sortOrder,
+        page: currentPage.toString(),
+        limit: TASKS_PER_PAGE.toString()
       });
       const response = await fetch(`/api/follow-up-tasks/${tenantId}?${params}`);
       if (!response.ok) throw new Error('Failed to fetch tasks');
@@ -352,35 +361,67 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-4">
-        <div className="flex-1">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por estado" />
+      {/* Filters and Sorting */}
+      <div className="flex gap-4 items-center justify-between">
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={(value) => {
+            setStatusFilter(value);
+            setCurrentPage(1); // Reset to first page when filter changes
+          }}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Estado" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los estados</SelectItem>
+              <SelectItem value="all">Todos los Estados</SelectItem>
               <SelectItem value="pending">Pendiente</SelectItem>
               <SelectItem value="in_progress">En Progreso</SelectItem>
-              <SelectItem value="completed">Completada</SelectItem>
-              <SelectItem value="cancelled">Cancelada</SelectItem>
+              <SelectItem value="completed">Completado</SelectItem>
+              <SelectItem value="cancelled">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={priorityFilter} onValueChange={(value) => {
+            setPriorityFilter(value);
+            setCurrentPage(1); // Reset to first page when filter changes
+          }}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Prioridad" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las Prioridades</SelectItem>
+              <SelectItem value="low">Baja</SelectItem>
+              <SelectItem value="normal">Normal</SelectItem>
+              <SelectItem value="high">Alta</SelectItem>
+              <SelectItem value="urgent">Urgente</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="flex-1">
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por prioridad" />
+        
+        {/* Sorting Controls */}
+        <div className="flex gap-2 items-center">
+          <span className="text-sm text-gray-600 dark:text-gray-400">Ordenar por:</span>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las prioridades</SelectItem>
-              <SelectItem value="urgent">Urgente</SelectItem>
-              <SelectItem value="high">Alta</SelectItem>
-              <SelectItem value="normal">Normal</SelectItem>
-              <SelectItem value="low">Baja</SelectItem>
+              <SelectItem value="createdAt">Fecha de Creación</SelectItem>
+              <SelectItem value="dueDate">Fecha de Vencimiento</SelectItem>
+              <SelectItem value="priority">Prioridad</SelectItem>
+              <SelectItem value="status">Estado</SelectItem>
+              <SelectItem value="title">Título</SelectItem>
             </SelectContent>
           </Select>
+          
+          <Button
+            variant="outline" 
+            size="sm"
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            data-testid="button-sort-order"
+          >
+            <ArrowUpDown className="h-4 w-4 mr-1" />
+            {sortOrder === 'asc' ? 'Asc' : 'Desc'}
+          </Button>
         </div>
       </div>
 
@@ -388,7 +429,7 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
       <div className="grid gap-4">
         {isLoading ? (
           <div className="text-center py-8">Cargando tareas...</div>
-        ) : tasks.length === 0 ? (
+        ) : !tasksResponse || tasksResponse.tasks.length === 0 ? (
           <Card>
             <CardContent className="text-center py-8">
               <p className="text-gray-500 dark:text-gray-400">
@@ -397,7 +438,7 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
             </CardContent>
           </Card>
         ) : (
-          tasks.map((task) => (
+          tasksResponse.tasks.map((task) => (
             <Card key={task.id} className="p-4">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-start gap-3">
@@ -475,6 +516,43 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
           ))
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {tasksResponse && tasksResponse.totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Mostrando {Math.min((currentPage - 1) * TASKS_PER_PAGE + 1, tasksResponse.total)} a {Math.min(currentPage * TASKS_PER_PAGE, tasksResponse.total)} de {tasksResponse.total} tareas
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              data-testid="button-prev-page"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Anterior
+            </Button>
+            
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Página {currentPage} de {tasksResponse.totalPages}
+            </span>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === tasksResponse.totalPages}
+              data-testid="button-next-page"
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

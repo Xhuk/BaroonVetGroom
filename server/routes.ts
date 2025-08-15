@@ -7466,16 +7466,42 @@ This password expires in 24 hours.
   app.get('/api/follow-up-tasks/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;
-      const { status, priority, taskType } = req.query;
+      const { 
+        status, 
+        priority, 
+        taskType, 
+        sortBy = 'createdAt',
+        sortOrder = 'desc',
+        page = '1',
+        limit = '50'
+      } = req.query;
       
       // Build filter conditions
       const filters: any = { tenantId };
-      if (status) filters.status = status;
-      if (priority) filters.priority = priority;
-      if (taskType) filters.taskType = taskType;
+      if (status && status !== 'all') filters.status = status;
+      if (priority && priority !== 'all') filters.priority = priority;
+      if (taskType && taskType !== 'all') filters.taskType = taskType;
       
-      const tasks = await storage.getFollowUpTasks(filters);
-      res.json(tasks);
+      // Pagination and sorting parameters
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = parseInt(limit as string, 10);
+      const offset = (pageNum - 1) * limitNum;
+      
+      const result = await storage.getFollowUpTasksPaginated(filters, {
+        sortBy: sortBy as string,
+        sortOrder: sortOrder as string,
+        limit: limitNum,
+        offset
+      });
+      
+      res.json({
+        tasks: result.tasks,
+        total: result.total,
+        totalPages: Math.ceil(result.total / limitNum),
+        currentPage: pageNum,
+        hasNextPage: pageNum < Math.ceil(result.total / limitNum),
+        hasPreviousPage: pageNum > 1
+      });
     } catch (error) {
       console.error("Error fetching follow-up tasks:", error);
       res.status(500).json({ message: "Failed to fetch follow-up tasks" });

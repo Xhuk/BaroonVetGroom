@@ -421,6 +421,7 @@ export interface IStorage {
   
   // Follow-up Tasks operations
   getFollowUpTasks(filters: any): Promise<FollowUpTask[]>;
+  getFollowUpTasksPaginated(filters: any, options: { sortBy: string; sortOrder: string; limit: number; offset: number; }): Promise<{ tasks: FollowUpTask[]; total: number; }>;
   createFollowUpTask(task: InsertFollowUpTask): Promise<FollowUpTask>;
   updateFollowUpTask(taskId: string, updates: Partial<InsertFollowUpTask>): Promise<FollowUpTask>;
   deleteFollowUpTask(taskId: string): Promise<void>;
@@ -3460,6 +3461,74 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching follow-up tasks:', error);
       return [];
+    }
+  }
+
+  async getFollowUpTasksPaginated(filters: any, options: { sortBy: string; sortOrder: string; limit: number; offset: number; }): Promise<{ tasks: FollowUpTask[]; total: number; }> {
+    try {
+      // Build base query conditions
+      const conditions = [];
+      if (filters.tenantId) {
+        conditions.push(eq(followUpTasks.tenantId, filters.tenantId));
+      }
+      if (filters.status) {
+        conditions.push(eq(followUpTasks.status, filters.status));
+      }
+      if (filters.priority) {
+        conditions.push(eq(followUpTasks.priority, filters.priority));
+      }
+      if (filters.taskType) {
+        conditions.push(eq(followUpTasks.taskType, filters.taskType));
+      }
+
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+      // Get total count
+      const [countResult] = await db
+        .select({ count: sql`count(*)` })
+        .from(followUpTasks)
+        .where(whereClause);
+      
+      const total = Number(countResult.count);
+
+      // Build query for tasks with sorting and pagination
+      let tasksQuery = db.select().from(followUpTasks);
+      
+      if (whereClause) {
+        tasksQuery = tasksQuery.where(whereClause);
+      }
+
+      // Apply sorting
+      let sortColumn;
+      switch (options.sortBy) {
+        case 'dueDate':
+          sortColumn = followUpTasks.dueDate;
+          break;
+        case 'priority':
+          sortColumn = followUpTasks.priority;
+          break;
+        case 'status':
+          sortColumn = followUpTasks.status;
+          break;
+        case 'title':
+          sortColumn = followUpTasks.title;
+          break;
+        default:
+          sortColumn = followUpTasks.createdAt;
+          break;
+      }
+      const orderFunc = options.sortOrder === 'asc' ? asc : desc;
+      tasksQuery = tasksQuery.orderBy(orderFunc(sortColumn));
+
+      // Apply pagination
+      tasksQuery = tasksQuery.limit(options.limit).offset(options.offset);
+
+      const tasks = await tasksQuery;
+
+      return { tasks, total };
+    } catch (error) {
+      console.error('Error fetching paginated follow-up tasks:', error);
+      return { tasks: [], total: 0 };
     }
   }
 
