@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, AlertCircle, CheckCircle, Clock, Trash2, Edit, Stethoscope, Scissors } from 'lucide-react';
+import { Plus, AlertCircle, CheckCircle, Clock, Trash2, Edit } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import type { FollowUpTask, InsertFollowUpTask } from '@shared/schema';
 
@@ -191,6 +191,8 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
     },
   });
 
+  // Auto-generation is now handled by server background service
+
   const onSubmit = (data: FollowUpTaskFormData) => {
     const taskData: InsertFollowUpTask = {
       ...data,
@@ -227,24 +229,6 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            onClick={() => autoGenerateTasksMutation.mutate({ appointmentType: 'medical' })}
-            disabled={autoGenerateTasksMutation.isPending}
-            variant="outline"
-            data-testid="button-auto-generate-medical"
-          >
-            <Stethoscope className="h-4 w-4 mr-2" />
-            Auto-Generar Médicos
-          </Button>
-          <Button
-            onClick={() => autoGenerateTasksMutation.mutate({ appointmentType: 'grooming' })}
-            disabled={autoGenerateTasksMutation.isPending}
-            variant="outline"
-            data-testid="button-auto-generate-grooming"
-          >
-            <Scissors className="h-4 w-4 mr-2" />
-            Auto-Generar Estética
-          </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button data-testid="button-create-task">

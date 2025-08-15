@@ -94,6 +94,12 @@ app.use((req, res, next) => {
       log('Subscription email scheduler started');
     });
 
+    // Start follow-up auto-generator
+    import('./followUpAutoGenerator').then(({ followUpAutoGenerator }) => {
+      followUpAutoGenerator.start();
+      log('Follow-up auto-generator service started');
+    });
+
     // Auto status updates now handled by database functions
     log('Database auto-status functions ready');
     
