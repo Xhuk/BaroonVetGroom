@@ -385,6 +385,13 @@ export default function SuperAdmin() {
                     <span className="text-sm font-medium text-indigo-700">Features</span>
                   </Button>
                 </Link>
+
+                <Link href="/superadmin/demo-management" className="block">
+                  <Button variant="outline" className="w-full h-auto py-3 px-4 flex flex-col items-center space-y-2 bg-cyan-50 hover:bg-cyan-100 border-cyan-300">
+                    <UserPlus className="w-5 h-5 text-cyan-600" />
+                    <span className="text-sm font-medium text-cyan-700">Demo Tenants</span>
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>

@@ -7597,7 +7597,60 @@ This password expires in 24 hours.
     }
   });
 
+  // Demo Tenant Management (Super Admin only)
+  app.get('/api/superadmin/demo-tenants', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const demoTenants = await storage.getDemoTenants();
+      res.json(demoTenants);
+    } catch (error) {
+      console.error("Error fetching demo tenants:", error);
+      res.status(500).json({ message: "Failed to fetch demo tenants" });
+    }
+  });
 
+  app.post('/api/superadmin/demo-tenants', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { tenantName, companyName, userCount, appointmentDays } = req.body;
+      
+      if (!tenantName || !companyName) {
+        return res.status(400).json({ message: "Tenant name and company name are required" });
+      }
+
+      const result = await storage.createDemoTenant({
+        tenantName,
+        companyName,
+        userCount: userCount || 5,
+        appointmentDays: appointmentDays || 7
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error creating demo tenant:", error);
+      res.status(500).json({ message: "Failed to create demo tenant" });
+    }
+  });
+
+  app.post('/api/superadmin/demo-tenants/:tenantId/refresh', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const result = await storage.refreshDemoTenantData(tenantId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error refreshing demo tenant data:", error);
+      res.status(500).json({ message: "Failed to refresh demo tenant data" });
+    }
+  });
+
+  app.delete('/api/superadmin/demo-tenants/:tenantId', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      await storage.purgeDemoTenant(tenantId);
+      res.json({ message: "Demo tenant purged successfully" });
+    } catch (error) {
+      console.error("Error purging demo tenant:", error);
+      res.status(500).json({ message: "Failed to purge demo tenant" });
+    }
+  });
 
   return httpServer;
 }

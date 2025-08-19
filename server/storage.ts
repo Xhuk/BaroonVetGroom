@@ -427,6 +427,12 @@ export interface IStorage {
   deleteFollowUpTask(taskId: string): Promise<void>;
   generateFollowUpTasks(tenantId: string): Promise<FollowUpTask[]>;
   getFollowUpConfigurations(): Promise<any[]>;
+  
+  // Demo Tenant Management operations
+  getDemoTenants(): Promise<any[]>;
+  createDemoTenant(data: { tenantName: string; companyName: string; userCount: number; appointmentDays: number; }): Promise<any>;
+  refreshDemoTenantData(tenantId: string): Promise<any>;
+  purgeDemoTenant(tenantId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3662,6 +3668,311 @@ export class DatabaseStorage implements IStorage {
 
 
 
+  // Demo Tenant Management operations
+  async getDemoTenants(): Promise<any[]> {
+    try {
+      const demoTenants = await db
+        .select({
+          id: tenants.id,
+          name: tenants.name,
+          companyId: tenants.companyId,
+          createdAt: tenants.createdAt,
+          status: tenants.status
+        })
+        .from(tenants)
+        .where(sql`${tenants.name} LIKE '%demo%' OR ${tenants.name} LIKE '%Demo%'`)
+        .orderBy(desc(tenants.createdAt));
+
+      // Get additional stats for each demo tenant
+      const enrichedTenants = await Promise.all(
+        demoTenants.map(async (tenant) => {
+          const [userCount] = await db
+            .select({ count: sql`count(*)` })
+            .from(userTenants)
+            .where(eq(userTenants.tenantId, tenant.id));
+
+          const [appointmentCount] = await db
+            .select({ count: sql`count(*)` })
+            .from(appointments)
+            .where(eq(appointments.tenantId, tenant.id));
+
+          const [lastAppointment] = await db
+            .select({ createdAt: appointments.createdAt })
+            .from(appointments)
+            .where(eq(appointments.tenantId, tenant.id))
+            .orderBy(desc(appointments.createdAt))
+            .limit(1);
+
+          return {
+            ...tenant,
+            userCount: Number(userCount.count) || 0,
+            appointmentCount: Number(appointmentCount.count) || 0,
+            lastActivity: lastAppointment?.createdAt || tenant.createdAt,
+            status: tenant.status || 'active'
+          };
+        })
+      );
+
+      return enrichedTenants;
+    } catch (error) {
+      console.error('Error fetching demo tenants:', error);
+      return [];
+    }
+  }
+
+  async createDemoTenant(data: { tenantName: string; companyName: string; userCount: number; appointmentDays: number; }): Promise<any> {
+    try {
+      // Create company first
+      const companyId = `demo-${Date.now()}`;
+      const [company] = await db.insert(companies).values({
+        id: companyId,
+        name: data.companyName,
+        subscriptionStatus: 'trial',
+        trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        maxTenants: 1,
+        maxStaff: 10
+      }).returning();
+
+      // Create tenant
+      const tenantId = `demo-${Date.now()}-tenant`;
+      const [tenant] = await db.insert(tenants).values({
+        id: tenantId,
+        name: data.tenantName,
+        companyId: company.id,
+        status: 'active',
+        openTime: '08:00',
+        closeTime: '18:00',
+        timeSlotDuration: 30
+      }).returning();
+
+      // Create demo users
+      const demoUsers = [];
+      for (let i = 1; i <= data.userCount; i++) {
+        const userId = `demo-user-${tenantId}-${i}`;
+        const [user] = await db.insert(users).values({
+          id: userId,
+          username: `demo.user${i}@${data.tenantName.toLowerCase().replace(/\s/g, '')}.com`,
+          email: `demo.user${i}@${data.tenantName.toLowerCase().replace(/\s/g, '')}.com`,
+          firstName: `Demo`,
+          lastName: `User ${i}`,
+          phone: `+1555000${String(i).padStart(3, '0')}`,
+          timezone: 'America/Mexico_City'
+        }).returning();
+
+        // Associate user with tenant
+        await db.insert(userTenants).values({
+          userId: user.id,
+          tenantId: tenant.id
+        });
+
+        demoUsers.push(user);
+      }
+
+      // Create demo clients and pets
+      const demoClients = [];
+      for (let i = 1; i <= Math.min(10, data.userCount * 2); i++) {
+        const clientId = `demo-client-${tenantId}-${i}`;
+        const [client] = await db.insert(clients).values({
+          id: clientId,
+          tenantId: tenant.id,
+          firstName: `Cliente`,
+          lastName: `Demo ${i}`,
+          email: `cliente${i}@demo.com`,
+          phone: `+1555100${String(i).padStart(3, '0')}`,
+          address: `Calle Demo ${i}, Ciudad Demo`
+        }).returning();
+
+        // Create 1-2 pets per client
+        const petCount = Math.floor(Math.random() * 2) + 1;
+        for (let j = 1; j <= petCount; j++) {
+          const petId = `demo-pet-${clientId}-${j}`;
+          await db.insert(pets).values({
+            id: petId,
+            clientId: client.id,
+            tenantId: tenant.id,
+            name: `Mascota ${i}-${j}`,
+            species: Math.random() > 0.5 ? 'dog' : 'cat',
+            breed: 'Mestizo',
+            birthDate: new Date(Date.now() - Math.random() * 5 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            weight: Math.floor(Math.random() * 30) + 5,
+            isActive: true
+          });
+        }
+
+        demoClients.push(client);
+      }
+
+      // Create demo appointments for the specified number of days
+      let appointmentCount = 0;
+      for (let day = 0; day < data.appointmentDays; day++) {
+        const appointmentDate = new Date(Date.now() - day * 24 * 60 * 60 * 1000);
+        const dailyAppointments = Math.floor(Math.random() * 8) + 3; // 3-10 appointments per day
+
+        for (let i = 0; i < dailyAppointments; i++) {
+          const hour = Math.floor(Math.random() * 9) + 8; // 8 AM to 5 PM
+          const minute = Math.random() > 0.5 ? 0 : 30;
+          const appointmentDateTime = new Date(appointmentDate);
+          appointmentDateTime.setHours(hour, minute, 0, 0);
+
+          const randomClient = demoClients[Math.floor(Math.random() * demoClients.length)];
+          const [randomPet] = await db.select().from(pets)
+            .where(eq(pets.clientId, randomClient.id))
+            .limit(1);
+
+          if (randomPet) {
+            await db.insert(appointments).values({
+              id: `demo-appt-${tenantId}-${day}-${i}`,
+              tenantId: tenant.id,
+              clientId: randomClient.id,
+              petId: randomPet.id,
+              appointmentDateTime: appointmentDateTime.toISOString(),
+              status: day === 0 && i < 2 ? 'scheduled' : 'completed',
+              appointmentType: Math.random() > 0.7 ? 'grooming' : 'medical',
+              notes: `Demo appointment - ${day === 0 ? 'Today' : `${day} days ago`}`
+            });
+            appointmentCount++;
+          }
+        }
+      }
+
+      return {
+        tenant,
+        company,
+        userCount: data.userCount,
+        appointmentCount,
+        clientCount: demoClients.length,
+        message: `Demo tenant "${data.tenantName}" created successfully`
+      };
+    } catch (error) {
+      console.error('Error creating demo tenant:', error);
+      throw new Error('Failed to create demo tenant');
+    }
+  }
+
+  async refreshDemoTenantData(tenantId: string): Promise<any> {
+    try {
+      // Get existing clients for this tenant
+      const existingClients = await db.select().from(clients)
+        .where(eq(clients.tenantId, tenantId));
+
+      if (existingClients.length === 0) {
+        throw new Error('No existing clients found for this tenant');
+      }
+
+      // Add new appointments for today and tomorrow
+      let newAppointments = 0;
+      const today = new Date();
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      for (const date of [today, tomorrow]) {
+        const dailyAppointments = Math.floor(Math.random() * 5) + 2; // 2-6 new appointments per day
+
+        for (let i = 0; i < dailyAppointments; i++) {
+          const hour = Math.floor(Math.random() * 9) + 8;
+          const minute = Math.random() > 0.5 ? 0 : 30;
+          const appointmentDateTime = new Date(date);
+          appointmentDateTime.setHours(hour, minute, 0, 0);
+
+          const randomClient = existingClients[Math.floor(Math.random() * existingClients.length)];
+          const [randomPet] = await db.select().from(pets)
+            .where(eq(pets.clientId, randomClient.id))
+            .limit(1);
+
+          if (randomPet) {
+            await db.insert(appointments).values({
+              id: `refresh-appt-${tenantId}-${Date.now()}-${i}`,
+              tenantId,
+              clientId: randomClient.id,
+              petId: randomPet.id,
+              appointmentDateTime: appointmentDateTime.toISOString(),
+              status: date.toDateString() === today.toDateString() ? 'scheduled' : 'scheduled',
+              appointmentType: Math.random() > 0.7 ? 'grooming' : 'medical',
+              notes: `Refreshed demo appointment`
+            });
+            newAppointments++;
+          }
+        }
+      }
+
+      // Optionally add 1-2 new users
+      const newUsers = Math.floor(Math.random() * 3); // 0-2 new users
+      for (let i = 1; i <= newUsers; i++) {
+        const userId = `refresh-user-${tenantId}-${Date.now()}-${i}`;
+        const [user] = await db.insert(users).values({
+          id: userId,
+          username: `refresh.user${Date.now()}${i}@demo.com`,
+          email: `refresh.user${Date.now()}${i}@demo.com`,
+          firstName: `Refresh`,
+          lastName: `User ${i}`,
+          phone: `+1555900${String(Date.now()).slice(-3)}`,
+          timezone: 'America/Mexico_City'
+        }).returning();
+
+        await db.insert(userTenants).values({
+          userId: user.id,
+          tenantId
+        });
+      }
+
+      return {
+        newAppointments,
+        newUsers,
+        message: 'Demo data refreshed successfully'
+      };
+    } catch (error) {
+      console.error('Error refreshing demo tenant data:', error);
+      throw new Error('Failed to refresh demo tenant data');
+    }
+  }
+
+  async purgeDemoTenant(tenantId: string): Promise<void> {
+    try {
+      // Delete in reverse dependency order to avoid foreign key constraints
+      
+      // Delete appointments first
+      await db.delete(appointments).where(eq(appointments.tenantId, tenantId));
+      
+      // Delete medical appointments and records
+      await db.delete(medicalAppointments).where(eq(medicalAppointments.tenantId, tenantId));
+      await db.delete(medicalRecords).where(eq(medicalRecords.tenantId, tenantId));
+      
+      // Delete grooming records
+      await db.delete(groomingRecords).where(eq(groomingRecords.tenantId, tenantId));
+      
+      // Delete follow-up tasks
+      await db.delete(followUpTasks).where(eq(followUpTasks.tenantId, tenantId));
+      
+      // Delete pets
+      await db.delete(pets).where(eq(pets.tenantId, tenantId));
+      
+      // Delete clients
+      await db.delete(clients).where(eq(clients.tenantId, tenantId));
+      
+      // Delete user-tenant associations
+      await db.delete(userTenants).where(eq(userTenants.tenantId, tenantId));
+      
+      // Delete staff assignments
+      await db.delete(staff).where(eq(staff.tenantId, tenantId));
+      
+      // Get the company ID before deleting tenant
+      const [tenant] = await db.select({ companyId: tenants.companyId })
+        .from(tenants)
+        .where(eq(tenants.id, tenantId));
+      
+      // Delete the tenant
+      await db.delete(tenants).where(eq(tenants.id, tenantId));
+      
+      // Delete the company if it was a demo company
+      if (tenant?.companyId.includes('demo-')) {
+        await db.delete(companies).where(eq(companies.id, tenant.companyId));
+      }
+      
+      console.log(`Demo tenant ${tenantId} and all associated data purged successfully`);
+    } catch (error) {
+      console.error('Error purging demo tenant:', error);
+      throw new Error('Failed to purge demo tenant');
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
