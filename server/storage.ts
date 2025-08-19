@@ -3934,8 +3934,14 @@ export class DatabaseStorage implements IStorage {
       // Delete follow-up tasks
       await db.delete(followUpTasks).where(eq(followUpTasks.tenantId, tenantId));
       
-      // Delete pets
-      await db.delete(pets).where(eq(pets.tenantId, tenantId));
+      // Delete pets (by finding clients first since pets don't have tenantId)
+      const tenantClients = await db.select({ id: clients.id }).from(clients).where(eq(clients.tenantId, tenantId));
+      if (tenantClients.length > 0) {
+        const clientIds = tenantClients.map(c => c.id);
+        for (const clientId of clientIds) {
+          await db.delete(pets).where(eq(pets.clientId, clientId));
+        }
+      }
       
       // Delete clients
       await db.delete(clients).where(eq(clients.tenantId, tenantId));
