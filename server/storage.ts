@@ -3769,8 +3769,7 @@ export class DatabaseStorage implements IStorage {
       for (let i = 1; i <= Math.min(10, data.userCount * 2); i++) {
         const [client] = await db.insert(clients).values({
           tenantId: tenant.id,
-          firstName: `Cliente`,
-          lastName: `Demo ${i}`,
+          name: `Cliente Demo ${i}`,
           email: `cliente${i}@demo.com`,
           phone: `+1555100${String(i).padStart(3, '0')}`,
           address: `Calle Demo ${i}, Ciudad Demo`
