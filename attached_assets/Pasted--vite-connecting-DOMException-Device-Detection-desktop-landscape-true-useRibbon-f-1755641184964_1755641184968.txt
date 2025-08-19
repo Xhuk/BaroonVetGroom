@@ -1,0 +1,85 @@
+[vite] connecting...
+DOMException {}
+
+📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+Timezone changed to Mexico/General, new time: 2025-08-19T15:55:53.162Z
+Timezone changed to Mexico/General, new time: 2025-08-19T15:56:53.163Z
+Timezone changed to Mexico/General, new time: 2025-08-19T15:57:53.170Z
+Timezone changed to Mexico/General, new time: 2025-08-19T15:58:53.166Z
+Timezone changed to Mexico/General, new time: 2025-08-19T15:59:53.163Z
+Timezone changed to Mexico/General, new time: 2025-08-19T16:00:53.167Z
+Timezone changed to Mexico/General, new time: 2025-08-19T16:01:53.165Z
+Timezone changed to Mexico/General, new time: 2025-08-19T16:02:53.166Z
+Timezone changed to Mexico/General, new time: 2025-08-19T16:03:53.163Z
+Timezone changed to Mexico/General, new time: 2025-08-19T16:04:53.161Z
+Warning: validateDOMNesting(...): <ul> cannot appear as a descendant of &lt;p&gt;.
+    at ul
+    at p
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=dd465189:42:13
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YVLMVTEU.js?v=dd465189:283:13
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-alert-dialog.js?v=dd465189:132:11
+    at _c9 (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ui/alert-dialog.tsx:158:12)
+    at div
+    at AlertDialogHeader (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ui/alert-dialog.tsx:86:3)
+    at Slottable2 (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=dd465189:95:25)
+    at div
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=dd465189:42:13
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-W7RJ5FVN.js?v=dd465189:59:7
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=dd465189:79:13
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=dd465189:56:13
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=dd465189:42:13
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-U4VVCSAF.js?v=dd465189:29:5
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YVLMVTEU.js?v=dd465189:235:13
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YVLMVTEU.js?v=dd465189:158:58
+    at Presence (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7QZBBLXT.js?v=dd465189:24:11)
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YVLMVTEU.js?v=dd465189:149:64
+    at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=dd465189:38:15)
+    at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=dd465189:17:13)
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-alert-dialog.js?v=dd465189:85:13
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=dd465189:79:13
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=dd465189:56:13
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=dd465189:42:13
+    at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-W7RJ5FVN.js?v=dd465189:258:22
+    at Presence (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7QZBBLXT.js?v=dd465189:24:11)
+    at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=dd465189:38:15)
+    at DialogPortal (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YVLMVTEU.js?v=dd465189:111:11)
+    at AlertDialogPortal (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-alert-dialog.js?v=dd465189:66:11)
+    at _c3…
+at ul
+at p
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=dd465189:42:13
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YVLMVTEU.js?v=dd465189:283:13
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-alert-dialog.js?v=dd465189:132:11
+at _c9 (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ui/alert-dialog.tsx:158:12)
+at div
+at AlertDialogHeader (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ui/alert-dialog.tsx:86:3)
+at Slottable2 (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=dd465189:95:25)
+at div
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=dd465189:42:13
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-W7RJ5FVN.js?v=dd465189:59:7
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=dd465189:79:13
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=dd465189:56:13
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=dd465189:42:13
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-U4VVCSAF.js?v=dd465189:29:5
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YVLMVTEU.js?v=dd465189:235:13
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YVLMVTEU.js?v=dd465189:158:58
+at Presence (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7QZBBLXT.js?v=dd465189:24:11)
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YVLMVTEU.js?v=dd465189:149:64
+at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=dd465189:38:15)
+at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=dd465189:17:13)
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-alert-dialog.js?v=dd465189:85:13
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=dd465189:79:13
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=dd465189:56:13
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=dd465189:42:13
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-W7RJ5FVN.js?v=dd465189:258:22
+at Presence (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7QZBBLXT.js?v=dd465189:24:11)
+at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=dd465189:38:15)
+at DialogPortal (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YVLMVTEU.js?v=dd465189:111:11)
+at AlertDialogPortal (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-alert-dialog.js?v=dd465189:66:11)
+at _c3…
+at new window.Error (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/lib/errorSuppression.ts?v=4fVJbw_IDAXm3RV66GgVB:77:12)
+at t.value (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Timezone changed to Mexico/General, new time: 2025-08-19T16:05:53.155Z
