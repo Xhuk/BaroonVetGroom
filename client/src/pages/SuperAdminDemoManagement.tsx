@@ -89,8 +89,14 @@ export default function SuperAdminDemoManagement() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Demo Tenant Created",
-        description: `Demo tenant "${data.tenant.name}" created successfully with ${data.userCount} users and ${data.appointmentCount} appointments.`,
+        title: "Demo Tenant Created Successfully!",
+        description: `✓ Created tenant "${data.tenant.name}" with ${data.appointmentDays || createForm.appointmentDays} days of demo data
+✓ Added ${data.userCount} demo user accounts 
+✓ Generated ${data.clientCount} clients with pets
+✓ Created ${data.appointmentCount} sample appointments
+✓ Tenant ID: ${data.tenant.id}
+
+Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`,
       });
       setIsCreateDialogOpen(false);
       setCreateForm({

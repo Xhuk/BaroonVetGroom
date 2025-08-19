@@ -3730,7 +3730,9 @@ export class DatabaseStorage implements IStorage {
         subscriptionStatus: 'trial',
         trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         maxTenants: 1,
-        maxStaff: 10
+        maxStaff: 10,
+        autoStatusUpdateEnabled: false,
+        autoStatusUpdateInterval: 15
       }).returning();
 
       // Create tenant
@@ -3841,7 +3843,8 @@ export class DatabaseStorage implements IStorage {
         userCount: data.userCount,
         appointmentCount,
         clientCount: demoClients.length,
-        message: `Demo tenant "${data.tenantName}" created successfully`
+        appointmentDays: data.appointmentDays,
+        message: `Demo tenant "${data.tenantName}" created successfully with ${data.userCount} users, ${demoClients.length} clients, and ${appointmentCount} appointments over ${data.appointmentDays} days`
       };
     } catch (error) {
       console.error('Error creating demo tenant:', error);
