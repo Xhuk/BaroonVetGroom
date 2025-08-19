@@ -3728,9 +3728,7 @@ export class DatabaseStorage implements IStorage {
         id: companyId,
         name: data.companyName,
         subscriptionStatus: 'trial',
-        trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        maxTenants: 1,
-        maxStaff: 10,
+        subscriptionEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         autoStatusUpdateEnabled: false,
         autoStatusUpdateInterval: 15
       }).returning();
@@ -3741,7 +3739,7 @@ export class DatabaseStorage implements IStorage {
         id: tenantId,
         name: data.tenantName,
         companyId: company.id,
-        status: 'active',
+        subdomain: tenantId,
         openTime: '08:00',
         closeTime: '18:00',
         timeSlotDuration: 30
