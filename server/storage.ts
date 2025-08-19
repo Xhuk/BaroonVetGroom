@@ -3749,8 +3749,9 @@ export class DatabaseStorage implements IStorage {
       const demoUsers = [];
       for (let i = 1; i <= data.userCount; i++) {
         const userId = `demo-user-${tenantId}-${i}`;
+        const timestamp = Date.now();
         const [user] = await db.insert(users).values({
-          email: `demo.user${i}@${data.tenantName.toLowerCase().replace(/\s/g, '')}.com`,
+          email: `demo.user${i}.${timestamp}@${data.tenantName.toLowerCase().replace(/\s/g, '')}.com`,
           firstName: `Demo`,
           lastName: `User ${i}`,
         }).returning();
@@ -3767,10 +3768,11 @@ export class DatabaseStorage implements IStorage {
       // Create demo clients and pets
       const demoClients = [];
       for (let i = 1; i <= Math.min(10, data.userCount * 2); i++) {
+        const timestamp = Date.now();
         const [client] = await db.insert(clients).values({
           tenantId: tenant.id,
           name: `Cliente Demo ${i}`,
-          email: `cliente${i}@demo.com`,
+          email: `cliente${i}.${timestamp}@demo.com`,
           phone: `+1555100${String(i).padStart(3, '0')}`,
           address: `Calle Demo ${i}, Ciudad Demo`
         }).returning();
