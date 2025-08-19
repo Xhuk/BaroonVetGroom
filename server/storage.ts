@@ -3750,13 +3750,9 @@ export class DatabaseStorage implements IStorage {
       for (let i = 1; i <= data.userCount; i++) {
         const userId = `demo-user-${tenantId}-${i}`;
         const [user] = await db.insert(users).values({
-          id: userId,
-          username: `demo.user${i}@${data.tenantName.toLowerCase().replace(/\s/g, '')}.com`,
           email: `demo.user${i}@${data.tenantName.toLowerCase().replace(/\s/g, '')}.com`,
           firstName: `Demo`,
           lastName: `User ${i}`,
-          phone: `+1555000${String(i).padStart(3, '0')}`,
-          timezone: 'America/Mexico_City'
         }).returning();
 
         // Associate user with tenant
@@ -3771,9 +3767,7 @@ export class DatabaseStorage implements IStorage {
       // Create demo clients and pets
       const demoClients = [];
       for (let i = 1; i <= Math.min(10, data.userCount * 2); i++) {
-        const clientId = `demo-client-${tenantId}-${i}`;
         const [client] = await db.insert(clients).values({
-          id: clientId,
           tenantId: tenant.id,
           firstName: `Cliente`,
           lastName: `Demo ${i}`,
@@ -3785,16 +3779,13 @@ export class DatabaseStorage implements IStorage {
         // Create 1-2 pets per client
         const petCount = Math.floor(Math.random() * 2) + 1;
         for (let j = 1; j <= petCount; j++) {
-          const petId = `demo-pet-${clientId}-${j}`;
           await db.insert(pets).values({
-            id: petId,
             clientId: client.id,
-            tenantId: tenant.id,
             name: `Mascota ${i}-${j}`,
             species: Math.random() > 0.5 ? 'dog' : 'cat',
             breed: 'Mestizo',
             birthDate: new Date(Date.now() - Math.random() * 5 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            weight: Math.floor(Math.random() * 30) + 5,
+            registeredAge: `${Math.floor(Math.random() * 10) + 1}`,
             isActive: true
           });
         }
@@ -3821,7 +3812,6 @@ export class DatabaseStorage implements IStorage {
 
           if (randomPet) {
             await db.insert(appointments).values({
-              id: `demo-appt-${tenantId}-${day}-${i}`,
               tenantId: tenant.id,
               clientId: randomClient.id,
               petId: randomPet.id,
