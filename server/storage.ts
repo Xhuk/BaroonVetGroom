@@ -3676,11 +3676,10 @@ export class DatabaseStorage implements IStorage {
           id: tenants.id,
           name: tenants.name,
           companyId: tenants.companyId,
-          createdAt: tenants.createdAt,
-          status: tenants.status
+          createdAt: tenants.createdAt
         })
         .from(tenants)
-        .where(sql`${tenants.name} LIKE '%demo%' OR ${tenants.name} LIKE '%Demo%'`)
+        .where(sql`${tenants.id} LIKE 'demo-%' OR ${tenants.name} LIKE '%demo%' OR ${tenants.name} LIKE '%Demo%'`)
         .orderBy(desc(tenants.createdAt));
 
       // Get additional stats for each demo tenant
@@ -3708,7 +3707,7 @@ export class DatabaseStorage implements IStorage {
             userCount: Number(userCount.count) || 0,
             appointmentCount: Number(appointmentCount.count) || 0,
             lastActivity: lastAppointment?.createdAt || tenant.createdAt,
-            status: tenant.status || 'active'
+            status: 'active'
           };
         })
       );
