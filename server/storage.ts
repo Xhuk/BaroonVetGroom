@@ -3814,11 +3814,12 @@ export class DatabaseStorage implements IStorage {
           if (randomPet) {
             await db.insert(appointments).values({
               tenantId: tenant.id,
+              type: Math.random() > 0.7 ? 'grooming' : 'medical',
               clientId: randomClient.id,
               petId: randomPet.id,
               appointmentDateTime: appointmentDateTime.toISOString(),
               status: day === 0 && i < 2 ? 'scheduled' : 'completed',
-              appointmentType: Math.random() > 0.7 ? 'grooming' : 'medical',
+              duration: 60,
               notes: `Demo appointment - ${day === 0 ? 'Today' : `${day} days ago`}`
             });
             appointmentCount++;
