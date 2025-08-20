@@ -90,8 +90,8 @@ export function useAuth() {
     
     // Choose logout endpoint based on desired redirect
     if (redirectTo === 'landing') {
-      // Redirect to landing page directly
-      window.location.href = '/landing';
+      // Use specific landing page logout endpoint
+      window.location.href = '/api/logout-to-landing';
     } else {
       // Use logout endpoint that redirects to /auth
       const logoutEndpoint = isDevelopment ? '/api/logout' : '/api/auth/logout';

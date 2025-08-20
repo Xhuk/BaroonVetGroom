@@ -201,6 +201,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ success: true, message: 'Cache cleared' });
   });
 
+  // Logout and redirect to landing page
+  app.get('/api/logout-to-landing', (req: any, res) => {
+    // Clear session immediately without external redirect
+    req.logout((err: any) => {
+      if (err) {
+        console.error('Logout error:', err);
+      }
+      
+      // Destroy session
+      req.session.destroy((sessionErr: any) => {
+        if (sessionErr) {
+          console.error('Session destruction error:', sessionErr);
+        }
+        
+        // Clear all cookies
+        res.clearCookie('connect.sid', { path: '/' });
+        res.clearCookie('session', { path: '/' });
+        
+        // Send HTML page that clears all client-side data and redirects to landing page
+        res.setHeader('Content-Type', 'text/html');
+        res.send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Redirigiendo...</title>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+                <div style="text-align: center; color: white;">
+                  <div style="margin-bottom: 30px; font-size: 24px; font-weight: 300;">Redirigiendo a inicio...</div>
+                  <div style="width: 50px; height: 50px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                  <div style="margin-top: 20px; font-size: 14px; opacity: 0.8;">Será redirigido a la página de inicio</div>
+                </div>
+              </div>
+              <style>
+                @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+                }
+              </style>
+              <script>
+                console.log('🚪 Clearing all authentication data...');
+                
+                // Clear all storage
+                try {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  console.log('✅ Storage cleared');
+                } catch (e) {
+                  console.error('Storage clear error:', e);
+                }
+                
+                // Set logout flag
+                try {
+                  localStorage.setItem('auth_logged_out', 'true');
+                  console.log('✅ Logout flag set');
+                } catch (e) {
+                  console.error('Logout flag error:', e);
+                }
+                
+                // Redirect to landing page
+                setTimeout(() => {
+                  console.log('🏠 Redirecting to landing page...');
+                  window.location.replace('/landing');
+                }, 2000);
+              </script>
+            </body>
+          </html>
+        `);
+      });
+    });
+  });
+
   // Email/Password Authentication Endpoints
   
   // Password hashing utilities
