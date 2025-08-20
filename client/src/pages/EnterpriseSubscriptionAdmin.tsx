@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
-import { Plus, Building2, Users, DollarSign, Settings, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Plus, Building2, Users, DollarSign, Settings, AlertTriangle, ArrowLeft, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -253,6 +253,38 @@ function EnterpriseSubscriptionAdmin() {
       setEditingPlan(null);
     },
   });
+
+  // Delete subscription plan
+  const deletePlan = useMutation({
+    mutationFn: async (planId: string) => {
+      const response = await fetch(`/api/superadmin/subscription-plans/${planId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete plan');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/subscription-plans'] });
+      toast({
+        title: "✅ Plan Eliminado",
+        description: "El plan de suscripción ha sido eliminado correctamente",
+        variant: "default",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ Error al Eliminar",
+        description: error?.message || "Error al eliminar el plan de suscripción",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeletePlan = (planId: string, planName: string) => {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar el plan "${planName}"? Esta acción no se puede deshacer.`)) {
+      deletePlan.mutate(planId);
+    }
+  };
 
   // Bulk import subscription plans from JSON
   const importPlans = useMutation({
@@ -768,17 +800,29 @@ function EnterpriseSubscriptionAdmin() {
                     </div>
                   </div>
                   
-                  <Button
-                    onClick={() => {
-                      setEditingPlan(plan);
-                      setPlanConfigDialog(true);
-                    }}
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                    data-testid={`button-edit-plan-${plan.id}`}
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Editar Plan
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => {
+                        setEditingPlan(plan);
+                        setPlanConfigDialog(true);
+                      }}
+                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      data-testid={`button-edit-plan-${plan.id}`}
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Editar Plan
+                    </Button>
+                    <Button
+                      onClick={() => handleDeletePlan(plan.id, plan.displayName || plan.name)}
+                      className="w-full bg-red-600 hover:bg-red-700"
+                      size="sm"
+                      disabled={deletePlan.isPending}
+                      data-testid={`button-delete-plan-${plan.id}`}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {deletePlan.isPending ? "Eliminando..." : "Eliminar Plan"}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

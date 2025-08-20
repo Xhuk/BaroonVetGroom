@@ -848,7 +848,7 @@ export default function SuperAdmin() {
                     <CreditCard className="h-5 w-5 text-blue-600" />
                     <span>Gestión de Planes de Suscripción</span>
                   </div>
-                  <Link to="/enterprise-subscription-admin">
+                  <Link to="/superadmin/subscriptions">
                     <Button 
                       size="sm" 
                       className="bg-blue-600 hover:bg-blue-700"

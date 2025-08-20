@@ -356,6 +356,7 @@ export interface IStorage {
   getCompanySubscription(companyId: string): Promise<CompanySubscription | undefined>;
   createCompanySubscription(subscription: InsertCompanySubscription): Promise<CompanySubscription>;
   updateCompanySubscription(companyId: string, updates: Partial<InsertCompanySubscription>): Promise<CompanySubscription>;
+  deleteSubscriptionPlan(planId: string): Promise<void>;
 
   // Subscription promotions
   getActivePromotions(): Promise<SubscriptionPromotion[]>;
@@ -2264,6 +2265,12 @@ export class DatabaseStorage implements IStorage {
       .where(eq(subscriptionPlans.id, planId))
       .returning();
     return updatedPlan;
+  }
+
+  async deleteSubscriptionPlan(planId: string): Promise<void> {
+    await db
+      .delete(subscriptionPlans)
+      .where(eq(subscriptionPlans.id, planId));
   }
 
   async getAllCompaniesWithSubscriptions(): Promise<Company[]> {

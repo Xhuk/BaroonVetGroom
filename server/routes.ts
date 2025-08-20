@@ -5766,6 +5766,17 @@ This password expires in 24 hours.
     }
   });
 
+  app.delete('/api/superadmin/subscription-plans/:planId', isSuperAdmin, async (req, res) => {
+    try {
+      const { planId } = req.params;
+      await storage.deleteSubscriptionPlan(planId);
+      res.json({ success: true, message: "Subscription plan deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting subscription plan:", error);
+      res.status(500).json({ message: "Failed to delete subscription plan" });
+    }
+  });
+
   // Bulk import subscription plans from JSON configuration
   app.post('/api/superadmin/subscription-plans/bulk-import', isSuperAdmin, async (req, res) => {
     try {
