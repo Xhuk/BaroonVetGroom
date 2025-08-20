@@ -201,6 +201,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ success: true, message: 'Cache cleared' });
   });
 
+  // Email/Password Authentication Endpoints
+  
+  // Password hashing utilities
+  const bcrypt = await import('bcrypt');
+  const SALT_ROUNDS = 10;
+  
+  // Register new user with clinic
+  app.post('/api/auth/register', async (req: any, res) => {
+    try {
+      const { email, password, firstName, lastName, clinicName } = req.body;
+      
+      // Validate required fields
+      if (!email || !password || !firstName || !lastName || !clinicName) {
+        return res.status(400).json({ message: 'Todos los campos son requeridos' });
+      }
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Este email ya está registrado' });
+      }
+      
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+      
+      // Create user and clinic
+      const result = await storage.createUserWithClinic({
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        clinicName
+      });
+      
+      // Set session
+      req.session.userId = result.user.id;
+      req.session.isAuthenticated = true;
+      
+      res.status(201).json({
+        success: true,
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName
+        },
+        clinic: result.clinic
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ message: 'Error al crear la cuenta' });
+    }
+  });
+  
+  // Login with email/password
+  app.post('/api/auth/login', async (req: any, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Email y contraseña son requeridos' });
+      }
+      
+      // Get user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: 'Email o contraseña incorrectos' });
+      }
+      
+      // Verify password
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: 'Email o contraseña incorrectos' });
+      }
+      
+      // Set session
+      req.session.userId = user.id;
+      req.session.isAuthenticated = true;
+      
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName
+        }
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: 'Error al iniciar sesión' });
+    }
+  });
+  
+  // Logout
+  app.post('/api/auth/logout', (req: any, res) => {
+    req.session.destroy((err: any) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({ message: 'Error al cerrar sesión' });
+      }
+      res.json({ success: true, message: 'Sesión cerrada exitosamente' });
+    });
+  });
+
   // Enhanced in-memory cache for user data (valid for 15 minutes)
   const userCache = new Map<string, { data: any, timestamp: number }>();
   const CACHE_TTL = 15 * 60 * 1000; // 15 minutes - longer cache
@@ -209,9 +314,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const tenantCache = new Map<string, { data: any, timestamp: number }>();
   const TENANT_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-  // Auth routes with ultra-aggressive caching
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // Get current user (updated for email/password auth)
+  app.get('/api/user', async (req: any, res) => {
     try {
+      // Check session-based auth first
+      if (req.session?.isAuthenticated && req.session?.userId) {
+        const user = await storage.getUser(req.session.userId);
+        if (user) {
+          return res.json({
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName
+          });
+        }
+      }
+      
+      // Fallback to Replit auth for existing users
+      if (!req.user?.claims?.sub) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
       const userId = req.user.claims.sub;
       
       // Set ultra-aggressive cache headers for instant subsequent loads

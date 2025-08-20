@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import { LandingPage } from "@/pages/LandingPage";
+import AuthPage from "@/pages/AuthPage";
 import Dashboard from "@/pages/Dashboard";
 import Admin from "@/pages/Admin";
 import SuperAdmin from "@/pages/SuperAdmin";
@@ -90,9 +91,9 @@ function Router() {
             </div>
           );
         }
-        // Always show landing page if not properly authenticated
+        // Show login page if not properly authenticated
         if (shouldShowLandingPage) {
-          return <LandingPage />;
+          return <AuthPage />;
         }
         return <Dashboard />;
       }} />

@@ -3,7 +3,7 @@ import type { User } from "@shared/schema";
 
 export function useAuth() {
   const { data: user, isLoading, error } = useQuery<User>({
-    queryKey: ["/api/auth/user"],
+    queryKey: ["/api/user"],
     retry: false,
     staleTime: 60 * 60 * 1000, // 1 hour - ultra aggressive caching
     gcTime: 24 * 60 * 60 * 1000, // 24 hours - keep in cache much longer
@@ -29,7 +29,7 @@ export function useAuth() {
       }
       
       // Fallback to network request
-      const response = await fetch('/api/auth/user', { credentials: 'include' });
+      const response = await fetch('/api/user', { credentials: 'include' });
       if (response.ok) {
         const userData = await response.json();
         // Cache the result
@@ -42,8 +42,11 @@ export function useAuth() {
   });
 
   const logout = () => {
-    // Redirect immediately to logout endpoint which will handle all cleanup
-    window.location.href = '/api/logout';
+    // Clear cache and redirect to logout endpoint
+    localStorage.removeItem('auth_user_cache');
+    localStorage.removeItem('auth_cache_time');
+    localStorage.setItem('auth_logged_out', 'true');
+    window.location.href = '/api/auth/logout';
   };
 
   return {
