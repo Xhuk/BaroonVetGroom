@@ -334,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             id: `ut-${Date.now()}`,
             userId: userId,
             tenantId: tenantInfo.tenantId,
-            roleId: 'demo-admin',
+            roleId: req.user.isDemoUser ? 'tenant_admin' : 'tenant_admin', // Use standard tenant admin role
             roleName: req.user.isDemoUser ? 'Demo Admin' : 'Vanilla Admin',
             isActive: true,
             createdAt: new Date(),
@@ -2731,25 +2731,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user access info
   app.get('/api/auth/access-info', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
-      const cacheKey = `access_${userId}`;
+      console.log('🔍 [/api/auth/access-info] Request user session:', {
+        hasUser: !!req.user,
+        isLocalUser: req.user?.isLocalUser,
+        isDemoUser: req.user?.isDemoUser,
+        email: req.user?.claims?.email,
+        sub: req.user?.claims?.sub
+      });
+
+      let userId: string;
+      let cacheKey: string;
+      
+      if (req.user.isLocalUser) {
+        // For local users, use email-based lookup
+        const userEmail = req.user.claims.email;
+        userId = userEmail; // Use email as identifier for cache
+        cacheKey = `access_email_${userEmail}`;
+        console.log('🔍 [/api/auth/access-info] Using local user email:', userEmail);
+      } else {
+        // For OIDC users, use standard claims.sub
+        userId = req.user?.claims?.sub;
+        cacheKey = `access_id_${userId}`;
+        console.log('🔍 [/api/auth/access-info] Using OIDC user ID:', userId);
+      }
       
       // Check cache first
       const cached = userCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        console.log('🔍 [/api/auth/access-info] Returning cached access info');
         return res.json(cached.data);
       }
       
       const accessLevel = await getUserAccessLevel(req);
-      const roles = await storage.getUserSystemRoles(userId);
+      console.log('🔍 [/api/auth/access-info] User access level:', accessLevel);
+      
+      let roles = [];
+      
+      if (req.user.isLocalUser) {
+        // For demo/vanilla users, get their tenant roles
+        console.log('🔍 [/api/auth/access-info] Getting tenant roles for demo user');
+        const userEmail = req.user.claims.email;
+        const tenantInfo = await storage.getUserTenantInfo(userEmail);
+        
+        if (tenantInfo && tenantInfo.tenantId) {
+          // Create role info based on the role assigned to demo users
+          roles = [{
+            roleId: req.user.isDemoUser ? 'tenant_admin' : 'tenant_admin',
+            roleName: req.user.isDemoUser ? 'Demo Admin' : 'Vanilla Admin',
+            roleDescription: 'Full access to tenant operations and management',
+            systemLevel: false,
+            isActive: true
+          }];
+          console.log('🔍 [/api/auth/access-info] Demo user roles:', roles);
+        }
+      } else {
+        // For regular OIDC users, get their system roles
+        roles = await storage.getUserSystemRoles(userId);
+        console.log('🔍 [/api/auth/access-info] OIDC user system roles:', roles.length);
+      }
       
       const accessInfo = {
         accessLevel,
         roles,
         canAccessSuperAdmin: accessLevel === 'system_admin',
-        canAccessAdmin: ['system_admin', 'super_tenant'].includes(accessLevel),
+        canAccessAdmin: ['system_admin', 'super_tenant'].includes(accessLevel) || roles.some(r => r.roleId === 'tenant_admin'),
         canDebugTenants: await hasDebugAccess(req)
       };
+
+      console.log('🔍 [/api/auth/access-info] Final access info:', {
+        accessLevel: accessInfo.accessLevel,
+        rolesCount: accessInfo.roles.length,
+        canAccessAdmin: accessInfo.canAccessAdmin
+      });
       
       // Cache the result
       userCache.set(cacheKey, { data: accessInfo, timestamp: Date.now() });
