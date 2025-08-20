@@ -66,6 +66,7 @@ export default function SuperAdminDemoManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [showTrashAnimation, setShowTrashAnimation] = useState(false);
   const trashAnimationRef = useRef<HTMLDivElement>(null);
+  const trashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [createForm, setCreateForm] = useState<CreateDemoForm>({
     tenantName: '',
     companyName: '',
@@ -77,66 +78,74 @@ export default function SuperAdminDemoManagement() {
   const triggerTrashAnimation = () => {
     setShowTrashAnimation(true);
     
+    // Clear any existing timeout
+    if (trashTimeoutRef.current) {
+      clearTimeout(trashTimeoutRef.current);
+    }
+    
     // Animate the trash can with more dramatic effects
     if (trashAnimationRef.current) {
       (anime as any)({
         targets: trashAnimationRef.current,
         translateY: [
-          { value: -80, duration: 300 },
-          { value: -150, duration: 400 },
-          { value: -120, duration: 300 },
-          { value: -180, duration: 400 },
-          { value: -100, duration: 300 },
-          { value: -200, duration: 400 },
-          { value: -300, duration: 500 }
+          { value: -80, duration: 400 },
+          { value: -150, duration: 500 },
+          { value: -120, duration: 400 },
+          { value: -180, duration: 500 },
+          { value: -100, duration: 400 },
+          { value: -200, duration: 500 },
+          { value: -300, duration: 800 }
         ],
         translateX: [
-          { value: 30, duration: 300 },
-          { value: -20, duration: 400 },
-          { value: 15, duration: 300 },
-          { value: -25, duration: 400 },
-          { value: 10, duration: 300 },
-          { value: -15, duration: 400 },
-          { value: 0, duration: 500 }
+          { value: 30, duration: 400 },
+          { value: -20, duration: 500 },
+          { value: 15, duration: 400 },
+          { value: -25, duration: 500 },
+          { value: 10, duration: 400 },
+          { value: -15, duration: 500 },
+          { value: 0, duration: 800 }
         ],
         scale: [
-          { value: 1.3, duration: 300 },
-          { value: 1.1, duration: 400 },
-          { value: 1.4, duration: 300 },
-          { value: 1.2, duration: 400 },
-          { value: 1.5, duration: 300 },
-          { value: 1.1, duration: 400 },
-          { value: 0.8, duration: 500 }
+          { value: 1.3, duration: 400 },
+          { value: 1.1, duration: 500 },
+          { value: 1.4, duration: 400 },
+          { value: 1.2, duration: 500 },
+          { value: 1.5, duration: 400 },
+          { value: 1.1, duration: 500 },
+          { value: 0.8, duration: 800 }
         ],
         rotate: [
-          { value: 15, duration: 300 },
-          { value: -12, duration: 400 },
-          { value: 18, duration: 300 },
-          { value: -15, duration: 400 },
-          { value: 20, duration: 300 },
-          { value: -10, duration: 400 },
-          { value: 360, duration: 500 }
+          { value: 15, duration: 400 },
+          { value: -12, duration: 500 },
+          { value: 18, duration: 400 },
+          { value: -15, duration: 500 },
+          { value: 20, duration: 400 },
+          { value: -10, duration: 500 },
+          { value: 360, duration: 800 }
         ],
         opacity: [
-          { value: 1, duration: 300 },
-          { value: 0.9, duration: 400 },
-          { value: 1, duration: 300 },
-          { value: 0.8, duration: 400 },
-          { value: 1, duration: 300 },
-          { value: 0.7, duration: 400 },
-          { value: 0, duration: 500 }
+          { value: 1, duration: 400 },
+          { value: 0.9, duration: 500 },
+          { value: 1, duration: 400 },
+          { value: 0.8, duration: 500 },
+          { value: 1, duration: 400 },
+          { value: 0.7, duration: 500 },
+          { value: 0, duration: 800 }
         ],
-        duration: 3200,
+        duration: 4800, // Extended to 4.8 seconds to match toast timing
         easing: 'easeOutQuart',
         complete: () => {
+          if (trashTimeoutRef.current) {
+            clearTimeout(trashTimeoutRef.current);
+          }
           setShowTrashAnimation(false);
         }
       });
       
-      // Also hide animation after toast duration (safety fallback)
-      setTimeout(() => {
+      // Fallback timeout - hide after 6 seconds if animation doesn't complete
+      trashTimeoutRef.current = setTimeout(() => {
         setShowTrashAnimation(false);
-      }, 5000);
+      }, 6000);
     }
   };
 
