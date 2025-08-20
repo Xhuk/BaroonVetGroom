@@ -12,7 +12,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, AlertCircle, CheckCircle, Clock, Trash2, Edit, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  Plus, AlertCircle, CheckCircle, Clock, Trash2, Edit, Search, 
+  TrendingUp, AlertTriangle, Calendar, User, Target, Zap,
+  Filter, MoreHorizontal, Eye, ChevronDown
+} from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import type { FollowUpTask, InsertFollowUpTask } from '@shared/schema';
 
@@ -27,18 +31,58 @@ const followUpTaskSchema = z.object({
 
 type FollowUpTaskFormData = z.infer<typeof followUpTaskSchema>;
 
-const priorityColors = {
-  low: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  normal: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  high: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-  urgent: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+const priorityConfig = {
+  low: { 
+    label: 'Baja', 
+    color: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
+    dot: 'bg-emerald-400',
+    icon: Clock
+  },
+  normal: { 
+    label: 'Normal', 
+    color: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800',
+    dot: 'bg-blue-400',
+    icon: Target
+  },
+  high: { 
+    label: 'Alta', 
+    color: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800',
+    dot: 'bg-amber-400',
+    icon: AlertTriangle
+  },
+  urgent: { 
+    label: 'Urgente', 
+    color: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800',
+    dot: 'bg-red-400',
+    icon: Zap
+  },
 };
 
-const statusColors = {
-  pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  in_progress: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+const statusConfig = {
+  pending: { 
+    label: 'Pendientes', 
+    color: 'bg-yellow-50 dark:bg-yellow-950', 
+    border: 'border-yellow-200 dark:border-yellow-800',
+    textColor: 'text-yellow-700 dark:text-yellow-300'
+  },
+  in_progress: { 
+    label: 'En Progreso', 
+    color: 'bg-blue-50 dark:bg-blue-950', 
+    border: 'border-blue-200 dark:border-blue-800',
+    textColor: 'text-blue-700 dark:text-blue-300'
+  },
+  completed: { 
+    label: 'Completadas', 
+    color: 'bg-emerald-50 dark:bg-emerald-950', 
+    border: 'border-emerald-200 dark:border-emerald-800',
+    textColor: 'text-emerald-700 dark:text-emerald-300'
+  },
+  cancelled: { 
+    label: 'Canceladas', 
+    color: 'bg-gray-50 dark:bg-gray-950', 
+    border: 'border-gray-200 dark:border-gray-800',
+    textColor: 'text-gray-700 dark:text-gray-300'
+  },
 };
 
 interface FollowUpTasksProps {
@@ -46,17 +90,14 @@ interface FollowUpTasksProps {
 }
 
 export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('createdAt');
-  const [sortOrder, setSortOrder] = useState<string>('desc');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('pending');
+  const [selectedPriority, setPriority] = useState<string>('all');
+  const [view, setView] = useState<'kanban' | 'list'>('kanban');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<FollowUpTask | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  const TASKS_PER_PAGE = 50;
 
   const form = useForm<FollowUpTaskFormData>({
     resolver: zodResolver(followUpTaskSchema),
@@ -66,23 +107,41 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
     },
   });
 
-  // Fetch follow-up tasks with pagination
+  // Fetch all tasks for stats
+  const { data: allTasksResponse } = useQuery({
+    queryKey: ['/api/follow-up-tasks', tenantId, 'all', 'all', 'createdAt', 'desc', 1],
+    queryFn: async () => {
+      const response = await fetch(`/api/follow-up-tasks/${tenantId}`);
+      if (!response.ok) throw new Error('Failed to fetch tasks');
+      return response.json();
+    },
+  });
+
+  // Fetch filtered tasks
   const { data: tasksResponse, isLoading } = useQuery({
-    queryKey: ['/api/follow-up-tasks', tenantId, statusFilter, priorityFilter, sortBy, sortOrder, currentPage],
-    queryFn: async (): Promise<{ tasks: FollowUpTask[], total: number, totalPages: number }> => {
+    queryKey: ['/api/follow-up-tasks', tenantId, selectedStatus, selectedPriority, searchQuery],
+    queryFn: async (): Promise<{ tasks: FollowUpTask[], total: number }> => {
       const params = new URLSearchParams({ 
-        ...(statusFilter !== 'all' && { status: statusFilter }),
-        ...(priorityFilter !== 'all' && { priority: priorityFilter }),
-        sortBy,
-        sortOrder,
-        page: currentPage.toString(),
-        limit: TASKS_PER_PAGE.toString()
+        ...(selectedStatus !== 'all' && { status: selectedStatus }),
+        ...(selectedPriority !== 'all' && { priority: selectedPriority }),
+        ...(searchQuery && { search: searchQuery }),
+        limit: '500'
       });
       const response = await fetch(`/api/follow-up-tasks/${tenantId}?${params}`);
       if (!response.ok) throw new Error('Failed to fetch tasks');
       return response.json();
     },
   });
+
+  // Calculate statistics
+  const stats = allTasksResponse ? {
+    total: allTasksResponse.tasks?.length || 0,
+    pending: allTasksResponse.tasks?.filter(t => t.status === 'pending').length || 0,
+    inProgress: allTasksResponse.tasks?.filter(t => t.status === 'in_progress').length || 0,
+    completed: allTasksResponse.tasks?.filter(t => t.status === 'completed').length || 0,
+    urgent: allTasksResponse.tasks?.filter(t => t.priority === 'urgent').length || 0,
+    high: allTasksResponse.tasks?.filter(t => t.priority === 'high').length || 0,
+  } : { total: 0, pending: 0, inProgress: 0, completed: 0, urgent: 0, high: 0 };
 
   // Create task mutation
   const createTaskMutation = useMutation({
@@ -100,14 +159,14 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
       setIsCreateDialogOpen(false);
       form.reset();
       toast({
-        title: 'Tarea creada',
-        description: 'La tarea de seguimiento ha sido creada exitosamente.',
+        title: '✅ Tarea creada exitosamente',
+        description: 'La nueva tarea de seguimiento ha sido añadida al sistema.',
       });
     },
     onError: () => {
       toast({
-        title: 'Error',
-        description: 'No se pudo crear la tarea de seguimiento.',
+        title: '❌ Error al crear tarea',
+        description: 'No se pudo crear la tarea de seguimiento. Por favor intenta de nuevo.',
         variant: 'destructive',
       });
     },
@@ -128,8 +187,8 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/follow-up-tasks'] });
       setEditingTask(null);
       toast({
-        title: 'Tarea actualizada',
-        description: 'La tarea de seguimiento ha sido actualizada exitosamente.',
+        title: '✅ Tarea actualizada',
+        description: 'Los cambios han sido guardados correctamente.',
       });
     },
   });
@@ -148,8 +207,8 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/follow-up-tasks'] });
       toast({
-        title: 'Tarea completada',
-        description: 'La tarea de seguimiento ha sido marcada como completada.',
+        title: '🎉 ¡Tarea completada!',
+        description: 'Excelente trabajo. La tarea ha sido marcada como completada.',
       });
     },
   });
@@ -167,47 +226,18 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/follow-up-tasks'] });
       toast({
-        title: 'Tarea eliminada',
-        description: 'La tarea de seguimiento ha sido eliminada exitosamente.',
+        title: '🗑️ Tarea eliminada',
+        description: 'La tarea ha sido eliminada permanentemente.',
       });
     },
   });
-
-  // Auto-generate tasks mutation with appointment type
-  const autoGenerateTasksMutation = useMutation({
-    mutationFn: async ({ appointmentType }: { appointmentType: string }) => {
-      const response = await fetch(`/api/follow-up-tasks/${tenantId}/auto-generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ appointmentType }),
-      });
-      if (!response.ok) throw new Error('Failed to auto-generate tasks');
-      return response.json();
-    },
-    onSuccess: (response: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/follow-up-tasks'] });
-      toast({
-        title: 'Tareas generadas',
-        description: `Se generaron ${response.generatedCount} tareas de seguimiento automáticamente.`,
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'No se pudieron generar las tareas automáticamente.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Auto-generation is now handled by server background service
 
   const onSubmit = (data: FollowUpTaskFormData) => {
     const taskData: InsertFollowUpTask = {
       ...data,
       tenantId,
-      clientId: 'temp-client', // This would need to be selected from a dropdown
-      petId: 'temp-pet', // This would need to be selected from a dropdown
+      clientId: 'temp-client',
+      petId: 'temp-pet',
     };
 
     if (editingTask) {
@@ -217,48 +247,150 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
     }
   };
 
-  const getPriorityIcon = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return <AlertCircle className="h-4 w-4" />;
-      case 'high': return <AlertCircle className="h-4 w-4" />;
-      default: return <Clock className="h-4 w-4" />;
-    }
+  const TaskCard = ({ task }: { task: FollowUpTask }) => {
+    const priorityInfo = priorityConfig[task.priority as keyof typeof priorityConfig];
+    const PriorityIcon = priorityInfo.icon;
+
+    return (
+      <Card className="group hover:shadow-lg transition-all duration-200 border-l-4" 
+            style={{ borderLeftColor: priorityInfo.dot.replace('bg-', '#') }}>
+        <CardContent className="p-6 space-y-4">
+          {/* Header with priority indicator */}
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${priorityInfo.color}`}>
+                <PriorityIcon className="h-4 w-4" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-1">
+                  {task.title}
+                </h3>
+                <Badge variant="outline" className={priorityInfo.color}>
+                  {priorityInfo.label}
+                </Badge>
+              </div>
+            </div>
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Description */}
+          {task.description && (
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+              {task.description}
+            </p>
+          )}
+
+          {/* Meta information */}
+          <div className="flex flex-wrap gap-2 text-sm text-gray-500 dark:text-gray-400">
+            {task.dueDate && (
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                <span>Vence: {new Date(task.dueDate).toLocaleDateString()}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <span>Creada: {new Date(task.createdAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-2">
+            {task.status !== 'completed' && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => completeTaskMutation.mutate(task.id)}
+                disabled={completeTaskMutation.isPending}
+                className="flex items-center gap-2 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 dark:hover:bg-emerald-950"
+                data-testid={`button-complete-${task.id}`}
+              >
+                <CheckCircle className="h-4 w-4" />
+                Completar
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setEditingTask(task);
+                form.reset({
+                  title: task.title,
+                  description: task.description || '',
+                  priority: task.priority as any,
+                  taskType: task.taskType,
+                  dueDate: task.dueDate || '',
+                });
+                setIsCreateDialogOpen(true);
+              }}
+              className="flex items-center gap-2"
+              data-testid={`button-edit-${task.id}`}
+            >
+              <Edit className="h-4 w-4" />
+              Editar
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => deleteTaskMutation.mutate(task.id)}
+              disabled={deleteTaskMutation.isPending}
+              className="flex items-center gap-2 hover:bg-red-50 hover:text-red-700 hover:border-red-300 dark:hover:bg-red-950"
+              data-testid={`button-delete-${task.id}`}
+            >
+              <Trash2 className="h-4 w-4" />
+              Eliminar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
-    <div className="space-y-6" data-testid="follow-up-tasks-page">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Tareas de Seguimiento
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Gestiona las tareas de seguimiento y información faltante
-          </p>
-        </div>
-        <div className="flex gap-2">
+    <div className="space-y-8 max-w-7xl mx-auto p-6" data-testid="follow-up-tasks-page">
+      {/* Modern Header */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              📋 Tareas de Seguimiento
+            </h1>
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl">
+              Gestiona y supervisa todas las tareas pendientes, información faltante y seguimientos 
+              requeridos para mantener la operación al día.
+            </p>
+          </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button data-testid="button-create-task">
-                <Plus className="h-4 w-4 mr-2" />
+              <Button size="lg" className="shadow-lg" data-testid="button-create-task">
+                <Plus className="h-5 w-5 mr-2" />
                 Nueva Tarea
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>{editingTask ? 'Editar Tarea' : 'Nueva Tarea de Seguimiento'}</DialogTitle>
+                <DialogTitle className="text-xl">
+                  {editingTask ? '✏️ Editar Tarea' : '✨ Nueva Tarea de Seguimiento'}
+                </DialogTitle>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
                     control={form.control}
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Título</FormLabel>
+                        <FormLabel>Título de la Tarea</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ingresa el título de la tarea" {...field} />
+                          <Input 
+                            placeholder="Ej: Completar diagnóstico de Luna" 
+                            className="h-12" 
+                            {...field} 
+                          />
                         </FormControl>
                       </FormItem>
                     )}
@@ -271,34 +403,53 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
                       <FormItem>
                         <FormLabel>Descripción</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Describe la tarea..." {...field} />
+                          <Textarea 
+                            placeholder="Describe los detalles de la tarea..." 
+                            className="min-h-[100px]" 
+                            {...field} 
+                          />
                         </FormControl>
                       </FormItem>
                     )}
                   />
                   
-                  <FormField
-                    control={form.control}
-                    name="priority"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Prioridad</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="priority"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Prioridad</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Selecciona prioridad" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="low">🟢 Baja</SelectItem>
+                              <SelectItem value="normal">🔵 Normal</SelectItem>
+                              <SelectItem value="high">🟡 Alta</SelectItem>
+                              <SelectItem value="urgent">🔴 Urgente</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="dueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fecha Límite</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona prioridad" />
-                            </SelectTrigger>
+                            <Input type="date" className="h-12" {...field} />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="low">Baja</SelectItem>
-                            <SelectItem value="normal">Normal</SelectItem>
-                            <SelectItem value="high">Alta</SelectItem>
-                            <SelectItem value="urgent">Urgente</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   
                   <FormField
                     control={form.control}
@@ -308,50 +459,39 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
                         <FormLabel>Tipo de Tarea</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-12">
                               <SelectValue placeholder="Selecciona tipo" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="medical_follow_up">Seguimiento Médico</SelectItem>
-                            <SelectItem value="grooming_follow_up">Seguimiento Grooming</SelectItem>
-                            <SelectItem value="missing_diagnosis">Diagnóstico Faltante</SelectItem>
-                            <SelectItem value="missing_treatment">Tratamiento Faltante</SelectItem>
-                            <SelectItem value="missing_price">Precio Faltante</SelectItem>
-                            <SelectItem value="incomplete_record">Registro Incompleto</SelectItem>
-                            <SelectItem value="general">General</SelectItem>
+                            <SelectItem value="medical_follow_up">🏥 Seguimiento Médico</SelectItem>
+                            <SelectItem value="grooming_follow_up">✂️ Seguimiento Grooming</SelectItem>
+                            <SelectItem value="missing_diagnosis">🔍 Diagnóstico Faltante</SelectItem>
+                            <SelectItem value="missing_treatment">💊 Tratamiento Faltante</SelectItem>
+                            <SelectItem value="missing_price">💰 Precio Faltante</SelectItem>
+                            <SelectItem value="incomplete_record">📝 Registro Incompleto</SelectItem>
+                            <SelectItem value="general">📋 General</SelectItem>
                           </SelectContent>
                         </Select>
                       </FormItem>
                     )}
                   />
                   
-                  <FormField
-                    control={form.control}
-                    name="dueDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Fecha Límite</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end gap-3 pt-4">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setIsCreateDialogOpen(false)}
+                      className="px-6"
                     >
                       Cancelar
                     </Button>
                     <Button
                       type="submit"
                       disabled={createTaskMutation.isPending || updateTaskMutation.isPending}
+                      className="px-6"
                     >
-                      {editingTask ? 'Actualizar' : 'Crear'} Tarea
+                      {editingTask ? '💾 Actualizar' : '✨ Crear'} Tarea
                     </Button>
                   </div>
                 </form>
@@ -361,198 +501,143 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
         </div>
       </div>
 
-      {/* Filters and Sorting */}
-      <div className="flex gap-4 items-center justify-between">
-        <div className="flex gap-2">
-          <Select value={statusFilter} onValueChange={(value) => {
-            setStatusFilter(value);
-            setCurrentPage(1); // Reset to first page when filter changes
-          }}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Estado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los Estados</SelectItem>
-              <SelectItem value="pending">Pendiente</SelectItem>
-              <SelectItem value="in_progress">En Progreso</SelectItem>
-              <SelectItem value="completed">Completado</SelectItem>
-              <SelectItem value="cancelled">Cancelado</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={priorityFilter} onValueChange={(value) => {
-            setPriorityFilter(value);
-            setCurrentPage(1); // Reset to first page when filter changes
-          }}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Prioridad" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las Prioridades</SelectItem>
-              <SelectItem value="low">Baja</SelectItem>
-              <SelectItem value="normal">Normal</SelectItem>
-              <SelectItem value="high">Alta</SelectItem>
-              <SelectItem value="urgent">Urgente</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Statistics Dashboard */}
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+              {stats.total}
+            </div>
+            <div className="text-sm font-medium text-blue-700 dark:text-blue-300">Total</div>
+          </CardContent>
+        </Card>
         
-        {/* Sorting Controls */}
-        <div className="flex gap-2 items-center">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Ordenar por:</span>
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Ordenar por" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="createdAt">Fecha de Creación</SelectItem>
-              <SelectItem value="dueDate">Fecha de Vencimiento</SelectItem>
-              <SelectItem value="priority">Prioridad</SelectItem>
-              <SelectItem value="status">Estado</SelectItem>
-              <SelectItem value="title">Título</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button
-            variant="outline" 
-            size="sm"
-            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            data-testid="button-sort-order"
-          >
-            <ArrowUpDown className="h-4 w-4 mr-1" />
-            {sortOrder === 'asc' ? 'Asc' : 'Desc'}
-          </Button>
-        </div>
+        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 border-yellow-200 dark:border-yellow-800">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">
+              {stats.pending}
+            </div>
+            <div className="text-sm font-medium text-yellow-700 dark:text-yellow-300">Pendientes</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+              {stats.inProgress}
+            </div>
+            <div className="text-sm font-medium text-blue-700 dark:text-blue-300">En Progreso</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 border-emerald-200 dark:border-emerald-800">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+              {stats.completed}
+            </div>
+            <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Completadas</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1">
+              {stats.urgent}
+            </div>
+            <div className="text-sm font-medium text-red-700 dark:text-red-300">Urgentes</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 border-amber-200 dark:border-amber-800">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">
+              {stats.high}
+            </div>
+            <div className="text-sm font-medium text-amber-700 dark:text-amber-300">Alta Prioridad</div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Tasks Grid */}
-      <div className="grid gap-4">
+      {/* Modern Filters */}
+      <Card className="shadow-sm">
+        <CardContent className="p-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Buscar tareas por título o descripción..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-12 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+              />
+            </div>
+
+            {/* Status Filter Tabs */}
+            <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+              {Object.entries(statusConfig).map(([status, config]) => (
+                <Button
+                  key={status}
+                  variant={selectedStatus === status ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setSelectedStatus(status)}
+                  className={`px-4 py-2 ${selectedStatus === status ? '' : 'text-gray-600 dark:text-gray-400'}`}
+                >
+                  {config.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Priority Filter */}
+            <Select value={selectedPriority} onValueChange={setPriority}>
+              <SelectTrigger className="w-48 h-12 bg-white dark:bg-gray-950">
+                <SelectValue placeholder="Filtrar por prioridad" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">🔘 Todas las Prioridades</SelectItem>
+                <SelectItem value="low">🟢 Baja</SelectItem>
+                <SelectItem value="normal">🔵 Normal</SelectItem>
+                <SelectItem value="high">🟡 Alta</SelectItem>
+                <SelectItem value="urgent">🔴 Urgente</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tasks Content */}
+      <div className="space-y-6">
         {isLoading ? (
-          <div className="text-center py-8">Cargando tareas...</div>
+          <div className="text-center py-16">
+            <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-lg text-gray-600 dark:text-gray-400">Cargando tareas...</p>
+          </div>
         ) : !tasksResponse || tasksResponse.tasks.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-8">
-              <p className="text-gray-500 dark:text-gray-400">
-                No hay tareas de seguimiento disponibles.
+          <Card className="border-2 border-dashed border-gray-300 dark:border-gray-700">
+            <CardContent className="text-center py-16">
+              <div className="text-6xl mb-6">📝</div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                No hay tareas de seguimiento
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                {selectedStatus === 'all' 
+                  ? 'Aún no hay tareas creadas. ¡Crea la primera tarea para comenzar!'
+                  : `No hay tareas con estado "${statusConfig[selectedStatus as keyof typeof statusConfig]?.label.toLowerCase()}".`}
               </p>
+              <Button onClick={() => setIsCreateDialogOpen(true)} size="lg">
+                <Plus className="h-5 w-5 mr-2" />
+                Crear Primera Tarea
+              </Button>
             </CardContent>
           </Card>
         ) : (
-          tasksResponse.tasks.map((task) => (
-            <Card key={task.id} className="p-4">
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-start gap-3">
-                  {getPriorityIcon(task.priority || 'normal')}
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                      {task.title}
-                    </h3>
-                    {task.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        {task.description}
-                      </p>
-                    )}
-                    <div className="flex gap-2 mb-2">
-                      <Badge className={priorityColors[task.priority as keyof typeof priorityColors]}>
-                        {task.priority === 'low' ? 'Baja' : 
-                         task.priority === 'normal' ? 'Normal' :
-                         task.priority === 'high' ? 'Alta' : 'Urgente'}
-                      </Badge>
-                      <Badge className={statusColors[task.status as keyof typeof statusColors]}>
-                        {task.status === 'pending' ? 'Pendiente' :
-                         task.status === 'in_progress' ? 'En Progreso' :
-                         task.status === 'completed' ? 'Completada' : 'Cancelada'}
-                      </Badge>
-                    </div>
-                    {task.dueDate && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Fecha límite: {new Date(task.dueDate).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  {task.status !== 'completed' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => completeTaskMutation.mutate(task.id)}
-                      disabled={completeTaskMutation.isPending}
-                      data-testid={`button-complete-${task.id}`}
-                    >
-                      <CheckCircle className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setEditingTask(task);
-                      form.reset({
-                        title: task.title,
-                        description: task.description || '',
-                        priority: task.priority as any,
-                        taskType: task.taskType,
-                        dueDate: task.dueDate || '',
-                      });
-                      setIsCreateDialogOpen(true);
-                    }}
-                    data-testid={`button-edit-${task.id}`}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => deleteTaskMutation.mutate(task.id)}
-                    disabled={deleteTaskMutation.isPending}
-                    data-testid={`button-delete-${task.id}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))
+          <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+            {tasksResponse.tasks.map((task) => (
+              <TaskCard key={task.id} task={task} />
+            ))}
+          </div>
         )}
       </div>
-
-      {/* Pagination Controls */}
-      {tasksResponse && tasksResponse.totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            Mostrando {Math.min((currentPage - 1) * TASKS_PER_PAGE + 1, tasksResponse.total)} a {Math.min(currentPage * TASKS_PER_PAGE, tasksResponse.total)} de {tasksResponse.total} tareas
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              data-testid="button-prev-page"
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Anterior
-            </Button>
-            
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Página {currentPage} de {tasksResponse.totalPages}
-            </span>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === tasksResponse.totalPages}
-              data-testid="button-next-page"
-            >
-              Siguiente
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
