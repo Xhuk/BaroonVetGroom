@@ -188,11 +188,6 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
-  // Email/Password Authentication
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUserWithClinic(data: { email: string; password: string; firstName: string; lastName: string; clinicName: string; }): Promise<{ user: User; clinic: any; }>;
-  updateUserPassword(email: string, hashedPassword: string): Promise<void>;
-  
   // Company operations
   getCompanies(): Promise<Company[]>;
   createCompany(company: InsertCompany): Promise<Company>;
@@ -445,13 +440,6 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  
-  async updateUserPassword(email: string, hashedPassword: string): Promise<void> {
-    await db.update(users)
-      .set({ password: hashedPassword })
-      .where(eq(users.email, email));
-  }
-
   // User operations (IMPORTANT: mandatory for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -471,79 +459,6 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
-  }
-
-  // Email/Password Authentication methods
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
-  }
-  
-  async createUserWithClinic(data: { email: string; password: string; firstName: string; lastName: string; clinicName: string; }): Promise<{ user: User; clinic: any; }> {
-    try {
-      // Create company first
-      const companyId = `clinic-${Date.now()}`;
-      const [company] = await db.insert(companies).values({
-        id: companyId,
-        name: data.clinicName,
-        subscriptionStatus: 'trial',
-        subscriptionEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days trial
-        autoStatusUpdateEnabled: false,
-        autoStatusUpdateInterval: 15
-      }).returning();
-      
-      // Create tenant
-      const tenantId = `${data.clinicName.toLowerCase().replace(/\s+/g, '')}-${Date.now()}`;
-      const [tenant] = await db.insert(tenants).values({
-        id: tenantId,
-        name: data.clinicName,
-        companyId: company.id,
-        subdomain: tenantId,
-        openTime: '08:00',
-        closeTime: '18:00',
-        timeSlotDuration: 30
-      }).returning();
-      
-      // Create user
-      const [user] = await db.insert(users).values({
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        password: data.password,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }).returning();
-      
-      // Create admin role for the company
-      const [adminRole] = await db.insert(roles).values({
-        companyId: company.id,
-        name: 'admin',
-        displayName: 'Administrador',
-        department: 'admin',
-        permissions: ['manage_all'],
-        pageAccess: 'all',
-        isActive: true
-      }).returning();
-      
-      // Associate user with tenant and admin role
-      await db.insert(userTenants).values({
-        userId: user.id,
-        tenantId: tenant.id,
-        roleId: adminRole.id
-      });
-      
-      return {
-        user,
-        clinic: {
-          id: tenant.id,
-          name: tenant.name,
-          company: company
-        }
-      };
-    } catch (error) {
-      console.error('Error creating user with clinic:', error);
-      throw new Error('Failed to create user and clinic');
-    }
   }
 
   // Company operations

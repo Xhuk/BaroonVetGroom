@@ -11,7 +11,6 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import { LandingPage } from "@/pages/LandingPage";
-import AuthPage from "@/pages/AuthPage";
 import Dashboard from "@/pages/Dashboard";
 import Admin from "@/pages/Admin";
 import SuperAdmin from "@/pages/SuperAdmin";
@@ -65,11 +64,10 @@ import { DebugBanner } from "@/components/DebugBanner";
 import { DeviceBlocker } from "@/components/DeviceBlocker";
 
 function Router() {
-  const { user, isLoading, error, isAuthenticated, isDevelopment } = useAuth();
+  const { user, isLoading, error, isAuthenticated } = useAuth();
   
-  // Show auth page if not authenticated, regardless of environment
-  // Both development and production require authentication
-  const shouldShowAuthPage = !isLoading && !isAuthenticated;
+  // Force landing page if there's an auth error (401) or explicit logout
+  const shouldShowLandingPage = !isLoading && (!isAuthenticated || error?.message?.includes('401') || error?.message?.includes('Unauthorized'));
   
   // Clear logout flag on successful auth
   if (isAuthenticated && localStorage.getItem('auth_logged_out') === 'true') {
@@ -92,14 +90,12 @@ function Router() {
             </div>
           );
         }
-        // Show auth page if not authenticated
-        if (shouldShowAuthPage) {
-          return <AuthPage />;
+        // Always show landing page if not properly authenticated
+        if (shouldShowLandingPage) {
+          return <LandingPage />;
         }
         return <Dashboard />;
       }} />
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/landing" component={() => <LandingPage />} />
       <Route path="/plans" component={SubscriptionLanding} />
       <Route path="/checkout" component={SubscriptionCheckout} />
       <Route path="/onboarding" component={CompanyOnboarding} />

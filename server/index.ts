@@ -1,6 +1,4 @@
 import express, { type Request, Response, NextFunction } from "express";
-import session from "express-session";
-import { getUserInfo } from "@replit/repl-auth";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { webhookMonitor } from "./webhookMonitor";
@@ -9,63 +7,9 @@ import { scalableAppointmentService } from './scalableAppointmentService';
 import { reservationCleanup } from "./reservationCleanup";
 // Removed autoStatusService - now using database cron functions
 
-// Extend session data type
-declare module 'express-session' {
-  interface SessionData {
-    isAuthenticated?: boolean;
-    userId?: string;
-  }
-}
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Session configuration for email/password authentication (using in-memory store to avoid conflicts)
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'vetclinic-default-secret-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { 
-    secure: false, // Set to true in production with HTTPS
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
-}));
-
-// Enhanced authentication middleware - Replit auth only in development
-app.use(async (req: any, res, next) => {
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  
-  // Only enable Replit auth in development environment
-  if (isDevelopment) {
-    // Only try Replit auth for /api/user endpoint to reduce noise
-    if (req.path === '/api/user') {
-      console.log('🔐 Attempting Replit Auth (DEV MODE)...');
-      try {
-        const userInfo = await getUserInfo(req);
-        if (userInfo) {
-          req.user = {
-            claims: {
-              sub: userInfo.id,
-              name: userInfo.name
-            }
-          };
-          console.log('🔐 Replit Auth Success (DEV):', { id: userInfo.id, name: userInfo.name });
-        } else {
-          console.log('🔐 Replit Auth: No user info (using fallback to session auth)');
-        }
-      } catch (error: any) {
-        console.log('🔐 Replit Auth failed, falling back to session auth');
-      }
-    }
-  } else {
-    // In production, Replit auth is disabled - rely on session-based auth only
-    console.log('🔐 Production mode: Replit auth disabled, using session auth only');
-  }
-  
-  next();
-});
 
 app.use((req, res, next) => {
   const start = Date.now();

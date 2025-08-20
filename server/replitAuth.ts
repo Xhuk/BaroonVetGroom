@@ -177,10 +177,10 @@ export async function setupAuth(app: Express) {
                   console.error('Logout flag error:', e);
                 }
                 
-                // Redirect to auth page
+                // Redirect to landing page
                 setTimeout(() => {
-                  console.log('🏠 Redirecting to auth page...');
-                  window.location.replace('/auth');
+                  console.log('🏠 Redirecting to landing page...');
+                  window.location.replace('/');
                 }, 2000);
               </script>
             </body>

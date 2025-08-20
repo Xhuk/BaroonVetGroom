@@ -201,199 +201,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ success: true, message: 'Cache cleared' });
   });
 
-  // Logout and redirect to landing page
-  app.get('/api/logout-to-landing', (req: any, res) => {
-    // Clear session immediately without external redirect
-    req.logout((err: any) => {
-      if (err) {
-        console.error('Logout error:', err);
-      }
-      
-      // Destroy session
-      req.session.destroy((sessionErr: any) => {
-        if (sessionErr) {
-          console.error('Session destruction error:', sessionErr);
-        }
-        
-        // Clear all cookies
-        res.clearCookie('connect.sid', { path: '/' });
-        res.clearCookie('session', { path: '/' });
-        
-        // Send HTML page that clears all client-side data and redirects to landing page
-        res.setHeader('Content-Type', 'text/html');
-        res.send(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Redirigiendo...</title>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body style="margin: 0; padding: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-              <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
-                <div style="text-align: center; color: white;">
-                  <div style="margin-bottom: 30px; font-size: 24px; font-weight: 300;">Redirigiendo a inicio...</div>
-                  <div style="width: 50px; height: 50px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-                  <div style="margin-top: 20px; font-size: 14px; opacity: 0.8;">Será redirigido a la página de inicio</div>
-                </div>
-              </div>
-              <style>
-                @keyframes spin {
-                  0% { transform: rotate(0deg); }
-                  100% { transform: rotate(360deg); }
-                }
-              </style>
-              <script>
-                console.log('🚪 Clearing all authentication data...');
-                
-                // Clear all storage
-                try {
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  console.log('✅ Storage cleared');
-                } catch (e) {
-                  console.error('Storage clear error:', e);
-                }
-                
-                // Set logout flag
-                try {
-                  localStorage.setItem('auth_logged_out', 'true');
-                  console.log('✅ Logout flag set');
-                } catch (e) {
-                  console.error('Logout flag error:', e);
-                }
-                
-                // Redirect to landing page
-                setTimeout(() => {
-                  console.log('🏠 Redirecting to landing page...');
-                  window.location.replace('/landing');
-                }, 2000);
-              </script>
-            </body>
-          </html>
-        `);
-      });
-    });
-  });
-
-  // Email/Password Authentication Endpoints
-  
-  // Password hashing utilities
-  const bcrypt = await import('bcrypt');
-  const SALT_ROUNDS = 10;
-  
-  // Register new user with clinic
-  app.post('/api/auth/register', async (req: any, res) => {
-    try {
-      const { email, password, firstName, lastName, clinicName } = req.body;
-      
-      // Validate required fields
-      if (!email || !password || !firstName || !lastName || !clinicName) {
-        return res.status(400).json({ message: 'Todos los campos son requeridos' });
-      }
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: 'Este email ya está registrado' });
-      }
-      
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-      
-      // Create user and clinic
-      const result = await storage.createUserWithClinic({
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        clinicName
-      });
-      
-      // Set session
-      req.session.userId = result.user.id;
-      req.session.isAuthenticated = true;
-      
-      res.status(201).json({
-        success: true,
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          firstName: result.user.firstName,
-          lastName: result.user.lastName
-        },
-        clinic: result.clinic
-      });
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ message: 'Error al crear la cuenta' });
-    }
-  });
-  
-  // Login with email/password
-  app.post('/api/auth/login', async (req: any, res) => {
-    try {
-      const { email, password } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ message: 'Email y contraseña son requeridos' });
-      }
-      
-      // Get user by email
-      const user = await storage.getUserByEmail(email);
-      if (!user || !user.password) {
-        return res.status(401).json({ message: 'Email o contraseña incorrectos' });
-      }
-      
-      // Verify password
-      const isValidPassword = await bcrypt.compare(password, user.password);
-      if (!isValidPassword) {
-        return res.status(401).json({ message: 'Email o contraseña incorrectos' });
-      }
-      
-      // Set session
-      req.session.userId = user.id;
-      req.session.isAuthenticated = true;
-      
-      res.json({
-        success: true,
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName
-        }
-      });
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ message: 'Error al iniciar sesión' });
-    }
-  });
-  
-  // Environment-dependent logout endpoints
-  app.post('/api/auth/logout', (req: any, res) => {
-    // Production logout - destroy session
-    req.session.destroy((err: any) => {
-      if (err) {
-        console.error('Logout error:', err);
-        return res.status(500).json({ message: 'Error al cerrar sesión' });
-      }
-      res.json({ success: true, message: 'Sesión cerrada exitosamente' });
-    });
-  });
-  
-  // Development logout (for Replit auth)
-  app.post('/api/logout', (req: any, res) => {
-    // Clear session if it exists
-    if (req.session) {
-      req.session.destroy((err: any) => {
-        if (err) console.error('Session destroy error:', err);
-      });
-    }
-    // For Replit auth, just return success - actual logout handled by Replit
-    res.json({ success: true, message: 'Logged out successfully' });
-  });
-
   // Enhanced in-memory cache for user data (valid for 15 minutes)
   const userCache = new Map<string, { data: any, timestamp: number }>();
   const CACHE_TTL = 15 * 60 * 1000; // 15 minutes - longer cache
@@ -402,70 +209,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const tenantCache = new Map<string, { data: any, timestamp: number }>();
   const TENANT_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-  // Get current user (environment-dependent auth)
-  app.get('/api/user', async (req: any, res) => {
+  // Auth routes with ultra-aggressive caching
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const isDevelopment = process.env.NODE_ENV === 'development';
+      const userId = req.user.claims.sub;
       
-      // In production: prioritize session-based auth
-      // In development: prioritize Replit auth for convenience
-      if (!isDevelopment) {
-        // Production: Use session-based auth
-        if (req.session?.isAuthenticated && req.session?.userId) {
-          const user = await storage.getUser(req.session.userId);
-          if (user) {
-            return res.json({
-              id: user.id,
-              email: user.email,
-              firstName: user.firstName,
-              lastName: user.lastName
-            });
-          }
-        }
-        return res.status(401).json({ message: 'Unauthorized' });
+      // Set ultra-aggressive cache headers for instant subsequent loads
+      res.set({
+        'Cache-Control': 'private, max-age=1800, s-maxage=1800', // 30 minutes browser cache
+        'ETag': `"user-${userId}-${Math.floor(Date.now() / 60000)}"`, // Change every minute
+        'Vary': 'Cookie, Authorization',
+        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
+      });
+      
+      // Check cache first
+      const cached = userCache.get(userId);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return res.json(cached.data);
       }
       
-      // Development: Check session first, then fallback to Replit auth
-      if (req.session?.isAuthenticated && req.session?.userId) {
-        const user = await storage.getUser(req.session.userId);
-        if (user) {
-          return res.json({
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName
-          });
-        }
-      }
+      const user = await storage.getUser(userId);
       
-      // Check Replit auth if available in development
-      if (req.user?.claims?.sub) {
-        const userId = req.user.claims.sub;
-        
-        // Set ultra-aggressive cache headers for instant subsequent loads
-        res.set({
-          'Cache-Control': 'private, max-age=1800, s-maxage=1800', // 30 minutes browser cache
-          'ETag': `"user-${userId}-${Math.floor(Date.now() / 60000)}"`, // Change every minute
-          'Vary': 'Cookie, Authorization',
-          'Last-Modified': new Date(Date.now() - 60000).toUTCString()
-        });
-        
-        // Check cache first
-        const cached = userCache.get(userId);
-        if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-          return res.json(cached.data);
-        }
-        
-        const user = await storage.getUser(userId);
-        
-        // Cache the result
-        userCache.set(userId, { data: user, timestamp: Date.now() });
-        
-        return res.json(user);
-      }
+      // Cache the result
+      userCache.set(userId, { data: user, timestamp: Date.now() });
       
-      // In development, if no session and no Replit auth, redirect to auth
-      return res.status(401).json({ message: 'Unauthorized', requiresAuth: true });
+      res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -7939,26 +7707,6 @@ This password expires in 24 hours.
     } catch (error) {
       console.error("Error purging demo tenant:", error);
       res.status(500).json({ message: "Failed to purge demo tenant" });
-    }
-  });
-
-  // SuperAdmin password setup endpoint
-  app.post('/api/setup-superadmin-password', async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      
-      if (email !== 'dongadgetoshop@gmail.com') {
-        return res.status(400).json({ message: 'Invalid email' });
-      }
-      
-      const hashedPassword = await bcrypt.hash(password, 12);
-      
-      await storage.updateUserPassword(email, hashedPassword);
-      
-      res.json({ success: true, message: 'SuperAdmin password set successfully' });
-    } catch (error) {
-      console.error('Error setting SuperAdmin password:', error);
-      res.status(500).json({ message: 'Failed to set password' });
     }
   });
 
