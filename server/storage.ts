@@ -191,6 +191,7 @@ export interface IStorage {
   // Email/Password Authentication
   getUserByEmail(email: string): Promise<User | undefined>;
   createUserWithClinic(data: { email: string; password: string; firstName: string; lastName: string; clinicName: string; }): Promise<{ user: User; clinic: any; }>;
+  updateUserPassword(email: string, hashedPassword: string): Promise<void>;
   
   // Company operations
   getCompanies(): Promise<Company[]>;
@@ -444,6 +445,13 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  
+  async updateUserPassword(email: string, hashedPassword: string): Promise<void> {
+    await db.update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.email, email));
+  }
+
   // User operations (IMPORTANT: mandatory for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

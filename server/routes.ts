@@ -7866,5 +7866,25 @@ This password expires in 24 hours.
     }
   });
 
+  // SuperAdmin password setup endpoint
+  app.post('/api/setup-superadmin-password', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (email !== 'dongadgetoshop@gmail.com') {
+        return res.status(400).json({ message: 'Invalid email' });
+      }
+      
+      const hashedPassword = await bcrypt.hash(password, 12);
+      
+      await storage.updateUserPassword(email, hashedPassword);
+      
+      res.json({ success: true, message: 'SuperAdmin password set successfully' });
+    } catch (error) {
+      console.error('Error setting SuperAdmin password:', error);
+      res.status(500).json({ message: 'Failed to set password' });
+    }
+  });
+
   return httpServer;
 }
