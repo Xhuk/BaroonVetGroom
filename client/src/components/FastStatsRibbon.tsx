@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useAccessControl } from "@/hooks/useAccessControl";
 import { useLocation } from "wouter";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 interface DashboardStats {
   appointmentsToday: number;
@@ -209,7 +209,7 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
 
       {/* Enhanced Calendar Dialog */}
       <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
-        <DialogContent className="max-w-md w-full mx-4 p-0 gap-0 bg-white dark:bg-slate-900 border-0 shadow-2xl">
+        <DialogContent className="max-w-md w-full mx-4 p-0 gap-0 bg-white dark:bg-slate-900 border-0 shadow-2xl" aria-label="Seleccionar Fecha">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 p-6 rounded-t-lg">
             <div>
