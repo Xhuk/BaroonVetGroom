@@ -77,21 +77,66 @@ export default function SuperAdminDemoManagement() {
   const triggerTrashAnimation = () => {
     setShowTrashAnimation(true);
     
-    // Animate the trash can
+    // Animate the trash can with more dramatic effects
     if (trashAnimationRef.current) {
       (anime as any)({
         targets: trashAnimationRef.current,
-        translateY: [-50, -120, -100, -80, -40],
-        translateX: [0, 20, -15, 10, -5, 0],
-        scale: [1, 1.2, 1.1, 1.3, 1.0],
-        rotate: [0, 10, -8, 5, -3, 0],
-        opacity: [1, 0.9, 1, 0.8, 0.6, 0],
-        duration: 4000,
-        easing: 'easeOutBounce',
+        translateY: [
+          { value: -80, duration: 300 },
+          { value: -150, duration: 400 },
+          { value: -120, duration: 300 },
+          { value: -180, duration: 400 },
+          { value: -100, duration: 300 },
+          { value: -200, duration: 400 },
+          { value: -300, duration: 500 }
+        ],
+        translateX: [
+          { value: 30, duration: 300 },
+          { value: -20, duration: 400 },
+          { value: 15, duration: 300 },
+          { value: -25, duration: 400 },
+          { value: 10, duration: 300 },
+          { value: -15, duration: 400 },
+          { value: 0, duration: 500 }
+        ],
+        scale: [
+          { value: 1.3, duration: 300 },
+          { value: 1.1, duration: 400 },
+          { value: 1.4, duration: 300 },
+          { value: 1.2, duration: 400 },
+          { value: 1.5, duration: 300 },
+          { value: 1.1, duration: 400 },
+          { value: 0.8, duration: 500 }
+        ],
+        rotate: [
+          { value: 15, duration: 300 },
+          { value: -12, duration: 400 },
+          { value: 18, duration: 300 },
+          { value: -15, duration: 400 },
+          { value: 20, duration: 300 },
+          { value: -10, duration: 400 },
+          { value: 360, duration: 500 }
+        ],
+        opacity: [
+          { value: 1, duration: 300 },
+          { value: 0.9, duration: 400 },
+          { value: 1, duration: 300 },
+          { value: 0.8, duration: 400 },
+          { value: 1, duration: 300 },
+          { value: 0.7, duration: 400 },
+          { value: 0, duration: 500 }
+        ],
+        duration: 3200,
+        easing: 'easeOutQuart',
         complete: () => {
           setShowTrashAnimation(false);
         }
       });
+      
+      // Also hide animation after toast duration (safety fallback)
+      setTimeout(() => {
+        setShowTrashAnimation(false);
+      }, 5000);
     }
   };
 
@@ -206,11 +251,17 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
           ref={trashAnimationRef}
           className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
           style={{ 
-            filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))',
-            willChange: 'transform, opacity'
+            filter: 'drop-shadow(0 8px 16px rgba(220, 38, 38, 0.4)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))',
+            willChange: 'transform, opacity, scale, rotate'
           }}
         >
-          <Trash2 className="w-16 h-16 text-red-500 fill-red-400" />
+          <div className="relative">
+            <Trash2 className="w-20 h-20 text-red-500 fill-red-400" />
+            {/* Sparkle effects around the trash can */}
+            <div className="absolute -top-2 -right-2 w-3 h-3 bg-red-400 rounded-full animate-pulse" />
+            <div className="absolute -bottom-1 -left-2 w-2 h-2 bg-red-300 rounded-full animate-ping" />
+            <div className="absolute top-1 -right-3 w-1 h-1 bg-red-500 rounded-full animate-bounce" />
+          </div>
         </div>
       )}
       
