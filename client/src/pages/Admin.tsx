@@ -2562,8 +2562,8 @@ function Admin() {
                       const roleUsers = users.filter(user => {
                         // Handle different role mapping scenarios
                         if (coreRole.id === 'groomer') {
-                          // Services role includes groomer and delivery_driver
-                          return user.roleId === coreRole.id || user.roleName === 'groomer' || user.roleName === 'delivery_driver';
+                          // Services role includes groomer and delivery functions
+                          return user.roleId === coreRole.id || user.roleName === 'groomer';
                         }
                         return user.roleId === coreRole.id || user.roleName === coreRole.id;
                       });

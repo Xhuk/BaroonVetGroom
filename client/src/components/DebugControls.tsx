@@ -90,13 +90,10 @@ export function DebugControls() {
               <SelectItem value="none">Sin impersonación</SelectItem>
               <SelectItem value="system_admin">Sys Admin</SelectItem>
               <SelectItem value="company_admin">Company Admin</SelectItem>
-              <SelectItem value="tenant_admin">Tenant Admin</SelectItem>
-              <SelectItem value="veterinario">Veterinario</SelectItem>
-              <SelectItem value="asistente">Asistente</SelectItem>
-              <SelectItem value="recepcionista">Recepcionista</SelectItem>
-              <SelectItem value="groomer">Groomer</SelectItem>
-              <SelectItem value="delivery_driver">Conductor</SelectItem>
-              <SelectItem value="viewer">Solo Lectura</SelectItem>
+              <SelectItem value="tenant_admin">Administrador</SelectItem>
+              <SelectItem value="veterinario">Personal Médico</SelectItem>
+              <SelectItem value="recepcionista">Recepción</SelectItem>
+              <SelectItem value="groomer">Servicios</SelectItem>
             </SelectContent>
           </Select>
           {viewAsRole && viewAsRole !== "none" && (

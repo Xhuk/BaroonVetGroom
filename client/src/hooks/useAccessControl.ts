@@ -15,7 +15,7 @@ interface AccessInfo {
   canDebugTenants: boolean;
 }
 
-// Role-based permissions mapping for impersonation
+// Consolidated Role-based permissions mapping (1 role per module)
 const ROLE_PERMISSIONS = {
   system_admin: {
     canAccessSuperAdmin: true,
@@ -68,27 +68,6 @@ const ROLE_PERMISSIONS = {
     canManagePets: true,
     accessLevel: 'tenant' as const
   },
-  debugger: {
-    canAccessSuperAdmin: false,
-    canAccessAdmin: false,
-    canDebugTenants: true,
-    canManageCompanies: false,
-    canManageAllTenants: false,
-    canViewAllData: true, // Can view data across tenants for debugging
-    canManageUsers: false, // READ-ONLY: Cannot modify users
-    canManageRoles: false, // READ-ONLY: Cannot modify roles
-    canAccessDeliveryTracking: true, // Can view for debugging
-    canManageInventory: false, // READ-ONLY: Cannot modify inventory
-    canViewReports: true, // Can view all reports for debugging
-    canManageAppointments: false, // READ-ONLY: Cannot modify appointments
-    canManageClients: false, // READ-ONLY: Cannot modify client data
-    canManagePets: false, // READ-ONLY: Cannot modify pet data
-    canManagePayments: false, // READ-ONLY: Cannot modify payment configurations
-    canManageConfigurations: false, // READ-ONLY: Cannot modify system configurations
-    canViewLogs: true, // Can access logs and diagnostic information
-    canExportData: true, // Can export data for analysis
-    accessLevel: 'tenant' as const
-  },
   veterinario: {
     canAccessSuperAdmin: false,
     canAccessAdmin: false,
@@ -101,23 +80,6 @@ const ROLE_PERMISSIONS = {
     canAccessDeliveryTracking: false,
     canManageInventory: false,
     canViewReports: true,
-    canManageAppointments: true,
-    canManageClients: true,
-    canManagePets: true,
-    accessLevel: 'tenant' as const
-  },
-  asistente: {
-    canAccessSuperAdmin: false,
-    canAccessAdmin: false,
-    canDebugTenants: false,
-    canManageCompanies: false,
-    canManageAllTenants: false,
-    canViewAllData: false,
-    canManageUsers: false,
-    canManageRoles: false,
-    canAccessDeliveryTracking: false,
-    canManageInventory: true,
-    canViewReports: false,
     canManageAppointments: true,
     canManageClients: true,
     canManagePets: true,
@@ -149,47 +111,13 @@ const ROLE_PERMISSIONS = {
     canViewAllData: false,
     canManageUsers: false,
     canManageRoles: false,
-    canAccessDeliveryTracking: false,
+    canAccessDeliveryTracking: true, // Services includes delivery
     canManageInventory: false,
     canViewReports: false,
     canManageAppointments: true,
     canManageClients: false,
     canManagePets: false,
     accessLevel: 'tenant' as const
-  },
-  delivery_driver: {
-    canAccessSuperAdmin: false,
-    canAccessAdmin: false,
-    canDebugTenants: false,
-    canManageCompanies: false,
-    canManageAllTenants: false,
-    canViewAllData: false,
-    canManageUsers: false,
-    canManageRoles: false,
-    canAccessDeliveryTracking: true,
-    canManageInventory: false,
-    canViewReports: false,
-    canManageAppointments: false,
-    canManageClients: false,
-    canManagePets: false,
-    accessLevel: 'tenant' as const
-  },
-  viewer: {
-    canAccessSuperAdmin: false,
-    canAccessAdmin: false,
-    canDebugTenants: false,
-    canManageCompanies: false,
-    canManageAllTenants: false,
-    canViewAllData: false,
-    canManageUsers: false,
-    canManageRoles: false,
-    canAccessDeliveryTracking: false,
-    canManageInventory: false,
-    canViewReports: false,
-    canManageAppointments: false,
-    canManageClients: false,
-    canManagePets: false,
-    accessLevel: 'none' as const
   }
 };
 

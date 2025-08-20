@@ -20,7 +20,7 @@ export function useRoleImpersonation() {
   return context;
 }
 
-// Role-based permissions mapping
+// Consolidated Role-based permissions mapping (1 role per module)
 const ROLE_PERMISSIONS = {
   system_admin: {
     canAccessSuperAdmin: true,
@@ -82,21 +82,6 @@ const ROLE_PERMISSIONS = {
     canManageClients: true,
     canManagePets: true
   },
-  asistente: {
-    canAccessSuperAdmin: false,
-    canDebugTenants: false,
-    canManageCompanies: false,
-    canManageAllTenants: false,
-    canViewAllData: false,
-    canManageUsers: false,
-    canManageRoles: false,
-    canAccessDeliveryTracking: false,
-    canManageInventory: true,
-    canViewReports: false,
-    canManageAppointments: true,
-    canManageClients: true,
-    canManagePets: true
-  },
   recepcionista: {
     canAccessSuperAdmin: false,
     canDebugTenants: false,
@@ -120,40 +105,10 @@ const ROLE_PERMISSIONS = {
     canViewAllData: false,
     canManageUsers: false,
     canManageRoles: false,
-    canAccessDeliveryTracking: false,
+    canAccessDeliveryTracking: true, // Services includes delivery
     canManageInventory: false,
     canViewReports: false,
     canManageAppointments: true,
-    canManageClients: false,
-    canManagePets: false
-  },
-  delivery_driver: {
-    canAccessSuperAdmin: false,
-    canDebugTenants: false,
-    canManageCompanies: false,
-    canManageAllTenants: false,
-    canViewAllData: false,
-    canManageUsers: false,
-    canManageRoles: false,
-    canAccessDeliveryTracking: true,
-    canManageInventory: false,
-    canViewReports: false,
-    canManageAppointments: false,
-    canManageClients: false,
-    canManagePets: false
-  },
-  viewer: {
-    canAccessSuperAdmin: false,
-    canDebugTenants: false,
-    canManageCompanies: false,
-    canManageAllTenants: false,
-    canViewAllData: false,
-    canManageUsers: false,
-    canManageRoles: false,
-    canAccessDeliveryTracking: false,
-    canManageInventory: false,
-    canViewReports: false,
-    canManageAppointments: false,
     canManageClients: false,
     canManagePets: false
   }

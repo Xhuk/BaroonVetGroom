@@ -1,0 +1,223 @@
+dministrador
+admin
+
+admin
+Permisos: 1
+Usuarios asignados: 0
+Editar
+
+Veterinario
+veterinarian
+
+medical
+Permisos: 5
+Usuarios asignados: 0
+Editar
+
+Estilista
+groomer
+
+grooming
+Permisos: 3
+Usuarios asignados: 0
+Editar
+
+Recepción
+receptionist
+
+reception
+Permisos: 3
+Usuarios asignados: 0
+Editar
+
+Entregas
+delivery
+
+delivery
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Test Role
+test
+
+admin
+Permisos: 1
+Usuarios asignados: 0
+Editar
+
+Super Administrador
+supertenant_admin
+
+admin
+Permisos: 1
+Usuarios asignados: 0
+Editar
+
+Administrador
+tenant_admin
+
+admin
+Permisos: 9
+Usuarios asignados: 0
+Editar
+
+Recepcionista
+reception
+
+reception
+Permisos: 4
+Usuarios asignados: 0
+Editar
+
+Veterinario
+veterinarian
+
+medical
+Permisos: 5
+Usuarios asignados: 0
+Editar
+
+Estilista
+groomer
+
+grooming
+Permisos: 3
+Usuarios asignados: 0
+Editar
+
+Conductor de Entregas
+delivery_driver
+
+delivery
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Sin Acceso
+no_access
+
+none
+Permisos: 0
+Usuarios asignados: 0
+Editar
+
+Administrador
+admin
+
+admin
+Permisos: 1
+Usuarios asignados: 0
+Editar
+
+Recepcionista
+recepcion
+
+reception
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Groomer
+grooming
+
+grooming
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Veterinario
+medical
+
+medical
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Delivery
+autoentregas
+
+delivery
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Administrador
+admin
+
+admin
+Permisos: 1
+Usuarios asignados: 0
+Editar
+
+Recepcionista
+recepcion
+
+reception
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Groomer
+grooming
+
+grooming
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Veterinario
+medical
+
+medical
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Delivery
+autoentregas
+
+delivery
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Administrador
+admin
+
+admin
+Permisos: 1
+Usuarios asignados: 0
+Editar
+
+Recepcionista
+recepcion
+
+reception
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Groomer
+grooming
+
+grooming
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Veterinario
+medical
+
+medical
+Permisos: 2
+Usuarios asignados: 0
+Editar
+
+Delivery
+autoentregas
+
+delivery
+Permisos: 2
+Usuarios asignados: 0
+Editar
