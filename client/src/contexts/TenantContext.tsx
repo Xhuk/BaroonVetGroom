@@ -98,38 +98,21 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    // Priority 3: Handle demo/vanilla users who might not be in userTenants properly
-    if (user?.isDemoUser || user?.isVanillaUser) {
-      const userEmail = user.claims?.email || user.email;
-      if (userEmail && !currentTenant && !debugMode) {
-        // Auto-detect tenant from user email for demo/vanilla users
-        if (user.isDemoUser && userEmail.includes('@')) {
-          // For demo users, try to find their demo tenant
-          const allAvailableTenants = [...userTenants.map(ut => ({ id: ut.tenantId })), ...allTenants];
-          const demoTenant = allAvailableTenants.find(t => t.id && t.id.startsWith('demo-'));
-          if (demoTenant) {
-            console.log('🎯 Auto-selecting demo tenant for user:', userEmail, 'tenant:', demoTenant.id);
-            const optimisticTenant = {
-              id: demoTenant.id,
-              name: `Demo Clinic - ${demoTenant.id}`,
-              subdomain: demoTenant.id,
-              companyId: 'demo-company',
-              address: 'Demo Address',
-              phone: '+1-555-0123',
-              email: userEmail,
-              latitude: null,
-              longitude: null,
-              postalCode: null,
-              openTime: '09:00:00',
-              closeTime: '18:00:00',
-              timeSlotDuration: 30,
-              reservationTimeout: 5,
-              deliveryTrackingEnabled: false,
-              settings: { language: 'es', timezone: 'America/Mexico_City' },
-              createdAt: new Date(),
-              updatedAt: new Date()
-            };
-            setCurrentTenant(optimisticTenant);
+    // Priority 3: Handle demo/vanilla users - use database tenant relationship
+    // For local authentication users, look up their actual tenant from database
+    if (user?.email && !currentTenant && !debugMode) {
+      const userEmail = user.email;
+      
+      // If this looks like a local auth user (demo or vanilla)
+      if (userEmail.includes('demo') || userEmail.startsWith('admin@')) {
+        // Use userTenants data to find their assigned tenant
+        if (userTenants.length > 0) {
+          const userTenant = userTenants[0]; // Get first tenant for local users
+          const matchingTenant = allTenants.find(t => t.id === userTenant.tenantId);
+          
+          if (matchingTenant) {
+            console.log(`🎯 Auto-selecting tenant for local user:`, userEmail, 'tenant:', matchingTenant.id);
+            setCurrentTenant(matchingTenant);
             return;
           }
         }
