@@ -451,77 +451,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
         billingCycle
       });
       
-      // Import createVanillaTenant function dynamically
-      const { createVanillaTenant } = await import('./seedDemoData');
-      
       // Generate safe tenant name from company name
       const tenantName = companyName.toLowerCase()
         .replace(/[^a-z0-9\s]/g, '')
         .replace(/\s+/g, '-')
         .substring(0, 30) + '-' + Date.now().toString().slice(-6);
       
-      // Create vanilla tenant with selected subscription plan
-      const vanillaResult = await createVanillaTenant({
-        tenantName,
-        companyName,
-        subscriptionType: 'paid',
-        subscriptionPlan: selectedPlan,
-        contactEmail
+      const tenantId = `${tenantName}-tenant`;
+      const companyId = `${tenantName}-company`;
+      
+      console.log('🏗️ Creating vanilla tenant:', { tenantId, companyId });
+      
+      // Create company
+      const company = await storage.createCompany({
+        id: companyId,
+        name: companyName,
+        contactEmail,
+        contactName,
+        phone: phone || '',
+        address: address || '',
+        city: city || '',
+        country: country || 'México'
       });
       
-      if (vanillaResult.success) {
-        // Generate admin credentials
-        const adminCredentials = {
-          email: vanillaResult.adminUser.email,
-          password: vanillaResult.adminUser.temporaryPassword,
-          loginUrl: process.env.REPLIT_DEV_DOMAIN 
-            ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-            : `${req.protocol}://${req.get('host')}`
-        };
-        
-        // Send credentials via email
-        try {
-          const emailSent = await emailService.sendVanillaTenantCredentials(
-            contactEmail,
-            companyName,
-            vanillaResult.tenant.tenantId,
-            adminCredentials
-          );
-          
-          if (emailSent) {
-            console.log('✅ Vanilla tenant credentials sent via email to:', contactEmail);
-          } else {
-            console.error('❌ Failed to send vanilla tenant credentials email');
-          }
-        } catch (emailError) {
-          console.error('❌ Error sending vanilla tenant credentials:', emailError);
-          // Continue even if email fails
-        }
-        
-        res.json({
-          success: true,
-          message: "¡Tu cuenta profesional ha sido creada exitosamente!",
-          tenant: {
-            tenantId: vanillaResult.tenant.tenantId,
-            companyName: vanillaResult.company.name,
-            plan: selectedPlan
-          },
-          credentials: {
-            loginUrl: adminCredentials.loginUrl,
-            adminEmail: adminCredentials.email,
-            note: "La contraseña temporal ha sido enviada a tu email"
-          },
-          nextSteps: [
-            "Revisa tu email para obtener las credenciales de acceso",
-            "Ingresa al sistema y cambia la contraseña temporal",
-            "Configura usuarios adicionales para tu equipo",
-            "Personaliza la configuración de tu clínica",
-            "¡Comienza a gestionar tu práctica veterinaria!"
-          ]
-        });
-      } else {
-        throw new Error(vanillaResult.message || 'Failed to create vanilla tenant');
+      // Create tenant
+      const tenant = await storage.createTenant({
+        id: tenantId,
+        companyId: company.id,
+        name: companyName,
+        timezone: 'America/Mexico_City'
+      });
+      
+      // Get subscription plan details
+      const allPlans = await storage.getSubscriptionPlans();
+      const planDetails = allPlans.find(p => p.id === selectedPlan);
+      if (!planDetails) {
+        throw new Error(`Subscription plan ${selectedPlan} not found`);
       }
+      
+      // Create subscription
+      const now = new Date();
+      const periodEnd = new Date(now);
+      if (billingCycle === 'yearly') {
+        periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+      } else {
+        periodEnd.setMonth(periodEnd.getMonth() + 1);
+      }
+      
+      await storage.createCompanySubscription({
+        companyId: company.id,
+        planId: selectedPlan,
+        status: 'active',
+        currentPeriodStart: now,
+        currentPeriodEnd: periodEnd
+      });
+      
+      // Generate admin user credentials
+      const adminEmail = contactEmail;
+      const temporaryPassword = 'VetGroom2024!' + Math.random().toString(36).slice(-4);
+      const bcrypt = require('bcrypt');
+      const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+      
+      // Create admin user
+      const adminUser = await storage.createUser({
+        email: adminEmail,
+        firstName: contactName.split(' ')[0] || contactName,
+        lastName: contactName.split(' ').slice(1).join(' ') || '',
+        password: hashedPassword,
+        isActive: true,
+        timezone: 'America/Mexico_City'
+      });
+      
+      // Get tenant_admin role
+      const roles = await storage.getRoles();
+      const tenantAdminRole = roles.find(r => r.id === 'tenant_admin');
+      if (!tenantAdminRole) {
+        throw new Error('tenant_admin role not found');
+      }
+      
+      // Create user-tenant relationship
+      await storage.createUserTenant({
+        userId: adminUser.id,
+        tenantId: tenant.id,
+        roleId: tenantAdminRole.id,
+        isActive: true
+      });
+      
+      console.log('✅ Vanilla tenant created successfully:', {
+        tenantId: tenant.id,
+        companyName: company.name,
+        adminEmail: adminUser.email,
+        plan: selectedPlan
+      });
+      
+      // Prepare admin credentials
+      const adminCredentials = {
+        email: adminUser.email,
+        password: temporaryPassword,
+        loginUrl: process.env.REPLIT_DEV_DOMAIN 
+          ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+          : `${req.protocol}://${req.get('host')}`
+      };
+      
+      // Send credentials via email
+      try {
+        const emailSent = await emailService.sendVanillaTenantCredentials(
+          contactEmail,
+          companyName,
+          tenant.id,
+          adminCredentials
+        );
+        
+        if (emailSent) {
+          console.log('✅ Vanilla tenant credentials sent via email to:', contactEmail);
+        } else {
+          console.error('❌ Failed to send vanilla tenant credentials email');
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending vanilla tenant credentials:', emailError);
+        // Continue even if email fails
+      }
+      
+      res.json({
+        success: true,
+        message: "¡Tu cuenta profesional ha sido creada exitosamente!",
+        tenant: {
+          tenantId: tenant.id,
+          companyName: company.name,
+          plan: selectedPlan
+        },
+        credentials: {
+          loginUrl: adminCredentials.loginUrl,
+          adminEmail: adminCredentials.email,
+          note: "La contraseña temporal ha sido enviada a tu email"
+        },
+        nextSteps: [
+          "Revisa tu email para obtener las credenciales de acceso",
+          "Ingresa al sistema y cambia la contraseña temporal",
+          "Configura usuarios adicionales para tu equipo",
+          "Personaliza la configuración de tu clínica",
+          "¡Comienza a gestionar tu práctica veterinaria!"
+        ]
+      });
     } catch (error) {
       console.error("Error processing vanilla tenant request:", error);
       res.status(500).json({ message: "Failed to process request" });
@@ -6567,15 +6638,16 @@ This password expires in 24 hours.
           // 2. Schedule the price change for the appropriate billing cycle
           // 3. Update payment gateway subscription with effective dates
           // 4. Send customer notification about the upcoming price change
-          priceChangeEffectiveDate: priceChangeEffective,
+          // priceChangeEffectiveDate: priceChangeEffective, // Removed - field doesn't exist in schema
           updatedAt: new Date()
         });
         
         res.json({ 
           message: "Subscription plan updated successfully", 
           subscription: updatedSubscription,
-          priceChangeEffectiveDate: priceChangeEffective.toISOString(),
-          daysUntilPriceChange: Math.ceil((priceChangeEffective.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24))
+          // priceChangeEffectiveDate: priceChangeEffective.toISOString(),
+          // daysUntilPriceChange: Math.ceil((priceChangeEffective.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24))
+          note: "Plan updated immediately"
         });
       } else {
         // Create new subscription if none exists
