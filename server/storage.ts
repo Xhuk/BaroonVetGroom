@@ -3835,11 +3835,10 @@ export class DatabaseStorage implements IStorage {
 
       // Create essential roles for the tenant
       const roleTemplates = [
-        { name: 'admin', displayName: 'Administrador', department: 'admin', permissions: ['manage_all'] },
-        { name: 'recepcion', displayName: 'Recepcionista', department: 'reception', permissions: ['view_appointments', 'manage_clients'] },
-        { name: 'grooming', displayName: 'Groomer', department: 'grooming', permissions: ['view_appointments', 'manage_grooming'] },
-        { name: 'medical', displayName: 'Veterinario', department: 'medical', permissions: ['view_appointments', 'manage_medical'] },
-        { name: 'autoentregas', displayName: 'Delivery', department: 'delivery', permissions: ['view_deliveries', 'manage_routes'] }
+        { name: 'tenant_admin', displayName: 'Administrador', department: 'admin', permissions: ['manage_all'] },
+        { name: 'veterinario', displayName: 'Personal Médico', department: 'medical', permissions: ['view_appointments', 'manage_medical'] },
+        { name: 'recepcionista', displayName: 'Recepción', department: 'reception', permissions: ['view_appointments', 'manage_clients'] },
+        { name: 'groomer', displayName: 'Servicios', department: 'services', permissions: ['view_appointments', 'manage_grooming', 'view_deliveries', 'manage_routes'] }
       ];
 
       const createdRoles = [];
@@ -3850,7 +3849,7 @@ export class DatabaseStorage implements IStorage {
           displayName: roleTemplate.displayName,
           department: roleTemplate.department,
           permissions: roleTemplate.permissions,
-          pageAccess: roleTemplate.name === 'admin' ? 'all' : 'some',
+          pageAccess: roleTemplate.name === 'tenant_admin' ? 'all' : 'some',
           isActive: true
         }).returning();
         createdRoles.push(role);
@@ -3878,7 +3877,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       // Create default admin user for vanilla tenant
-      const adminRole = createdRoles.find(role => role.name === 'admin');
+      const adminRole = createdRoles.find(role => role.name === 'tenant_admin');
       if (!adminRole) {
         throw new Error('Admin role not found');
       }
@@ -4185,13 +4184,12 @@ export class DatabaseStorage implements IStorage {
         timeSlotDuration: 30
       }).returning();
 
-      // Create essential roles for the tenant
+      // Create essential consolidated roles for the tenant (1 role per module)
       const roleTemplates = [
-        { name: 'admin', displayName: 'Administrador', department: 'admin', permissions: ['manage_all'] },
-        { name: 'recepcion', displayName: 'Recepcionista', department: 'reception', permissions: ['view_appointments', 'manage_clients'] },
-        { name: 'grooming', displayName: 'Groomer', department: 'grooming', permissions: ['view_appointments', 'manage_grooming'] },
-        { name: 'medical', displayName: 'Veterinario', department: 'medical', permissions: ['view_appointments', 'manage_medical'] },
-        { name: 'autoentregas', displayName: 'Delivery', department: 'delivery', permissions: ['view_deliveries', 'manage_routes'] }
+        { name: 'tenant_admin', displayName: 'Administrador', department: 'admin', permissions: ['manage_all'] },
+        { name: 'veterinario', displayName: 'Personal Médico', department: 'medical', permissions: ['view_appointments', 'manage_medical'] },
+        { name: 'recepcionista', displayName: 'Recepción', department: 'reception', permissions: ['view_appointments', 'manage_clients'] },
+        { name: 'groomer', displayName: 'Servicios', department: 'services', permissions: ['view_appointments', 'manage_grooming', 'view_deliveries', 'manage_routes'] }
       ];
 
       const createdRoles = [];
@@ -4202,7 +4200,7 @@ export class DatabaseStorage implements IStorage {
           displayName: roleTemplate.displayName,
           department: roleTemplate.department,
           permissions: roleTemplate.permissions,
-          pageAccess: roleTemplate.name === 'admin' ? 'all' : 'some',
+          pageAccess: roleTemplate.name === 'tenant_admin' ? 'all' : 'some',
           isActive: true
         }).returning();
         createdRoles.push(role);
@@ -4211,11 +4209,10 @@ export class DatabaseStorage implements IStorage {
       // Create demo users with predefined roles
       const demoUsers = [];
       const userRoleAssignments = [
-        { role: 'admin', firstName: 'Demo Admin', lastName: 'Administrador' },
-        { role: 'recepcion', firstName: 'Demo Recepcion', lastName: 'Recepcionista' },
-        { role: 'grooming', firstName: 'Demo Groomer', lastName: 'Estilista' },
-        { role: 'medical', firstName: 'Demo Doctor', lastName: 'Veterinario' },
-        { role: 'autoentregas', firstName: 'Demo Driver', lastName: 'Conductor' }
+        { role: 'tenant_admin', firstName: 'Demo Admin', lastName: 'Administrador' },
+        { role: 'veterinario', firstName: 'Demo Doctor', lastName: 'Veterinario' },
+        { role: 'recepcionista', firstName: 'Demo Recepcion', lastName: 'Recepcionista' },
+        { role: 'groomer', firstName: 'Demo Servicios', lastName: 'Servicios' }
       ];
 
       // Create guaranteed role users first
