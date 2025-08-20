@@ -65,10 +65,12 @@ import { DebugBanner } from "@/components/DebugBanner";
 import { DeviceBlocker } from "@/components/DeviceBlocker";
 
 function Router() {
-  const { user, isLoading, error, isAuthenticated } = useAuth();
+  const { user, isLoading, error, isAuthenticated, isDevelopment } = useAuth();
   
   // Force landing page if there's an auth error (401) or explicit logout
-  const shouldShowLandingPage = !isLoading && (!isAuthenticated || error?.message?.includes('401') || error?.message?.includes('Unauthorized'));
+  // In development: continue to allow access (Replit auth)
+  // In production: require email/password authentication
+  const shouldShowLandingPage = !isDevelopment && !isLoading && (!isAuthenticated || error?.message?.includes('401') || error?.message?.includes('Unauthorized'));
   
   // Clear logout flag on successful auth
   if (isAuthenticated && localStorage.getItem('auth_logged_out') === 'true') {

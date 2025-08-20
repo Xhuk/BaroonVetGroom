@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
 
+const isDevelopment = import.meta.env.DEV;
+
 export function useAuth() {
   const { data: user, isLoading, error } = useQuery<User>({
     queryKey: ["/api/user"],
@@ -28,8 +30,9 @@ export function useAuth() {
         }
       }
       
-      // Fallback to network request
-      const response = await fetch('/api/user', { credentials: 'include' });
+      // Environment-dependent auth endpoint
+      const authEndpoint = isDevelopment ? '/api/user' : '/api/user';
+      const response = await fetch(authEndpoint, { credentials: 'include' });
       if (response.ok) {
         const userData = await response.json();
         // Cache the result
@@ -42,11 +45,14 @@ export function useAuth() {
   });
 
   const logout = () => {
-    // Clear cache and redirect to logout endpoint
+    // Clear cache and redirect to appropriate logout endpoint
     localStorage.removeItem('auth_user_cache');
     localStorage.removeItem('auth_cache_time');
     localStorage.setItem('auth_logged_out', 'true');
-    window.location.href = '/api/auth/logout';
+    
+    // Environment-dependent logout endpoint
+    const logoutEndpoint = isDevelopment ? '/api/logout' : '/api/auth/logout';
+    window.location.href = logoutEndpoint;
   };
 
   return {
@@ -55,5 +61,6 @@ export function useAuth() {
     error,
     isAuthenticated: !!user,
     logout,
+    isDevelopment, // Expose environment info
   };
 }

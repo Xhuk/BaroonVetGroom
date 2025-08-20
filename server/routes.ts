@@ -266,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get user by email
       const user = await storage.getUserByEmail(email);
-      if (!user) {
+      if (!user || !user.password) {
         return res.status(401).json({ message: 'Email o contraseña incorrectos' });
       }
       
@@ -295,8 +295,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Logout
+  // Environment-dependent logout endpoints
   app.post('/api/auth/logout', (req: any, res) => {
+    // Production logout - destroy session
     req.session.destroy((err: any) => {
       if (err) {
         console.error('Logout error:', err);
@@ -304,6 +305,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ success: true, message: 'Sesión cerrada exitosamente' });
     });
+  });
+  
+  // Development logout (for Replit auth)
+  app.post('/api/logout', (req: any, res) => {
+    // Clear session if it exists
+    if (req.session) {
+      req.session.destroy((err: any) => {
+        if (err) console.error('Session destroy error:', err);
+      });
+    }
+    // For Replit auth, just return success - actual logout handled by Replit
+    res.json({ success: true, message: 'Logged out successfully' });
   });
 
   // Enhanced in-memory cache for user data (valid for 15 minutes)
@@ -314,10 +327,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const tenantCache = new Map<string, { data: any, timestamp: number }>();
   const TENANT_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-  // Get current user (updated for email/password auth)
+  // Get current user (environment-dependent auth)
   app.get('/api/user', async (req: any, res) => {
     try {
-      // Check session-based auth first
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      
+      // In production: prioritize session-based auth
+      // In development: prioritize Replit auth for convenience
+      if (!isDevelopment) {
+        // Production: Use session-based auth
+        if (req.session?.isAuthenticated && req.session?.userId) {
+          const user = await storage.getUser(req.session.userId);
+          if (user) {
+            return res.json({
+              id: user.id,
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName
+            });
+          }
+        }
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      // Development: Check session first, then fallback to Replit auth
       if (req.session?.isAuthenticated && req.session?.userId) {
         const user = await storage.getUser(req.session.userId);
         if (user) {
@@ -330,7 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Fallback to Replit auth for existing users
+      // Fallback to Replit auth in development
       if (!req.user?.claims?.sub) {
         return res.status(401).json({ message: 'Unauthorized' });
       }
