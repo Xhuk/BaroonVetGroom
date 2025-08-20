@@ -109,11 +109,11 @@ export async function setupAuth(app: Express) {
     try {
       console.log('🔐 Local login attempt:', email);
       
-      // Check if this is a vanilla user first (admin.* or admin@* pattern)
-      const isVanillaUser = email.startsWith('admin@') || email.startsWith('admin.');
+      // Check if this is a demo user (any email containing 'demo')
+      const isDemoUser = email.includes('demo');
       
-      // Check if this is a demo user (demo.* pattern, but not admin.* pattern)
-      const isDemoUser = !isVanillaUser && (email.includes('demo') || email.startsWith('demo.') || email.includes('.demo'));
+      // Check if this is a vanilla user (admin@tenantname.com pattern only, NOT demo)
+      const isVanillaUser = !isDemoUser && email.startsWith('admin@');
       
       if (!isDemoUser && !isVanillaUser) {
         return done(null, false, { message: 'Only demo and vanilla tenant users can use local login' });

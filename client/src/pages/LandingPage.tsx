@@ -36,10 +36,10 @@ export function LandingPage() {
     
     try {
       // Check if this is a demo or vanilla user for local auth
-      // Check vanilla user first (admin.* or admin@* pattern)
-      const isVanillaUser = loginForm.email.startsWith('admin@') || loginForm.email.startsWith('admin.');
-      // Check demo user (demo.* pattern, but not admin.* pattern)  
-      const isDemoUser = !isVanillaUser && (loginForm.email.includes('demo') || loginForm.email.startsWith('demo.') || loginForm.email.includes('.demo'));
+      // Check demo user first (any email containing 'demo')
+      const isDemoUser = loginForm.email.includes('demo');
+      // Check vanilla user (admin@tenantname.com pattern only, NOT demo)
+      const isVanillaUser = !isDemoUser && loginForm.email.startsWith('admin@');
       
       if (isDemoUser || isVanillaUser) {
         // Use local authentication for demo and vanilla users
