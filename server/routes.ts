@@ -7630,6 +7630,27 @@ This password expires in 24 hours.
     }
   });
 
+  // Vanilla Tenant Creation (Super Admin only)
+  app.post('/api/superadmin/vanilla-tenants', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { tenantName, companyName } = req.body;
+      
+      if (!tenantName || !companyName) {
+        return res.status(400).json({ message: "Tenant name and company name are required" });
+      }
+
+      const result = await storage.createVanillaTenant({
+        tenantName,
+        companyName
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error creating vanilla tenant:", error);
+      res.status(500).json({ message: "Failed to create vanilla tenant" });
+    }
+  });
+
   app.post('/api/superadmin/demo-tenants/:tenantId/refresh', isAuthenticated, isSuperAdmin, async (req, res) => {
     try {
       const { tenantId } = req.params;

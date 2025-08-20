@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,8 @@ import {
   Edit,
   Copy,
   Eye,
-  EyeOff
+  EyeOff,
+  ArrowLeft
 } from "lucide-react";
 import {
   Dialog,
@@ -97,7 +99,9 @@ interface CreateDemoForm {
 export default function SuperAdminDemoManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreateVanillaDialogOpen, setIsCreateVanillaDialogOpen] = useState(false);
   const [showTrashAnimation, setShowTrashAnimation] = useState(false);
   const [showDoggyAnimation, setShowDoggyAnimation] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<DemoTenant | null>(null);
@@ -112,6 +116,10 @@ export default function SuperAdminDemoManagement() {
     companyName: '',
     userCount: 5,
     appointmentDays: 7
+  });
+  const [vanillaForm, setVanillaForm] = useState({
+    tenantName: '',
+    companyName: ''
   });
 
   // Function to trigger floating trash animation
@@ -325,6 +333,47 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
     },
   });
 
+  // Create vanilla tenant mutation
+  const createVanillaTenantMutation = useMutation({
+    mutationFn: async (data: { tenantName: string; companyName: string }) => {
+      const response = await fetch('/api/superadmin/vanilla-tenants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create vanilla tenant');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Vanilla Tenant Created Successfully! 🏢",
+        description: `✓ Created tenant "${data.tenant.name}"
+✓ Added basic roles and services
+✓ Ready for client onboarding
+✓ Tenant ID: ${data.tenant.id}
+
+Vanilla tenant is ready for customization and client setup.`,
+        duration: 5000,
+      });
+      
+      setIsCreateVanillaDialogOpen(false);
+      setVanillaForm({
+        tenantName: '',
+        companyName: ''
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/demo-tenants'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Create Vanilla Tenant",
+        description: error?.message || "An error occurred while creating the vanilla tenant.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Refresh demo data mutation
   const refreshDemoDataMutation = useMutation({
     mutationFn: async (tenantId: string) => {
@@ -459,9 +508,21 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
       
       <div className="container mx-auto p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Demo Tenant Management</h1>
+          <div className="flex items-center gap-4 mb-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setLocation('/superadmin')}
+              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              data-testid="button-back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Tenant Management</h1>
           <p className="text-muted-foreground">
-            Create, manage, and purge demo tenants for demonstration purposes
+            Create and manage tenants for demonstrations and client onboarding
           </p>
         </div>
 
@@ -558,6 +619,79 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
             <p className="text-sm text-muted-foreground">
               Demo tenants are automatically populated with sample clients, pets, appointments, and staff members. 
               They can be refreshed with new data or completely purged when no longer needed.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Create Vanilla Tenant Card */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Building className="w-5 h-5" />
+                Create Vanilla Tenant
+              </span>
+              <Dialog open={isCreateVanillaDialogOpen} onOpenChange={setIsCreateVanillaDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950" data-testid="button-create-vanilla">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Vanilla Tenant
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create Vanilla Tenant</DialogTitle>
+                    <DialogDescription>
+                      Create a new empty tenant with only basic roles and services for client onboarding.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="vanillaTenantName">Tenant Name</Label>
+                      <Input
+                        id="vanillaTenantName"
+                        placeholder="New Veterinary Clinic"
+                        value={vanillaForm.tenantName}
+                        onChange={(e) => setVanillaForm(prev => ({ ...prev, tenantName: e.target.value }))}
+                        data-testid="input-vanilla-tenant-name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="vanillaCompanyName">Company Name</Label>
+                      <Input
+                        id="vanillaCompanyName"
+                        placeholder="New Veterinary Corp"
+                        value={vanillaForm.companyName}
+                        onChange={(e) => setVanillaForm(prev => ({ ...prev, companyName: e.target.value }))}
+                        data-testid="input-vanilla-company-name"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsCreateVanillaDialogOpen(false)}
+                        data-testid="button-cancel-vanilla"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => createVanillaTenantMutation.mutate(vanillaForm)}
+                        disabled={createVanillaTenantMutation.isPending || !vanillaForm.tenantName || !vanillaForm.companyName}
+                        data-testid="button-confirm-vanilla"
+                      >
+                        {createVanillaTenantMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        Create Vanilla Tenant
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Vanilla tenants contain only essential roles and services, ready for client customization and onboarding. 
+              Perfect for setting up new client accounts from scratch.
             </p>
           </CardContent>
         </Card>

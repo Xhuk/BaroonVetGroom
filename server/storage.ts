@@ -3719,6 +3719,89 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Vanilla Tenant Creation
+  async createVanillaTenant(data: { tenantName: string; companyName: string }): Promise<any> {
+    try {
+      // Create company first
+      const companyId = `vanilla-${Date.now()}`;
+      const [company] = await db.insert(companies).values({
+        id: companyId,
+        name: data.companyName,
+        subscriptionStatus: 'trial',
+        subscriptionEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        autoStatusUpdateEnabled: false,
+        autoStatusUpdateInterval: 15
+      }).returning();
+
+      // Create tenant
+      const tenantId = `vanilla-${Date.now()}-tenant`;
+      const [tenant] = await db.insert(tenants).values({
+        id: tenantId,
+        name: data.tenantName,
+        companyId: company.id,
+        subdomain: tenantId,
+        openTime: '08:00',
+        closeTime: '18:00',
+        timeSlotDuration: 30
+      }).returning();
+
+      // Create essential roles for the tenant
+      const roleTemplates = [
+        { name: 'admin', displayName: 'Administrador', department: 'admin', permissions: ['manage_all'] },
+        { name: 'recepcion', displayName: 'Recepcionista', department: 'reception', permissions: ['view_appointments', 'manage_clients'] },
+        { name: 'grooming', displayName: 'Groomer', department: 'grooming', permissions: ['view_appointments', 'manage_grooming'] },
+        { name: 'medical', displayName: 'Veterinario', department: 'medical', permissions: ['view_appointments', 'manage_medical'] },
+        { name: 'autoentregas', displayName: 'Delivery', department: 'delivery', permissions: ['view_deliveries', 'manage_routes'] }
+      ];
+
+      const createdRoles = [];
+      for (const roleTemplate of roleTemplates) {
+        const [role] = await db.insert(roles).values({
+          companyId: company.id,
+          name: roleTemplate.name,
+          displayName: roleTemplate.displayName,
+          department: roleTemplate.department,
+          permissions: roleTemplate.permissions,
+          pageAccess: roleTemplate.name === 'admin' ? 'all' : 'some',
+          isActive: true
+        }).returning();
+        createdRoles.push(role);
+      }
+
+      // Create essential services
+      const serviceTemplates = [
+        { name: 'Consulta General', category: 'medical', price: 50000, duration: 30 },
+        { name: 'Baño y Corte', category: 'grooming', price: 35000, duration: 60 },
+        { name: 'Vacunación', category: 'medical', price: 25000, duration: 15 },
+        { name: 'Desparasitación', category: 'medical', price: 15000, duration: 15 }
+      ];
+
+      const createdServices = [];
+      for (const serviceTemplate of serviceTemplates) {
+        const [service] = await db.insert(services).values({
+          companyId: company.id,
+          name: serviceTemplate.name,
+          category: serviceTemplate.category,
+          price: serviceTemplate.price,
+          duration: serviceTemplate.duration,
+          isActive: true
+        }).returning();
+        createdServices.push(service);
+      }
+
+      return {
+        tenant,
+        company,
+        roles: createdRoles,
+        services: createdServices,
+        message: 'Vanilla tenant created successfully with basic roles and services'
+      };
+    } catch (error) {
+      console.error('Error creating vanilla tenant:', error);
+      throw error;
+    }
+  }
+
   async createDemoTenant(data: { tenantName: string; companyName: string; userCount: number; appointmentDays: number; }): Promise<any> {
     try {
       // Create company first
