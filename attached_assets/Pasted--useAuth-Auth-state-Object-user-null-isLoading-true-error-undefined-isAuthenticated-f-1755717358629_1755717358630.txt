@@ -1,0 +1,29 @@
+🔍 [useAuth] Auth state: 
+Object {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+🔍 [useAuth] Auth state: 
+Object {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+🔍 [useAuth] Making network request to /api/auth/user
+🔍 [TenantContext] useEffect triggered: 
+Object {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+🔍 [TenantContext] Not authenticated, skipping
+🎯 [TenantContext] Final context value: 
+Object {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: false}
+🔍 [useAuth] Auth state: 
+Object {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+🔍 [TenantContext] useEffect triggered: 
+Object {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+🔍 [TenantContext] Not authenticated, skipping
+🔍 [useAuth] Response: 200 OK
+🔍 [useAuth] Auth state: 
+Object {user: null, isLoading: false, error: "Failed to execute 'json' on 'Response': Unexpected end of JSON input", isAuthenticated: false}
+🔍 [useAuth] Auth state: 
+Object {user: null, isLoading: false, error: "Failed to execute 'json' on 'Response': Unexpected end of JSON input", isAuthenticated: false}
+🔍 [TenantContext] useEffect triggered: 
+Object {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+🔍 [TenantContext] Not authenticated, skipping
+🔍 [useAuth] Auth state: 
+Object {user: null, isLoading: false, error: "Failed to execute 'json' on 'Response': Unexpected end of JSON input", isAuthenticated: false}
+🔍 [TenantContext] useEffect triggered: 
+Object {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+🔍 [TenantContext] Not authenticated, skipping
