@@ -97,6 +97,7 @@ function Router() {
         }
         return <Dashboard />;
       }} />
+      <Route path="/auth" component={AuthPage} />
       <Route path="/plans" component={SubscriptionLanding} />
       <Route path="/checkout" component={SubscriptionCheckout} />
       <Route path="/onboarding" component={CompanyOnboarding} />
