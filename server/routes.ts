@@ -212,26 +212,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes with ultra-aggressive caching
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      
-      // Set ultra-aggressive cache headers for instant subsequent loads
-      res.set({
-        'Cache-Control': 'private, max-age=1800, s-maxage=1800', // 30 minutes browser cache
-        'ETag': `"user-${userId}-${Math.floor(Date.now() / 60000)}"`, // Change every minute
-        'Vary': 'Cookie, Authorization',
-        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
+      console.log('🔍 [/api/auth/user] Session structure:', {
+        hasUser: !!req.user,
+        hasClaims: !!req.user?.claims,
+        sub: req.user?.claims?.sub,
+        id: req.user?.id,
+        isLocalUser: req.user?.isLocalUser,
+        isDemoUser: req.user?.isDemoUser,
+        email: req.user?.claims?.email || req.user?.email
       });
+
+      // Handle different authentication types
+      let user;
+      let cacheKey: string;
       
-      // Check cache first
-      const cached = userCache.get(userId);
-      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-        return res.json(cached.data);
+      if (req.user.isLocalUser) {
+        // For local authentication users (demo/vanilla), get user by email
+        const userEmail = req.user.claims.email;
+        cacheKey = `email-${userEmail}`;
+        console.log('🔍 [/api/auth/user] Using local auth user email:', userEmail);
+        
+        // Set ultra-aggressive cache headers for instant subsequent loads
+        res.set({
+          'Cache-Control': 'private, max-age=1800, s-maxage=1800', // 30 minutes browser cache
+          'ETag': `"user-${userEmail}-${Math.floor(Date.now() / 60000)}"`, // Change every minute
+          'Vary': 'Cookie, Authorization',
+          'Last-Modified': new Date(Date.now() - 60000).toUTCString()
+        });
+        
+        // Check cache first
+        const cached = userCache.get(cacheKey);
+        if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+          console.log('🔍 [/api/auth/user] Returning cached user for email:', userEmail);
+          return res.json(cached.data);
+        }
+        
+        console.log('🔍 [/api/auth/user] Fetching user by email from database:', userEmail);
+        user = await storage.getUserByEmail(userEmail);
+      } else {
+        // For Replit OIDC users, use claims.sub as userId
+        const userId = req.user.claims.sub;
+        cacheKey = `id-${userId}`;
+        console.log('🔍 [/api/auth/user] Using OIDC user ID:', userId);
+        
+        if (!userId) {
+          console.error('🔍 [/api/auth/user] No user ID found in OIDC session');
+          return res.status(400).json({ message: "No user ID found in session" });
+        }
+        
+        // Set ultra-aggressive cache headers for instant subsequent loads
+        res.set({
+          'Cache-Control': 'private, max-age=1800, s-maxage=1800', // 30 minutes browser cache
+          'ETag': `"user-${userId}-${Math.floor(Date.now() / 60000)}"`, // Change every minute
+          'Vary': 'Cookie, Authorization',
+          'Last-Modified': new Date(Date.now() - 60000).toUTCString()
+        });
+        
+        // Check cache first
+        const cached = userCache.get(cacheKey);
+        if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+          console.log('🔍 [/api/auth/user] Returning cached user for ID:', userId);
+          return res.json(cached.data);
+        }
+        
+        console.log('🔍 [/api/auth/user] Fetching user from database by ID:', userId);
+        user = await storage.getUser(userId);
       }
       
-      const user = await storage.getUser(userId);
+      if (!user) {
+        console.error('🔍 [/api/auth/user] User not found in database');
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log('🔍 [/api/auth/user] User found:', { id: user.id, email: user.email, firstName: user.firstName });
       
       // Cache the result
-      userCache.set(userId, { data: user, timestamp: Date.now() });
+      userCache.set(cacheKey, { data: user, timestamp: Date.now() });
       
       res.json(user);
     } catch (error) {
