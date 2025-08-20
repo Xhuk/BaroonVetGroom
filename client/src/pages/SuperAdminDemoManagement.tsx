@@ -365,7 +365,7 @@ Vanilla tenant is ready for customization and client setup.`,
       
       if (tenant.id.startsWith('vanilla-')) {
         // For vanilla tenants, show admin credentials
-        credentialsText = `Vanilla Tenant: ${tenant.name}\nTenant ID: ${tenant.id}\n\nAdmin Account:\nEmail: admin@${tenant.name.toLowerCase().replace(/\s+/g, '')}.com\nPassword: admin123\nRole: Administrador\n\nLogin URL: /debug-auth`;
+        credentialsText = `Vanilla Tenant: ${tenant.name}\nTenant ID: ${tenant.id}\n\nAdmin Account:\nEmail: admin@${tenant.name.toLowerCase().replace(/\s+/g, '')}.com\nPassword: admin123\nRole: Administrador`;
       } else {
         // For demo tenants, show all demo users
         if (tenant.demoUsers && tenant.demoUsers.length > 0) {
@@ -373,7 +373,6 @@ Vanilla tenant is ready for customization and client setup.`,
           tenant.demoUsers.forEach((user, index) => {
             credentialsText += `${index + 1}. ${user.firstName} ${user.lastName}\n   Email: ${user.credentials.email}\n   Password: ${user.credentials.password}\n   Role: ${user.roleName} (${user.department})\n\n`;
           });
-          credentialsText += 'Login URL: /debug-auth';
         } else {
           credentialsText = `Demo Tenant: ${tenant.name}\nTenant ID: ${tenant.id}\n\nNo user credentials available. Please refresh demo data to generate users.`;
         }
