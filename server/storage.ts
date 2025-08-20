@@ -2068,51 +2068,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(medicalDocuments.createdAt));
   }
 
-  // Follow-up Tasks operations
-  async getFollowUpTasks(tenantId: string): Promise<any[]> {
-    const result = await db
-      .select({
-        id: medicalAppointments.id,
-        visitDate: medicalAppointments.visitDate,
-        followUpRequired: medicalAppointments.followUpRequired,
-        followUpDate: medicalAppointments.followUpDate,
-        isConfirmed: medicalAppointments.isConfirmed,
-        confirmedAt: medicalAppointments.confirmedAt,
-        client: {
-          id: clients.id,
-          name: clients.name,
-          phone: clients.phone,
-          email: clients.email,
-        },
-        pet: {
-          id: pets.id,
-          name: pets.name,
-          species: pets.species,
-          breed: pets.breed,
-        },
-        veterinarian: {
-          id: staff.id,
-          name: staff.name,
-        }
-      })
-      .from(medicalAppointments)
-      .leftJoin(clients, eq(medicalAppointments.clientId, clients.id))
-      .leftJoin(pets, eq(medicalAppointments.petId, pets.id))
-      .leftJoin(staff, eq(medicalAppointments.veterinarianId, staff.id))
-      .where(
-        and(
-          eq(medicalAppointments.tenantId, tenantId),
-          eq(medicalAppointments.followUpRequired, true),
-          or(
-            eq(medicalAppointments.isConfirmed, false),
-            isNull(medicalAppointments.isConfirmed)
-          )
-        )
-      )
-      .orderBy(asc(medicalAppointments.followUpDate), asc(medicalAppointments.visitDate));
-
-    return result;
-  }
+  // Follow-up Tasks operations (legacy method removed - using the advanced version with filters)
 
   // Payment gateway configuration operations
   async getPaymentGatewayConfigs(companyId?: string, tenantId?: string): Promise<PaymentGatewayConfig[]> {
@@ -3372,19 +3328,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateVan(vanId: string, updates: Partial<Van>): Promise<Van> {
-    try {
-      const [result] = await db
-        .update(vans)
-        .set({ ...updates, updatedAt: new Date() })
-        .where(eq(vans.id, vanId))
-        .returning();
-      return result;
-    } catch (error) {
-      console.error('Error updating van:', error);
-      throw error;
-    }
-  }
   
   async updateServiceAutoRenewal(companyId: string, serviceId: string, autoRenewal: boolean): Promise<void> {
     try {
