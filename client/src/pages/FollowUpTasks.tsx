@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, AlertCircle, CheckCircle, Clock, Trash2, Edit, Search, 
   TrendingUp, AlertTriangle, Calendar, User, Target, Zap,
-  Filter, MoreHorizontal, Eye, ChevronDown
+  Filter, MoreHorizontal, Eye, ChevronDown, ArrowLeft
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import type { FollowUpTask, InsertFollowUpTask } from '@shared/schema';
@@ -136,11 +136,11 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
   // Calculate statistics
   const stats = allTasksResponse ? {
     total: allTasksResponse.tasks?.length || 0,
-    pending: allTasksResponse.tasks?.filter(t => t.status === 'pending').length || 0,
-    inProgress: allTasksResponse.tasks?.filter(t => t.status === 'in_progress').length || 0,
-    completed: allTasksResponse.tasks?.filter(t => t.status === 'completed').length || 0,
-    urgent: allTasksResponse.tasks?.filter(t => t.priority === 'urgent').length || 0,
-    high: allTasksResponse.tasks?.filter(t => t.priority === 'high').length || 0,
+    pending: allTasksResponse.tasks?.filter((t: FollowUpTask) => t.status === 'pending').length || 0,
+    inProgress: allTasksResponse.tasks?.filter((t: FollowUpTask) => t.status === 'in_progress').length || 0,
+    completed: allTasksResponse.tasks?.filter((t: FollowUpTask) => t.status === 'completed').length || 0,
+    urgent: allTasksResponse.tasks?.filter((t: FollowUpTask) => t.priority === 'urgent').length || 0,
+    high: allTasksResponse.tasks?.filter((t: FollowUpTask) => t.priority === 'high').length || 0,
   } : { total: 0, pending: 0, inProgress: 0, completed: 0, urgent: 0, high: 0 };
 
   // Create task mutation
@@ -294,7 +294,7 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
             )}
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              <span>Creada: {new Date(task.createdAt).toLocaleDateString()}</span>
+              <span>Creada: {task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'N/A'}</span>
             </div>
           </div>
 
@@ -356,6 +356,18 @@ export default function FollowUpTasks({ tenantId }: FollowUpTasksProps) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div>
+            <div className="flex items-center gap-4 mb-4">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={() => window.history.back()}
+                className="flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800"
+                data-testid="button-back"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Volver
+              </Button>
+            </div>
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
               📋 Tareas de Seguimiento
             </h1>
