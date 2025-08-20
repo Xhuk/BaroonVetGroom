@@ -363,33 +363,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Fallback to Replit auth in development
-      if (!req.user?.claims?.sub) {
-        return res.status(401).json({ message: 'Unauthorized' });
+      // Check Replit auth if available in development
+      if (req.user?.claims?.sub) {
+        const userId = req.user.claims.sub;
+        
+        // Set ultra-aggressive cache headers for instant subsequent loads
+        res.set({
+          'Cache-Control': 'private, max-age=1800, s-maxage=1800', // 30 minutes browser cache
+          'ETag': `"user-${userId}-${Math.floor(Date.now() / 60000)}"`, // Change every minute
+          'Vary': 'Cookie, Authorization',
+          'Last-Modified': new Date(Date.now() - 60000).toUTCString()
+        });
+        
+        // Check cache first
+        const cached = userCache.get(userId);
+        if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+          return res.json(cached.data);
+        }
+        
+        const user = await storage.getUser(userId);
+        
+        // Cache the result
+        userCache.set(userId, { data: user, timestamp: Date.now() });
+        
+        return res.json(user);
       }
       
-      const userId = req.user.claims.sub;
-      
-      // Set ultra-aggressive cache headers for instant subsequent loads
-      res.set({
-        'Cache-Control': 'private, max-age=1800, s-maxage=1800', // 30 minutes browser cache
-        'ETag': `"user-${userId}-${Math.floor(Date.now() / 60000)}"`, // Change every minute
-        'Vary': 'Cookie, Authorization',
-        'Last-Modified': new Date(Date.now() - 60000).toUTCString()
-      });
-      
-      // Check cache first
-      const cached = userCache.get(userId);
-      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-        return res.json(cached.data);
-      }
-      
-      const user = await storage.getUser(userId);
-      
-      // Cache the result
-      userCache.set(userId, { data: user, timestamp: Date.now() });
-      
-      res.json(user);
+      // In development, if no session and no Replit auth, redirect to auth
+      return res.status(401).json({ message: 'Unauthorized', requiresAuth: true });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

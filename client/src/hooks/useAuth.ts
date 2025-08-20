@@ -16,8 +16,11 @@ export function useAuth() {
     networkMode: 'offlineFirst',
     // Add custom query function for ultra-fast auth
     queryFn: async () => {
-      // Always clear the logout flag when checking auth (to prevent getting stuck)
-      localStorage.removeItem('auth_logged_out');
+      // Check if user was manually logged out to prevent auth loops
+      const loggedOut = localStorage.getItem('auth_logged_out');
+      if (loggedOut === 'true') {
+        return null; // Don't make request if manually logged out
+      }
       
       // Check localStorage first for instant response
       const cachedUser = localStorage.getItem('auth_user_cache');
@@ -40,6 +43,15 @@ export function useAuth() {
         localStorage.setItem('auth_cache_time', Date.now().toString());
         return userData;
       }
+      
+      // Handle 401 gracefully - return null instead of throwing
+      if (response.status === 401) {
+        localStorage.removeItem('auth_user_cache');
+        localStorage.removeItem('auth_cache_time');
+        return null;
+      }
+      
+      // Only throw for actual errors (500, network issues, etc.)
       throw new Error(`${response.status}: ${response.statusText}`);
     }
   });
