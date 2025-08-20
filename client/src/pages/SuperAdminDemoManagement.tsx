@@ -190,12 +190,13 @@ export default function SuperAdminDemoManagement() {
   };
 
   const startDoggyAnimation = () => {
-    if (!doggyAnimationRef.current) return;
-    
     setShowDoggyAnimation(true);
     
-    // Barking doggy animation with bouncing and tail wagging effects
-    if (doggyAnimationRef.current) {
+    // Wait for next tick to ensure the component is rendered
+    setTimeout(() => {
+      if (!doggyAnimationRef.current) return;
+      
+      // Barking doggy animation with bouncing and tail wagging effects
       (anime as any)({
         targets: doggyAnimationRef.current,
         translateY: [
@@ -252,7 +253,7 @@ export default function SuperAdminDemoManagement() {
       doggyTimeoutRef.current = setTimeout(() => {
         setShowDoggyAnimation(false);
       }, 6000);
-    }
+    }, 100); // Small delay to ensure component is rendered
   };
 
   // Fetch demo tenants
