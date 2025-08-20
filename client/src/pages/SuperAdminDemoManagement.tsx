@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/queryClient";
-import * as anime from "animejs";
 import { 
   Users, 
   Building, 
@@ -107,15 +106,9 @@ export default function SuperAdminDemoManagement() {
   const [isCreateVanillaDialogOpen, setIsCreateVanillaDialogOpen] = useState(false);
   const [isClientOnboardingOpen, setIsClientOnboardingOpen] = useState(false);
   const [onboardingType, setOnboardingType] = useState<'demo' | 'vanilla'>('demo');
-  const [showTrashAnimation, setShowTrashAnimation] = useState(false);
-  const [showDoggyAnimation, setShowDoggyAnimation] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<DemoTenant | null>(null);
   const [showUsersDialog, setShowUsersDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<DemoUser | null>(null);
-  const trashAnimationRef = useRef<HTMLDivElement>(null);
-  const doggyAnimationRef = useRef<HTMLDivElement>(null);
-  const trashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const doggyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [createForm, setCreateForm] = useState<CreateDemoForm>({
     tenantName: '',
     companyName: '',
@@ -161,147 +154,7 @@ export default function SuperAdminDemoManagement() {
     }
   });
 
-  // Function to trigger floating trash animation
-  const triggerTrashAnimation = () => {
-    setShowTrashAnimation(true);
-    
-    // Clear any existing timeout
-    if (trashTimeoutRef.current) {
-      clearTimeout(trashTimeoutRef.current);
-    }
-    
-    // Animate the trash can with more dramatic effects
-    if (trashAnimationRef.current) {
-      (anime as any)({
-        targets: trashAnimationRef.current,
-        translateY: [
-          { value: -80, duration: 400 },
-          { value: -150, duration: 500 },
-          { value: -120, duration: 400 },
-          { value: -180, duration: 500 },
-          { value: -100, duration: 400 },
-          { value: -200, duration: 500 },
-          { value: -300, duration: 800 }
-        ],
-        translateX: [
-          { value: 30, duration: 400 },
-          { value: -20, duration: 500 },
-          { value: 15, duration: 400 },
-          { value: -25, duration: 500 },
-          { value: 10, duration: 400 },
-          { value: -15, duration: 500 },
-          { value: 0, duration: 800 }
-        ],
-        scale: [
-          { value: 1.3, duration: 400 },
-          { value: 1.1, duration: 500 },
-          { value: 1.4, duration: 400 },
-          { value: 1.2, duration: 500 },
-          { value: 1.5, duration: 400 },
-          { value: 1.1, duration: 500 },
-          { value: 0.8, duration: 800 }
-        ],
-        rotate: [
-          { value: 15, duration: 400 },
-          { value: -12, duration: 500 },
-          { value: 18, duration: 400 },
-          { value: -15, duration: 500 },
-          { value: 20, duration: 400 },
-          { value: -10, duration: 500 },
-          { value: 360, duration: 800 }
-        ],
-        opacity: [
-          { value: 1, duration: 400 },
-          { value: 0.9, duration: 500 },
-          { value: 1, duration: 400 },
-          { value: 0.8, duration: 500 },
-          { value: 1, duration: 400 },
-          { value: 0.7, duration: 500 },
-          { value: 0, duration: 800 }
-        ],
-        duration: 4800, // Extended to 4.8 seconds to match toast timing
-        easing: 'easeOutQuart',
-        complete: () => {
-          if (trashTimeoutRef.current) {
-            clearTimeout(trashTimeoutRef.current);
-          }
-          setShowTrashAnimation(false);
-        }
-      });
-      
-      // Fallback timeout - hide after 6 seconds if animation doesn't complete
-      trashTimeoutRef.current = setTimeout(() => {
-        setShowTrashAnimation(false);
-      }, 6000);
-    }
-  };
 
-  const startDoggyAnimation = () => {
-    setShowDoggyAnimation(true);
-    
-    // Wait for next tick to ensure the component is rendered
-    setTimeout(() => {
-      if (!doggyAnimationRef.current) return;
-      
-      // Barking doggy animation with bouncing and tail wagging effects
-      (anime as any)({
-        targets: doggyAnimationRef.current,
-        translateY: [
-          { value: -20, duration: 300 },
-          { value: 0, duration: 200 },
-          { value: -15, duration: 250 },
-          { value: 0, duration: 200 },
-          { value: -25, duration: 300 },
-          { value: 0, duration: 200 },
-          { value: -10, duration: 200 },
-          { value: 0, duration: 150 }
-        ],
-        scale: [
-          { value: 1.2, duration: 300 },
-          { value: 1.0, duration: 200 },
-          { value: 1.1, duration: 250 },
-          { value: 1.0, duration: 200 },
-          { value: 1.3, duration: 300 },
-          { value: 1.0, duration: 200 },
-          { value: 1.1, duration: 200 },
-          { value: 1.0, duration: 150 }
-        ],
-        rotate: [
-          { value: 5, duration: 300 },
-          { value: -3, duration: 200 },
-          { value: 8, duration: 250 },
-          { value: -5, duration: 200 },
-          { value: 10, duration: 300 },
-          { value: -2, duration: 200 },
-          { value: 3, duration: 200 },
-          { value: 0, duration: 150 }
-        ],
-        opacity: [
-          { value: 1, duration: 300 },
-          { value: 0.9, duration: 200 },
-          { value: 1, duration: 250 },
-          { value: 0.8, duration: 200 },
-          { value: 1, duration: 300 },
-          { value: 0.9, duration: 200 },
-          { value: 1, duration: 200 },
-          { value: 0, duration: 1000 }
-        ],
-        duration: 5000, // Match toast duration
-        easing: 'easeOutBounce',
-        complete: () => {
-          if (doggyTimeoutRef.current) {
-            clearTimeout(doggyTimeoutRef.current);
-          }
-          setShowDoggyAnimation(false);
-        }
-      });
-      
-      // Fallback timeout - hide after 6 seconds if animation doesn't complete
-      doggyTimeoutRef.current = setTimeout(() => {
-        setShowDoggyAnimation(false);
-      }, 6000);
-    }, 100); // Small delay to ensure component is rendered
-  };
 
   // Fetch demo tenants
   const { data: demoTenants = [], isLoading: isLoadingTenants, refetch } = useQuery<DemoTenant[]>({
@@ -321,8 +174,6 @@ export default function SuperAdminDemoManagement() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Show doggy animation for successful creation
-      startDoggyAnimation();
       
       toast({
         title: "Demo Tenant Created Successfully! 🐕",
@@ -456,8 +307,6 @@ Vanilla tenant is ready for customization and client setup.`,
       return response.json();
     },
     onSuccess: () => {
-      // Enhanced trash animation
-      triggerTrashAnimation();
       
       toast({
         title: "Demo Tenant Purged",
@@ -547,46 +396,6 @@ Vanilla tenant is ready for customization and client setup.`,
     <div className="min-h-screen bg-background relative">
       <Header />
       
-      {/* Floating Trash Animation */}
-      {showTrashAnimation && (
-        <div 
-          ref={trashAnimationRef}
-          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
-          style={{ 
-            filter: 'drop-shadow(0 8px 16px rgba(220, 38, 38, 0.4)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))',
-            willChange: 'transform, opacity, scale, rotate'
-          }}
-        >
-          <div className="relative">
-            <Trash2 className="w-20 h-20 text-red-500 fill-red-400" />
-            {/* Sparkle effects around the trash can */}
-            <div className="absolute -top-2 -right-2 w-3 h-3 bg-red-400 rounded-full animate-pulse" />
-            <div className="absolute -bottom-1 -left-2 w-2 h-2 bg-red-300 rounded-full animate-ping" />
-            <div className="absolute top-1 -right-3 w-1 h-1 bg-red-500 rounded-full animate-bounce" />
-          </div>
-        </div>
-      )}
-
-      {/* Floating Doggy Animation */}
-      {showDoggyAnimation && (
-        <div 
-          ref={doggyAnimationRef}
-          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
-          style={{ 
-            filter: 'drop-shadow(0 8px 16px rgba(34, 197, 94, 0.4)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))',
-            willChange: 'transform, opacity, scale, rotate'
-          }}
-        >
-          <div className="relative">
-            <div className="text-6xl">🐕</div>
-            {/* Barking effects around the doggy */}
-            <div className="absolute -top-2 -right-2 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-            <div className="absolute -bottom-1 -left-2 w-2 h-2 bg-green-300 rounded-full animate-ping" />
-            <div className="absolute top-1 -right-3 w-1 h-1 bg-green-500 rounded-full animate-bounce" />
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-lg animate-bounce">🎉</div>
-          </div>
-        </div>
-      )}
       
       <div className="container mx-auto p-6">
         <div className="mb-6">
