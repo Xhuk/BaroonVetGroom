@@ -170,12 +170,14 @@ export function convertUTCToUserDateTime(utcDate: string, utcTime: string, timez
   }
   
   try {
-    // Create UTC datetime from database values
-    const utcDateTime = new Date(`${utcDate}T${utcTime}:00Z`);
+    // Create UTC datetime from database values with proper formatting
+    // Handle both HH:MM and HH:MM:SS formats
+    const timeFormatted = utcTime.length === 5 ? `${utcTime}:00` : utcTime;
+    const utcDateTime = new Date(`${utcDate}T${timeFormatted}Z`);
     
     // Check if the date is valid
     if (isNaN(utcDateTime.getTime())) {
-      console.warn(`convertUTCToUserDateTime: Invalid date created from ${utcDate} ${utcTime}`);
+      console.warn(`convertUTCToUserDateTime: Invalid date created from ${utcDate} ${utcTime} → ${utcDate}T${timeFormatted}Z`);
       const now = new Date();
       return {
         localDate: now.toISOString().split('T')[0],
