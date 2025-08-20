@@ -420,6 +420,7 @@ Vanilla tenant is ready for customization and client setup.`,
         duration: 5000,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/demo-tenants'] });
+      refetch(); // Force immediate UI refresh
     },
     onError: (error: any) => {
       toast({
