@@ -2069,6 +2069,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Follow-up Tasks operations (legacy method removed - using the advanced version with filters)
+  
+  async generateFollowUpTasks(tenantId: string): Promise<FollowUpTask[]> {
+    // This method generates follow-up tasks based on missing data in medical/grooming records
+    try {
+      const tasks: FollowUpTask[] = [];
+      
+      // Generate tasks for medical appointments missing diagnosis
+      const medicalTasks = await db
+        .select({
+          appointmentId: medicalAppointments.id,
+          clientId: medicalAppointments.clientId,
+          petId: medicalAppointments.petId,
+          visitDate: medicalAppointments.visitDate
+        })
+        .from(medicalAppointments)
+        .where(
+          and(
+            eq(medicalAppointments.tenantId, tenantId),
+            or(
+              isNull(medicalAppointments.diagnosis),
+              eq(medicalAppointments.diagnosis, '')
+            )
+          )
+        );
+      
+      for (const medical of medicalTasks) {
+        tasks.push({
+          id: `task-${Date.now()}-${Math.random()}`,
+          tenantId,
+          taskType: 'missing_diagnosis',
+          referenceId: medical.appointmentId,
+          title: 'Falta diagnóstico médico',
+          description: `Completar diagnóstico para cita médica del ${medical.visitDate}`,
+          priority: 'high',
+          status: 'pending',
+          assignedTo: null,
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+          createdAt: new Date(),
+          updatedAt: new Date()
+        } as FollowUpTask);
+      }
+      
+      return tasks;
+    } catch (error) {
+      console.error('Error generating follow-up tasks:', error);
+      return [];
+    }
+  }
 
   // Payment gateway configuration operations
   async getPaymentGatewayConfigs(companyId?: string, tenantId?: string): Promise<PaymentGatewayConfig[]> {
@@ -4345,7 +4393,6 @@ export class DatabaseStorage implements IStorage {
       for (let i = 1; i <= newUsers; i++) {
         const userId = `refresh-user-${tenantId}-${Date.now()}-${i}`;
         const [user] = await db.insert(users).values({
-          id: userId,
           username: `refresh.user${Date.now()}${i}@demo.com`,
           email: `refresh.user${Date.now()}${i}@demo.com`,
           firstName: `Refresh`,
