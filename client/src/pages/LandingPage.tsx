@@ -35,20 +35,59 @@ export function LandingPage() {
     setIsLoggingIn(true);
     
     try {
-      // For now, redirect to Replit auth - this can be replaced with custom auth later
-      toast({
-        title: "Iniciando sesión...",
-        description: "Redirigiendo al sistema de autenticación",
-      });
+      // Check if this is a demo or vanilla user for local auth
+      const isDemoUser = loginForm.email.includes('demo') || loginForm.email.startsWith('demo.') || loginForm.email.includes('.demo');
+      const isVanillaUser = loginForm.email.startsWith('admin@') && !loginForm.email.includes('demo');
       
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 1000);
+      if (isDemoUser || isVanillaUser) {
+        // Use local authentication for demo and vanilla users
+        console.log('🔑 Attempting local login for:', loginForm.email);
+        
+        const response = await fetch('/api/login-local', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: loginForm.email,
+            password: loginForm.password
+          })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          toast({
+            title: "¡Inicio de sesión exitoso! 🎉",
+            description: `Bienvenido ${result.user.name}`,
+          });
+
+          // Close dialog and redirect
+          setIsLoginDialogOpen(false);
+          setTimeout(() => {
+            window.location.href = result.redirect || "/";
+          }, 1000);
+        } else {
+          throw new Error(result.error || 'Local authentication failed');
+        }
+      } else {
+        // Use Replit OIDC for other users
+        toast({
+          title: "Redirigiendo...",
+          description: "Usando autenticación Replit",
+        });
+        
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 1000);
+      }
       
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Error de autenticación",
-        description: "No se pudo iniciar sesión. Intenta nuevamente.",
+        description: error.message || "No se pudo iniciar sesión. Intenta nuevamente.",
         variant: "destructive",
       });
       setIsLoggingIn(false);

@@ -1,5 +1,7 @@
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import bcrypt from "bcrypt";
 
 import passport from "passport";
 import session from "express-session";
@@ -99,6 +101,68 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
   }
 
+  // Local strategy for demo AND vanilla users
+  passport.use(new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password'
+  }, async (email, password, done) => {
+    try {
+      console.log('🔐 Local login attempt:', email);
+      
+      // Check if this is a demo user
+      const isDemoUser = email.includes('demo') || email.startsWith('demo.') || email.includes('.demo');
+      
+      // Check if this is a vanilla user (admin@tenantname.com pattern)
+      const isVanillaUser = email.startsWith('admin@') && !email.includes('demo');
+      
+      if (!isDemoUser && !isVanillaUser) {
+        return done(null, false, { message: 'Only demo and vanilla tenant users can use local login' });
+      }
+
+      let isValidCredentials = false;
+      let userType = '';
+      
+      if (isDemoUser) {
+        // For demo users, password is typically 'demo123'
+        isValidCredentials = password === 'demo123' || password === 'demo' || password === '123456';
+        userType = 'Demo';
+      } else if (isVanillaUser) {
+        // For vanilla users, password is 'admin123'
+        isValidCredentials = password === 'admin123' || password === 'admin';
+        userType = 'Admin';
+      }
+      
+      if (isValidCredentials) {
+        // Create a user object for local authentication
+        const user = {
+          isLocalUser: true,
+          isDemoUser,
+          isVanillaUser,
+          claims: {
+            sub: `local-${email.replace('@', '-').replace(/\./g, '-')}`,
+            email: email,
+            first_name: isDemoUser 
+              ? email.split('@')[0].split('.').map((s: string) => 
+                  s.charAt(0).toUpperCase() + s.slice(1)
+                ).join(' ')
+              : 'Admin',
+            last_name: isDemoUser ? 'Demo User' : 'Administrator'
+          },
+          expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+        };
+        
+        console.log(`✅ ${userType} authentication successful:`, email);
+        return done(null, user);
+      } else {
+        console.log(`❌ ${userType} authentication failed - invalid password:`, email);
+        return done(null, false, { message: 'Invalid credentials' });
+      }
+    } catch (error) {
+      console.error('❌ Local authentication error:', error);
+      return done(error);
+    }
+  }));
+
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
@@ -113,6 +177,43 @@ export async function setupAuth(app: Express) {
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
+    })(req, res, next);
+  });
+
+  // Local login endpoint for demo and vanilla users
+  app.post("/api/login-local", (req, res, next) => {
+    console.log('🔑 Local login request received:', req.body.email);
+    
+    passport.authenticate('local', (err: any, user: any, info: any) => {
+      if (err) {
+        console.error('Local auth error:', err);
+        return res.status(500).json({ error: 'Authentication error' });
+      }
+      
+      if (!user) {
+        console.log('Local auth failed:', info?.message || 'Invalid credentials');
+        return res.status(401).json({ error: info?.message || 'Invalid credentials' });
+      }
+      
+      req.logIn(user, (loginErr: any) => {
+        if (loginErr) {
+          console.error('Login error:', loginErr);
+          return res.status(500).json({ error: 'Login failed' });
+        }
+        
+        console.log('✅ Local login successful, redirecting to dashboard');
+        res.json({ 
+          success: true, 
+          message: 'Login successful',
+          user: {
+            email: user.claims.email,
+            name: `${user.claims.first_name} ${user.claims.last_name}`,
+            isDemoUser: user.isDemoUser,
+            isVanillaUser: user.isVanillaUser
+          },
+          redirect: '/'
+        });
+      });
     })(req, res, next);
   });
 
