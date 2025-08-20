@@ -4285,24 +4285,23 @@ export class DatabaseStorage implements IStorage {
         const dailyAppointments = Math.floor(Math.random() * 8) + 3; // 3-10 appointments per day
 
         for (let i = 0; i < dailyAppointments; i++) {
-          const hour = Math.floor(Math.random() * 9) + 8; // 8 AM to 5 PM
+          // Create appointments during Mexico business hours (8 AM - 6 PM Mexico time)
+          const mexicoHour = Math.floor(Math.random() * 10) + 8; // 8 AM to 6 PM Mexico time
           const minute = Math.random() > 0.5 ? 0 : 30;
-          const appointmentDateTime = new Date(appointmentDate);
-          appointmentDateTime.setHours(hour, minute, 0, 0);
-
+          
           const randomClient = demoClients[Math.floor(Math.random() * demoClients.length)];
           const [randomPet] = await db.select().from(pets)
             .where(eq(pets.clientId, randomClient.id))
             .limit(1);
 
           if (randomPet) {
-            // Convert to proper UTC format for database storage
-            const userDate = appointmentDateTime.toISOString().split('T')[0];
-            const userTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            // Create appointment in Mexico timezone, then convert to UTC for storage
+            const mexicoDate = appointmentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+            const mexicoTime = `${mexicoHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
             
             // Import and use timezone conversion
             const { convertUserDateTimeToUTC } = await import('../shared/timeUtils');
-            const { utcDate, utcTime } = convertUserDateTimeToUTC(userDate, userTime);
+            const { utcDate, utcTime } = convertUserDateTimeToUTC(mexicoDate, mexicoTime, 'Mexico/General');
             
             const dateOnly = utcDate;
             const timeOnly = utcTime;
@@ -4360,10 +4359,9 @@ export class DatabaseStorage implements IStorage {
         const dailyAppointments = Math.floor(Math.random() * 5) + 2; // 2-6 new appointments per day
 
         for (let i = 0; i < dailyAppointments; i++) {
-          const hour = Math.floor(Math.random() * 9) + 8;
+          // Create appointments during Mexico business hours (8 AM - 6 PM Mexico time)
+          const mexicoHour = Math.floor(Math.random() * 10) + 8; // 8 AM to 6 PM Mexico time
           const minute = Math.random() > 0.5 ? 0 : 30;
-          const appointmentDateTime = new Date(date);
-          appointmentDateTime.setHours(hour, minute, 0, 0);
 
           const randomClient = existingClients[Math.floor(Math.random() * existingClients.length)];
           const [randomPet] = await db.select().from(pets)
@@ -4371,13 +4369,13 @@ export class DatabaseStorage implements IStorage {
             .limit(1);
 
           if (randomPet) {
-            // Convert to proper UTC format for database storage
-            const userDate = appointmentDateTime.toISOString().split('T')[0];
-            const userTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            // Create appointment in Mexico timezone, then convert to UTC for storage
+            const mexicoDate = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+            const mexicoTime = `${mexicoHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
             
             // Import and use timezone conversion
             const { convertUserDateTimeToUTC } = await import('../shared/timeUtils');
-            const { utcDate, utcTime } = convertUserDateTimeToUTC(userDate, userTime);
+            const { utcDate, utcTime } = convertUserDateTimeToUTC(mexicoDate, mexicoTime, 'Mexico/General');
             
             const dateOnly = utcDate;
             const timeOnly = utcTime;
