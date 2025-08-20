@@ -7641,6 +7641,19 @@ This password expires in 24 hours.
     }
   });
 
+  app.put('/api/superadmin/demo-tenants/:tenantId/users/:userId/role', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const { tenantId, userId } = req.params;
+      const { roleId } = req.body;
+      
+      const updatedUser = await storage.updateDemoUserRole(tenantId, userId, roleId);
+      res.json({ success: true, user: updatedUser });
+    } catch (error: any) {
+      console.error('Error updating demo user role:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
   app.delete('/api/superadmin/demo-tenants/:tenantId', isAuthenticated, isSuperAdmin, async (req, res) => {
     try {
       const { tenantId } = req.params;

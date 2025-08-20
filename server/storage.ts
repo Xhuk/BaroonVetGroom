@@ -3744,24 +3744,102 @@ export class DatabaseStorage implements IStorage {
         timeSlotDuration: 30
       }).returning();
 
-      // Create demo users
+      // Create essential roles for the tenant
+      const roleTemplates = [
+        { name: 'admin', displayName: 'Administrador', department: 'admin', permissions: ['manage_all'] },
+        { name: 'recepcion', displayName: 'Recepcionista', department: 'reception', permissions: ['view_appointments', 'manage_clients'] },
+        { name: 'grooming', displayName: 'Groomer', department: 'grooming', permissions: ['view_appointments', 'manage_grooming'] },
+        { name: 'medical', displayName: 'Veterinario', department: 'medical', permissions: ['view_appointments', 'manage_medical'] },
+        { name: 'autoentregas', displayName: 'Delivery', department: 'delivery', permissions: ['view_deliveries', 'manage_routes'] }
+      ];
+
+      const createdRoles = [];
+      for (const roleTemplate of roleTemplates) {
+        const [role] = await db.insert(roles).values({
+          companyId: company.id,
+          name: roleTemplate.name,
+          displayName: roleTemplate.displayName,
+          department: roleTemplate.department,
+          permissions: roleTemplate.permissions,
+          pageAccess: roleTemplate.name === 'admin' ? 'all' : 'some',
+          isActive: true
+        }).returning();
+        createdRoles.push(role);
+      }
+
+      // Create demo users with predefined roles
       const demoUsers = [];
-      for (let i = 1; i <= data.userCount; i++) {
-        const userId = `demo-user-${tenantId}-${i}`;
-        const timestamp = Date.now();
+      const userRoleAssignments = [
+        { role: 'admin', firstName: 'Demo Admin', lastName: 'Administrador' },
+        { role: 'recepcion', firstName: 'Demo Recepcion', lastName: 'Recepcionista' },
+        { role: 'grooming', firstName: 'Demo Groomer', lastName: 'Estilista' },
+        { role: 'medical', firstName: 'Demo Doctor', lastName: 'Veterinario' },
+        { role: 'autoentregas', firstName: 'Demo Driver', lastName: 'Conductor' }
+      ];
+
+      // Create guaranteed role users first
+      for (let i = 0; i < Math.min(userRoleAssignments.length, data.userCount); i++) {
+        const assignment = userRoleAssignments[i];
+        const timestamp = Date.now() + i;
         const [user] = await db.insert(users).values({
-          email: `demo.user${i}.${timestamp}@${data.tenantName.toLowerCase().replace(/\s/g, '')}.com`,
-          firstName: `Demo`,
-          lastName: `User ${i}`,
+          email: `${assignment.role}.${timestamp}@${data.tenantName.toLowerCase().replace(/\s/g, '')}.com`,
+          firstName: assignment.firstName,
+          lastName: assignment.lastName,
+          createdAt: new Date(),
+          updatedAt: new Date()
         }).returning();
 
-        // Associate user with tenant
+        const assignedRole = createdRoles.find(r => r.name === assignment.role);
+        
+        // Associate user with tenant and role
         await db.insert(userTenants).values({
           userId: user.id,
-          tenantId: tenant.id
+          tenantId: tenant.id,
+          roleId: assignedRole?.id
         });
 
-        demoUsers.push(user);
+        demoUsers.push({
+          ...user,
+          role: assignedRole?.displayName || 'Sin Rol',
+          roleName: assignedRole?.name || 'none',
+          department: assignedRole?.department || 'none',
+          credentials: {
+            email: user.email,
+            password: 'demo123' // Standard demo password
+          }
+        });
+      }
+
+      // Create additional users if requested count is higher
+      for (let i = userRoleAssignments.length; i < data.userCount; i++) {
+        const timestamp = Date.now() + i;
+        const [user] = await db.insert(users).values({
+          email: `demo.user${i + 1}.${timestamp}@${data.tenantName.toLowerCase().replace(/\s/g, '')}.com`,
+          firstName: `Demo User`,
+          lastName: `${i + 1}`,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }).returning();
+
+        // Assign random role
+        const randomRole = createdRoles[Math.floor(Math.random() * createdRoles.length)];
+        
+        await db.insert(userTenants).values({
+          userId: user.id,
+          tenantId: tenant.id,
+          roleId: randomRole.id
+        });
+
+        demoUsers.push({
+          ...user,
+          role: randomRole.displayName,
+          roleName: randomRole.name,
+          department: randomRole.department,
+          credentials: {
+            email: user.email,
+            password: 'demo123'
+          }
+        });
       }
 
       // Create demo clients and pets
@@ -3835,6 +3913,8 @@ export class DatabaseStorage implements IStorage {
       return {
         tenant,
         company,
+        demoUsers,
+        availableRoles: createdRoles,
         userCount: data.userCount,
         appointmentCount,
         clientCount: demoClients.length,
@@ -3926,6 +4006,35 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error refreshing demo tenant data:', error);
       throw new Error('Failed to refresh demo tenant data');
+    }
+  }
+
+  async updateDemoUserRole(tenantId: string, userId: string, newRoleId: string): Promise<any> {
+    try {
+      // Update user role in userTenants table
+      await db.update(userTenants)
+        .set({ roleId: newRoleId, updatedAt: new Date() })
+        .where(and(eq(userTenants.tenantId, tenantId), eq(userTenants.userId, userId)));
+
+      // Get updated user with role info
+      const [updatedUser] = await db.select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        roleName: roles.name,
+        roleDisplayName: roles.displayName,
+        department: roles.department
+      })
+      .from(users)
+      .leftJoin(userTenants, eq(users.id, userTenants.userId))
+      .leftJoin(roles, eq(userTenants.roleId, roles.id))
+      .where(and(eq(users.id, userId), eq(userTenants.tenantId, tenantId)));
+
+      return updatedUser;
+    } catch (error) {
+      console.error('Error updating demo user role:', error);
+      throw new Error('Failed to update user role');
     }
   }
 

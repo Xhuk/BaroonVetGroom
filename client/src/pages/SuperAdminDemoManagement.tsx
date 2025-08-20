@@ -20,7 +20,11 @@ import {
   AlertTriangle,
   Calendar,
   UserPlus,
-  Loader2
+  Loader2,
+  Edit,
+  Copy,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import {
   Dialog,
@@ -41,6 +45,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface DemoTenant {
   id: string;
@@ -51,6 +62,29 @@ interface DemoTenant {
   createdAt: string;
   lastActivity: string;
   status: 'active' | 'inactive';
+  demoUsers?: DemoUser[];
+  availableRoles?: Role[];
+}
+
+interface DemoUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  roleName: string;
+  department: string;
+  credentials: {
+    email: string;
+    password: string;
+  };
+}
+
+interface Role {
+  id: string;
+  name: string;
+  displayName: string;
+  department: string;
 }
 
 interface CreateDemoForm {
@@ -65,8 +99,14 @@ export default function SuperAdminDemoManagement() {
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [showTrashAnimation, setShowTrashAnimation] = useState(false);
+  const [showDoggyAnimation, setShowDoggyAnimation] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<DemoTenant | null>(null);
+  const [showUsersDialog, setShowUsersDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState<DemoUser | null>(null);
   const trashAnimationRef = useRef<HTMLDivElement>(null);
+  const doggyAnimationRef = useRef<HTMLDivElement>(null);
   const trashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const doggyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [createForm, setCreateForm] = useState<CreateDemoForm>({
     tenantName: '',
     companyName: '',
@@ -149,6 +189,72 @@ export default function SuperAdminDemoManagement() {
     }
   };
 
+  const startDoggyAnimation = () => {
+    if (!doggyAnimationRef.current) return;
+    
+    setShowDoggyAnimation(true);
+    
+    // Barking doggy animation with bouncing and tail wagging effects
+    if (doggyAnimationRef.current) {
+      anime({
+        targets: doggyAnimationRef.current,
+        translateY: [
+          { value: -20, duration: 300 },
+          { value: 0, duration: 200 },
+          { value: -15, duration: 250 },
+          { value: 0, duration: 200 },
+          { value: -25, duration: 300 },
+          { value: 0, duration: 200 },
+          { value: -10, duration: 200 },
+          { value: 0, duration: 150 }
+        ],
+        scale: [
+          { value: 1.2, duration: 300 },
+          { value: 1.0, duration: 200 },
+          { value: 1.1, duration: 250 },
+          { value: 1.0, duration: 200 },
+          { value: 1.3, duration: 300 },
+          { value: 1.0, duration: 200 },
+          { value: 1.1, duration: 200 },
+          { value: 1.0, duration: 150 }
+        ],
+        rotate: [
+          { value: 5, duration: 300 },
+          { value: -3, duration: 200 },
+          { value: 8, duration: 250 },
+          { value: -5, duration: 200 },
+          { value: 10, duration: 300 },
+          { value: -2, duration: 200 },
+          { value: 3, duration: 200 },
+          { value: 0, duration: 150 }
+        ],
+        opacity: [
+          { value: 1, duration: 300 },
+          { value: 0.9, duration: 200 },
+          { value: 1, duration: 250 },
+          { value: 0.8, duration: 200 },
+          { value: 1, duration: 300 },
+          { value: 0.9, duration: 200 },
+          { value: 1, duration: 200 },
+          { value: 0, duration: 1000 }
+        ],
+        duration: 5000, // Match toast duration
+        easing: 'easeOutBounce',
+        complete: () => {
+          if (doggyTimeoutRef.current) {
+            clearTimeout(doggyTimeoutRef.current);
+          }
+          setShowDoggyAnimation(false);
+        }
+      });
+      
+      // Fallback timeout - hide after 6 seconds if animation doesn't complete
+      doggyTimeoutRef.current = setTimeout(() => {
+        setShowDoggyAnimation(false);
+      }, 6000);
+    }
+  };
+
   // Fetch demo tenants
   const { data: demoTenants = [], isLoading: isLoadingTenants, refetch } = useQuery<DemoTenant[]>({
     queryKey: ['/api/superadmin/demo-tenants'],
@@ -167,16 +273,21 @@ export default function SuperAdminDemoManagement() {
       return response.json();
     },
     onSuccess: (data) => {
+      // Show doggy animation for successful creation
+      startDoggyAnimation();
+      
       toast({
-        title: "Demo Tenant Created Successfully!",
+        title: "Demo Tenant Created Successfully! 🐕",
         description: `✓ Created tenant "${data.tenant.name}" with ${data.appointmentDays || createForm.appointmentDays} days of demo data
-✓ Added ${data.userCount} demo user accounts 
+✓ Added ${data.userCount} demo user accounts (Password: demo123)
 ✓ Generated ${data.clientCount} clients with pets
 ✓ Created ${data.appointmentCount} sample appointments
 ✓ Tenant ID: ${data.tenant.id}
 
 Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`,
+        duration: 5000,
       });
+      
       setIsCreateDialogOpen(false);
       setCreateForm({
         tenantName: '',
@@ -184,6 +295,24 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
         userCount: 5,
         appointmentDays: 7
       });
+      
+      // Store the created tenant data for showing users
+      if (data.demoUsers && data.availableRoles) {
+        setSelectedTenant({
+          ...data.tenant,
+          demoUsers: data.demoUsers,
+          availableRoles: data.availableRoles,
+          userCount: data.userCount,
+          appointmentCount: data.appointmentCount,
+          status: 'active' as const,
+          createdAt: new Date().toISOString(),
+          lastActivity: new Date().toISOString()
+        });
+        
+        // Automatically show users dialog after a short delay
+        setTimeout(() => setShowUsersDialog(true), 1000);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/demo-tenants'] });
     },
     onError: (error: any) => {
@@ -232,12 +361,13 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
       return response.json();
     },
     onSuccess: () => {
-      // Trigger the floating trash animation
-      triggerTrashAnimation();
+      // Enhanced trash animation
+      startTrashAnimation();
       
       toast({
         title: "Demo Tenant Purged",
         description: "Demo tenant and all associated data have been permanently deleted.",
+        duration: 5000,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/demo-tenants'] });
     },
@@ -245,6 +375,37 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
       toast({
         title: "Failed to Purge Demo Tenant",
         description: error?.message || "An error occurred while purging the demo tenant.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update user role mutation
+  const updateUserRoleMutation = useMutation({
+    mutationFn: async ({ tenantId, userId, roleId }: { tenantId: string; userId: string; roleId: string }) => {
+      const response = await fetch(`/api/superadmin/demo-tenants/${tenantId}/users/${userId}/role`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ roleId }),
+      });
+      if (!response.ok) throw new Error('Failed to update user role');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User Role Updated",
+        description: "User role has been updated successfully",
+      });
+      setEditingUser(null);
+      if (selectedTenant) {
+        queryClient.invalidateQueries({ queryKey: ['/api/superadmin/demo-tenants'] });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user role",
         variant: "destructive",
       });
     },
@@ -270,6 +431,27 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
             <div className="absolute -top-2 -right-2 w-3 h-3 bg-red-400 rounded-full animate-pulse" />
             <div className="absolute -bottom-1 -left-2 w-2 h-2 bg-red-300 rounded-full animate-ping" />
             <div className="absolute top-1 -right-3 w-1 h-1 bg-red-500 rounded-full animate-bounce" />
+          </div>
+        </div>
+      )}
+
+      {/* Floating Doggy Animation */}
+      {showDoggyAnimation && (
+        <div 
+          ref={doggyAnimationRef}
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
+          style={{ 
+            filter: 'drop-shadow(0 8px 16px rgba(34, 197, 94, 0.4)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))',
+            willChange: 'transform, opacity, scale, rotate'
+          }}
+        >
+          <div className="relative">
+            <div className="text-6xl">🐕</div>
+            {/* Barking effects around the doggy */}
+            <div className="absolute -top-2 -right-2 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+            <div className="absolute -bottom-1 -left-2 w-2 h-2 bg-green-300 rounded-full animate-ping" />
+            <div className="absolute top-1 -right-3 w-1 h-1 bg-green-500 rounded-full animate-bounce" />
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-lg animate-bounce">🎉</div>
           </div>
         </div>
       )}
