@@ -7,13 +7,15 @@ import {
   Calendar, 
   Users, 
   DoorOpen,
-  Receipt
+  Receipt,
+  ChevronLeft,
+  ChevronRight,
+  X
 } from "lucide-react";
 import { useAccessControl } from "@/hooks/useAccessControl";
 import { useLocation } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 interface DashboardStats {
   appointmentsToday: number;
   groomingToday: number;
@@ -35,6 +37,7 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
   const [, navigate] = useLocation();
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
@@ -205,30 +208,93 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
         </div>
       </div>
 
-      {/* Calendar Dialog */}
+      {/* Enhanced Calendar Dialog */}
       <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
-        <DialogContent className="max-w-full sm:max-w-full md:max-w-2xl lg:max-w-4xl w-full mx-4">
-          <DialogHeader>
-            <DialogTitle>Seleccionar Fecha</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col space-y-4">
-            <CalendarPicker
-              mode="single"
-              selected={selectedDate}
-              onSelect={handleDateSelect}
-              className="rounded-md border w-full"
-              data-testid="calendar-picker"
-            />
-            <div className="flex justify-end space-x-2">
+        <DialogContent className="max-w-md w-full mx-4 p-0 gap-0 bg-white dark:bg-slate-900 border-0 shadow-2xl">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 p-6 rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-white mb-1">Seleccionar Fecha</h2>
+                <p className="text-blue-100 text-sm">Navega por el calendario de citas</p>
+              </div>
               <Button
-                variant="outline"
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowCalendar(false)}
+                className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-full"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Calendar Body */}
+          <div className="p-6">
+            {/* Month Navigation */}
+            <div className="flex items-center justify-between mb-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const newMonth = new Date(currentMonth);
+                  newMonth.setMonth(newMonth.getMonth() - 1);
+                  setCurrentMonth(newMonth);
+                }}
+                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {currentMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                </h3>
+              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const newMonth = new Date(currentMonth);
+                  newMonth.setMonth(newMonth.getMonth() + 1);
+                  setCurrentMonth(newMonth);
+                }}
+                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Days of Week Header */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'].map((day) => (
+                <div key={day} className="h-8 flex items-center justify-center">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{day}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Grid */}
+            <CalendarGrid
+              currentMonth={currentMonth}
+              selectedDate={selectedDate}
+              onDateSelect={handleDateSelect}
+            />
+
+            {/* Action Buttons */}
+            <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-slate-700">
+              <Button
+                variant="ghost"
+                onClick={() => setShowCalendar(false)}
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                 data-testid="button-cancel"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={() => handleDateSelect(new Date())}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6"
                 data-testid="button-today"
               >
                 Hoy
@@ -237,6 +303,103 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// Enhanced Calendar Grid Component
+interface CalendarGridProps {
+  currentMonth: Date;
+  selectedDate: Date | undefined;
+  onDateSelect: (date: Date | undefined) => void;
+}
+
+function CalendarGrid({ currentMonth, selectedDate, onDateSelect }: CalendarGridProps) {
+  const today = new Date();
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  
+  // Get first day of month and calculate offset
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startOffset = firstDay.getDay();
+  const daysInMonth = lastDay.getDate();
+  
+  // Generate calendar days
+  const calendarDays = [];
+  
+  // Previous month days (grayed out)
+  const prevMonth = new Date(year, month - 1, 0);
+  for (let i = startOffset - 1; i >= 0; i--) {
+    const dayNum = prevMonth.getDate() - i;
+    const date = new Date(year, month - 1, dayNum);
+    calendarDays.push({
+      date,
+      isCurrentMonth: false,
+      isToday: false,
+      isSelected: false
+    });
+  }
+  
+  // Current month days
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month, day);
+    const isToday = date.toDateString() === today.toDateString();
+    const isSelected = selectedDate ? date.toDateString() === selectedDate.toDateString() : false;
+    
+    calendarDays.push({
+      date,
+      isCurrentMonth: true,
+      isToday,
+      isSelected
+    });
+  }
+  
+  // Next month days (grayed out)
+  const remainingDays = 42 - calendarDays.length;
+  for (let day = 1; day <= remainingDays; day++) {
+    const date = new Date(year, month + 1, day);
+    calendarDays.push({
+      date,
+      isCurrentMonth: false,
+      isToday: false,
+      isSelected: false
+    });
+  }
+  
+  return (
+    <div className="grid grid-cols-7 gap-1" data-testid="calendar-picker">
+      {calendarDays.map((day, index) => {
+        const dayNum = day.date.getDate();
+        
+        return (
+          <button
+            key={index}
+            onClick={() => day.isCurrentMonth ? onDateSelect(day.date) : null}
+            disabled={!day.isCurrentMonth}
+            className={`
+              h-10 w-full rounded-lg text-sm font-medium transition-all duration-200 relative
+              ${day.isCurrentMonth 
+                ? 'hover:bg-blue-50 dark:hover:bg-blue-950/30 cursor-pointer'
+                : 'cursor-not-allowed'
+              }
+              ${day.isSelected 
+                ? 'bg-blue-500 text-white shadow-lg hover:bg-blue-600' 
+                : day.isToday && day.isCurrentMonth
+                  ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-bold border-2 border-blue-300 dark:border-blue-600'
+                  : day.isCurrentMonth 
+                    ? 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400'
+                    : 'text-gray-300 dark:text-gray-600'
+              }
+            `}
+          >
+            {dayNum}
+            {day.isToday && day.isCurrentMonth && !day.isSelected && (
+              <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
