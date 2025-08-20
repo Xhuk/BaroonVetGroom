@@ -3951,7 +3951,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Auto-assign trial subscription to new companies
-  async createTrialSubscription(companyId: string, trialDurationDays: number = 15) {
+  async createTrialSubscription(companyId: string, trialDurationDays: number = 16) {
     try {
       // Get or create trial plan
       let trialPlan = await db
@@ -4002,13 +4002,13 @@ export class DatabaseStorage implements IStorage {
     try {
       // Try to get from a config table or use default
       return {
-        trialDurationDays: 15, // Default 15 days
+        trialDurationDays: 16, // Default 16 days
         autoAssignTrial: true
       };
     } catch (error) {
       console.error('Error getting trial config:', error);
       return {
-        trialDurationDays: 15,
+        trialDurationDays: 16,
         autoAssignTrial: true
       };
     }
