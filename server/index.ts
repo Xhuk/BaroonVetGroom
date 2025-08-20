@@ -1,13 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { webhookMonitor } from "./webhookMonitor";
 import { deliveryMonitor } from "./deliveryMonitor";
 import { scalableAppointmentService } from './scalableAppointmentService';
 import { reservationCleanup } from "./reservationCleanup";
-import { pool } from "./db";
 // Removed autoStatusService - now using database cron functions
 
 // Extend session data type
@@ -22,14 +20,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration for email/password authentication
-const PostgresSessionStore = connectPgSimple(session);
+// Session configuration for email/password authentication (using in-memory store to avoid conflicts)
 app.use(session({
-  store: new PostgresSessionStore({
-    pool: pool,
-    createTableIfMissing: false, // Table already exists from schema
-    tableName: 'sessions', // Use existing sessions table
-  }),
   secret: process.env.SESSION_SECRET || 'vetclinic-default-secret-change-in-production',
   resave: false,
   saveUninitialized: false,
