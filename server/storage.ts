@@ -456,9 +456,19 @@ export class DatabaseStorage implements IStorage {
 
   async verifyPassword(providedPassword: string, storedPassword: string): Promise<boolean> {
     // For demo users, the stored password is 'demo123'
-    // For vanilla users, the stored password is 'admin123'  
+    // For vanilla users, the stored password is randomly generated  
     // Simple string comparison since demo passwords are not hashed
     return providedPassword === storedPassword;
+  }
+
+  // Generate random password for vanilla users
+  generateRandomPassword(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -3858,13 +3868,17 @@ export class DatabaseStorage implements IStorage {
         throw new Error('Admin role not found');
       }
       
+      // Generate random password for vanilla user
+      const randomPassword = this.generateRandomPassword();
+      
       const defaultAdminUser = {
         email: 'admin@' + data.tenantName.toLowerCase().replace(/\s+/g, '') + '.com',
         firstName: 'Admin',
         lastName: 'User',
         timezone: 'America/Mexico_City',
         language: 'es',
-        isActive: true
+        isActive: true,
+        password: randomPassword
       };
 
       const [adminUser] = await db.insert(users).values(defaultAdminUser).returning();
@@ -3942,7 +3956,7 @@ export class DatabaseStorage implements IStorage {
           ...adminUser,
           credentials: {
             email: defaultAdminUser.email,
-            password: 'admin123'
+            password: randomPassword
           },
           roleName: adminRole.displayName,
           department: adminRole.department
