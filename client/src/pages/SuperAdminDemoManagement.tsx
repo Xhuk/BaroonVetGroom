@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/queryClient";
-import anime from "animejs/lib/anime.es.js";
+import * as anime from "animejs";
 import { 
   Users, 
   Building, 
@@ -79,7 +79,7 @@ export default function SuperAdminDemoManagement() {
     
     // Animate the trash can
     if (trashAnimationRef.current) {
-      anime({
+      (anime as any)({
         targets: trashAnimationRef.current,
         translateY: [-50, -120, -100, -80, -40],
         translateX: [0, 20, -15, 10, -5, 0],
@@ -96,7 +96,7 @@ export default function SuperAdminDemoManagement() {
   };
 
   // Fetch demo tenants
-  const { data: demoTenants = [], isLoading: isLoadingTenants, refetch } = useQuery({
+  const { data: demoTenants = [], isLoading: isLoadingTenants, refetch } = useQuery<DemoTenant[]>({
     queryKey: ['/api/superadmin/demo-tenants'],
   });
 
