@@ -29,14 +29,19 @@ export function useAuth() {
       }
       
       // Fallback to network request
+      console.log('🔍 [useAuth] Making network request to /api/auth/user');
       const response = await fetch('/api/auth/user', { credentials: 'include' });
+      console.log('🔍 [useAuth] Response:', response.status, response.statusText);
+      
       if (response.ok) {
         const userData = await response.json();
+        console.log('🔍 [useAuth] User data received:', userData?.id ? { id: userData.id, email: userData.email } : null);
         // Cache the result
         localStorage.setItem('auth_user_cache', JSON.stringify(userData));
         localStorage.setItem('auth_cache_time', Date.now().toString());
         return userData;
       }
+      console.log('🔍 [useAuth] Auth request failed:', response.status, response.statusText);
       throw new Error(`${response.status}: ${response.statusText}`);
     }
   });
@@ -45,6 +50,14 @@ export function useAuth() {
     // Redirect immediately to logout endpoint which will handle all cleanup
     window.location.href = '/api/logout';
   };
+
+  // Debug logging for auth state
+  console.log('🔍 [useAuth] Auth state:', {
+    user: user?.id ? { id: user.id, email: user.email, firstName: user.firstName } : null,
+    isLoading,
+    error: error?.message,
+    isAuthenticated: !!user
+  });
 
   return {
     user,

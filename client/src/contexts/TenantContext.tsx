@@ -47,6 +47,17 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    queryFn: async () => {
+      console.log('🔍 [TenantContext] Fetching user tenants...');
+      const response = await fetch('/api/tenants/user', { credentials: 'include' });
+      console.log('🔍 [TenantContext] User tenants response:', response.status);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user tenants: ${response.status}`);
+      }
+      const tenants = await response.json();
+      console.log('🔍 [TenantContext] User tenants received:', tenants.length, 'tenants:', tenants.map(t => ({ id: t.id, tenantId: t.tenantId })));
+      return tenants;
+    }
   });
 
   const isDebugUser = accessInfo?.canDebugTenants || user?.email?.includes('vetgroom') || false;
