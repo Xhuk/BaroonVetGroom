@@ -198,9 +198,9 @@ function App() {
         <TooltipProvider>
           <ThemeProvider>
             <TimezoneProvider>
-              <InstantNavigation />
               <TenantProvider>
                 <RoleImpersonationProvider>
+                  <InstantNavigation />
                   <Toaster />
                   <Router />
                 </RoleImpersonationProvider>
