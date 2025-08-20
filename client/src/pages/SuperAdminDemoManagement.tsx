@@ -350,7 +350,8 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
         title: "Vanilla Tenant Created Successfully! 🏢",
         description: `✓ Created tenant "${data.tenant.name}"
 ✓ Added basic roles and services
-✓ Ready for client onboarding
+✓ Created admin user: ${data.adminUser.credentials.email}
+✓ Password: ${data.adminUser.credentials.password}
 ✓ Tenant ID: ${data.tenant.id}
 
 Vanilla tenant is ready for customization and client setup.`,
@@ -461,6 +462,42 @@ Vanilla tenant is ready for customization and client setup.`,
       });
     },
   });
+
+  // Copy user credentials to clipboard
+  const copyUserCredentials = async (tenant: DemoTenant) => {
+    try {
+      let credentialsText = '';
+      
+      if (tenant.id.startsWith('vanilla-')) {
+        // For vanilla tenants, show admin credentials
+        credentialsText = `Vanilla Tenant: ${tenant.name}\nTenant ID: ${tenant.id}\n\nAdmin Account:\nEmail: admin@${tenant.name.toLowerCase().replace(/\s+/g, '')}.com\nPassword: admin123\nRole: Administrador\n\nLogin URL: /debug-auth`;
+      } else {
+        // For demo tenants, show all demo users
+        if (tenant.demoUsers && tenant.demoUsers.length > 0) {
+          credentialsText = `Demo Tenant: ${tenant.name}\nTenant ID: ${tenant.id}\n\nDemo User Accounts:\n\n`;
+          tenant.demoUsers.forEach((user, index) => {
+            credentialsText += `${index + 1}. ${user.firstName} ${user.lastName}\n   Email: ${user.credentials.email}\n   Password: ${user.credentials.password}\n   Role: ${user.roleName} (${user.department})\n\n`;
+          });
+          credentialsText += 'Login URL: /debug-auth';
+        } else {
+          credentialsText = `Demo Tenant: ${tenant.name}\nTenant ID: ${tenant.id}\n\nNo user credentials available. Please refresh demo data to generate users.`;
+        }
+      }
+      
+      await navigator.clipboard.writeText(credentialsText);
+      toast({
+        title: "Credentials Copied!",
+        description: "User credentials have been copied to clipboard",
+        duration: 3000,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to Copy",
+        description: "Could not copy credentials to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -754,13 +791,25 @@ Vanilla tenant is ready for customization and client setup.`,
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => refreshDemoDataMutation.mutate(tenant.id)}
-                        disabled={refreshDemoDataMutation.isPending}
-                        data-testid={`button-refresh-${tenant.id}`}
+                        onClick={() => copyUserCredentials(tenant)}
+                        data-testid={`button-copy-users-${tenant.id}`}
                       >
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Refresh Data
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy Users
                       </Button>
+                      
+                      {!tenant.id.startsWith('vanilla-') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => refreshDemoDataMutation.mutate(tenant.id)}
+                          disabled={refreshDemoDataMutation.isPending}
+                          data-testid={`button-refresh-${tenant.id}`}
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Refresh Data
+                        </Button>
+                      )}
                       
                       <AlertDialog>
                         <AlertDialogTrigger asChild>

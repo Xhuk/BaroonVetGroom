@@ -3779,21 +3779,55 @@ export class DatabaseStorage implements IStorage {
       const createdServices = [];
       for (const serviceTemplate of serviceTemplates) {
         const [service] = await db.insert(services).values({
-          companyId: company.id,
+          tenantId: tenant.id,
           name: serviceTemplate.name,
-          category: serviceTemplate.category,
-          price: serviceTemplate.price,
+          type: serviceTemplate.category,
+          price: serviceTemplate.price.toString(),
           duration: serviceTemplate.duration,
           isActive: true
         }).returning();
         createdServices.push(service);
       }
 
+      // Create default admin user for vanilla tenant
+      const adminRole = createdRoles.find(role => role.name === 'admin');
+      if (!adminRole) {
+        throw new Error('Admin role not found');
+      }
+      
+      const defaultAdminUser = {
+        email: 'admin@' + data.tenantName.toLowerCase().replace(/\s+/g, '') + '.com',
+        firstName: 'Admin',
+        lastName: 'User',
+        timezone: 'America/Mexico_City',
+        language: 'es',
+        isActive: true
+      };
+
+      const [adminUser] = await db.insert(users).values(defaultAdminUser).returning();
+      
+      // Create user tenant relationship
+      await db.insert(userTenants).values({
+        userId: adminUser.id,
+        tenantId: tenant.id,
+        roleId: adminRole.id,
+        isActive: true
+      });
+
       return {
         tenant,
         company,
         roles: createdRoles,
         services: createdServices,
+        adminUser: {
+          ...adminUser,
+          credentials: {
+            email: defaultAdminUser.email,
+            password: defaultAdminUser.password
+          },
+          roleName: adminRole.displayName,
+          department: adminRole.department
+        },
         message: 'Vanilla tenant created successfully with basic roles and services'
       };
     } catch (error) {
