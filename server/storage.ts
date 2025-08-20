@@ -455,7 +455,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async verifyPassword(providedPassword: string, storedPassword: string): Promise<boolean> {
-    // For demo users, the stored password is 'demo123'
+    // For demo users, the stored password starts with "demo" prefix + random string
     // For vanilla users, the stored password is randomly generated  
     // Simple string comparison since demo passwords are not hashed
     return providedPassword === storedPassword;
@@ -469,6 +469,16 @@ export class DatabaseStorage implements IStorage {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return password;
+  }
+
+  // Generate demo password with "demo" prefix and random string
+  generateDemoPassword(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let randomString = '';
+    for (let i = 0; i < 8; i++) {
+      randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `demo${randomString}`;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -3765,7 +3775,7 @@ export class DatabaseStorage implements IStorage {
             department: user.department || 'none',
             credentials: {
               email: user.email,
-              password: 'demo123' // Standard demo password
+              password: this.generateDemoPassword()
             }
           }));
 
@@ -4231,7 +4241,7 @@ export class DatabaseStorage implements IStorage {
           department: assignedRole?.department || 'none',
           credentials: {
             email: user.email,
-            password: 'demo123' // Standard demo password
+            password: this.generateDemoPassword()
           }
         });
       }
@@ -4263,7 +4273,7 @@ export class DatabaseStorage implements IStorage {
           department: randomRole.department,
           credentials: {
             email: user.email,
-            password: 'demo123'
+            password: this.generateDemoPassword()
           }
         });
       }
