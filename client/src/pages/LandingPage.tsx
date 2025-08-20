@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 export function LandingPage() {
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
@@ -62,8 +63,19 @@ export function LandingPage() {
         if (response.ok && result.success) {
           toast({
             title: "¡Inicio de sesión exitoso! 🎉",
-            description: `Bienvenido ${result.user.name}`,
+            description: `Bienvenido ${result.user?.firstName || result.user?.name || 'Usuario'}`,
           });
+
+          // CRITICAL: Invalidate auth cache to refresh user state
+          console.log('🔄 Invalidating auth cache after successful login');
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/access-info"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/tenants/user"] });
+          
+          // Clear localStorage auth cache
+          localStorage.removeItem('auth_user_cache');
+          localStorage.removeItem('auth_cache_time');
+          localStorage.removeItem('auth_logged_out');
 
           // Close dialog and redirect
           setIsLoginDialogOpen(false);
