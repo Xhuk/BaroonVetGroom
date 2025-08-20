@@ -2804,11 +2804,8 @@ function Admin() {
                           <div className="space-y-3">
                             {availablePlans
                               .filter((plan: any) => {
-                                // Don't allow admins to change to Trial plan
-                                if (plan.id === 'trial' && subscriptionData?.hasSubscription) {
-                                  return false;
-                                }
-                                return true;
+                                // Don't allow admins to change to Trial plan at all
+                                return plan.id !== 'trial';
                               })
                               .map((plan: any) => (
                               <div 
