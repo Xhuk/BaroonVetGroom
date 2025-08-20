@@ -109,44 +109,74 @@ export async function setupAuth(app: Express) {
     try {
       console.log('🔐 Local login attempt:', email);
       
-      // Check if this is a demo user (any email containing 'demo')
-      const isDemoUser = email.includes('demo');
+      // Look up user's tenant type from the database
+      let tenantType = null;
+      let userType = '';
       
-      // Check if this is a vanilla user (admin@tenantname.com pattern only, NOT demo)
-      const isVanillaUser = !isDemoUser && email.startsWith('admin@');
+      try {
+        // First, try to find the user's tenant from user_tenants table
+        const userTenant = await storage.getUserTenantByEmail(email);
+        if (userTenant && userTenant.tenantType) {
+          tenantType = userTenant.tenantType;
+          console.log(`📋 Found tenant type "${tenantType}" for user:`, email);
+        } else {
+          // Fallback to email pattern matching for backward compatibility
+          const isDemoUser = email.includes('demo');
+          const isVanillaUser = !isDemoUser && email.startsWith('admin@');
+          
+          if (isDemoUser) {
+            tenantType = 'demo';
+          } else if (isVanillaUser) {
+            tenantType = 'vanilla';
+          }
+          
+          console.log(`🔍 Using email pattern fallback, detected type "${tenantType}" for:`, email);
+        }
+      } catch (dbError) {
+        console.error('Database lookup error, using email pattern fallback:', dbError);
+        // Fallback to email pattern matching
+        const isDemoUser = email.includes('demo');
+        const isVanillaUser = !isDemoUser && email.startsWith('admin@');
+        
+        if (isDemoUser) {
+          tenantType = 'demo';
+        } else if (isVanillaUser) {
+          tenantType = 'vanilla';
+        }
+      }
       
-      if (!isDemoUser && !isVanillaUser) {
+      if (!tenantType || (tenantType !== 'demo' && tenantType !== 'vanilla')) {
         return done(null, false, { message: 'Only demo and vanilla tenant users can use local login' });
       }
 
       let isValidCredentials = false;
-      let userType = '';
       
-      if (isDemoUser) {
+      if (tenantType === 'demo') {
         // For demo users, password is typically 'demo123'
         isValidCredentials = password === 'demo123' || password === 'demo' || password === '123456';
         userType = 'Demo';
-      } else if (isVanillaUser) {
+      } else if (tenantType === 'vanilla') {
         // For vanilla users, password is 'admin123'
         isValidCredentials = password === 'admin123' || password === 'admin';
-        userType = 'Admin';
+        userType = 'Vanilla Admin';
       }
       
       if (isValidCredentials) {
         // Create a user object for local authentication
         const user = {
           isLocalUser: true,
-          isDemoUser,
-          isVanillaUser,
+          isDemoUser: tenantType === 'demo',
+          isVanillaUser: tenantType === 'vanilla',
+          tenantType: tenantType,
           claims: {
             sub: `local-${email.replace('@', '-').replace(/\./g, '-')}`,
             email: email,
-            first_name: isDemoUser 
+            first_name: tenantType === 'demo'
               ? email.split('@')[0].split('.').map((s: string) => 
                   s.charAt(0).toUpperCase() + s.slice(1)
                 ).join(' ')
               : 'Admin',
-            last_name: isDemoUser ? 'Demo User' : 'Administrator'
+            last_name: tenantType === 'demo' ? 'Demo User' : 'Administrator'
           },
           expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
         };

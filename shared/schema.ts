@@ -81,6 +81,7 @@ export const tenants = pgTable("tenants", {
   companyId: varchar("company_id").notNull().references(() => companies.id),
   name: varchar("name").notNull(),
   subdomain: varchar("subdomain").notNull().unique(), // e.g., "VetGroom-1"
+  tenantType: varchar("tenant_type").notNull().default("regular"), // demo, vanilla, regular
   address: text("address"),
   phone: varchar("phone"),
   email: varchar("email"),
