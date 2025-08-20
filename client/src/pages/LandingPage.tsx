@@ -55,6 +55,7 @@ export function LandingPage() {
     }
   };
 
+
   const openLoginDialog = () => {
     setIsLoginDialogOpen(true);
     setLoginForm({ email: '', password: '' });
