@@ -108,13 +108,39 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         // Use userTenants data to find their assigned tenant
         if (userTenants.length > 0) {
           const userTenant = userTenants[0]; // Get first tenant for local users
-          const matchingTenant = allTenants.find(t => t.id === userTenant.tenantId);
           
-          if (matchingTenant) {
-            console.log(`🎯 Auto-selecting tenant for local user:`, userEmail, 'tenant:', matchingTenant.id);
-            setCurrentTenant(matchingTenant);
-            return;
-          }
+          // For demo users, we need to fetch the tenant directly since allTenants may be empty
+          // Create a minimal tenant object from userTenant data
+          const demoTenant: Tenant = {
+            id: userTenant.tenantId,
+            name: userTenant.tenant?.name || `Demo Tenant ${userTenant.tenantId}`,
+            slug: userTenant.tenant?.slug || userTenant.tenantId,
+            subdomain: userTenant.tenant?.subdomain || userTenant.tenantId,
+            address: userTenant.tenant?.address || null,
+            zipCode: userTenant.tenant?.zipCode || null,
+            city: userTenant.tenant?.city || null,
+            state: userTenant.tenant?.state || null,
+            country: userTenant.tenant?.country || null,
+            contactPhone: userTenant.tenant?.contactPhone || null,
+            contactEmail: userTenant.tenant?.contactEmail || null,
+            logoUrl: userTenant.tenant?.logoUrl || null,
+            timezone: userTenant.tenant?.timezone || 'America/Mexico_City',
+            currency: userTenant.tenant?.currency || 'MXN',
+            settings: userTenant.tenant?.settings || null,
+            companyId: userTenant.tenant?.companyId || '',
+            deliveryRadiusKm: userTenant.tenant?.deliveryRadiusKm || 10,
+            deliverySchedulingEnabled: userTenant.tenant?.deliverySchedulingEnabled || false,
+            subscriptionStatus: userTenant.tenant?.subscriptionStatus || 'active',
+            subscriptionEndDate: userTenant.tenant?.subscriptionEndDate || null,
+            vetSiteLimit: userTenant.tenant?.vetSiteLimit || 1,
+            currentVetSiteCount: userTenant.tenant?.currentVetSiteCount || 1,
+            createdAt: userTenant.tenant?.createdAt || new Date(),
+            updatedAt: userTenant.tenant?.updatedAt || new Date()
+          };
+          
+          console.log(`🎯 Auto-selecting tenant for local user:`, userEmail, 'tenant:', demoTenant.id);
+          setCurrentTenant(demoTenant);
+          return;
         }
       }
     }
