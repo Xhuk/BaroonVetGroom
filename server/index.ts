@@ -27,7 +27,8 @@ const PostgresSessionStore = connectPgSimple(session);
 app.use(session({
   store: new PostgresSessionStore({
     pool: pool,
-    createTableIfMissing: true,
+    createTableIfMissing: false, // Table already exists from schema
+    tableName: 'sessions', // Use existing sessions table
   }),
   secret: process.env.SESSION_SECRET || 'vetclinic-default-secret-change-in-production',
   resave: false,
