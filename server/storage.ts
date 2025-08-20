@@ -3686,7 +3686,7 @@ export class DatabaseStorage implements IStorage {
         .where(sql`${tenants.id} LIKE 'demo-%' OR ${tenants.name} LIKE '%demo%' OR ${tenants.name} LIKE '%Demo%'`)
         .orderBy(desc(tenants.createdAt));
 
-      // Get additional stats for each demo tenant
+      // Get additional stats and user data for each demo tenant
       const enrichedTenants = await Promise.all(
         demoTenants.map(async (tenant) => {
           const [userCount] = await db
@@ -3706,12 +3706,41 @@ export class DatabaseStorage implements IStorage {
             .orderBy(desc(appointments.createdAt))
             .limit(1);
 
+          // Fetch demo users with their credentials and roles
+          const demoUsers = await db
+            .select({
+              id: users.id,
+              email: users.email,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              roleName: roles.name,
+              roleDisplayName: roles.displayName,
+              department: roles.department
+            })
+            .from(users)
+            .leftJoin(userTenants, eq(users.id, userTenants.userId))
+            .leftJoin(roles, eq(userTenants.roleId, roles.id))
+            .where(eq(userTenants.tenantId, tenant.id));
+
+          // Add credentials to demo users
+          const demoUsersWithCredentials = demoUsers.map(user => ({
+            ...user,
+            role: user.roleDisplayName || 'Sin Rol',
+            roleName: user.roleName || 'none',
+            department: user.department || 'none',
+            credentials: {
+              email: user.email,
+              password: 'demo123' // Standard demo password
+            }
+          }));
+
           return {
             ...tenant,
             userCount: Number(userCount.count) || 0,
             appointmentCount: Number(appointmentCount.count) || 0,
             lastActivity: lastAppointment?.createdAt || tenant.createdAt,
-            status: 'active'
+            status: 'active',
+            demoUsers: demoUsersWithCredentials
           };
         })
       );
