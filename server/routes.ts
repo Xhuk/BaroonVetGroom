@@ -6142,6 +6142,73 @@ This password expires in 24 hours.
     }
   });
 
+  // Update company subscription plan
+  app.post('/api/subscription/update-plan/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const { planId } = req.body;
+      
+      if (!planId) {
+        return res.status(400).json({ message: "Plan ID is required" });
+      }
+      
+      // Verify the plan exists
+      const plan = await storage.getSubscriptionPlan(planId);
+      if (!plan) {
+        return res.status(404).json({ message: "Plan not found" });
+      }
+      
+      // Get current subscription or create if doesn't exist
+      let subscription = await storage.getCompanySubscription(companyId);
+      
+      if (subscription) {
+        // Update existing subscription
+        const updatedSubscription = await storage.updateCompanySubscription(companyId, {
+          planId: planId,
+          // Note: In a real payment gateway integration, you would:
+          // 1. Calculate prorated charges/credits
+          // 2. Schedule the plan change for the next billing cycle
+          // 3. Update payment gateway subscription
+          updatedAt: new Date()
+        });
+        
+        res.json({ 
+          message: "Subscription plan updated successfully", 
+          subscription: updatedSubscription 
+        });
+      } else {
+        // Create new subscription if none exists
+        const now = new Date();
+        const currentPeriodEnd = new Date();
+        currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1); // Default to 1 month
+        
+        const newSubscription = await storage.createCompanySubscription({
+          companyId,
+          planId,
+          status: 'active',
+          currentPeriodStart: now,
+          currentPeriodEnd,
+          createdAt: now,
+          updatedAt: now
+        });
+        
+        res.json({ 
+          message: "Subscription created successfully", 
+          subscription: newSubscription 
+        });
+      }
+      
+      // TODO: Integrate with payment gateway here
+      // - Calculate prorated amounts if changing mid-cycle
+      // - Update payment gateway subscription
+      // - Handle payment method updates if needed
+      
+    } catch (error) {
+      console.error("Error updating subscription plan:", error);
+      res.status(500).json({ message: "Failed to update subscription plan" });
+    }
+  });
+
   // Email configuration management for SuperAdmin
   app.get("/api/superadmin/email-config", isSuperAdmin, async (req, res) => {
     try {

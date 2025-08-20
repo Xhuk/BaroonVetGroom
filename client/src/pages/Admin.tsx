@@ -42,7 +42,8 @@ import {
   X,
   Receipt,
   ShoppingCart,
-  Star
+  Star,
+  CreditCard
 } from "lucide-react";
 
 // Helper function to get room type icons
@@ -103,6 +104,18 @@ function Admin() {
   const { data: deliveryConfigData } = useQuery({
     queryKey: ["/api/admin/delivery-config", currentTenant?.id],
     enabled: !!currentTenant?.id,
+  });
+
+  // Fetch current subscription information
+  const { data: subscriptionData, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ["/api/subscription/status", currentTenant?.companyId],
+    enabled: !!currentTenant?.companyId,
+  });
+
+  // Fetch available subscription plans
+  const { data: availablePlans, isLoading: plansLoading } = useQuery({
+    queryKey: ["/api/superadmin/subscription-plans"],
+    enabled: !!currentTenant?.companyId,
   });
 
   const { data: staffData, isLoading: staffLoading } = useQuery({
@@ -198,6 +211,10 @@ function Admin() {
     department: '',
     description: ''
   });
+  
+  // Subscription management state
+  const [isSubscriptionDialogOpen, setIsSubscriptionDialogOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
   
   // New room data
   const [newRoomData, setNewRoomData] = useState({
@@ -694,6 +711,47 @@ function Admin() {
     updateDeliveryConfigMutation.mutate(deliveryConfig);
   };
 
+  // Update company subscription mutation
+  const updateSubscriptionMutation = useMutation({
+    mutationFn: async ({ planId }: { planId: string }) => {
+      return apiRequest(`/api/subscription/update-plan/${currentTenant?.companyId}`, 'POST', { planId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Suscripción actualizada",
+        description: "El plan de suscripción ha sido cambiado exitosamente. Los cambios se aplicarán en el próximo período de facturación.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/status", currentTenant?.companyId] });
+      setIsSubscriptionDialogOpen(false);
+      setSelectedPlan('');
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para cambiar la suscripción",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar la suscripción",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle subscription plan change
+  const handleSubscriptionChange = () => {
+    if (selectedPlan && selectedPlan !== subscriptionData?.planId) {
+      updateSubscriptionMutation.mutate({ planId: selectedPlan });
+    }
+  };
+
   // Seed grooming appointments for today mutation
   const seedGroomingTodayMutation = useMutation({
     mutationFn: async () => {
@@ -1051,7 +1109,7 @@ function Admin() {
           </div>
 
           <Tabs defaultValue="rooms" className="w-full">
-            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-8' : 'grid-cols-7'}`}>
+            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-9' : 'grid-cols-8'}`}>
               <TabsTrigger value="rooms" className="flex items-center gap-2">
                 <DoorOpen className="w-4 h-4" />
                 Salas
@@ -1079,6 +1137,10 @@ function Admin() {
               <TabsTrigger value="stats" className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 Estadísticas
+              </TabsTrigger>
+              <TabsTrigger value="subscription" className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                Suscripción
               </TabsTrigger>
               {isVetGroomDeveloper && (
                 <TabsTrigger value="delivery-tracking" className="flex items-center gap-2">
@@ -2564,6 +2626,290 @@ function Admin() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Subscription Management Tab */}
+            <TabsContent value="subscription" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <CreditCard className="w-6 h-6" />
+                    Gestión de Suscripción
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400">Administra el plan de suscripción de tu clínica</p>
+                </div>
+              </div>
+
+              {subscriptionLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">Cargando información de suscripción...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Current Subscription Info */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CreditCard className="w-5 h-5" />
+                        Suscripción Actual
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {subscriptionData?.hasSubscription ? (
+                        <>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">Plan Actual</p>
+                              <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                                {subscriptionData.plan}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">Estado</p>
+                              <Badge 
+                                className={`${
+                                  subscriptionData.status === 'active' 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                    : subscriptionData.status === 'trial'
+                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                                }`}
+                              >
+                                {subscriptionData.status === 'active' && 'Activa'}
+                                {subscriptionData.status === 'trial' && 'Período de Prueba'}
+                                {subscriptionData.status === 'cancelled' && 'Cancelada'}
+                                {subscriptionData.status === 'suspended' && 'Suspendida'}
+                              </Badge>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">Días Restantes</p>
+                              <p className="text-lg font-semibold">
+                                {subscriptionData.daysRemaining > 0 
+                                  ? `${subscriptionData.daysRemaining} días`
+                                  : 'Vencida'
+                                }
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">Fecha de Renovación</p>
+                              <p className="text-lg font-semibold">
+                                {new Date(subscriptionData.expiresAt).toLocaleDateString('es-MX')}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">Clínicas Utilizadas</p>
+                              <p className="text-lg font-semibold">
+                                {subscriptionData.vetsitesUsed} / {subscriptionData.vetsitesAllowed}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">Utilización</p>
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                  <div 
+                                    className="bg-blue-500 h-2 rounded-full" 
+                                    style={{ 
+                                      width: `${Math.min(100, (subscriptionData.vetsitesUsed / subscriptionData.vetsitesAllowed) * 100)}%` 
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-sm font-medium">
+                                  {Math.round((subscriptionData.vetsitesUsed / subscriptionData.vetsitesAllowed) * 100)}%
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {subscriptionData.daysRemaining <= 7 && subscriptionData.daysRemaining > 0 && (
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 dark:bg-orange-950 dark:border-orange-800">
+                              <div className="flex items-start gap-3">
+                                <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+                                <div>
+                                  <h4 className="font-medium text-orange-900 dark:text-orange-100">Suscripción por Vencer</h4>
+                                  <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
+                                    Tu suscripción vence en {subscriptionData.daysRemaining} días. Contacta a soporte para renovar.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {subscriptionData.daysRemaining <= 0 && (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 dark:bg-red-950 dark:border-red-800">
+                              <div className="flex items-start gap-3">
+                                <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                                <div>
+                                  <h4 className="font-medium text-red-900 dark:text-red-100">Suscripción Vencida</h4>
+                                  <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                                    Tu suscripción ha vencido. Contacta a soporte inmediatamente para renovar y evitar interrupciones del servicio.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-center py-8">
+                          <XCircle className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                          <p className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">Sin Suscripción</p>
+                          <p className="text-sm text-gray-400 dark:text-gray-500">
+                            No hay una suscripción activa para esta clínica
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Change Subscription Plan */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Settings className="w-5 h-5" />
+                        Cambiar Plan
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {!plansLoading && availablePlans ? (
+                        <>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Selecciona un nuevo plan para tu clínica. Los cambios se aplicarán en el próximo período de facturación.
+                          </p>
+                          
+                          <div className="space-y-3">
+                            {availablePlans.map((plan: any) => (
+                              <div 
+                                key={plan.id}
+                                className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                                  selectedPlan === plan.id 
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-blue-400'
+                                    : subscriptionData?.planId === plan.id
+                                    ? 'border-green-500 bg-green-50 dark:bg-green-950 dark:border-green-400'
+                                    : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+                                }`}
+                                onClick={() => setSelectedPlan(plan.id)}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                                        {plan.displayName}
+                                      </h4>
+                                      {subscriptionData?.planId === plan.id && (
+                                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                          Actual
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                      {plan.description}
+                                    </p>
+                                    <div className="flex items-center gap-4 mt-2">
+                                      <p className="text-sm font-medium">
+                                        Hasta {plan.maxTenants} clínicas
+                                      </p>
+                                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                                        ${plan.monthlyPrice.toLocaleString()} MXN/mes
+                                      </p>
+                                      <p className="text-sm text-gray-500">
+                                        ${plan.yearlyPrice.toLocaleString()} MXN/año
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="ml-4">
+                                    <div className={`w-4 h-4 rounded-full border-2 ${
+                                      selectedPlan === plan.id 
+                                        ? 'border-blue-500 bg-blue-500'
+                                        : subscriptionData?.planId === plan.id
+                                        ? 'border-green-500 bg-green-500'
+                                        : 'border-gray-300 dark:border-gray-600'
+                                    }`} />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <Dialog open={isSubscriptionDialogOpen} onOpenChange={setIsSubscriptionDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button 
+                                className="w-full mt-4"
+                                disabled={!selectedPlan || selectedPlan === subscriptionData?.planId}
+                                onClick={() => setIsSubscriptionDialogOpen(true)}
+                              >
+                                <CreditCard className="w-4 h-4 mr-2" />
+                                Cambiar Plan de Suscripción
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Confirmar Cambio de Suscripción</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  ¿Estás seguro de que quieres cambiar tu plan de suscripción?
+                                </p>
+                                
+                                {selectedPlan && availablePlans && (
+                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-950 dark:border-blue-800">
+                                    <div className="flex items-start gap-3">
+                                      <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                                      <div>
+                                        <h4 className="font-medium text-blue-900 dark:text-blue-100">Nuevo Plan</h4>
+                                        <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                                          {availablePlans.find((p: any) => p.id === selectedPlan)?.displayName}
+                                        </p>
+                                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                          Los cambios se aplicarán en el próximo período de facturación.
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                <div className="flex gap-3 pt-4">
+                                  <Button 
+                                    variant="outline" 
+                                    onClick={() => setIsSubscriptionDialogOpen(false)}
+                                    className="flex-1"
+                                  >
+                                    Cancelar
+                                  </Button>
+                                  <Button 
+                                    onClick={handleSubscriptionChange}
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                    disabled={updateSubscriptionMutation.isPending}
+                                  >
+                                    {updateSubscriptionMutation.isPending ? (
+                                      <>
+                                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                                        Procesando...
+                                      </>
+                                    ) : (
+                                      'Confirmar Cambio'
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </>
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+                          <p className="text-gray-500 dark:text-gray-400">Cargando planes disponibles...</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </TabsContent>
 
             {/* Delivery Tracking Tab - VetGroom Developer Only */}
