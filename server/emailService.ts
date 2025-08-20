@@ -400,6 +400,11 @@ El equipo de VetGroom
     </html>
     `;
 
+    if (!this.provider || !this.config) {
+      console.error('Email service not properly configured');
+      return false;
+    }
+
     return this.provider.sendEmail({
       to: contactEmail,
       from: `${this.config.fromName} <${this.config.fromEmail}>`,

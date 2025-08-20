@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CreditCard, CheckCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,7 @@ export function SubscriptionBlocker({ children, companyId }: SubscriptionBlocker
   const [selectedPlan, setSelectedPlan] = useState('');
   const [isUpgradeDialogOpen, setIsUpgradeDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Check if this is a demo tenant (exempt from subscription requirements)
   const isDemoTenant = companyId && (
@@ -55,10 +57,15 @@ export function SubscriptionBlocker({ children, companyId }: SubscriptionBlocker
     refetchInterval: 30000, // Check every 30 seconds
   });
 
-  // Get available plans (excluding trial)
+  // Check if user is demo user
+  const isDemoUser = user?.email?.includes('@fergon-demo.com') || user?.email?.includes('demo');
+  
+  // Get available plans (excluding trial) - use appropriate endpoint
+  const plansEndpoint = isDemoUser ? "/api/demo/subscription-plans" : "/api/superadmin/subscription-plans";
   const { data: availablePlans } = useQuery<SubscriptionPlan[]>({
-    queryKey: ["/api/superadmin/subscription-plans"],
+    queryKey: [plansEndpoint],
     enabled: isBlocked,
+    select: (data) => isDemoUser ? (data as any)?.plans : data,
   });
 
   // Update subscription mutation

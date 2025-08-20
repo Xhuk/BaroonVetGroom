@@ -83,9 +83,10 @@ function Admin() {
     queryKey: ['/api', 'admin', 'roles'],
   });
 
-  // Check if current user is VetGroom developer account
+  // Check if current user is VetGroom developer account or demo user
   const { user } = useAuth();
   const isVetGroomDeveloper = user?.email?.includes('vetgroom') || currentTenant?.companyId === 'vetgroom-company';
+  const isDemoUser = user?.email?.includes('@fergon-demo.com') || user?.email?.includes('demo');
 
   // Delivery tracking for VetGroom developers only
   const { data: activeDeliveries, refetch: refetchDeliveries } = useQuery({
@@ -112,10 +113,12 @@ function Admin() {
     enabled: !!currentTenant?.companyId,
   });
 
-  // Fetch available subscription plans
+  // Fetch available subscription plans - use appropriate endpoint
+  const plansEndpoint = isDemoUser ? "/api/demo/subscription-plans" : "/api/superadmin/subscription-plans";
   const { data: availablePlans, isLoading: plansLoading } = useQuery({
-    queryKey: ["/api/superadmin/subscription-plans"],
+    queryKey: [plansEndpoint],
     enabled: !!currentTenant?.companyId,
+    select: (data) => isDemoUser ? data?.plans : data,
   });
 
   const { data: staffData, isLoading: staffLoading } = useQuery({
