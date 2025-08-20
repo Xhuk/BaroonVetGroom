@@ -4419,6 +4419,40 @@ export class DatabaseStorage implements IStorage {
   }
 
 
+  // Get user tenant information for authentication
+  async getUserTenantInfo(email: string): Promise<{ tenantId: string } | null> {
+    try {
+      // Look up user by email first
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (!user) {
+        return null;
+      }
+
+      // Find user's tenant relationship
+      const [userTenant] = await db
+        .select({
+          tenantId: userTenants.tenantId,
+        })
+        .from(userTenants)
+        .where(eq(userTenants.userId, user.id))
+        .limit(1);
+
+      if (userTenant) {
+        return { tenantId: userTenant.tenantId };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error looking up user tenant info:', error);
+      return null;
+    }
+  }
+
   async updateDemoUserRole(tenantId: string, userId: string, newRoleId: string): Promise<any> {
     try {
       // Update user role in userTenants table

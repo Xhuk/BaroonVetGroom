@@ -113,17 +113,35 @@ export async function setupAuth(app: Express) {
       let tenantType = null;
       let userType = '';
       
-      // Use email pattern matching to determine tenant type
-      const isDemoUser = email.includes('demo');
-      const isVanillaUser = !isDemoUser && email.startsWith('admin@');
-      
-      if (isDemoUser) {
-        tenantType = 'demo';
-      } else if (isVanillaUser) {
-        tenantType = 'vanilla';
+      // First, try to determine tenant type from database
+      try {
+        const userTenantInfo = await storage.getUserTenantInfo(email);
+        if (userTenantInfo && userTenantInfo.tenantId) {
+          // Demo tenants have IDs starting with "demo-"
+          if (userTenantInfo.tenantId.startsWith('demo-')) {
+            tenantType = 'demo';
+            console.log(`📋 Database lookup: Demo tenant "${userTenantInfo.tenantId}" for:`, email);
+          } else {
+            tenantType = 'vanilla';
+            console.log(`📋 Database lookup: Vanilla tenant "${userTenantInfo.tenantId}" for:`, email);
+          }
+        } else {
+          throw new Error('No tenant found for user');
+        }
+      } catch (dbError) {
+        console.error('Database lookup failed, using email pattern fallback:', dbError);
+        // Fallback to email pattern matching
+        const isDemoUser = email.includes('demo');
+        const isVanillaUser = !isDemoUser && email.startsWith('admin@');
+        
+        if (isDemoUser) {
+          tenantType = 'demo';
+          console.log(`🔍 Email pattern fallback: Demo user detected for:`, email);
+        } else if (isVanillaUser) {
+          tenantType = 'vanilla';
+          console.log(`🔍 Email pattern fallback: Vanilla user detected for:`, email);
+        }
       }
-      
-      console.log(`🔍 Detected type "${tenantType}" for:`, email);
       
       if (!tenantType || (tenantType !== 'demo' && tenantType !== 'vanilla')) {
         return done(null, false, { message: 'Only demo and vanilla tenant users can use local login' });
