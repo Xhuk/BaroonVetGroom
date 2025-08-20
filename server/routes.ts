@@ -6162,19 +6162,34 @@ This password expires in 24 hours.
       let subscription = await storage.getCompanySubscription(companyId);
       
       if (subscription) {
-        // Update existing subscription
+        // Update existing subscription with 10-day advance notice policy
+        // The plan change is immediate, but price change applies to next billing cycle
+        const currentDate = new Date();
+        const currentPeriodEnd = new Date(subscription.currentPeriodEnd);
+        const daysUntilRenewal = Math.ceil((currentPeriodEnd.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // If there are more than 10 days until renewal, price change applies to next cycle
+        // If there are 10 or fewer days, price change applies to the cycle after next
+        const priceChangeEffective = daysUntilRenewal > 10 
+          ? new Date(currentPeriodEnd) 
+          : new Date(currentPeriodEnd.getTime() + (30 * 24 * 60 * 60 * 1000)); // Add 30 days
+        
         const updatedSubscription = await storage.updateCompanySubscription(companyId, {
           planId: planId,
           // Note: In a real payment gateway integration, you would:
-          // 1. Calculate prorated charges/credits
-          // 2. Schedule the plan change for the next billing cycle
-          // 3. Update payment gateway subscription
+          // 1. Schedule the plan change for immediate access to features
+          // 2. Schedule the price change for the appropriate billing cycle
+          // 3. Update payment gateway subscription with effective dates
+          // 4. Send customer notification about the upcoming price change
+          priceChangeEffectiveDate: priceChangeEffective,
           updatedAt: new Date()
         });
         
         res.json({ 
           message: "Subscription plan updated successfully", 
-          subscription: updatedSubscription 
+          subscription: updatedSubscription,
+          priceChangeEffectiveDate: priceChangeEffective.toISOString(),
+          daysUntilPriceChange: Math.ceil((priceChangeEffective.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24))
         });
       } else {
         // Create new subscription if none exists

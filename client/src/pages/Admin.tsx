@@ -2778,12 +2778,39 @@ function Admin() {
                     <CardContent className="space-y-4">
                       {!plansLoading && availablePlans ? (
                         <>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            Selecciona un nuevo plan para tu clínica. Los cambios se aplicarán en el próximo período de facturación.
-                          </p>
+                          <div className="mb-4 space-y-3">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Selecciona un nuevo plan para tu clínica.
+                            </p>
+                            
+                            {subscriptionData?.hasSubscription && (
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 dark:bg-blue-950 dark:border-blue-800">
+                                <div className="flex items-start gap-2">
+                                  <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                                  <div className="text-sm">
+                                    <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                                      Información de Facturación
+                                    </p>
+                                    <p className="text-blue-700 dark:text-blue-300">
+                                      Los cambios de precio se aplican con 10 días de anticipación. Si cambias tu plan hoy, 
+                                      el próximo cargo mantendrá el precio actual, pero el siguiente período ya aplicará el nuevo precio.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                           
                           <div className="space-y-3">
-                            {availablePlans.map((plan: any) => (
+                            {availablePlans
+                              .filter((plan: any) => {
+                                // Don't allow admins to change to Trial plan
+                                if (plan.id === 'trial' && subscriptionData?.hasSubscription) {
+                                  return false;
+                                }
+                                return true;
+                              })
+                              .map((plan: any) => (
                               <div 
                                 key={plan.id}
                                 className={`border rounded-lg p-4 cursor-pointer transition-colors ${
@@ -2852,9 +2879,26 @@ function Admin() {
                                 <DialogTitle>Confirmar Cambio de Suscripción</DialogTitle>
                               </DialogHeader>
                               <div className="space-y-4">
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  ¿Estás seguro de que quieres cambiar tu plan de suscripción?
-                                </p>
+                                <div className="space-y-3">
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    ¿Estás seguro de que quieres cambiar tu plan de suscripción?
+                                  </p>
+                                  
+                                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 dark:bg-orange-950 dark:border-orange-800">
+                                    <div className="flex items-start gap-2">
+                                      <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+                                      <div className="text-sm">
+                                        <p className="font-medium text-orange-900 dark:text-orange-100 mb-1">
+                                          Política de Cambio de Precio
+                                        </p>
+                                        <p className="text-orange-700 dark:text-orange-300">
+                                          El cambio de plan se aplicará inmediatamente, pero el ajuste de precio 
+                                          se efectuará en el siguiente período de facturación con 10 días de anticipación.
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                                 
                                 {selectedPlan && availablePlans && (
                                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-950 dark:border-blue-800">
