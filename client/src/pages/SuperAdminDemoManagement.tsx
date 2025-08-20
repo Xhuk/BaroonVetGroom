@@ -196,7 +196,7 @@ export default function SuperAdminDemoManagement() {
     
     // Barking doggy animation with bouncing and tail wagging effects
     if (doggyAnimationRef.current) {
-      anime({
+      (anime as any)({
         targets: doggyAnimationRef.current,
         translateY: [
           { value: -20, duration: 300 },
@@ -362,7 +362,7 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
     },
     onSuccess: () => {
       // Enhanced trash animation
-      startTrashAnimation();
+      triggerTrashAnimation();
       
       toast({
         title: "Demo Tenant Purged",
