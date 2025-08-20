@@ -19,21 +19,44 @@ interface SubscriptionBlockerProps {
   companyId: string;
 }
 
+interface SubscriptionData {
+  hasSubscription: boolean;
+  status: string;
+  daysRemaining: number;
+  plan?: string;
+}
+
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  displayName: string;
+  monthlyPrice: number;
+  yearlyPrice: number;
+  maxTenants: number;
+}
+
 export function SubscriptionBlocker({ children, companyId }: SubscriptionBlockerProps) {
   const [isBlocked, setIsBlocked] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('');
   const [isUpgradeDialogOpen, setIsUpgradeDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Check subscription status
-  const { data: subscriptionData, isLoading } = useQuery({
+  // Check if this is a demo tenant (exempt from subscription requirements)
+  const isDemoTenant = companyId && (
+    companyId.startsWith('demo-') || 
+    companyId.includes('demo') || 
+    companyId === 'unknown'
+  );
+
+  // Check subscription status (skip for demo tenants)
+  const { data: subscriptionData, isLoading } = useQuery<SubscriptionData>({
     queryKey: ["/api/subscription/status", companyId],
-    enabled: !!companyId,
+    enabled: !!companyId && !isDemoTenant,
     refetchInterval: 30000, // Check every 30 seconds
   });
 
   // Get available plans (excluding trial)
-  const { data: availablePlans } = useQuery({
+  const { data: availablePlans } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/superadmin/subscription-plans"],
     enabled: isBlocked,
   });
@@ -53,7 +76,7 @@ export function SubscriptionBlocker({ children, companyId }: SubscriptionBlocker
       setIsUpgradeDialogOpen(false);
       setSelectedPlan('');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "No se pudo activar la suscripción",
@@ -63,6 +86,12 @@ export function SubscriptionBlocker({ children, companyId }: SubscriptionBlocker
   });
 
   useEffect(() => {
+    // Demo tenants are never blocked
+    if (isDemoTenant) {
+      setIsBlocked(false);
+      return;
+    }
+
     if (subscriptionData) {
       // Block access if subscription is expired or doesn't exist
       const shouldBlock = !subscriptionData.hasSubscription || 
@@ -72,7 +101,7 @@ export function SubscriptionBlocker({ children, companyId }: SubscriptionBlocker
       
       setIsBlocked(shouldBlock);
     }
-  }, [subscriptionData]);
+  }, [subscriptionData, isDemoTenant]);
 
   const handlePlanSelection = (planId: string) => {
     setSelectedPlan(planId);
@@ -85,7 +114,8 @@ export function SubscriptionBlocker({ children, companyId }: SubscriptionBlocker
     }
   };
 
-  if (isLoading) {
+  // Skip loading check for demo tenants
+  if (isLoading && !isDemoTenant) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
@@ -96,7 +126,8 @@ export function SubscriptionBlocker({ children, companyId }: SubscriptionBlocker
     );
   }
 
-  if (isBlocked) {
+  // Demo tenants are never blocked
+  if (isBlocked && !isDemoTenant) {
     return (
       <div className="min-h-screen bg-red-50 dark:bg-red-950 flex items-center justify-center p-4">
         <div className="max-w-4xl w-full">
@@ -123,116 +154,113 @@ export function SubscriptionBlocker({ children, companyId }: SubscriptionBlocker
                       <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
                       <div>
                         <p className="font-medium text-red-900 dark:text-red-100">
-                          Plan Anterior: {subscriptionData.plan}
+                        Plan Actual: {subscriptionData.plan || 'N/A'}
                         </p>
                         <p className="text-sm text-red-700 dark:text-red-300">
-                          Expiró hace {Math.abs(subscriptionData.daysRemaining)} días
+                          Expira en: {subscriptionData.daysRemaining} días
                         </p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 text-center">
-                  Selecciona un Plan para Continuar
-                </h3>
-
                 {/* Available Plans */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {availablePlans
-                    ?.filter((plan: any) => plan.id !== 'trial' && plan.displayName !== 'Trial')
-                    .map((plan: any) => (
-                    <Card 
-                      key={plan.id}
-                      className={`cursor-pointer transition-all hover:shadow-lg ${
-                        selectedPlan === plan.id 
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-blue-400' 
-                          : 'hover:border-gray-300 dark:hover:border-gray-600'
-                      }`}
-                      onClick={() => setSelectedPlan(plan.id)}
-                    >
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Planes Disponibles
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {availablePlans?.filter((plan: SubscriptionPlan) => plan.name !== 'trial')?.map((plan: SubscriptionPlan) => (
+                    <Card key={plan.id} className="border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors">
                       <CardHeader className="text-center">
-                        <CardTitle className="text-lg">{plan.displayName}</CardTitle>
-                        <div className="space-y-1">
-                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                            ${plan.monthlyPrice.toLocaleString()}
-                          </div>
-                          <div className="text-sm text-gray-500">MXN/mes</div>
-                        </div>
+                        <CardTitle className="text-lg text-gray-900 dark:text-gray-100">
+                          {plan.displayName}
+                        </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                          {plan.description}
+                      <CardContent className="text-center space-y-4">
+                      <Badge variant="secondary" className="text-xs">
+                        {plan.maxTenants} VetSite{plan.maxTenants !== 1 ? 's' : ''}
+                      </Badge>
+                      <div className="space-y-2">
+                        <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                          ${plan.monthlyPrice}/mes
                         </p>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                            <span className="text-sm">Hasta {plan.maxTenants} clínicas</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                            <span className="text-sm">Soporte 24/7</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                            <span className="text-sm">Actualizaciones incluidas</span>
-                          </div>
-                        </div>
-                        {selectedPlan === plan.id && (
-                          <Badge className="w-full justify-center bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                            Seleccionado
-                          </Badge>
-                        )}
-                      </CardContent>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          ${plan.yearlyPrice}/año
+                        </p>
+                      </div>
+                      <Button 
+                        onClick={() => handlePlanSelection(plan.id)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        disabled={updateSubscriptionMutation.isPending}
+                      >
+                        {updateSubscriptionMutation.isPending ? 'Procesando...' : 'Seleccionar Plan'}
+                      </Button>
+                    </CardContent>
                     </Card>
-                  ))}
+                  )) || []}
+                </div>
                 </div>
 
-                <div className="text-center">
-                  <Button 
-                    onClick={() => handlePlanSelection(selectedPlan)}
-                    disabled={!selectedPlan}
-                    className="px-8 py-3 bg-blue-600 hover:bg-blue-700"
-                    size="lg"
-                  >
-                    <CreditCard className="w-5 h-5 mr-2" />
-                    Activar Plan Seleccionado
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Confirmation Dialog */}
-        <Dialog open={isUpgradeDialogOpen} onOpenChange={setIsUpgradeDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Confirmar Activación de Plan</DialogTitle>
-              <DialogDescription>
-                ¿Estás seguro de que quieres activar este plan?
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              {selectedPlan && availablePlans && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-950 dark:border-blue-800">
+                {/* Billing Notice */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-900 dark:border-blue-700">
                   <div className="flex items-start gap-3">
-                    <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                    <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                     <div>
-                      <h4 className="font-medium text-blue-900 dark:text-blue-100">
-                        {availablePlans.find((p: any) => p.id === selectedPlan)?.displayName}
-                      </h4>
-                      <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                        ${availablePlans.find((p: any) => p.id === selectedPlan)?.monthlyPrice.toLocaleString()} MXN/mes
+                      <p className="font-medium text-blue-900 dark:text-blue-100">
+                        Política de Facturación
                       </p>
-                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                        Acceso inmediato a todas las funcionalidades
+                      <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                        Los cambios de precio entrarán en vigor en 10 días naturales desde la fecha de activación. 
+                        Esto te da tiempo suficiente para planificar tu presupuesto.
                       </p>
                     </div>
                   </div>
                 </div>
-              )}
-              
+
+                {/* Success Message */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 dark:bg-green-900 dark:border-green-700">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-green-900 dark:text-green-100">
+                        Acceso Completo
+                      </p>
+                      <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                        Una vez activado tu plan, tendrás acceso completo a todas las funcionalidades 
+                        del sistema de gestión veterinaria.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Confirmation Dialog */}
+          <Dialog open={isUpgradeDialogOpen} onOpenChange={setIsUpgradeDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirmar Activación de Plan</DialogTitle>
+                <DialogDescription>
+                  {selectedPlan && availablePlans && (
+                    <>
+                      Estás a punto de activar el plan{" "}
+                      <strong>
+                        {availablePlans.find((p: SubscriptionPlan) => p.id === selectedPlan)?.displayName}
+                      </strong>
+                      {" "}por{" "}
+                      <strong>
+                        ${availablePlans.find((p: SubscriptionPlan) => p.id === selectedPlan)?.monthlyPrice}/mes
+                      </strong>
+                      .
+                      <br />
+                      <br />
+                      Los cambios de precio entrarán en vigor en 10 días naturales desde hoy.
+                    </>
+                  )}
+                </DialogDescription>
+              </DialogHeader>
               <div className="flex gap-3 pt-4">
                 <Button 
                   variant="outline" 
@@ -243,25 +271,19 @@ export function SubscriptionBlocker({ children, companyId }: SubscriptionBlocker
                 </Button>
                 <Button 
                   onClick={handleConfirmUpgrade}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
                   disabled={updateSubscriptionMutation.isPending}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
-                  {updateSubscriptionMutation.isPending ? (
-                    <>
-                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                      Activando...
-                    </>
-                  ) : (
-                    'Confirmar Activación'
-                  )}
+                  {updateSubscriptionMutation.isPending ? 'Activando...' : 'Confirmar Activación'}
                 </Button>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     );
   }
 
+  // For demo tenants or valid subscriptions, render children
   return <>{children}</>;
 }

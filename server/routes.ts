@@ -6151,6 +6151,16 @@ This password expires in 24 hours.
       if (!planId) {
         return res.status(400).json({ message: "Plan ID is required" });
       }
+
+      // Check if company exists
+      if (companyId === 'unknown' || !companyId) {
+        return res.status(400).json({ message: "Invalid company ID" });
+      }
+
+      // Check if this is a demo tenant (exempt from subscription requirements)
+      if (companyId.startsWith('demo-') || companyId.includes('demo')) {
+        return res.status(400).json({ message: "Demo tenants are exempt from subscription requirements" });
+      }
       
       // Verify the plan exists
       const plan = await storage.getSubscriptionPlan(planId);
