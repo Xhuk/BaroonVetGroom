@@ -223,6 +223,19 @@ function Admin() {
   // Drag and drop state
   const [draggedUser, setDraggedUser] = useState<any>(null);
   const [dragOverRole, setDragOverRole] = useState<string | null>(null);
+
+  // Bulk assignment state
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [bulkRoleId, setBulkRoleId] = useState<string>('');  
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+
+  // Core consolidated roles for the veterinary clinic
+  const CORE_ROLES = [
+    { id: 'tenant_admin', name: 'Administrador', department: 'admin', color: 'bg-purple-100 dark:bg-purple-900 border-purple-300 dark:border-purple-700' },
+    { id: 'veterinario', name: 'Personal Médico', department: 'medical', color: 'bg-green-100 dark:bg-green-900 border-green-300 dark:border-green-700' },
+    { id: 'recepcionista', name: 'Recepción', department: 'reception', color: 'bg-blue-100 dark:bg-blue-900 border-blue-300 dark:border-blue-700' },
+    { id: 'groomer', name: 'Servicios', department: 'services', color: 'bg-orange-100 dark:bg-orange-900 border-orange-300 dark:border-orange-700' }
+  ];
   
   // Subscription management state
   const [isSubscriptionDialogOpen, setIsSubscriptionDialogOpen] = useState(false);
@@ -677,6 +690,50 @@ function Admin() {
     setDraggedUser(null);
     setDragOverRole(null);
   };
+
+  // Bulk assignment handlers
+  const handleSelectUser = (userId: string) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    const filteredUsers = roleFilter === 'all' ? users : users.filter(user => user.roleId === roleFilter);
+    const allSelected = filteredUsers.every(user => selectedUsers.includes(user.id));
+    
+    if (allSelected) {
+      // Deselect all filtered users
+      setSelectedUsers(prev => prev.filter(id => !filteredUsers.map(u => u.id).includes(id)));
+    } else {
+      // Select all filtered users
+      setSelectedUsers(prev => [...new Set([...prev, ...filteredUsers.map(u => u.id)])]);
+    }
+  };
+
+  const handleBulkRoleAssignment = () => {
+    if (selectedUsers.length === 0 || !bulkRoleId) {
+      toast({
+        title: "Error",
+        description: "Selecciona usuarios y un rol para la asignación masiva",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Apply role changes to all selected users
+    selectedUsers.forEach(userId => {
+      updateUserRoleMutation.mutate({ userId, roleId: bulkRoleId });
+    });
+
+    setSelectedUsers([]);
+    setBulkRoleId('');
+  };
+
+  // Filter users based on role filter
+  const filteredUsers = roleFilter === 'all' ? users : users.filter(user => user.roleId === roleFilter);
 
   // Create service mutation
   const createServiceMutation = useMutation({
@@ -2439,47 +2496,105 @@ function Admin() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-center gap-3">
-                      <Users className="w-5 h-5 text-blue-600" />
-                      <div>
-                        <h3 className="font-medium text-blue-900 dark:text-blue-100">Sistema de Roles por Arrastrar y Soltar</h3>
-                        <p className="text-sm text-blue-700 dark:text-blue-300">
-                          Arrastra usuarios entre columnas para cambiar sus roles. Los cambios se guardan automáticamente.
-                        </p>
+                  {/* Bulk Assignment Controls */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Users className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <h3 className="font-medium text-blue-900 dark:text-blue-100">Gestión de Usuarios y Roles</h3>
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            Selecciona múltiples usuarios para asignación masiva de roles
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                        <div className="flex items-center gap-2">
+                          <Select value={roleFilter} onValueChange={setRoleFilter}>
+                            <SelectTrigger className="w-40">
+                              <SelectValue placeholder="Filtrar por rol" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos los roles</SelectItem>
+                              {CORE_ROLES.map(role => (
+                                <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                            {filteredUsers.length > 0 && filteredUsers.every(user => selectedUsers.includes(user.id)) ? 'Deseleccionar' : 'Seleccionar'} Todo
+                          </Button>
+                        </div>
+                        
+                        {selectedUsers.length > 0 && (
+                          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-md border">
+                            <Badge variant="secondary">{selectedUsers.length} seleccionados</Badge>
+                            <Select value={bulkRoleId} onValueChange={setBulkRoleId}>
+                              <SelectTrigger className="w-40">
+                                <SelectValue placeholder="Asignar rol" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {CORE_ROLES.map(role => (
+                                  <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              onClick={handleBulkRoleAssignment}
+                              disabled={!bulkRoleId || updateUserRoleMutation.isPending}
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              Asignar
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                    {roles.map(role => {
-                      const roleUsers = users.filter(user => user.roleId === role.id);
+                  {/* Consolidated Role Columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                    {CORE_ROLES.map(coreRole => {
+                      // Map core role to actual database roles - for now just match by ID
+                      const matchingDbRole = roles.find(role => role.name === coreRole.id || role.id === coreRole.id);
+                      const roleUsers = users.filter(user => {
+                        // Handle different role mapping scenarios
+                        if (coreRole.id === 'groomer') {
+                          // Services role includes groomer and delivery_driver
+                          return user.roleId === coreRole.id || user.roleName === 'groomer' || user.roleName === 'delivery_driver';
+                        }
+                        return user.roleId === coreRole.id || user.roleName === coreRole.id;
+                      });
+                      
                       return (
                         <div
-                          key={role.id}
-                          className={`bg-white dark:bg-gray-800 rounded-lg border-2 transition-colors min-h-[200px] ${
-                            dragOverRole === role.id 
-                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' 
-                              : 'border-gray-200 dark:border-gray-700'
+                          key={coreRole.id}
+                          className={`rounded-lg border-2 transition-all min-h-[300px] ${coreRole.color} ${
+                            dragOverRole === coreRole.id 
+                              ? 'border-blue-500 shadow-lg scale-105' 
+                              : ''
                           }`}
-                          onDragOver={(e) => handleDragOver(e, role.id)}
+                          onDragOver={(e) => handleDragOver(e, coreRole.id)}
                           onDragLeave={handleDragLeave}
-                          onDrop={(e) => handleDrop(e, role.id)}
+                          onDrop={(e) => handleDrop(e, coreRole.id)}
                         >
-                          <div className="p-4">
-                            <div className="flex items-center justify-between mb-3">
+                          <div className="p-5">
+                            <div className="flex items-center justify-between mb-4">
                               <div>
-                                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{role.displayName}</h3>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">{role.department}</p>
+                                <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">{coreRole.name}</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">{coreRole.department}</p>
                               </div>
-                              <Badge variant="outline">{roleUsers.length}</Badge>
+                              <Badge variant="outline" className="text-lg px-3 py-1">{roleUsers.length}</Badge>
                             </div>
                             
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               {roleUsers.length === 0 ? (
-                                <div className="text-center py-4 text-gray-400 dark:text-gray-600">
-                                  <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                  <p className="text-sm">Sin usuarios</p>
+                                <div className="text-center py-8 text-gray-400 dark:text-gray-600">
+                                  <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                                  <p className="text-sm font-medium">Sin usuarios asignados</p>
+                                  <p className="text-xs">Arrastra usuarios aquí</p>
                                 </div>
                               ) : (
                                 roleUsers.map(user => (
@@ -2488,19 +2603,33 @@ function Admin() {
                                     draggable
                                     onDragStart={(e) => handleDragStart(e, user)}
                                     onDragEnd={handleDragEnd}
-                                    className={`bg-gray-50 dark:bg-gray-700 p-3 rounded-md border cursor-move transition-all hover:shadow-md ${
+                                    className={`bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm cursor-move transition-all hover:shadow-md hover:scale-[1.02] ${
                                       draggedUser?.id === user.id ? 'opacity-50 scale-95' : ''
+                                    } ${
+                                      selectedUsers.includes(user.id) ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' : ''
                                     }`}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      handleSelectUser(user.id);
+                                    }}
                                   >
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex items-start gap-3">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedUsers.includes(user.id)}
+                                        onChange={() => handleSelectUser(user.id)}
+                                        className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        onClick={(e) => e.stopPropagation()}
+                                      />
                                       <div className="min-w-0 flex-1">
-                                        <p className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
+                                        <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                                           {user.firstName} {user.lastName}
                                         </p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-                                      </div>
-                                      <div className="flex items-center gap-1 ml-2">
-                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                                        <div className="flex items-center gap-2 mt-2">
+                                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                          <span className="text-xs text-green-600 dark:text-green-400">Activo</span>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
