@@ -406,75 +406,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access restricted to demo users" });
       }
       
-      // Get available subscription plans (excluding trial)
-      const plans = [
-        {
-          id: 'basic',
-          name: 'Plan Básico',
-          description: 'Perfecto para clínicas pequeñas',
-          features: [
-            'Hasta 3 sitios veterinarios',
-            'Gestión de citas básica',
-            'Historial médico',
-            'Facturación simple'
-          ],
-          pricing: {
-            monthly: { amount: 2900, display: '$29.00 USD/mes' },
-            yearly: { amount: 29000, display: '$290.00 USD/año (ahorra $58)' }
-          }
-        },
-        {
-          id: 'medium',
-          name: 'Plan Mediano',
-          description: 'Ideal para clínicas en crecimiento',
-          features: [
-            'Hasta 8 sitios veterinarios',
-            'Gestión avanzada de citas',
-            'Historial médico completo',
-            'Facturación y reportes',
-            'Gestión de inventario',
-            'Servicios de grooming'
-          ],
-          pricing: {
-            monthly: { amount: 5900, display: '$59.00 USD/mes' },
-            yearly: { amount: 59000, display: '$590.00 USD/año (ahorra $118)' }
-          }
-        },
-        {
-          id: 'large',
-          name: 'Plan Grande',
-          description: 'Para clínicas establecidas',
-          features: [
-            'Hasta 15 sitios veterinarios',
-            'Sistema completo de gestión',
-            'Análisis y reportes avanzados',
-            'Integración con WhatsApp',
-            'Gestión de entregas',
-            'Soporte prioritario'
-          ],
-          pricing: {
-            monthly: { amount: 9900, display: '$99.00 USD/mes' },
-            yearly: { amount: 99000, display: '$990.00 USD/año (ahorra $198)' }
-          }
-        },
-        {
-          id: 'extra_large',
-          name: 'Plan Premium',
-          description: 'Para redes de clínicas grandes',
-          features: [
-            'Sitios veterinarios ilimitados',
-            'Sistema empresarial completo',
-            'API personalizada',
-            'Soporte dedicado 24/7',
-            'Capacitación personalizada',
-            'Implementación asistida'
-          ],
-          pricing: {
-            monthly: { amount: 19900, display: '$199.00 USD/mes' },
-            yearly: { amount: 199000, display: '$1,990.00 USD/año (ahorra $398)' }
-          }
-        }
-      ];
+      // Get real subscription plans from database (excluding trial)
+      const allPlans = await storage.getSubscriptionPlans();
+      const plans = allPlans.filter(plan => plan.id !== 'trial');
       
       res.json({ plans });
     } catch (error) {

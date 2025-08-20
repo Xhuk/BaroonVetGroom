@@ -14,12 +14,12 @@ import { Check, Crown, Building, Users, Zap, Shield, ArrowRight } from 'lucide-r
 interface SubscriptionPlan {
   id: string;
   name: string;
+  displayName: string;
   description: string;
   features: string[];
-  pricing: {
-    monthly: { amount: number; display: string };
-    yearly: { amount: number; display: string };
-  };
+  monthlyPrice: number;
+  yearlyPrice: number;
+  maxTenants: number;
 }
 
 export default function DemoSubscriptionUpgrade() {
@@ -37,10 +37,36 @@ export default function DemoSubscriptionUpgrade() {
     country: 'México'
   });
 
-  const { data: plansData, isLoading } = useQuery({
+  const { data: plansData, isLoading } = useQuery<{plans: SubscriptionPlan[]}>({
     queryKey: ['/api/demo/subscription-plans'],
     retry: false
   });
+
+  // Helper function to format price
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  // Helper function to get price display
+  const getPriceDisplay = (plan: SubscriptionPlan, cycle: 'monthly' | 'yearly') => {
+    const price = cycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
+    const formatted = formatPrice(price);
+    const period = cycle === 'monthly' ? '/mes' : '/año';
+    return { price: formatted, period };
+  };
+
+  // Helper function to calculate yearly discount
+  const calculateYearlyDiscount = (monthlyPrice: number, yearlyPrice: number) => {
+    const monthlyTotal = monthlyPrice * 12;
+    const savings = monthlyTotal - yearlyPrice;
+    const percentage = Math.round((savings / monthlyTotal) * 100);
+    return { savings: formatPrice(savings), percentage };
+  };
 
   const requestVanillaTenantMutation = useMutation({
     mutationFn: async (requestData: any) => {
@@ -228,7 +254,7 @@ export default function DemoSubscriptionUpgrade() {
                 <div className="bg-blue-50 p-4 rounded-lg mb-4">
                   <h3 className="font-semibold text-blue-900 mb-2">Resumen de tu Selección:</h3>
                   <p className="text-blue-700">
-                    Plan {plansData?.plans.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name} - 
+                    Plan {plansData?.plans.find((p: SubscriptionPlan) => p.id === selectedPlan)?.displayName} - 
                     Facturación {billingCycle === 'monthly' ? 'Mensual' : 'Anual'}
                   </p>
                 </div>
@@ -318,15 +344,20 @@ export default function DemoSubscriptionUpgrade() {
                     {getPlanIcon(plan.id)}
                   </div>
                 </div>
-                <CardTitle className="text-xl mb-2">{plan.name}</CardTitle>
+                <CardTitle className="text-xl mb-2">{plan.displayName}</CardTitle>
                 <p className="text-gray-600 text-sm mb-4">{plan.description}</p>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-gray-900">
-                    {plan.pricing[billingCycle].display.split(' ')[0]}
+                    {getPriceDisplay(plan, billingCycle).price}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {plan.pricing[billingCycle].display.split(' ').slice(1).join(' ')}
+                    {getPriceDisplay(plan, billingCycle).period}
                   </div>
+                  {billingCycle === 'yearly' && plan.yearlyPrice < (plan.monthlyPrice * 12) && (
+                    <div className="text-xs text-green-600 mt-1">
+                      Ahorra {calculateYearlyDiscount(plan.monthlyPrice, plan.yearlyPrice).savings}
+                    </div>
+                  )}
                 </div>
               </CardHeader>
               
@@ -358,7 +389,7 @@ export default function DemoSubscriptionUpgrade() {
             size="lg"
             className="px-8 py-3"
           >
-            Continuar con {selectedPlan ? plansData?.plans.find((p: SubscriptionPlan) => p.id === selectedPlan)?.name : 'Plan Seleccionado'}
+            Continuar con {selectedPlan ? plansData?.plans.find((p: SubscriptionPlan) => p.id === selectedPlan)?.displayName : 'Plan Seleccionado'}
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
