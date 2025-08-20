@@ -3785,7 +3785,7 @@ export class DatabaseStorage implements IStorage {
             species: Math.random() > 0.5 ? 'dog' : 'cat',
             breed: 'Mestizo',
             birthDate: new Date(Date.now() - Math.random() * 5 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            registeredAge: `${Math.floor(Math.random() * 10) + 1}`,
+            registeredAge: Math.floor(Math.random() * 10) + 1,
             isActive: true
           });
         }
@@ -3811,14 +3811,20 @@ export class DatabaseStorage implements IStorage {
             .limit(1);
 
           if (randomPet) {
+            // Split date and time for the database schema
+            const dateOnly = appointmentDateTime.toISOString().split('T')[0];
+            const timeOnly = appointmentDateTime.toTimeString().split(' ')[0].substring(0, 5); // HH:MM format
+            
             await db.insert(appointments).values({
               tenantId: tenant.id,
               type: Math.random() > 0.7 ? 'grooming' : 'medical',
               clientId: randomClient.id,
               petId: randomPet.id,
-              appointmentDateTime: appointmentDateTime.toISOString(),
+              scheduledDate: dateOnly,
+              scheduledTime: timeOnly,
               status: day === 0 && i < 2 ? 'scheduled' : 'completed',
               duration: 60,
+              logistics: Math.random() > 0.5 ? 'pickup' : 'delivered',
               notes: `Demo appointment - ${day === 0 ? 'Today' : `${day} days ago`}`
             });
             appointmentCount++;
@@ -3871,14 +3877,20 @@ export class DatabaseStorage implements IStorage {
             .limit(1);
 
           if (randomPet) {
+            // Split date and time for the database schema
+            const dateOnly = appointmentDateTime.toISOString().split('T')[0];
+            const timeOnly = appointmentDateTime.toTimeString().split(' ')[0].substring(0, 5); // HH:MM format
+            
             await db.insert(appointments).values({
               id: `refresh-appt-${tenantId}-${Date.now()}-${i}`,
               tenantId,
               clientId: randomClient.id,
               petId: randomPet.id,
-              appointmentDateTime: appointmentDateTime.toISOString(),
+              scheduledDate: dateOnly,
+              scheduledTime: timeOnly,
               status: date.toDateString() === today.toDateString() ? 'scheduled' : 'scheduled',
-              appointmentType: Math.random() > 0.7 ? 'grooming' : 'medical',
+              type: Math.random() > 0.7 ? 'grooming' : 'medical',
+              logistics: Math.random() > 0.5 ? 'pickup' : 'delivered',
               notes: `Refreshed demo appointment`
             });
             newAppointments++;
