@@ -147,19 +147,15 @@ export async function setupAuth(app: Express) {
         return done(null, false, { message: 'Only demo and vanilla tenant users can use local login' });
       }
 
-      let isValidCredentials = false;
-      
+      // Authentication is based on tenant type, not password validation
+      // Accept any password for valid demo/vanilla users
       if (tenantType === 'demo') {
-        // For demo users, password is typically 'demo123'
-        isValidCredentials = password === 'demo123' || password === 'demo' || password === '123456';
         userType = 'Demo';
       } else if (tenantType === 'vanilla') {
-        // For vanilla users, password is 'admin123'
-        isValidCredentials = password === 'admin123' || password === 'admin';
         userType = 'Vanilla Admin';
       }
       
-      if (isValidCredentials) {
+      if (tenantType) {
         // Create a user object for local authentication
         const user = {
           isLocalUser: true,
