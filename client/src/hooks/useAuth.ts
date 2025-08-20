@@ -80,7 +80,7 @@ export function useAuth() {
     }
   });
 
-  const logout = () => {
+  const logout = (redirectTo = 'auth') => {
     // Clear all auth-related cache and state
     localStorage.removeItem('auth_user_cache');
     localStorage.removeItem('auth_cache_time');
@@ -88,9 +88,15 @@ export function useAuth() {
     localStorage.setItem('auth_logged_out', 'true');
     localStorage.setItem('auth_check_disabled', 'true');
     
-    // Environment-dependent logout endpoint
-    const logoutEndpoint = isDevelopment ? '/api/logout' : '/api/auth/logout';
-    window.location.href = logoutEndpoint;
+    // Choose logout endpoint based on desired redirect
+    if (redirectTo === 'landing') {
+      // Redirect to landing page directly
+      window.location.href = '/landing';
+    } else {
+      // Use logout endpoint that redirects to /auth
+      const logoutEndpoint = isDevelopment ? '/api/logout' : '/api/auth/logout';
+      window.location.href = logoutEndpoint;
+    }
   };
 
   const enableAuthChecking = () => {

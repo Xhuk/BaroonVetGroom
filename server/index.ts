@@ -33,14 +33,15 @@ app.use(session({
   }
 }));
 
-// Enhanced authentication middleware for development mode
+// Enhanced authentication middleware - Replit auth only in development
 app.use(async (req: any, res, next) => {
   const isDevelopment = process.env.NODE_ENV === 'development';
   
+  // Only enable Replit auth in development environment
   if (isDevelopment) {
     // Only try Replit auth for /api/user endpoint to reduce noise
     if (req.path === '/api/user') {
-      console.log('🔐 Attempting Replit Auth...');
+      console.log('🔐 Attempting Replit Auth (DEV MODE)...');
       try {
         const userInfo = await getUserInfo(req);
         if (userInfo) {
@@ -50,7 +51,7 @@ app.use(async (req: any, res, next) => {
               name: userInfo.name
             }
           };
-          console.log('🔐 Replit Auth Success:', { id: userInfo.id, name: userInfo.name });
+          console.log('🔐 Replit Auth Success (DEV):', { id: userInfo.id, name: userInfo.name });
         } else {
           console.log('🔐 Replit Auth: No user info (using fallback to session auth)');
         }
@@ -58,6 +59,9 @@ app.use(async (req: any, res, next) => {
         console.log('🔐 Replit Auth failed, falling back to session auth');
       }
     }
+  } else {
+    // In production, Replit auth is disabled - rely on session-based auth only
+    console.log('🔐 Production mode: Replit auth disabled, using session auth only');
   }
   
   next();

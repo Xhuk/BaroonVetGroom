@@ -99,6 +99,7 @@ function Router() {
         return <Dashboard />;
       }} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/landing" component={LandingPage} />
       <Route path="/plans" component={SubscriptionLanding} />
       <Route path="/checkout" component={SubscriptionCheckout} />
       <Route path="/onboarding" component={CompanyOnboarding} />

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Calendar, Phone, Mail, LogOut, Moon, Sun, Settings, Clock } from "lucide-react";
+import { Calendar, Phone, Mail, LogOut, Moon, Sun, Settings, Clock, Home } from "lucide-react";
 import { VetGroomLogo } from "./VetGroomLogo";
 import { DebugControls } from "./DebugControls";
 import { TimezoneSettings } from "./TimezoneSettings";
@@ -61,7 +61,17 @@ export function Header() {
     sessionStorage.removeItem('selectedTenantId');
     sessionStorage.removeItem('debugMode');
     sessionStorage.removeItem('impersonatedRole');
-    logout();
+    // "Cerrar Sesión" should redirect to /auth
+    logout('auth');
+  };
+
+  const handleGoToLanding = () => {
+    // Clear debug mode on logout
+    sessionStorage.removeItem('selectedTenantId');
+    sessionStorage.removeItem('debugMode');
+    sessionStorage.removeItem('impersonatedRole');
+    // "Ir a Inicio" should redirect to landing page
+    logout('landing');
   };
 
   // Tablet-specific header layout
@@ -96,6 +106,9 @@ export function Header() {
             <div className="flex items-center space-x-1">
               <Button variant="ghost" size="sm" onClick={toggleTheme}>
                 {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleGoToLanding} title="Ir a Inicio">
+                <Home className="w-4 h-4" />
               </Button>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="w-4 h-4" />
@@ -186,6 +199,15 @@ export function Header() {
                 <TimezoneSettings />
               </PopoverContent>
             </Popover>
+            <Button
+              onClick={handleGoToLanding}
+              variant="outline"
+              size="sm"
+              className="font-medium"
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Ir a Inicio
+            </Button>
             <Button
               onClick={handleLogout}
               variant="destructive"
