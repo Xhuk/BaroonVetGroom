@@ -4502,6 +4502,10 @@ export class DatabaseStorage implements IStorage {
       
       // Delete the company if it was a demo company
       if (tenant?.companyId.includes('demo-')) {
+        // CRITICAL: Delete roles first to avoid foreign key constraint
+        await db.delete(roles).where(eq(roles.companyId, tenant.companyId));
+        
+        // Now delete the company
         await db.delete(companies).where(eq(companies.id, tenant.companyId));
       }
       
