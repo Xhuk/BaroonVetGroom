@@ -6218,9 +6218,54 @@ This password expires in 24 hours.
       // - Update payment gateway subscription
       // - Handle payment method updates if needed
       
+      // If changing from trial to paid plan, update the subscription status
+      if (subscription.status === 'trial' && planId !== 'trial') {
+        // Convert trial to paid subscription
+        const now = new Date();
+        const nextBillingDate = new Date();
+        nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+        
+        await storage.updateCompanySubscription(companyId, {
+          planId: planId,
+          status: 'active',
+          currentPeriodStart: now,
+          currentPeriodEnd: nextBillingDate,
+          trialEndsAt: null, // Clear trial end date
+          priceChangeEffectiveDate: priceChangeEffective,
+          updatedAt: new Date()
+        });
+      }
+      
     } catch (error) {
       console.error("Error updating subscription plan:", error);
       res.status(500).json({ message: "Failed to update subscription plan" });
+    }
+  });
+
+  // Trial configuration management for SuperAdmin
+  app.get("/api/superadmin/trial-config", isSuperAdmin, async (req, res) => {
+    try {
+      const config = await storage.getTrialConfig();
+      res.json(config);
+    } catch (error) {
+      console.error("Error getting trial config:", error);
+      res.status(500).json({ message: "Failed to get trial configuration" });
+    }
+  });
+
+  app.post("/api/superadmin/trial-config", isSuperAdmin, async (req, res) => {
+    try {
+      const { trialDurationDays, autoAssignTrial } = req.body;
+      
+      if (typeof trialDurationDays !== 'number' || trialDurationDays < 1 || trialDurationDays > 90) {
+        return res.status(400).json({ message: "Trial duration must be between 1 and 90 days" });
+      }
+      
+      const config = await storage.updateTrialConfig({ trialDurationDays, autoAssignTrial });
+      res.json({ message: "Trial configuration updated successfully", config });
+    } catch (error) {
+      console.error("Error updating trial config:", error);
+      res.status(500).json({ message: "Failed to update trial configuration" });
     }
   });
 

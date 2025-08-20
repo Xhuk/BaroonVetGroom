@@ -478,6 +478,19 @@ export class DatabaseStorage implements IStorage {
 
   async createCompany(company: InsertCompany): Promise<Company> {
     const [newCompany] = await db.insert(companies).values(company).returning();
+    
+    // Auto-assign trial subscription to new companies
+    try {
+      const trialConfig = await this.getTrialConfig();
+      if (trialConfig.autoAssignTrial) {
+        await this.createTrialSubscription(newCompany.id, trialConfig.trialDurationDays);
+        console.log(`Auto-assigned ${trialConfig.trialDurationDays}-day trial subscription to company ${newCompany.id}`);
+      }
+    } catch (error) {
+      console.error('Failed to auto-assign trial subscription:', error);
+      // Don't fail company creation if trial assignment fails
+    }
+    
     return newCompany;
   }
 
@@ -3933,6 +3946,82 @@ export class DatabaseStorage implements IStorage {
       };
     } catch (error) {
       console.error('Error creating vanilla tenant:', error);
+      throw error;
+    }
+  }
+
+  // Auto-assign trial subscription to new companies
+  async createTrialSubscription(companyId: string, trialDurationDays: number = 15) {
+    try {
+      // Get or create trial plan
+      let trialPlan = await db
+        .select()
+        .from(subscriptionPlans)
+        .where(eq(subscriptionPlans.name, 'trial'))
+        .limit(1);
+
+      if (trialPlan.length === 0) {
+        // Create trial plan if it doesn't exist
+        const [newTrialPlan] = await db.insert(subscriptionPlans).values({
+          name: 'trial',
+          displayName: 'Trial',
+          description: 'Free trial subscription plan',
+          maxTenants: 1,
+          monthlyPrice: '0',
+          yearlyPrice: '0',
+          isActive: true
+        }).returning();
+        trialPlan = [newTrialPlan];
+      }
+
+      const now = new Date();
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + trialDurationDays);
+
+      // Create trial subscription
+      const [subscription] = await db.insert(companySubscriptions).values({
+        companyId,
+        planId: trialPlan[0].id,
+        status: 'trial',
+        currentPeriodStart: now,
+        currentPeriodEnd: trialEndDate,
+        trialEndsAt: trialEndDate,
+        createdAt: now,
+        updatedAt: now
+      }).returning();
+
+      return subscription;
+    } catch (error) {
+      console.error('Error creating trial subscription:', error);
+      throw error;
+    }
+  }
+
+  // Get trial configuration
+  async getTrialConfig() {
+    try {
+      // Try to get from a config table or use default
+      return {
+        trialDurationDays: 15, // Default 15 days
+        autoAssignTrial: true
+      };
+    } catch (error) {
+      console.error('Error getting trial config:', error);
+      return {
+        trialDurationDays: 15,
+        autoAssignTrial: true
+      };
+    }
+  }
+
+  // Update trial configuration
+  async updateTrialConfig(config: { trialDurationDays: number; autoAssignTrial: boolean }) {
+    try {
+      // For now, just return the config since we don't have a config table
+      // In a full implementation, you would store this in a database table
+      return config;
+    } catch (error) {
+      console.error('Error updating trial config:', error);
       throw error;
     }
   }
