@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, Clock, User, Phone, Edit, Trash2 } from "lucide-react";
 import type { Appointment, Client, Pet, Room, Staff, Service } from "@shared/schema";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface AppointmentData {
   appointments: Appointment[];
@@ -15,15 +16,22 @@ interface AppointmentData {
 }
 
 export default function Appointments() {
+  const { currentTenant } = useTenant();
   const [data, setData] = useState<AppointmentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // INSTANT FETCH - No auth, no waiting
+  // INSTANT FETCH - Uses tenant context
   useEffect(() => {
+    if (!currentTenant?.id) {
+      console.log('🔍 [AppointmentsFast] No tenant available yet');
+      return;
+    }
+
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/appointments-fast/vetgroom1', {
+        console.log('🎯 [AppointmentsFast] Fetching data for tenant:', currentTenant.id);
+        const response = await fetch(`/api/appointments-fast/${currentTenant.id}`, {
           headers: { 'Cache-Control': 'no-cache' }
         });
         
@@ -41,7 +49,7 @@ export default function Appointments() {
     };
 
     fetchData();
-  }, []);
+  }, [currentTenant?.id]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

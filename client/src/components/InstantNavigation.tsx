@@ -1,16 +1,22 @@
 import { useEffect } from 'react';
+import { useTenant } from '@/contexts/TenantContext';
 
 /**
  * Preloads critical routes for instant navigation
  * Eliminates white page delays between routes
  */
 export function InstantNavigation() {
+  const { currentTenant } = useTenant();
+
   useEffect(() => {
+    if (!currentTenant?.id) return;
+
     // Preload critical route components
     const preloadRoutes = async () => {
       try {
+        console.log('🎯 [InstantNavigation] Preloading data for tenant:', currentTenant.id);
         // Preload appointments data for instant loading
-        fetch('/api/appointments-fast/vetgroom1', {
+        fetch(`/api/appointments-fast/${currentTenant.id}`, {
           headers: { 'Cache-Control': 'max-age=300' }
         });
         
@@ -28,7 +34,7 @@ export function InstantNavigation() {
     };
 
     preloadRoutes();
-  }, []);
+  }, [currentTenant?.id]);
 
   return null; // This component doesn't render anything
 }

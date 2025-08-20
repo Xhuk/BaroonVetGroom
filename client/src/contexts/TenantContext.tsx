@@ -72,20 +72,41 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
   // Check for debug mode and stored tenant selection
   useEffect(() => {
-    if (!isAuthenticated) return;
+    console.log('🔍 [TenantContext] useEffect triggered:', {
+      isAuthenticated,
+      userEmail: user?.email,
+      userTenantsLength: userTenants.length,
+      currentTenant: currentTenant?.id,
+      isLoadingTenants
+    });
+
+    if (!isAuthenticated) {
+      console.log('🔍 [TenantContext] Not authenticated, skipping');
+      return;
+    }
     
     const debugMode = sessionStorage.getItem('debugMode') === 'true';
     const storedTenantId = sessionStorage.getItem('selectedTenantId');
+    
+    console.log('🔍 [TenantContext] Debug mode check:', {
+      debugMode,
+      storedTenantId,
+      isDebugUser,
+      allTenantsLength: allTenants.length
+    });
     
     setIsDebugMode(debugMode);
     
     // Priority 1: Handle stored debug tenant selection (database-based)
     if (debugMode && isDebugUser && storedTenantId && !currentTenant) {
+      console.log('🔍 [TenantContext] Priority 1: Debug mode with stored tenant');
       // Find the selected tenant from all tenants (real database data)
       const selectedTenant = allTenants.find(t => t.id === storedTenantId);
       if (selectedTenant) {
+        console.log('🎯 [TenantContext] Setting debug tenant:', selectedTenant.id);
         setCurrentTenant(selectedTenant);
       } else if (allTenants.length > 0) {
+        console.log('🔍 [TenantContext] Debug tenant not found, showing selector');
         // If tenant not found in all tenants list, show debug selector
         setShowDebugTenantSelector(true);
       }
@@ -94,6 +115,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     
     // Priority 2: Show debug selector for debug mode without stored tenant
     if (debugMode && isDebugUser && !storedTenantId && !showDebugTenantSelector) {
+      console.log('🔍 [TenantContext] Priority 2: Debug mode without stored tenant');
       setShowDebugTenantSelector(true);
       return;
     }
@@ -102,12 +124,21 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     // For local authentication users, look up their actual tenant from database
     if (user?.email && !currentTenant && !debugMode) {
       const userEmail = user.email;
+      console.log('🔍 [TenantContext] Priority 3: Checking demo/vanilla users:', {
+        userEmail,
+        isDemo: userEmail.includes('demo'),
+        isAdmin: userEmail.startsWith('admin@'),
+        userTenantsAvailable: userTenants.length > 0,
+        userTenants: userTenants.map(ut => ({ id: ut.id, tenantId: ut.tenantId }))
+      });
       
       // If this looks like a local auth user (demo or vanilla)
       if (userEmail.includes('demo') || userEmail.startsWith('admin@')) {
+        console.log('🎯 [TenantContext] Detected demo/vanilla user!');
         // Use userTenants data to find their assigned tenant
         if (userTenants.length > 0) {
           const userTenant = userTenants[0]; // Get first tenant for local users
+          console.log('🔍 [TenantContext] Found userTenant:', userTenant);
           
           // For demo users, we need to fetch the tenant directly since allTenants may be empty
           // Create a minimal tenant object with the tenantId - the useQuery will load full details
@@ -116,7 +147,6 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
             name: `Demo Tenant ${userTenant.tenantId}`,
             subdomain: userTenant.tenantId,
             address: null,
-            zipCode: null,
             city: null,
             state: null,
             country: null,
@@ -138,11 +168,21 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
             updatedAt: new Date()
           };
           
-          console.log(`🎯 Auto-selecting tenant for local user:`, userEmail, 'tenant:', demoTenant.id);
+          console.log(`🎯 [TenantContext] Auto-selecting tenant for local user:`, userEmail, 'tenant:', demoTenant.id);
           setCurrentTenant(demoTenant);
           return;
+        } else {
+          console.log('⚠️ [TenantContext] Demo user detected but no userTenants available yet');
         }
+      } else {
+        console.log('🔍 [TenantContext] Not a demo/vanilla user');
       }
+    } else {
+      console.log('🔍 [TenantContext] Priority 3 skipped:', {
+        hasEmail: !!user?.email,
+        hasCurrentTenant: !!currentTenant,
+        debugMode
+      });
     }
 
     // Priority 4: Handle regular tenant assignments (including debug users with normal assignments)
@@ -234,6 +274,17 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     showDebugSelector,
     exitDebugMode,
   };
+
+  // Debug log the final tenant context value
+  useEffect(() => {
+    console.log('🎯 [TenantContext] Final context value:', {
+      currentTenant: value.currentTenant?.id,
+      currentTenantName: value.currentTenant?.name,
+      tenant: tenant?.id,
+      localCurrentTenant: currentTenant?.id,
+      isLoading: value.isLoading
+    });
+  }, [value.currentTenant?.id, tenant?.id, currentTenant?.id, value.isLoading]);
 
   return (
     <TenantContext.Provider value={value}>
