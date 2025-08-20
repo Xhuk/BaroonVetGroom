@@ -110,32 +110,32 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
           const userTenant = userTenants[0]; // Get first tenant for local users
           
           // For demo users, we need to fetch the tenant directly since allTenants may be empty
-          // Create a minimal tenant object from userTenant data
+          // Create a minimal tenant object with the tenantId - the useQuery will load full details
           const demoTenant: Tenant = {
             id: userTenant.tenantId,
-            name: userTenant.tenant?.name || `Demo Tenant ${userTenant.tenantId}`,
-            slug: userTenant.tenant?.slug || userTenant.tenantId,
-            subdomain: userTenant.tenant?.subdomain || userTenant.tenantId,
-            address: userTenant.tenant?.address || null,
-            zipCode: userTenant.tenant?.zipCode || null,
-            city: userTenant.tenant?.city || null,
-            state: userTenant.tenant?.state || null,
-            country: userTenant.tenant?.country || null,
-            contactPhone: userTenant.tenant?.contactPhone || null,
-            contactEmail: userTenant.tenant?.contactEmail || null,
-            logoUrl: userTenant.tenant?.logoUrl || null,
-            timezone: userTenant.tenant?.timezone || 'America/Mexico_City',
-            currency: userTenant.tenant?.currency || 'MXN',
-            settings: userTenant.tenant?.settings || null,
-            companyId: userTenant.tenant?.companyId || '',
-            deliveryRadiusKm: userTenant.tenant?.deliveryRadiusKm || 10,
-            deliverySchedulingEnabled: userTenant.tenant?.deliverySchedulingEnabled || false,
-            subscriptionStatus: userTenant.tenant?.subscriptionStatus || 'active',
-            subscriptionEndDate: userTenant.tenant?.subscriptionEndDate || null,
-            vetSiteLimit: userTenant.tenant?.vetSiteLimit || 1,
-            currentVetSiteCount: userTenant.tenant?.currentVetSiteCount || 1,
-            createdAt: userTenant.tenant?.createdAt || new Date(),
-            updatedAt: userTenant.tenant?.updatedAt || new Date()
+            name: `Demo Tenant ${userTenant.tenantId}`,
+            subdomain: userTenant.tenantId,
+            address: null,
+            zipCode: null,
+            city: null,
+            state: null,
+            country: null,
+            contactPhone: null,
+            contactEmail: null,
+            logoUrl: null,
+            timezone: 'America/Mexico_City',
+            currency: 'MXN',
+            settings: null,
+            companyId: '',
+            deliveryRadiusKm: 10,
+            deliverySchedulingEnabled: false,
+            subscriptionStatus: 'active',
+            subscriptionEndDate: null,
+            vetSiteLimit: 1,
+            currentVetSiteCount: 1,
+            reservationTimeout: null,
+            createdAt: new Date(),
+            updatedAt: new Date()
           };
           
           console.log(`🎯 Auto-selecting tenant for local user:`, userEmail, 'tenant:', demoTenant.id);
