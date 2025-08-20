@@ -32,6 +32,57 @@ app.use(session({
   }
 }));
 
+// Replit authentication middleware for development mode
+app.use((req: any, res, next) => {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  if (isDevelopment) {
+    // Try to get Replit user from headers
+    const replitUserId = req.get('X-Replit-User-Id');
+    const replitUserName = req.get('X-Replit-User-Name');
+    
+    // Also check environment variables that Replit might provide
+    const replitEnvUserId = process.env.REPL_OWNER;
+    const replitSlug = process.env.REPL_SLUG;
+    
+    // Debug logging for auth setup
+    if (req.path === '/api/user') {
+      console.log('🔐 Auth Debug:', {
+        headers: {
+          userId: replitUserId,
+          userName: replitUserName,
+        },
+        env: {
+          owner: replitEnvUserId,
+          slug: replitSlug,
+          nodeEnv: process.env.NODE_ENV
+        },
+        session: req.session?.isAuthenticated
+      });
+    }
+    
+    if (replitUserId && replitUserName) {
+      // Set up user object similar to Replit's expected format
+      req.user = {
+        claims: {
+          sub: replitUserId,
+          name: replitUserName
+        }
+      };
+    } else if (replitEnvUserId) {
+      // Fallback to environment-based auth
+      req.user = {
+        claims: {
+          sub: replitEnvUserId,
+          name: replitEnvUserId
+        }
+      };
+    }
+  }
+  
+  next();
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
