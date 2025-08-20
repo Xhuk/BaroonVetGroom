@@ -26,7 +26,9 @@ import {
   Copy,
   Eye,
   EyeOff,
-  ArrowLeft
+  ArrowLeft,
+  Smartphone,
+  Monitor
 } from "lucide-react";
 import {
   Dialog,
@@ -102,6 +104,8 @@ export default function SuperAdminDemoManagement() {
   const [, setLocation] = useLocation();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreateVanillaDialogOpen, setIsCreateVanillaDialogOpen] = useState(false);
+  const [isClientOnboardingOpen, setIsClientOnboardingOpen] = useState(false);
+  const [onboardingType, setOnboardingType] = useState<'demo' | 'vanilla'>('demo');
   const [showTrashAnimation, setShowTrashAnimation] = useState(false);
   const [showDoggyAnimation, setShowDoggyAnimation] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<DemoTenant | null>(null);
@@ -564,6 +568,51 @@ Vanilla tenant is ready for customization and client setup.`,
           </p>
         </div>
 
+        {/* Mobile-Friendly Client Onboarding */}
+        <Card className="mb-6 bg-gray-850 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-blue-300 flex items-center gap-2">
+              <Smartphone className="w-5 h-5" />
+              Onboarding de Clientes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-400 text-sm mb-4">
+              Crear tenants para demostraciones o clientes en producción - optimizado para celular
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button
+                onClick={() => {
+                  setOnboardingType('demo');
+                  setIsClientOnboardingOpen(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white h-16 flex-col gap-1"
+                data-testid="button-create-demo-simple"
+              >
+                <Smartphone className="w-6 h-6" />
+                <div className="text-center">
+                  <div className="font-medium">Crear Demo</div>
+                  <div className="text-xs opacity-80">Para demostraciones</div>
+                </div>
+              </Button>
+              <Button
+                onClick={() => {
+                  setOnboardingType('vanilla');
+                  setIsClientOnboardingOpen(true);
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white h-16 flex-col gap-1"
+                data-testid="button-create-vanilla-simple"
+              >
+                <Monitor className="w-6 h-6" />
+                <div className="text-center">
+                  <div className="font-medium">Crear Cliente</div>
+                  <div className="text-xs opacity-80">Para producción</div>
+                </div>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Create Demo Tenant Card */}
         <Card className="mb-6">
           <CardHeader>
@@ -859,6 +908,158 @@ Vanilla tenant is ready for customization and client setup.`,
             )}
           </CardContent>
         </Card>
+
+        {/* Client Onboarding Dialog */}
+        <Dialog open={isClientOnboardingOpen} onOpenChange={setIsClientOnboardingOpen}>
+          <DialogContent className="sm:max-w-md bg-gray-850 border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="text-blue-300">
+                {onboardingType === 'demo' ? '📱 Crear Tenant Demo' : '🏢 Onboarding Cliente'}
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                {onboardingType === 'demo' 
+                  ? 'Crear un tenant de demostración con datos de ejemplo'
+                  : 'Crear un tenant para cliente en producción con cuenta de administrador'
+                }
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="client-tenant-name" className="text-gray-300">
+                  Nombre del {onboardingType === 'demo' ? 'Demo' : 'Cliente'}
+                </Label>
+                <Input
+                  id="client-tenant-name"
+                  value={onboardingType === 'demo' ? demoForm.tenantName : vanillaForm.tenantName}
+                  onChange={(e) => {
+                    if (onboardingType === 'demo') {
+                      setDemoForm(prev => ({ ...prev, tenantName: e.target.value }));
+                    } else {
+                      setVanillaForm(prev => ({ ...prev, tenantName: e.target.value }));
+                    }
+                  }}
+                  placeholder={onboardingType === 'demo' ? 'Demo Veterinaria Central' : 'Clínica Veterinaria San Pedro'}
+                  className="bg-gray-800 border-gray-600 text-white"
+                  data-testid="input-client-tenant-name"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="client-company-name" className="text-gray-300">
+                  Nombre de la Empresa
+                </Label>
+                <Input
+                  id="client-company-name"
+                  value={onboardingType === 'demo' ? demoForm.companyName : vanillaForm.companyName}
+                  onChange={(e) => {
+                    if (onboardingType === 'demo') {
+                      setDemoForm(prev => ({ ...prev, companyName: e.target.value }));
+                    } else {
+                      setVanillaForm(prev => ({ ...prev, companyName: e.target.value }));
+                    }
+                  }}
+                  placeholder={onboardingType === 'demo' ? 'Demo Corp Veterinaria' : 'Corporativo Veterinario S.A.'}
+                  className="bg-gray-800 border-gray-600 text-white"
+                  data-testid="input-client-company-name"
+                />
+              </div>
+              
+              {onboardingType === 'demo' && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="client-user-count" className="text-gray-300">
+                      Usuarios de Demostración
+                    </Label>
+                    <Select
+                      value={demoForm.userCount.toString()}
+                      onValueChange={(value) => setDemoForm(prev => ({ ...prev, userCount: parseInt(value) }))}
+                    >
+                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white" data-testid="select-client-user-count">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-600">
+                        {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} {num === 1 ? 'usuario' : 'usuarios'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="client-days-history" className="text-gray-300">
+                      Historial de Citas
+                    </Label>
+                    <Select
+                      value={demoForm.daysOfHistory.toString()}
+                      onValueChange={(value) => setDemoForm(prev => ({ ...prev, daysOfHistory: parseInt(value) }))}
+                    >
+                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white" data-testid="select-client-days-history">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-600">
+                        {[1, 3, 7, 14, 21, 30].map(days => (
+                          <SelectItem key={days} value={days.toString()}>
+                            {days} {days === 1 ? 'día' : 'días'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+              
+              {onboardingType === 'vanilla' && (
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <h4 className="text-sm font-medium text-blue-300 mb-2">✅ Cuenta de Administrador</h4>
+                  <p className="text-xs text-gray-400 mb-2">
+                    Se creará automáticamente una cuenta de administrador:
+                  </p>
+                  <div className="text-xs text-gray-300 space-y-1">
+                    <div><strong>Email:</strong> admin@[nombre-tenant].com</div>
+                    <div><strong>Password:</strong> admin123</div>
+                    <div><strong>Rol:</strong> Administrador</div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsClientOnboardingOpen(false)}
+                className="flex-1"
+                data-testid="button-cancel-client-onboarding"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => {
+                  if (onboardingType === 'demo') {
+                    createDemoTenantMutation.mutate(demoForm);
+                  } else {
+                    createVanillaTenantMutation.mutate(vanillaForm);
+                  }
+                  setIsClientOnboardingOpen(false);
+                }}
+                disabled={onboardingType === 'demo' ? createDemoTenantMutation.isPending : createVanillaTenantMutation.isPending}
+                className={`flex-1 ${
+                  onboardingType === 'demo' 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : 'bg-green-600 hover:bg-green-700'
+                } text-white`}
+                data-testid="button-confirm-client-onboarding"
+              >
+                {(onboardingType === 'demo' ? createDemoTenantMutation.isPending : createVanillaTenantMutation.isPending) && (
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                {onboardingType === 'demo' ? 'Crear Demo' : 'Crear Cliente'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
