@@ -4418,40 +4418,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Get user tenant information by email for authentication
-  async getUserTenantByEmail(email: string): Promise<{ tenantType: string } | null> {
-    try {
-      // Look up user by email first
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, email))
-        .limit(1);
-
-      if (!user) {
-        return null;
-      }
-
-      // Find user's tenant relationship
-      const userTenantData = await db
-        .select({
-          tenantType: tenants.tenantType,
-        })
-        .from(userTenants)
-        .leftJoin(tenants, eq(userTenants.tenantId, tenants.id))
-        .where(eq(userTenants.userId, user.id))
-        .limit(1);
-
-      if (userTenantData.length > 0 && userTenantData[0].tenantType) {
-        return { tenantType: userTenantData[0].tenantType };
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Error looking up user tenant by email:', error);
-      return null;
-    }
-  }
 
   async updateDemoUserRole(tenantId: string, userId: string, newRoleId: string): Promise<any> {
     try {

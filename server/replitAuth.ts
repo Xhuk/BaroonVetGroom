@@ -113,37 +113,17 @@ export async function setupAuth(app: Express) {
       let tenantType = null;
       let userType = '';
       
-      try {
-        // First, try to find the user's tenant from user_tenants table
-        const userTenant = await storage.getUserTenantByEmail(email);
-        if (userTenant && userTenant.tenantType) {
-          tenantType = userTenant.tenantType;
-          console.log(`📋 Found tenant type "${tenantType}" for user:`, email);
-        } else {
-          // Fallback to email pattern matching for backward compatibility
-          const isDemoUser = email.includes('demo');
-          const isVanillaUser = !isDemoUser && email.startsWith('admin@');
-          
-          if (isDemoUser) {
-            tenantType = 'demo';
-          } else if (isVanillaUser) {
-            tenantType = 'vanilla';
-          }
-          
-          console.log(`🔍 Using email pattern fallback, detected type "${tenantType}" for:`, email);
-        }
-      } catch (dbError) {
-        console.error('Database lookup error, using email pattern fallback:', dbError);
-        // Fallback to email pattern matching
-        const isDemoUser = email.includes('demo');
-        const isVanillaUser = !isDemoUser && email.startsWith('admin@');
-        
-        if (isDemoUser) {
-          tenantType = 'demo';
-        } else if (isVanillaUser) {
-          tenantType = 'vanilla';
-        }
+      // Use email pattern matching to determine tenant type
+      const isDemoUser = email.includes('demo');
+      const isVanillaUser = !isDemoUser && email.startsWith('admin@');
+      
+      if (isDemoUser) {
+        tenantType = 'demo';
+      } else if (isVanillaUser) {
+        tenantType = 'vanilla';
       }
+      
+      console.log(`🔍 Detected type "${tenantType}" for:`, email);
       
       if (!tenantType || (tenantType !== 'demo' && tenantType !== 'vanilla')) {
         return done(null, false, { message: 'Only demo and vanilla tenant users can use local login' });
