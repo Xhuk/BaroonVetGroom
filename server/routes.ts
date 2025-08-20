@@ -1881,6 +1881,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes - Users  
+  app.get('/api/admin/users/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      // Get all users associated with this tenant
+      const tenantUsers = await storage.getTenantUsers(tenantId);
+      
+      console.log(`🔍 Found ${tenantUsers.length} users for tenant ${tenantId}`);
+      res.json(tenantUsers);
+    } catch (error) {
+      console.error("Error fetching tenant users:", error);
+      res.status(500).json({ message: "Failed to fetch tenant users" });
+    }
+  });
+
+  app.post('/api/admin/users', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId, firstName, lastName, email, password, roleId } = req.body;
+      
+      if (!tenantId || !firstName || !email || !password || !roleId) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+
+      // Create the user and assign to tenant with role
+      const newUser = await storage.createTenantUser({
+        firstName,
+        lastName,
+        email,
+        password,
+        tenantId,
+        roleId
+      });
+
+      console.log(`✅ Created new user ${email} for tenant ${tenantId} with role ${roleId}`);
+      res.status(201).json(newUser);
+    } catch (error: any) {
+      console.error("Error creating user:", error);
+      if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
+        return res.status(409).json({ message: "A user with this email already exists" });
+      }
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.put('/api/admin/users/:userId/role', isAuthenticated, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { tenantId, roleId } = req.body;
+      
+      if (!tenantId || !roleId) {
+        return res.status(400).json({ message: "Tenant ID and role ID are required" });
+      }
+
+      // Update user role within the tenant
+      const updatedUser = await storage.updateUserTenantRole(userId, tenantId, roleId);
+      
+      console.log(`✅ Updated user ${userId} role to ${roleId} in tenant ${tenantId}`);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
   // Admin routes for rooms, services, and roles
   app.get('/api/admin/rooms/:tenantId', isAuthenticated, async (req: any, res) => {
     try {

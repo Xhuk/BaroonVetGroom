@@ -123,11 +123,18 @@ function Admin() {
     enabled: !!currentTenant?.id,
   });
 
+  // Fetch tenant users from database
+  const { data: usersData, isLoading: usersLoading } = useQuery({
+    queryKey: ['/api/admin/users', currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
+
   // State management with proper types
   const [rooms, setRooms] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [deliveryConfig, setDeliveryConfig] = useState({
     mode: 'wave',
     totalWaves: 3,
@@ -146,27 +153,19 @@ function Admin() {
     if (servicesData) setServices(servicesData);
     if (rolesData) setRoles(rolesData);
     if (staffData) setStaff(staffData);
+    if (usersData) setUsers(usersData);
     if (deliveryConfigData) {
       setDeliveryConfig(deliveryConfigData);
     }
-  }, [roomsData, servicesData, rolesData, staffData, deliveryConfigData]);
+  }, [roomsData, servicesData, rolesData, staffData, usersData, deliveryConfigData]);
 
-  // State for users
-  const [users, setUsers] = useState([
-    { id: 'user1', name: 'María González', email: 'maria@vetgroom.com', currentRole: 'recepcion' },
-    { id: 'user2', name: 'Carlos Ruiz', email: 'carlos@vetgroom.com', currentRole: 'recepcion' },
-    { id: 'user3', name: 'Ana López', email: 'ana@vetgroom.com', currentRole: 'grooming' },
-    { id: 'user4', name: 'Pedro Sánchez', email: 'pedro@vetgroom.com', currentRole: 'grooming' },
-    { id: 'user5', name: 'Dr. Luis Morales', email: 'luis@vetgroom.com', currentRole: 'medical' },
-    { id: 'user6', name: 'Jessica Torres', email: 'jessica@vetgroom.com', currentRole: 'admin' },
-    { id: 'user7', name: 'Roberto Díaz', email: 'roberto@vetgroom.com', currentRole: 'autoentregas' },
-  ]);
 
   // Dialog states
   const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isStaffDialogOpen, setIsStaffDialogOpen] = useState(false);
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   
   // Edit states
   const [editingService, setEditingService] = useState(null);
@@ -211,6 +210,19 @@ function Admin() {
     department: '',
     description: ''
   });
+
+  // New user data
+  const [newUserData, setNewUserData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    roleId: ''
+  });
+
+  // Drag and drop state
+  const [draggedUser, setDraggedUser] = useState<any>(null);
+  const [dragOverRole, setDragOverRole] = useState<string | null>(null);
   
   // Subscription management state
   const [isSubscriptionDialogOpen, setIsSubscriptionDialogOpen] = useState(false);
@@ -291,6 +303,75 @@ function Admin() {
       toast({
         title: "Error",
         description: error.message || "No se pudo eliminar el rol",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest('/api/admin/users', 'POST', { ...data, tenantId: currentTenant?.id });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Usuario creado",
+        description: "El nuevo usuario ha sido creado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users', currentTenant?.id] });
+      setIsUserDialogOpen(false);
+      setNewUserData({ firstName: '', lastName: '', email: '', password: '', roleId: '' });
+    },
+    onError: (error: any) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para crear usuarios",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo crear el usuario",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update user role mutation
+  const updateUserRoleMutation = useMutation({
+    mutationFn: async ({ userId, roleId }: { userId: string; roleId: string }) => {
+      return apiRequest(`/api/admin/users/${userId}/role`, 'PUT', { 
+        tenantId: currentTenant?.id, 
+        roleId 
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Rol actualizado",
+        description: "El rol del usuario ha sido actualizado exitosamente.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users', currentTenant?.id] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para actualizar roles",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el rol del usuario",
         variant: "destructive",
       });
     },
@@ -536,6 +617,65 @@ function Admin() {
     if (window.confirm(`¿Estás seguro de que quieres eliminar el rol "${roleName}"?`)) {
       deleteRoleMutation.mutate(roleId);
     }
+  };
+
+  // Handle create user
+  const handleCreateUser = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    const data = {
+      firstName: formData.get('firstName'),
+      lastName: formData.get('lastName'),
+      email: formData.get('email'),
+      password: formData.get('password'),
+      roleId: formData.get('roleId')
+    };
+
+    if (!data.firstName || !data.email || !data.password || !data.roleId) {
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los campos requeridos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createUserMutation.mutate(data);
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, user: any) => {
+    setDraggedUser(user);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, roleId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverRole(roleId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverRole(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, roleId: string) => {
+    e.preventDefault();
+    setDragOverRole(null);
+    
+    if (draggedUser && draggedUser.roleId !== roleId) {
+      updateUserRoleMutation.mutate({
+        userId: draggedUser.id,
+        roleId: roleId
+      });
+    }
+    setDraggedUser(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedUser(null);
+    setDragOverRole(null);
   };
 
   // Create service mutation
@@ -1109,7 +1249,7 @@ function Admin() {
           </div>
 
           <Tabs defaultValue="rooms" className="w-full">
-            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-9' : 'grid-cols-8'}`}>
+            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-10' : 'grid-cols-9'}`}>
               <TabsTrigger value="rooms" className="flex items-center gap-2">
                 <DoorOpen className="w-4 h-4" />
                 Salas
@@ -1117,6 +1257,10 @@ function Admin() {
               <TabsTrigger value="roles" className="flex items-center gap-2">
                 <Shield className="w-4 h-4" />
                 Roles
+              </TabsTrigger>
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Usuarios
               </TabsTrigger>
               <TabsTrigger value="staff" className="flex items-center gap-2">
                 <UserCheck className="w-4 h-4" />
@@ -2195,6 +2339,189 @@ function Admin() {
                   </div>
                 </DialogContent>
               </Dialog>
+            </TabsContent>
+
+            {/* Users Management Tab */}
+            <TabsContent value="users" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Usuarios</h2>
+                <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Nuevo Usuario
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Crear Nuevo Usuario</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleCreateUser} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="firstName" className="text-sm font-medium">Nombre *</Label>
+                          <Input 
+                            name="firstName"
+                            placeholder="Ej: María" 
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="lastName" className="text-sm font-medium">Apellido</Label>
+                          <Input 
+                            name="lastName"
+                            placeholder="Ej: González" 
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="email" className="text-sm font-medium">Email *</Label>
+                        <Input 
+                          name="email"
+                          type="email"
+                          placeholder="Ej: maria@empresa.com" 
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="password" className="text-sm font-medium">Contraseña *</Label>
+                        <Input 
+                          name="password"
+                          type="password"
+                          placeholder="Contraseña para el usuario" 
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="roleId" className="text-sm font-medium">Rol Inicial *</Label>
+                        <Select name="roleId" required>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar rol" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {roles.map(role => (
+                              <SelectItem key={role.id} value={role.id}>
+                                {role.displayName} ({role.department})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex justify-end space-x-3 pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setIsUserDialogOpen(false);
+                            setNewUserData({ firstName: '', lastName: '', email: '', password: '', roleId: '' });
+                          }}
+                          disabled={createUserMutation.isPending}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          type="submit"
+                          className="bg-blue-600 hover:bg-blue-700"
+                          disabled={createUserMutation.isPending}
+                        >
+                          {createUserMutation.isPending ? 'Creando...' : 'Crear Usuario'}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {usersLoading ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <p className="mt-2 text-gray-600 dark:text-gray-400">Cargando usuarios...</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-3">
+                      <Users className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <h3 className="font-medium text-blue-900 dark:text-blue-100">Sistema de Roles por Arrastrar y Soltar</h3>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          Arrastra usuarios entre columnas para cambiar sus roles. Los cambios se guardan automáticamente.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    {roles.map(role => {
+                      const roleUsers = users.filter(user => user.roleId === role.id);
+                      return (
+                        <div
+                          key={role.id}
+                          className={`bg-white dark:bg-gray-800 rounded-lg border-2 transition-colors min-h-[200px] ${
+                            dragOverRole === role.id 
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' 
+                              : 'border-gray-200 dark:border-gray-700'
+                          }`}
+                          onDragOver={(e) => handleDragOver(e, role.id)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, role.id)}
+                        >
+                          <div className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{role.displayName}</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{role.department}</p>
+                              </div>
+                              <Badge variant="outline">{roleUsers.length}</Badge>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              {roleUsers.length === 0 ? (
+                                <div className="text-center py-4 text-gray-400 dark:text-gray-600">
+                                  <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                  <p className="text-sm">Sin usuarios</p>
+                                </div>
+                              ) : (
+                                roleUsers.map(user => (
+                                  <div
+                                    key={user.id}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, user)}
+                                    onDragEnd={handleDragEnd}
+                                    className={`bg-gray-50 dark:bg-gray-700 p-3 rounded-md border cursor-move transition-all hover:shadow-md ${
+                                      draggedUser?.id === user.id ? 'opacity-50 scale-95' : ''
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="min-w-0 flex-1">
+                                        <p className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
+                                          {user.firstName} {user.lastName}
+                                        </p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                                      </div>
+                                      <div className="flex items-center gap-1 ml-2">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {users.length === 0 && !usersLoading && (
+                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                      <Users className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                      <p className="text-lg font-medium mb-2">No hay usuarios registrados</p>
+                      <p className="text-sm">Crea el primer usuario de tu equipo usando el botón "Nuevo Usuario"</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </TabsContent>
 
             {/* Delivery Configuration Tab */}

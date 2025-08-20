@@ -190,6 +190,11 @@ export interface IStorage {
   verifyPassword(providedPassword: string, storedPassword: string): Promise<boolean>;
   upsertUser(user: UpsertUser): Promise<User>;
   
+  // Tenant User operations
+  getTenantUsers(tenantId: string): Promise<any[]>;
+  createTenantUser(userData: any): Promise<any>;
+  updateUserTenantRole(userId: string, tenantId: string, roleId: string): Promise<any>;
+  
   // Company operations
   getCompanies(): Promise<Company[]>;
   createCompany(company: InsertCompany): Promise<Company>;
@@ -4576,6 +4581,117 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error purging demo tenant:', error);
       throw new Error('Failed to purge demo tenant');
+    }
+  }
+
+  // Tenant User Management operations
+  async getTenantUsers(tenantId: string): Promise<any[]> {
+    try {
+      const tenantUsers = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          createdAt: users.createdAt,
+          roleId: userTenants.roleId,
+          roleName: roles.name,
+          roleDisplayName: roles.displayName,
+          department: roles.department,
+          isActive: userTenants.isActive,
+        })
+        .from(users)
+        .innerJoin(userTenants, eq(users.id, userTenants.userId))
+        .leftJoin(roles, eq(userTenants.roleId, roles.id))
+        .where(eq(userTenants.tenantId, tenantId))
+        .orderBy(users.firstName, users.lastName);
+
+      return tenantUsers;
+    } catch (error) {
+      console.error('Error fetching tenant users:', error);
+      throw new Error('Failed to fetch tenant users');
+    }
+  }
+
+  async createTenantUser(userData: any): Promise<any> {
+    try {
+      const { firstName, lastName, email, password, tenantId, roleId } = userData;
+
+      // Check if user with this email already exists
+      const existingUser = await this.getUserByEmail(email);
+      if (existingUser) {
+        throw new Error('A user with this email already exists');
+      }
+
+      // Create user first
+      const [newUser] = await db.insert(users).values({
+        firstName,
+        lastName: lastName || '',
+        email,
+        password, // Store password as-is (demo/vanilla users use plaintext)
+      }).returning();
+
+      // Assign user to tenant with role
+      await db.insert(userTenants).values({
+        userId: newUser.id,
+        tenantId,
+        roleId,
+        isActive: true,
+      });
+
+      // Return user with role information
+      const [userWithRole] = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          createdAt: users.createdAt,
+          roleId: userTenants.roleId,
+          roleName: roles.name,
+          roleDisplayName: roles.displayName,
+          department: roles.department,
+        })
+        .from(users)
+        .innerJoin(userTenants, eq(users.id, userTenants.userId))
+        .leftJoin(roles, eq(userTenants.roleId, roles.id))
+        .where(and(eq(users.id, newUser.id), eq(userTenants.tenantId, tenantId)));
+
+      return userWithRole;
+    } catch (error) {
+      console.error('Error creating tenant user:', error);
+      throw error;
+    }
+  }
+
+  async updateUserTenantRole(userId: string, tenantId: string, roleId: string): Promise<any> {
+    try {
+      // Update user role in userTenants table
+      await db.update(userTenants)
+        .set({ roleId, updatedAt: new Date() })
+        .where(and(eq(userTenants.userId, userId), eq(userTenants.tenantId, tenantId)));
+
+      // Get updated user with role info
+      const [updatedUser] = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          roleId: userTenants.roleId,
+          roleName: roles.name,
+          roleDisplayName: roles.displayName,
+          department: roles.department,
+        })
+        .from(users)
+        .innerJoin(userTenants, eq(users.id, userTenants.userId))
+        .leftJoin(roles, eq(userTenants.roleId, roles.id))
+        .where(and(eq(users.id, userId), eq(userTenants.tenantId, tenantId)));
+
+      return updatedUser;
+    } catch (error) {
+      console.error('Error updating user tenant role:', error);
+      throw new Error('Failed to update user role');
     }
   }
 }
