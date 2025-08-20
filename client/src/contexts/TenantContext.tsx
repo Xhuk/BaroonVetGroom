@@ -98,7 +98,45 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    // Priority 3: Handle regular tenant assignments (including debug users with normal assignments)
+    // Priority 3: Handle demo/vanilla users who might not be in userTenants properly
+    if (user?.isDemoUser || user?.isVanillaUser) {
+      const userEmail = user.claims?.email || user.email;
+      if (userEmail && !currentTenant && !debugMode) {
+        // Auto-detect tenant from user email for demo/vanilla users
+        if (user.isDemoUser && userEmail.includes('@')) {
+          // For demo users, try to find their demo tenant
+          const allAvailableTenants = [...userTenants.map(ut => ({ id: ut.tenantId })), ...allTenants];
+          const demoTenant = allAvailableTenants.find(t => t.id && t.id.startsWith('demo-'));
+          if (demoTenant) {
+            console.log('🎯 Auto-selecting demo tenant for user:', userEmail, 'tenant:', demoTenant.id);
+            const optimisticTenant = {
+              id: demoTenant.id,
+              name: `Demo Clinic - ${demoTenant.id}`,
+              subdomain: demoTenant.id,
+              companyId: 'demo-company',
+              address: 'Demo Address',
+              phone: '+1-555-0123',
+              email: userEmail,
+              latitude: null,
+              longitude: null,
+              postalCode: null,
+              openTime: '09:00:00',
+              closeTime: '18:00:00',
+              timeSlotDuration: 30,
+              reservationTimeout: 5,
+              deliveryTrackingEnabled: false,
+              settings: { language: 'es', timezone: 'America/Mexico_City' },
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+            setCurrentTenant(optimisticTenant);
+            return;
+          }
+        }
+      }
+    }
+
+    // Priority 4: Handle regular tenant assignments (including debug users with normal assignments)
     if (userTenants.length > 0 && !currentTenant && !debugMode) {
       // Auto-select first tenant immediately for single tenant case
       if (userTenants.length === 1 && availableTenants.length === 0) {
