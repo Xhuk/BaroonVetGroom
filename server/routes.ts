@@ -264,6 +264,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/tenants/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // For demo/vanilla users (local auth), find their tenant through email lookup
+      if (req.user.isLocalUser && (req.user.isDemoUser || req.user.isVanillaUser)) {
+        const userEmail = req.user.claims.email;
+        const tenantInfo = await storage.getUserTenantInfo(userEmail);
+        
+        if (tenantInfo && tenantInfo.tenantId) {
+          console.log(`🔍 Found tenant for local user ${userEmail}: ${tenantInfo.tenantId}`);
+          
+          // Return tenant info in the expected format
+          const userTenants = [{
+            id: `ut-${Date.now()}`,
+            userId: userId,
+            tenantId: tenantInfo.tenantId,
+            roleId: 'demo-admin',
+            roleName: req.user.isDemoUser ? 'Demo Admin' : 'Vanilla Admin',
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }];
+          
+          return res.json(userTenants);
+        } else {
+          console.log(`⚠️ No tenant found for local user: ${userEmail}`);
+          return res.json([]);
+        }
+      }
+      
+      // Regular user tenant lookup
       const userTenants = await storage.getUserTenants(userId);
       res.json(userTenants);
     } catch (error) {
