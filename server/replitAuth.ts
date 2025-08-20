@@ -225,6 +225,21 @@ export async function setupAuth(app: Express) {
           return res.status(500).json({ error: 'Login failed' });
         }
         
+        // Determine proper redirect based on user type and tenant
+        let redirectUrl = '/';
+        
+        // For demo/vanilla users, redirect to their tenant dashboard
+        if (user.isDemoUser || user.isVanillaUser) {
+          // Try to find their tenant ID from the database
+          storage.getUserTenantInfo(user.claims.email).then(tenantInfo => {
+            if (tenantInfo && tenantInfo.tenantId) {
+              console.log(`🎯 Redirecting ${user.isDemoUser ? 'demo' : 'vanilla'} user to tenant: ${tenantInfo.tenantId}`);
+            }
+          }).catch(err => {
+            console.error('Error getting tenant info for redirect:', err);
+          });
+        }
+        
         console.log('✅ Local login successful, redirecting to dashboard');
         res.json({ 
           success: true, 
@@ -235,7 +250,7 @@ export async function setupAuth(app: Express) {
             isDemoUser: user.isDemoUser,
             isVanillaUser: user.isVanillaUser
           },
-          redirect: '/'
+          redirect: redirectUrl
         });
       });
     })(req, res, next);
