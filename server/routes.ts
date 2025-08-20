@@ -16,6 +16,7 @@ import { gt } from "drizzle-orm";
 import { subscriptionService } from "./subscriptionService";
 import express from "express";
 import path from "path";
+import { emailService } from "./emailService";
 // Removed autoStatusService import - now using database functions
 
 // Extended request type for authenticated requests
@@ -362,7 +363,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { tenantId } = req.params;
       const userId = req.user.claims.sub;
       
-      // Verify user has access to this tenant
+      // Handle demo/vanilla users special access
+      if (req.user.isLocalUser && (req.user.isDemoUser || req.user.isVanillaUser)) {
+        const userEmail = req.user.claims.email;
+        const tenantInfo = await storage.getUserTenantInfo(userEmail);
+        
+        if (tenantInfo && tenantInfo.tenantId === tenantId) {
+          const tenant = await storage.getTenant(tenantId);
+          if (!tenant) {
+            return res.status(404).json({ message: "Tenant not found" });
+          }
+          return res.json(tenant);
+        } else {
+          return res.status(403).json({ message: "Access denied to this tenant" });
+        }
+      }
+      
+      // Verify regular user has access to this tenant
       const userTenants = await storage.getUserTenants(userId);
       const hasAccess = userTenants.some(ut => ut.tenantId === tenantId);
       if (!hasAccess) {
@@ -378,6 +395,202 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching tenant:", error);
       res.status(500).json({ message: "Failed to fetch tenant" });
+    }
+  });
+
+  // Demo User Subscription Plan Selection Routes
+  app.get('/api/demo/subscription-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      // Only allow demo users to access this endpoint
+      if (!req.user.isLocalUser || !req.user.isDemoUser) {
+        return res.status(403).json({ message: "Access restricted to demo users" });
+      }
+      
+      // Get available subscription plans (excluding trial)
+      const plans = [
+        {
+          id: 'basic',
+          name: 'Plan Básico',
+          description: 'Perfecto para clínicas pequeñas',
+          features: [
+            'Hasta 3 sitios veterinarios',
+            'Gestión de citas básica',
+            'Historial médico',
+            'Facturación simple'
+          ],
+          pricing: {
+            monthly: { amount: 2900, display: '$29.00 USD/mes' },
+            yearly: { amount: 29000, display: '$290.00 USD/año (ahorra $58)' }
+          }
+        },
+        {
+          id: 'medium',
+          name: 'Plan Mediano',
+          description: 'Ideal para clínicas en crecimiento',
+          features: [
+            'Hasta 8 sitios veterinarios',
+            'Gestión avanzada de citas',
+            'Historial médico completo',
+            'Facturación y reportes',
+            'Gestión de inventario',
+            'Servicios de grooming'
+          ],
+          pricing: {
+            monthly: { amount: 5900, display: '$59.00 USD/mes' },
+            yearly: { amount: 59000, display: '$590.00 USD/año (ahorra $118)' }
+          }
+        },
+        {
+          id: 'large',
+          name: 'Plan Grande',
+          description: 'Para clínicas establecidas',
+          features: [
+            'Hasta 15 sitios veterinarios',
+            'Sistema completo de gestión',
+            'Análisis y reportes avanzados',
+            'Integración con WhatsApp',
+            'Gestión de entregas',
+            'Soporte prioritario'
+          ],
+          pricing: {
+            monthly: { amount: 9900, display: '$99.00 USD/mes' },
+            yearly: { amount: 99000, display: '$990.00 USD/año (ahorra $198)' }
+          }
+        },
+        {
+          id: 'extra_large',
+          name: 'Plan Premium',
+          description: 'Para redes de clínicas grandes',
+          features: [
+            'Sitios veterinarios ilimitados',
+            'Sistema empresarial completo',
+            'API personalizada',
+            'Soporte dedicado 24/7',
+            'Capacitación personalizada',
+            'Implementación asistida'
+          ],
+          pricing: {
+            monthly: { amount: 19900, display: '$199.00 USD/mes' },
+            yearly: { amount: 199000, display: '$1,990.00 USD/año (ahorra $398)' }
+          }
+        }
+      ];
+      
+      res.json({ plans });
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ message: "Failed to fetch subscription plans" });
+    }
+  });
+  
+  app.post('/api/demo/request-vanilla-tenant', isAuthenticated, async (req: any, res) => {
+    try {
+      // Only allow demo users to access this endpoint
+      if (!req.user.isLocalUser || !req.user.isDemoUser) {
+        return res.status(403).json({ message: "Access restricted to demo users" });
+      }
+      
+      const { 
+        selectedPlan, 
+        billingCycle, 
+        companyName, 
+        contactName, 
+        contactEmail, 
+        phone, 
+        address, 
+        city, 
+        country 
+      } = req.body;
+      
+      // Validate required fields
+      if (!selectedPlan || !billingCycle || !companyName || !contactName || !contactEmail) {
+        return res.status(400).json({ 
+          message: "Faltan campos requeridos",
+          required: ['selectedPlan', 'billingCycle', 'companyName', 'contactName', 'contactEmail']
+        });
+      }
+      
+      console.log('🎯 Creating vanilla tenant for demo user:', {
+        companyName,
+        contactEmail,
+        selectedPlan,
+        billingCycle
+      });
+      
+      // Import createVanillaTenant function dynamically
+      const { createVanillaTenant } = await import('./seedDemoData');
+      
+      // Generate safe tenant name from company name
+      const tenantName = companyName.toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\s+/g, '-')
+        .substring(0, 30) + '-' + Date.now().toString().slice(-6);
+      
+      // Create vanilla tenant with selected subscription plan
+      const vanillaResult = await createVanillaTenant({
+        tenantName,
+        companyName,
+        subscriptionType: 'paid',
+        subscriptionPlan: selectedPlan,
+        contactEmail
+      });
+      
+      if (vanillaResult.success) {
+        // Generate admin credentials
+        const adminCredentials = {
+          email: vanillaResult.adminUser.email,
+          password: vanillaResult.adminUser.temporaryPassword,
+          loginUrl: process.env.REPLIT_DEV_DOMAIN 
+            ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+            : `${req.protocol}://${req.get('host')}`
+        };
+        
+        // Send credentials via email
+        try {
+          const emailSent = await emailService.sendVanillaTenantCredentials(
+            contactEmail,
+            companyName,
+            vanillaResult.tenant.tenantId,
+            adminCredentials
+          );
+          
+          if (emailSent) {
+            console.log('✅ Vanilla tenant credentials sent via email to:', contactEmail);
+          } else {
+            console.error('❌ Failed to send vanilla tenant credentials email');
+          }
+        } catch (emailError) {
+          console.error('❌ Error sending vanilla tenant credentials:', emailError);
+          // Continue even if email fails
+        }
+        
+        res.json({
+          success: true,
+          message: "¡Tu cuenta profesional ha sido creada exitosamente!",
+          tenant: {
+            tenantId: vanillaResult.tenant.tenantId,
+            companyName: vanillaResult.company.name,
+            plan: selectedPlan
+          },
+          credentials: {
+            loginUrl: adminCredentials.loginUrl,
+            adminEmail: adminCredentials.email,
+            note: "La contraseña temporal ha sido enviada a tu email"
+          },
+          nextSteps: [
+            "Revisa tu email para obtener las credenciales de acceso",
+            "Ingresa al sistema y cambia la contraseña temporal",
+            "Configura usuarios adicionales para tu equipo",
+            "Personaliza la configuración de tu clínica",
+            "¡Comienza a gestionar tu práctica veterinaria!"
+          ]
+        });
+      } else {
+        throw new Error(vanillaResult.message || 'Failed to create vanilla tenant');
+      }
+    } catch (error) {
+      console.error("Error processing vanilla tenant request:", error);
+      res.status(500).json({ message: "Failed to process request" });
     }
   });
 

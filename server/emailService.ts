@@ -299,6 +299,114 @@ El equipo de VetGroom
       html,
     });
   }
+
+  async sendVanillaTenantCredentials(contactEmail: string, companyName: string, tenantId: string, adminCredentials: { email: string; password: string; loginUrl: string }) {
+    const subject = `🎉 ¡Bienvenido a VetGroom! - Credenciales de Acceso para ${companyName}`;
+    
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 30px 20px; text-align: center; }
+        .content { padding: 30px 20px; }
+        .welcome-icon { font-size: 48px; margin-bottom: 15px; }
+        .btn { display: inline-block; background: #059669; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+        .credentials-box { background-color: #f0f9ff; border: 2px solid #0ea5e9; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .credential-item { background-color: #fff; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #059669; }
+        .footer { background-color: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; }
+        .security-note { background-color: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 5px; margin: 20px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="email-container">
+        <div class="header">
+          <div class="welcome-icon">🎉</div>
+          <h1 style="margin: 0; font-size: 28px;">¡Bienvenido a VetGroom!</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Su cuenta profesional está lista</p>
+        </div>
+        
+        <div class="content">
+          <h2>¡Estimado/a equipo de ${companyName}!</h2>
+          
+          <p>¡Excelentes noticias! Su solicitud de upgrade desde la cuenta demo ha sido procesada exitosamente. Su nueva cuenta profesional de VetGroom está lista para usar.</p>
+          
+          <div class="credentials-box">
+            <h3 style="margin-top: 0; color: #0ea5e9;">🔐 Credenciales de Acceso Administrativo</h3>
+            
+            <div class="credential-item">
+              <strong>🌐 URL de Acceso:</strong><br>
+              <a href="${adminCredentials.loginUrl}" style="color: #059669; font-weight: bold;">${adminCredentials.loginUrl}</a>
+            </div>
+            
+            <div class="credential-item">
+              <strong>📧 Email de Administrador:</strong><br>
+              <code style="background-color: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${adminCredentials.email}</code>
+            </div>
+            
+            <div class="credential-item">
+              <strong>🔑 Contraseña Temporal:</strong><br>
+              <code style="background-color: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${adminCredentials.password}</code>
+            </div>
+          </div>
+          
+          <div class="security-note">
+            <p><strong>🛡️ Importante - Seguridad:</strong></p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+              <li>Cambie la contraseña temporal inmediatamente después del primer login</li>
+              <li>No comparta estas credenciales por email o mensajes</li>
+              <li>Configure usuarios adicionales desde el panel de administración</li>
+            </ul>
+          </div>
+          
+          <h3>🚀 Próximos Pasos:</h3>
+          <ol>
+            <li>Ingrese al sistema usando las credenciales proporcionadas</li>
+            <li>Cambie la contraseña del administrador</li>
+            <li>Configure los usuarios de su equipo</li>
+            <li>Migre los datos desde su cuenta demo (si aplica)</li>
+            <li>Personalice la configuración de su clínica</li>
+          </ol>
+          
+          <div style="text-align: center;">
+            <a href="${adminCredentials.loginUrl}" class="btn">🚀 Acceder al Sistema</a>
+          </div>
+          
+          <h3>💎 Funciones de su Plan:</h3>
+          <ul>
+            <li>✅ Sistema completo de gestión veterinaria</li>
+            <li>✅ Gestión de citas y calendario</li>
+            <li>✅ Historiales médicos completos</li>
+            <li>✅ Sistema de facturación</li>
+            <li>✅ Reportes y análisis</li>
+            <li>✅ Soporte técnico prioritario</li>
+          </ul>
+          
+          <p><strong>🆘 ¿Necesita ayuda?</strong><br>
+          Nuestro equipo de soporte está disponible para ayudarle con la configuración inicial y migración de datos.</p>
+          
+          <p>¡Gracias por confiar en VetGroom para la gestión de su clínica veterinaria!</p>
+        </div>
+        
+        <div class="footer">
+          <p>© 2024 VetGroom - Sistema de Gestión Veterinaria</p>
+          <p>Tenant ID: ${tenantId} | Este correo contiene información confidencial</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    return this.provider.sendEmail({
+      to: contactEmail,
+      from: `${this.config.fromName} <${this.config.fromEmail}>`,
+      subject,
+      html,
+    });
+  }
 }
 
 // Singleton instance

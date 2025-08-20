@@ -9,14 +9,14 @@ import { FastCalendar } from "@/components/FastCalendar";
 import { FastStatsRibbon } from "@/components/FastStatsRibbon";
 import { Button } from "@/components/ui/button";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Plus, Truck, Phone, CalendarIcon } from "lucide-react";
+import { Plus, Truck, Phone, CalendarIcon, Crown } from "lucide-react";
 import { Link, useSearch } from "wouter";
 import type { Appointment } from "@shared/schema";
 import { getTodayInUserTimezone } from "@shared/timeUtils";
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const { currentTenant, isLoading: tenantLoading, isDebugMode } = useTenant();
   const { isInstant, startBackgroundLoad, completeLoad } = useFastLoad();
   const { shouldHideBottomRibbon } = useScreenSize();
@@ -235,6 +235,16 @@ export default function Dashboard() {
               Gestionar Citas
             </Button>
           </Link>
+          
+          {/* Demo User Upgrade Button */}
+          {user?.email?.includes('@fergon-demo.com') && (
+            <Link href="/demo/upgrade">
+              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 shadow-md animate-pulse">
+                <Crown className="w-4 h-4 mr-2" />
+                Cambiar Plan
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Fast Calendar - positioned to end at same level as navigation */}

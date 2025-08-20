@@ -18,6 +18,7 @@ import SuperAdminMonitoring from "@/pages/SuperAdminMonitoring";
 import SuperAdminRouteConfig from "@/pages/SuperAdminRouteConfig";
 import SuperAdminRBAC from "@/pages/SuperAdminRBAC";
 import SuperAdminReports from "@/pages/SuperAdminReports";
+import DemoSubscriptionUpgrade from "@/pages/DemoSubscriptionUpgrade";
 import EnterpriseSubscriptionAdmin from "@/pages/EnterpriseSubscriptionAdmin";
 import SuperAdminFeaturesAdmin from "@/pages/SuperAdminFeaturesAdmin";
 import SuperAdminDemoManagement from "@/pages/SuperAdminDemoManagement";
@@ -177,6 +178,7 @@ function Router() {
           <Route path="/superadmin/features" component={SuperAdminFeaturesAdmin} />
           <Route path="/superadmin/deployment" component={() => <VersionedSuperAdminDashboard />} />
           <Route path="/superadmin/demo-management" component={SuperAdminDemoManagement} />
+          <Route path="/demo/upgrade" component={DemoSubscriptionUpgrade} />
         </>
       )}
       <Route path="/mobile-admin" component={MobileAdmin} />
