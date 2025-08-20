@@ -186,6 +186,8 @@ db.execute(sql`SET timezone = 'UTC'`);
 export interface IStorage {
   // User operations (IMPORTANT: mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  verifyPassword(providedPassword: string, storedPassword: string): Promise<boolean>;
   upsertUser(user: UpsertUser): Promise<User>;
   
   // Company operations
@@ -445,6 +447,18 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async verifyPassword(providedPassword: string, storedPassword: string): Promise<boolean> {
+    // For demo users, the stored password is 'demo123'
+    // For vanilla users, the stored password is 'admin123'  
+    // Simple string comparison since demo passwords are not hashed
+    return providedPassword === storedPassword;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {

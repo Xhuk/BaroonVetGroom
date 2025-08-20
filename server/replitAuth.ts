@@ -147,8 +147,18 @@ export async function setupAuth(app: Express) {
         return done(null, false, { message: 'Only demo and vanilla tenant users can use local login' });
       }
 
-      // Authentication is based on tenant type, not password validation
-      // Accept any password for valid demo/vanilla users
+      // Validate actual password against database for demo/vanilla users
+      const storedUser = await storage.getUserByEmail(email);
+      if (!storedUser) {
+        return done(null, false, { message: 'User not found' });
+      }
+      
+      // Verify password against stored hash
+      const isValidPassword = await storage.verifyPassword(password, storedUser.password);
+      if (!isValidPassword) {
+        return done(null, false, { message: 'Invalid password' });
+      }
+      
       if (tenantType === 'demo') {
         userType = 'Demo';
       } else if (tenantType === 'vanilla') {
