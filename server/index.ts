@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import { getUserInfo } from "@replit/repl-auth";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { webhookMonitor } from "./webhookMonitor";
@@ -32,51 +33,46 @@ app.use(session({
   }
 }));
 
-// Replit authentication middleware for development mode
-app.use((req: any, res, next) => {
+// Official Replit authentication middleware for development mode
+app.use(async (req: any, res, next) => {
   const isDevelopment = process.env.NODE_ENV === 'development';
   
-  if (isDevelopment) {
-    // Try to get Replit user from headers
-    const replitUserId = req.get('X-Replit-User-Id');
-    const replitUserName = req.get('X-Replit-User-Name');
-    
-    // Also check environment variables that Replit might provide
-    const replitEnvUserId = process.env.REPL_OWNER;
-    const replitSlug = process.env.REPL_SLUG;
-    
-    // Debug logging for auth setup
-    if (req.path === '/api/user') {
-      console.log('🔐 Auth Debug:', {
-        headers: {
-          userId: replitUserId,
-          userName: replitUserName,
-        },
-        env: {
-          owner: replitEnvUserId,
-          slug: replitSlug,
-          nodeEnv: process.env.NODE_ENV
-        },
-        session: req.session?.isAuthenticated
-      });
+  if (isDevelopment && req.path === '/api/user') {
+    console.log('🔐 Starting Replit Auth Check...');
+    try {
+      // Use official Replit getUserInfo
+      const userInfo = await getUserInfo(req);
+      console.log('🔐 getUserInfo result:', userInfo);
+      if (userInfo) {
+        // Set up user object in Replit's expected format
+        req.user = {
+          claims: {
+            sub: userInfo.id,
+            name: userInfo.name
+          }
+        };
+        console.log('🔐 Replit Auth Success:', { id: userInfo.id, name: userInfo.name });
+      } else {
+        console.log('🔐 No user info returned');
+      }
+    } catch (error: any) {
+      console.log('🔐 Replit Auth Error:', error.message || error);
+      // Continue without auth - let the app handle it
     }
-    
-    if (replitUserId && replitUserName) {
-      // Set up user object similar to Replit's expected format
-      req.user = {
-        claims: {
-          sub: replitUserId,
-          name: replitUserName
-        }
-      };
-    } else if (replitEnvUserId) {
-      // Fallback to environment-based auth
-      req.user = {
-        claims: {
-          sub: replitEnvUserId,
-          name: replitEnvUserId
-        }
-      };
+  } else if (isDevelopment && !req.user) {
+    // For non-user endpoints, try auth without logging
+    try {
+      const userInfo = await getUserInfo(req);
+      if (userInfo) {
+        req.user = {
+          claims: {
+            sub: userInfo.id,
+            name: userInfo.name
+          }
+        };
+      }
+    } catch (error) {
+      // Silent fail for non-user endpoints
     }
   }
   
