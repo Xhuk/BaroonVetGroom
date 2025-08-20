@@ -1,8 +1,66 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Link } from "wouter";
-import { ArrowRight, Star, Users, Calendar, FileText, BarChart3 } from "lucide-react";
+import { ArrowRight, Star, Users, Calendar, FileText, BarChart3, LogIn, Eye, EyeOff } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export function LandingPage() {
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const { toast } = useToast();
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!loginForm.email || !loginForm.password) {
+      toast({
+        title: "Campos requeridos",
+        description: "Por favor ingresa tu email y contraseña",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoggingIn(true);
+    
+    try {
+      // For now, redirect to Replit auth - this can be replaced with custom auth later
+      toast({
+        title: "Iniciando sesión...",
+        description: "Redirigiendo al sistema de autenticación",
+      });
+      
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 1000);
+      
+    } catch (error) {
+      toast({
+        title: "Error de autenticación",
+        description: "No se pudo iniciar sesión. Intenta nuevamente.",
+        variant: "destructive",
+      });
+      setIsLoggingIn(false);
+    }
+  };
+
+  const openLoginDialog = () => {
+    setIsLoginDialogOpen(true);
+    setLoginForm({ email: '', password: '' });
+    setShowPassword(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
@@ -21,11 +79,13 @@ export function LandingPage() {
                 Folleto
               </Button>
             </Link>
-            <a href="/api/login">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                Iniciar Sesión
-              </Button>
-            </a>
+            <Button 
+              onClick={openLoginDialog}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              data-testid="button-login-header"
+            >
+              Iniciar Sesión
+            </Button>
           </div>
         </div>
       </header>
@@ -45,12 +105,15 @@ export function LandingPage() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/api/login">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg">
-                Comenzar Ahora
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </a>
+            <Button 
+              size="lg" 
+              onClick={openLoginDialog}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg"
+              data-testid="button-login-hero"
+            >
+              Comenzar Ahora
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
             <Link href="/marketing/brochure.html">
               <Button size="lg" variant="outline" className="px-8 py-4 text-lg border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20">
                 Ver Folleto
@@ -161,12 +224,15 @@ export function LandingPage() {
           <p className="text-xl text-blue-100 mb-8">
             Únete a cientos de veterinarias que ya confían en VetGroom
           </p>
-          <Link href="/api/auth/login">
-            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold">
-              Comenzar Prueba Gratuita
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+          <Button 
+            size="lg" 
+            onClick={openLoginDialog}
+            className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold"
+            data-testid="button-login-cta"
+          >
+            Comenzar Prueba Gratuita
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
         </div>
       </section>
 
@@ -202,6 +268,91 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Login Dialog */}
+      <Dialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center text-gray-900 dark:text-white flex items-center justify-center gap-2">
+              <LogIn className="w-6 h-6 text-blue-600" />
+              Iniciar Sesión
+            </DialogTitle>
+            <DialogDescription className="text-center text-gray-600 dark:text-gray-300">
+              Ingresa tus credenciales para acceder a VetGroom
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleLoginSubmit} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="tu@email.com"
+                value={loginForm.email}
+                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                className="w-full"
+                data-testid="input-email"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">
+                Contraseña
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Tu contraseña"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                  className="w-full pr-10"
+                  data-testid="input-password"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                  data-testid="button-toggle-password"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsLoginDialogOpen(false)}
+                className="flex-1"
+                data-testid="button-cancel-login"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoggingIn}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                data-testid="button-submit-login"
+              >
+                {isLoggingIn ? "Iniciando..." : "Iniciar Sesión"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
