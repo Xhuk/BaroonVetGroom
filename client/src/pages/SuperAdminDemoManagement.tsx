@@ -256,7 +256,9 @@ Vanilla tenant is ready for customization and client setup.`,
       setIsCreateVanillaDialogOpen(false);
       setVanillaForm({
         tenantName: '',
-        companyName: ''
+        companyName: '',
+        subscriptionType: 'monthly',
+        subscriptionPlan: 'medium'
       });
       
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/demo-tenants'] });
@@ -612,10 +614,10 @@ Vanilla tenant is ready for customization and client setup.`,
                 </Label>
                 <Input
                   id="client-tenant-name"
-                  value={onboardingType === 'demo' ? '' : vanillaForm.tenantName}
+                  value={onboardingType === 'demo' ? createForm.tenantName : vanillaForm.tenantName}
                   onChange={(e) => {
                     if (onboardingType === 'demo') {
-                      // Demo form will be handled separately
+                      setCreateForm(prev => ({ ...prev, tenantName: e.target.value }));
                     } else {
                       setVanillaForm(prev => ({ ...prev, tenantName: e.target.value }));
                     }
@@ -632,10 +634,10 @@ Vanilla tenant is ready for customization and client setup.`,
                 </Label>
                 <Input
                   id="client-company-name"
-                  value={onboardingType === 'demo' ? '' : vanillaForm.companyName}
+                  value={onboardingType === 'demo' ? createForm.companyName : vanillaForm.companyName}
                   onChange={(e) => {
                     if (onboardingType === 'demo') {
-                      // Demo form will be handled separately
+                      setCreateForm(prev => ({ ...prev, companyName: e.target.value }));
                     } else {
                       setVanillaForm(prev => ({ ...prev, companyName: e.target.value }));
                     }
@@ -653,8 +655,10 @@ Vanilla tenant is ready for customization and client setup.`,
                       Usuarios de Demostración
                     </Label>
                     <Select
-                      value="5"
-                      onValueChange={(value) => {}}
+                      value={createForm.userCount.toString()}
+                      onValueChange={(value) => {
+                        setCreateForm(prev => ({ ...prev, userCount: parseInt(value) || 5 }));
+                      }}
                     >
                       <SelectTrigger className="bg-gray-800 border-gray-600 text-white" data-testid="select-client-user-count">
                         <SelectValue />
@@ -674,8 +678,10 @@ Vanilla tenant is ready for customization and client setup.`,
                       Historial de Citas
                     </Label>
                     <Select
-                      value="7"
-                      onValueChange={(value) => {}}
+                      value={createForm.appointmentDays.toString()}
+                      onValueChange={(value) => {
+                        setCreateForm(prev => ({ ...prev, appointmentDays: parseInt(value) || 7 }));
+                      }}
                     >
                       <SelectTrigger className="bg-gray-800 border-gray-600 text-white" data-testid="select-client-days-history">
                         <SelectValue />
@@ -783,13 +789,17 @@ Vanilla tenant is ready for customization and client setup.`,
               <Button
                 onClick={() => {
                   if (onboardingType === 'demo') {
-                    // Handle demo creation separately
+                    createDemoTenantMutation.mutate(createForm);
                   } else {
                     createVanillaTenantMutation.mutate(vanillaForm);
                   }
                   setIsClientOnboardingOpen(false);
                 }}
-                disabled={onboardingType === 'demo' ? createDemoTenantMutation.isPending : createVanillaTenantMutation.isPending}
+                disabled={(
+                  onboardingType === 'demo' 
+                    ? createDemoTenantMutation.isPending || !createForm.tenantName || !createForm.companyName
+                    : createVanillaTenantMutation.isPending || !vanillaForm.tenantName || !vanillaForm.companyName
+                )}
                 className={`flex-1 ${
                   onboardingType === 'demo' 
                     ? 'bg-blue-600 hover:bg-blue-700' 
