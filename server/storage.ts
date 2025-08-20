@@ -4296,9 +4296,16 @@ export class DatabaseStorage implements IStorage {
             .limit(1);
 
           if (randomPet) {
-            // Split date and time for the database schema
-            const dateOnly = appointmentDateTime.toISOString().split('T')[0];
-            const timeOnly = appointmentDateTime.toTimeString().split(' ')[0].substring(0, 5); // HH:MM format
+            // Convert to proper UTC format for database storage
+            const userDate = appointmentDateTime.toISOString().split('T')[0];
+            const userTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            
+            // Import and use timezone conversion
+            const { convertUserDateTimeToUTC } = await import('../shared/timeUtils');
+            const { utcDate, utcTime } = convertUserDateTimeToUTC(userDate, userTime);
+            
+            const dateOnly = utcDate;
+            const timeOnly = utcTime;
             
             await db.insert(appointments).values({
               tenantId: tenant.id,
@@ -4364,9 +4371,16 @@ export class DatabaseStorage implements IStorage {
             .limit(1);
 
           if (randomPet) {
-            // Split date and time for the database schema
-            const dateOnly = appointmentDateTime.toISOString().split('T')[0];
-            const timeOnly = appointmentDateTime.toTimeString().split(' ')[0].substring(0, 5); // HH:MM format
+            // Convert to proper UTC format for database storage
+            const userDate = appointmentDateTime.toISOString().split('T')[0];
+            const userTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            
+            // Import and use timezone conversion
+            const { convertUserDateTimeToUTC } = await import('../shared/timeUtils');
+            const { utcDate, utcTime } = convertUserDateTimeToUTC(userDate, userTime);
+            
+            const dateOnly = utcDate;
+            const timeOnly = utcTime;
             
             await db.insert(appointments).values({
               id: `refresh-appt-${tenantId}-${Date.now()}-${i}`,
