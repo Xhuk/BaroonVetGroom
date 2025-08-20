@@ -314,13 +314,15 @@ export async function seedDemoData(days: number = 45) {
     }
     console.log(`✅ Created/verified ${clientsCreated} clients and ${petsCreated} pets`);
 
-    // 7. Generate appointments for the next 45 days
-    console.log(`📅 Generating appointments for next ${days} days...`);
+    // 7. Generate appointments spanning from today to selected days ahead
+    console.log(`📅 Generating realistic appointment data spanning ${days} days from today...`);
     let appointmentsCreated = 0;
     
     const startDate = new Date();
+    // Start from yesterday to include some past appointments for realism
+    startDate.setDate(startDate.getDate() - 1);
     const endDate = new Date();
-    endDate.setDate(startDate.getDate() + days);
+    endDate.setDate(startDate.getDate() + days + 1); // +1 to include the final day
     
     for (const tenant of createdTenants) {
       const tenantServices = await storage.getServices(tenant.id);
@@ -398,7 +400,7 @@ export async function seedDemoData(days: number = 45) {
     console.log(`✅ Created ${appointmentsCreated} appointments`);
     console.log("🎉 Demo data seeding completed successfully!");
     
-    return { success: true, message: `Demo data created successfully! Created ${appointmentsCreated} appointments for ${createdTenants.length} tenants over the next ${days} days.` };
+    return { success: true, message: `Demo data created successfully! Generated ${appointmentsCreated} appointments spanning ${days} days of realistic timeline data for ${createdTenants.length} tenants.` };
     
   } catch (error) {
     console.error("❌ Error seeding demo data:", error);

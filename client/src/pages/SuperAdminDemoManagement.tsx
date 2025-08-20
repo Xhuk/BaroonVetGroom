@@ -180,10 +180,10 @@ export default function SuperAdminDemoManagement() {
         description: `✓ Created tenant "${data.tenant.name}" with ${data.appointmentDays || createForm.appointmentDays} days of demo data
 ✓ Added ${data.userCount} demo user accounts (Password: demo123)
 ✓ Generated ${data.clientCount} clients with pets
-✓ Created ${data.appointmentCount} sample appointments
+✓ Created ${data.appointmentCount} appointments spanning from today to ${data.appointmentDays || createForm.appointmentDays} days ahead
 ✓ Tenant ID: ${data.tenant.id}
 
-Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`,
+Demo tenant ready with realistic data timeline for demonstrations!`,
         duration: 5000,
       });
       
@@ -674,8 +674,11 @@ Vanilla tenant is ready for customization and client setup.`,
                   
                   <div className="space-y-2">
                     <Label htmlFor="client-days-history" className="text-gray-300">
-                      Historial de Citas
+                      Período de Datos Demo
                     </Label>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Generar datos desde hoy hasta {createForm.appointmentDays} {createForm.appointmentDays === 1 ? 'día' : 'días'} en el futuro
+                    </p>
                     <Select
                       value={createForm.appointmentDays.toString()}
                       onValueChange={(value) => {
@@ -688,7 +691,7 @@ Vanilla tenant is ready for customization and client setup.`,
                       <SelectContent className="bg-gray-800 border-gray-600">
                         {[1, 3, 7, 14, 21, 30].map(days => (
                           <SelectItem key={days} value={days.toString()}>
-                            {days} {days === 1 ? 'día' : 'días'}
+                            {days} {days === 1 ? 'día' : 'días'} de datos
                           </SelectItem>
                         ))}
                       </SelectContent>
