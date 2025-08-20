@@ -433,6 +433,10 @@ export interface IStorage {
   createDemoTenant(data: { tenantName: string; companyName: string; userCount: number; appointmentDays: number; }): Promise<any>;
   refreshDemoTenantData(tenantId: string): Promise<any>;
   purgeDemoTenant(tenantId: string): Promise<void>;
+  
+  // Subscription Management operations
+  getSubscriptionExpirationStatus(): Promise<any>;
+  sendSubscriptionReminders(): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3720,7 +3724,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Vanilla Tenant Creation
-  async createVanillaTenant(data: { tenantName: string; companyName: string }): Promise<any> {
+  async createVanillaTenant(data: { 
+    tenantName: string; 
+    companyName: string;
+    subscriptionType: 'monthly' | 'yearly';
+    subscriptionPlan: 'trial' | 'basic' | 'medium' | 'large' | 'extra_large';
+  }): Promise<any> {
     try {
       // Create company first
       const companyId = `vanilla-${Date.now()}`;
@@ -3813,25 +3822,181 @@ export class DatabaseStorage implements IStorage {
         roleId: adminRole.id,
         isActive: true
       });
+      
+      // Create subscription for vanilla tenant
+      const subscriptionStartDate = new Date();
+      const subscriptionEndDate = new Date();
+      
+      if (data.subscriptionType === 'monthly') {
+        subscriptionEndDate.setDate(subscriptionEndDate.getDate() + 30);
+      } else {
+        subscriptionEndDate.setFullYear(subscriptionEndDate.getFullYear() + 1);
+      }
+      
+      // Get or create subscription plan
+      let subscriptionPlan = await db.select().from(subscriptionPlans)
+        .where(eq(subscriptionPlans.name, data.subscriptionPlan))
+        .limit(1);
+      
+      if (subscriptionPlan.length === 0) {
+        // Create default plan if it doesn't exist
+        const planDefaults = {
+          trial: { displayName: 'Trial', maxTenants: 1, monthlyPrice: '0', yearlyPrice: '0' },
+          basic: { displayName: 'Basic', maxTenants: 1, monthlyPrice: '29', yearlyPrice: '290' },
+          medium: { displayName: 'Medium', maxTenants: 3, monthlyPrice: '59', yearlyPrice: '590' },
+          large: { displayName: 'Large', maxTenants: 6, monthlyPrice: '99', yearlyPrice: '990' },
+          extra_large: { displayName: 'Extra Large', maxTenants: 10, monthlyPrice: '149', yearlyPrice: '1490' }
+        };
+        
+        const planData = planDefaults[data.subscriptionPlan];
+        const [newPlan] = await db.insert(subscriptionPlans).values({
+          name: data.subscriptionPlan,
+          displayName: planData.displayName,
+          description: `${planData.displayName} subscription plan`,
+          maxTenants: planData.maxTenants,
+          monthlyPrice: planData.monthlyPrice,
+          yearlyPrice: planData.yearlyPrice,
+          isActive: true
+        }).returning();
+        subscriptionPlan = [newPlan];
+      }
+      
+      // Create company subscription
+      const [companySubscription] = await db.insert(companySubscriptions).values({
+        companyId: company.id,
+        planId: subscriptionPlan[0].id,
+        status: data.subscriptionPlan === 'trial' ? 'trial' : 'active',
+        currentPeriodStart: subscriptionStartDate,
+        currentPeriodEnd: subscriptionEndDate,
+        trialEndsAt: data.subscriptionPlan === 'trial' ? subscriptionEndDate : null
+      }).returning();
 
       return {
         tenant,
         company,
         roles: createdRoles,
         services: createdServices,
+        subscription: {
+          ...companySubscription,
+          plan: subscriptionPlan[0],
+          type: data.subscriptionType,
+          onboardDate: subscriptionStartDate,
+          expirationDate: subscriptionEndDate,
+          daysUntilExpiration: Math.ceil((subscriptionEndDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+        },
         adminUser: {
           ...adminUser,
           credentials: {
             email: defaultAdminUser.email,
-            password: defaultAdminUser.password
+            password: 'admin123'
           },
           roleName: adminRole.displayName,
           department: adminRole.department
         },
-        message: 'Vanilla tenant created successfully with basic roles and services'
+        message: 'Vanilla tenant created successfully with subscription tracking'
       };
     } catch (error) {
       console.error('Error creating vanilla tenant:', error);
+      throw error;
+    }
+  }
+
+  // Subscription monitoring and reminders
+  async getSubscriptionExpirationStatus() {
+    try {
+      const subscriptions = await db
+        .select({
+          companyId: companySubscriptions.companyId,
+          companyName: companies.name,
+          planName: subscriptionPlans.displayName,
+          status: companySubscriptions.status,
+          currentPeriodEnd: companySubscriptions.currentPeriodEnd,
+          trialEndsAt: companySubscriptions.trialEndsAt,
+          createdAt: companySubscriptions.createdAt
+        })
+        .from(companySubscriptions)
+        .innerJoin(companies, eq(companySubscriptions.companyId, companies.id))
+        .innerJoin(subscriptionPlans, eq(companySubscriptions.planId, subscriptionPlans.id))
+        .where(eq(companySubscriptions.status, 'active'))
+        .orderBy(companySubscriptions.currentPeriodEnd);
+
+      const now = new Date();
+      const categorized = {
+        expiringSoon: [],
+        expired: [],
+        active: []
+      };
+
+      for (const sub of subscriptions) {
+        const expirationDate = sub.trialEndsAt || sub.currentPeriodEnd;
+        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        
+        const enrichedSub = {
+          ...sub,
+          expirationDate,
+          daysUntilExpiration,
+          onboardDate: sub.createdAt
+        };
+
+        if (daysUntilExpiration < 0) {
+          categorized.expired.push(enrichedSub);
+        } else if (daysUntilExpiration <= 7) {
+          categorized.expiringSoon.push(enrichedSub);
+        } else {
+          categorized.active.push(enrichedSub);
+        }
+      }
+
+      return {
+        total: subscriptions.length,
+        expiringSoon: categorized.expiringSoon.length,
+        expired: categorized.expired.length,
+        active: categorized.active.length,
+        subscriptions: categorized
+      };
+    } catch (error) {
+      console.error('Error fetching subscription expiration status:', error);
+      throw error;
+    }
+  }
+
+  async sendSubscriptionReminders() {
+    try {
+      const { subscriptions } = await this.getSubscriptionExpirationStatus();
+      const reminders = [];
+      
+      // Send reminders for expiring subscriptions
+      for (const sub of subscriptions.expiringSoon) {
+        reminders.push({
+          companyId: sub.companyId,
+          companyName: sub.companyName,
+          type: 'expiring_soon',
+          daysUntilExpiration: sub.daysUntilExpiration,
+          message: `La suscripción de ${sub.companyName} vence en ${sub.daysUntilExpiration} días`
+        });
+      }
+      
+      // Send alerts for expired subscriptions
+      for (const sub of subscriptions.expired) {
+        reminders.push({
+          companyId: sub.companyId,
+          companyName: sub.companyName,
+          type: 'expired',
+          daysUntilExpiration: sub.daysUntilExpiration,
+          message: `La suscripción de ${sub.companyName} venció hace ${Math.abs(sub.daysUntilExpiration)} días`
+        });
+      }
+      
+      // In a real implementation, this would send emails/notifications
+      console.log('Subscription reminders to send:', reminders);
+      
+      return {
+        success: true,
+        remindersSent: reminders.length,
+        reminders
+      };
+    } catch (error) {
+      console.error('Error sending subscription reminders:', error);
       throw error;
     }
   }

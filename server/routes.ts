@@ -7633,15 +7633,17 @@ This password expires in 24 hours.
   // Vanilla Tenant Creation (Super Admin only)
   app.post('/api/superadmin/vanilla-tenants', isAuthenticated, isSuperAdmin, async (req, res) => {
     try {
-      const { tenantName, companyName } = req.body;
+      const { tenantName, companyName, subscriptionType, subscriptionPlan } = req.body;
       
-      if (!tenantName || !companyName) {
-        return res.status(400).json({ message: "Tenant name and company name are required" });
+      if (!tenantName || !companyName || !subscriptionType || !subscriptionPlan) {
+        return res.status(400).json({ message: "Tenant name, company name, subscription type, and plan are required" });
       }
 
       const result = await storage.createVanillaTenant({
         tenantName,
-        companyName
+        companyName,
+        subscriptionType,
+        subscriptionPlan
       });
 
       res.json(result);
@@ -7672,6 +7674,28 @@ This password expires in 24 hours.
     } catch (error: any) {
       console.error('Error updating demo user role:', error);
       res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Get subscription status and expiration details
+  app.get('/api/superadmin/subscriptions/status', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const result = await storage.getSubscriptionExpirationStatus();
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching subscription status:', error);
+      res.status(500).json({ message: 'Failed to fetch subscription status' });
+    }
+  });
+
+  // Send subscription expiration reminders
+  app.post('/api/superadmin/subscriptions/send-reminders', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+      const result = await storage.sendSubscriptionReminders();
+      res.json(result);
+    } catch (error) {
+      console.error('Error sending subscription reminders:', error);
+      res.status(500).json({ message: 'Failed to send subscription reminders' });
     }
   });
 

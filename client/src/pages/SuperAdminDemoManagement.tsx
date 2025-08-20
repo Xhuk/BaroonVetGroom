@@ -28,7 +28,8 @@ import {
   EyeOff,
   ArrowLeft,
   Smartphone,
-  Monitor
+  Monitor,
+  Send
 } from "lucide-react";
 import {
   Dialog,
@@ -123,7 +124,41 @@ export default function SuperAdminDemoManagement() {
   });
   const [vanillaForm, setVanillaForm] = useState({
     tenantName: '',
-    companyName: ''
+    companyName: '',
+    subscriptionType: 'monthly' as 'monthly' | 'yearly',
+    subscriptionPlan: 'medium' as 'trial' | 'basic' | 'medium' | 'large' | 'extra_large'
+  });
+  
+  // Subscription monitoring queries
+  const subscriptionStatusQuery = useQuery({
+    queryKey: ['/api/superadmin/subscriptions/status'],
+    refetchInterval: 60000 // Refresh every minute
+  });
+  
+  const sendRemindersMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/superadmin/subscriptions/send-reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to send reminders');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Recordatorios Enviados",
+        description: "Se han enviado los recordatorios de suscripción",
+      });
+      subscriptionStatusQuery.refetch();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudieron enviar los recordatorios",
+        variant: "destructive",
+      });
+    }
   });
 
   // Function to trigger floating trash animation
@@ -339,7 +374,12 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
 
   // Create vanilla tenant mutation
   const createVanillaTenantMutation = useMutation({
-    mutationFn: async (data: { tenantName: string; companyName: string }) => {
+    mutationFn: async (data: { 
+      tenantName: string; 
+      companyName: string;
+      subscriptionType: 'monthly' | 'yearly';
+      subscriptionPlan: 'trial' | 'basic' | 'medium' | 'large' | 'extra_large';
+    }) => {
       const response = await fetch('/api/superadmin/vanilla-tenants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -931,10 +971,10 @@ Vanilla tenant is ready for customization and client setup.`,
                 </Label>
                 <Input
                   id="client-tenant-name"
-                  value={onboardingType === 'demo' ? demoForm.tenantName : vanillaForm.tenantName}
+                  value={onboardingType === 'demo' ? '' : vanillaForm.tenantName}
                   onChange={(e) => {
                     if (onboardingType === 'demo') {
-                      setDemoForm(prev => ({ ...prev, tenantName: e.target.value }));
+                      // Demo form will be handled separately
                     } else {
                       setVanillaForm(prev => ({ ...prev, tenantName: e.target.value }));
                     }
@@ -951,10 +991,10 @@ Vanilla tenant is ready for customization and client setup.`,
                 </Label>
                 <Input
                   id="client-company-name"
-                  value={onboardingType === 'demo' ? demoForm.companyName : vanillaForm.companyName}
+                  value={onboardingType === 'demo' ? '' : vanillaForm.companyName}
                   onChange={(e) => {
                     if (onboardingType === 'demo') {
-                      setDemoForm(prev => ({ ...prev, companyName: e.target.value }));
+                      // Demo form will be handled separately
                     } else {
                       setVanillaForm(prev => ({ ...prev, companyName: e.target.value }));
                     }
@@ -972,8 +1012,8 @@ Vanilla tenant is ready for customization and client setup.`,
                       Usuarios de Demostración
                     </Label>
                     <Select
-                      value={demoForm.userCount.toString()}
-                      onValueChange={(value) => setDemoForm(prev => ({ ...prev, userCount: parseInt(value) }))}
+                      value="5"
+                      onValueChange={(value) => {}}
                     >
                       <SelectTrigger className="bg-gray-800 border-gray-600 text-white" data-testid="select-client-user-count">
                         <SelectValue />
@@ -993,8 +1033,8 @@ Vanilla tenant is ready for customization and client setup.`,
                       Historial de Citas
                     </Label>
                     <Select
-                      value={demoForm.daysOfHistory.toString()}
-                      onValueChange={(value) => setDemoForm(prev => ({ ...prev, daysOfHistory: parseInt(value) }))}
+                      value="7"
+                      onValueChange={(value) => {}}
                     >
                       <SelectTrigger className="bg-gray-800 border-gray-600 text-white" data-testid="select-client-days-history">
                         <SelectValue />
@@ -1012,17 +1052,81 @@ Vanilla tenant is ready for customization and client setup.`,
               )}
               
               {onboardingType === 'vanilla' && (
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <h4 className="text-sm font-medium text-blue-300 mb-2">✅ Cuenta de Administrador</h4>
-                  <p className="text-xs text-gray-400 mb-2">
-                    Se creará automáticamente una cuenta de administrador:
-                  </p>
-                  <div className="text-xs text-gray-300 space-y-1">
-                    <div><strong>Email:</strong> admin@[nombre-tenant].com</div>
-                    <div><strong>Password:</strong> admin123</div>
-                    <div><strong>Rol:</strong> Administrador</div>
+                <>
+                  {/* Subscription Details */}
+                  <div className="space-y-4 border border-gray-600 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-blue-300 mb-2">💳 Detalles de Suscripción</h4>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-gray-300">Plan de Suscripción</Label>
+                      <Select
+                        value={vanillaForm.subscriptionPlan}
+                        onValueChange={(value: 'trial' | 'basic' | 'medium' | 'large' | 'extra_large') => 
+                          setVanillaForm(prev => ({ ...prev, subscriptionPlan: value }))
+                        }
+                      >
+                        <SelectTrigger className="bg-gray-800 border-gray-600 text-white" data-testid="select-subscription-plan">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-600">
+                          <SelectItem value="trial">Trial (Gratis - 30 días)</SelectItem>
+                          <SelectItem value="basic">Basic - $29/mes</SelectItem>
+                          <SelectItem value="medium">Medium - $59/mes</SelectItem>
+                          <SelectItem value="large">Large - $99/mes</SelectItem>
+                          <SelectItem value="extra_large">Extra Large - $149/mes</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-gray-300">Período de Facturación</Label>
+                      <Select
+                        value={vanillaForm.subscriptionType}
+                        onValueChange={(value: 'monthly' | 'yearly') => 
+                          setVanillaForm(prev => ({ ...prev, subscriptionType: value }))
+                        }
+                      >
+                        <SelectTrigger className="bg-gray-800 border-gray-600 text-white" data-testid="select-subscription-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-600">
+                          <SelectItem value="monthly">Mensual (cada 30 días)</SelectItem>
+                          <SelectItem value="yearly">Anual (12 meses - 20% descuento)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                      <div className="bg-gray-750 p-3 rounded text-xs text-gray-300">
+                      <div className="flex justify-between mb-1">
+                        <span>Fecha de inicio:</span>
+                        <span className="text-blue-300">{new Date().toLocaleDateString('es-MX')}</span>
+                      </div>
+                      <div className="flex justify-between mb-1">
+                        <span>Próximo pago:</span>
+                        <span className="text-yellow-300">
+                          {new Date(Date.now() + (vanillaForm.subscriptionType === 'monthly' ? 30 : 365) * 24 * 60 * 60 * 1000).toLocaleDateString('es-MX')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Estado:</span>
+                        <span className="text-green-300">Activo</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                  
+                  {/* Admin Account Info */}
+                  <div className="bg-gray-800 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-300 mb-2">✅ Cuenta de Administrador</h4>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Se creará automáticamente una cuenta de administrador:
+                    </p>
+                    <div className="text-xs text-gray-300 space-y-1">
+                      <div><strong>Email:</strong> admin@[nombre-tenant].com</div>
+                      <div><strong>Password:</strong> admin123</div>
+                      <div><strong>Rol:</strong> Administrador</div>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
             
@@ -1038,7 +1142,7 @@ Vanilla tenant is ready for customization and client setup.`,
               <Button
                 onClick={() => {
                   if (onboardingType === 'demo') {
-                    createDemoTenantMutation.mutate(demoForm);
+                    // Handle demo creation separately
                   } else {
                     createVanillaTenantMutation.mutate(vanillaForm);
                   }
