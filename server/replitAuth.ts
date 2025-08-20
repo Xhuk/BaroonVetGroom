@@ -150,14 +150,20 @@ export async function setupAuth(app: Express) {
       // Validate actual password against database for demo/vanilla users
       const storedUser = await storage.getUserByEmail(email);
       if (!storedUser) {
+        console.log(`❌ User not found in database: ${email}`);
         return done(null, false, { message: 'User not found' });
       }
+      
+      console.log(`🔐 Password validation: provided="${password}" stored="${storedUser.password}"`);
       
       // Verify password against stored hash
       const isValidPassword = await storage.verifyPassword(password, storedUser.password);
       if (!isValidPassword) {
+        console.log(`❌ Password mismatch for ${email}: provided="${password}" stored="${storedUser.password}"`);
         return done(null, false, { message: 'Invalid password' });
       }
+      
+      console.log(`✅ Password validated successfully for ${email}`);
       
       if (tenantType === 'demo') {
         userType = 'Demo';
