@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Loader2, Mail, Lock, User, Building2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Mail, Lock, User, Building2, Eye, EyeOff, RefreshCw, AlertTriangle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -41,6 +42,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const { authDisabled, hasRecentAuthFailure, enableAuthChecking, isDevelopment } = useAuth();
 
   // Forms
   const loginForm = useForm<LoginData>({
@@ -119,6 +121,40 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+      
+      {/* Authentication Debug Section */}
+      {(authDisabled || hasRecentAuthFailure) && (
+        <div className="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto">
+          <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                    Sistema de Autenticación
+                  </h3>
+                  <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                    {authDisabled 
+                      ? "La autenticación está deshabilitada debido a errores." 
+                      : "Error reciente de autenticación detectado."
+                    }
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={enableAuthChecking}
+                  className="text-orange-700 border-orange-300 hover:bg-orange-100 dark:text-orange-200 dark:border-orange-700 dark:hover:bg-orange-900"
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Reactivar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      
       <div className="w-full max-w-4xl grid md:grid-cols-2 gap-8 items-center">
         
         {/* Left Side - Branding */}

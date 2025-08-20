@@ -33,46 +33,30 @@ app.use(session({
   }
 }));
 
-// Official Replit authentication middleware for development mode
+// Enhanced authentication middleware for development mode
 app.use(async (req: any, res, next) => {
   const isDevelopment = process.env.NODE_ENV === 'development';
   
-  if (isDevelopment && req.path === '/api/user') {
-    console.log('🔐 Starting Replit Auth Check...');
-    try {
-      // Use official Replit getUserInfo
-      const userInfo = await getUserInfo(req);
-      console.log('🔐 getUserInfo result:', userInfo);
-      if (userInfo) {
-        // Set up user object in Replit's expected format
-        req.user = {
-          claims: {
-            sub: userInfo.id,
-            name: userInfo.name
-          }
-        };
-        console.log('🔐 Replit Auth Success:', { id: userInfo.id, name: userInfo.name });
-      } else {
-        console.log('🔐 No user info returned');
+  if (isDevelopment) {
+    // Only try Replit auth for /api/user endpoint to reduce noise
+    if (req.path === '/api/user') {
+      console.log('🔐 Attempting Replit Auth...');
+      try {
+        const userInfo = await getUserInfo(req);
+        if (userInfo) {
+          req.user = {
+            claims: {
+              sub: userInfo.id,
+              name: userInfo.name
+            }
+          };
+          console.log('🔐 Replit Auth Success:', { id: userInfo.id, name: userInfo.name });
+        } else {
+          console.log('🔐 Replit Auth: No user info (using fallback to session auth)');
+        }
+      } catch (error: any) {
+        console.log('🔐 Replit Auth failed, falling back to session auth');
       }
-    } catch (error: any) {
-      console.log('🔐 Replit Auth Error:', error.message || error);
-      // Continue without auth - let the app handle it
-    }
-  } else if (isDevelopment && !req.user) {
-    // For non-user endpoints, try auth without logging
-    try {
-      const userInfo = await getUserInfo(req);
-      if (userInfo) {
-        req.user = {
-          claims: {
-            sub: userInfo.id,
-            name: userInfo.name
-          }
-        };
-      }
-    } catch (error) {
-      // Silent fail for non-user endpoints
     }
   }
   
