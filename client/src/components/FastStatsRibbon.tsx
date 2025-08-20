@@ -9,8 +9,7 @@ import {
   DoorOpen,
   Receipt,
   ChevronLeft,
-  ChevronRight,
-  X
+  ChevronRight
 } from "lucide-react";
 import { useAccessControl } from "@/hooks/useAccessControl";
 import { useLocation } from "wouter";
@@ -213,19 +212,9 @@ export function FastStatsRibbon({ stats }: FastStatsRibbonProps) {
         <DialogContent className="max-w-md w-full mx-4 p-0 gap-0 bg-white dark:bg-slate-900 border-0 shadow-2xl">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 p-6 rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-white mb-1">Seleccionar Fecha</h2>
-                <p className="text-blue-100 text-sm">Navega por el calendario de citas</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowCalendar(false)}
-                className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-full"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+            <div>
+              <h2 className="text-xl font-bold text-white mb-1">Seleccionar Fecha</h2>
+              <p className="text-blue-100 text-sm">Navega por el calendario de citas</p>
             </div>
           </div>
 
