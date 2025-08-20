@@ -2804,8 +2804,9 @@ function Admin() {
                           <div className="space-y-3">
                             {availablePlans
                               .filter((plan: any) => {
-                                // Don't allow admins to change to Trial plan at all
-                                return plan.id !== 'trial';
+                                // Completely exclude Trial plan from admin interface
+                                // Only SuperAdmin can manage trials
+                                return plan.id !== 'trial' && plan.displayName !== 'Trial';
                               })
                               .map((plan: any) => (
                               <div 

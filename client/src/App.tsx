@@ -62,6 +62,7 @@ import CompanyClinicAdmin from "@/pages/CompanyClinicAdmin";
 import { InstantNavigation } from "@/components/InstantNavigation";
 import { DebugBanner } from "@/components/DebugBanner";
 import { DeviceBlocker } from "@/components/DeviceBlocker";
+import { SubscriptionBlocker } from "@/components/SubscriptionBlocker";
 
 function Router() {
   const { user, isLoading, error, isAuthenticated } = useAuth();
@@ -73,6 +74,16 @@ function Router() {
   if (isAuthenticated && localStorage.getItem('auth_logged_out') === 'true') {
     localStorage.removeItem('auth_logged_out');
   }
+
+  // Get company ID for subscription blocking
+  const getCompanyId = () => {
+    // Try to get from user data or default to 'unknown'
+    if (user?.companyId) {
+      return user.companyId;
+    }
+    // Fallback to extract from current context or use default
+    return user?.tenant?.companyId || 'unknown';
+  };
 
   // NEVER show loading spinner on route changes - always render instantly
   // Only show auth loading on initial app load when no route is detected
@@ -94,7 +105,11 @@ function Router() {
         if (shouldShowLandingPage) {
           return <LandingPage />;
         }
-        return <Dashboard />;
+        return (
+          <SubscriptionBlocker companyId={getCompanyId()}>
+            <Dashboard />
+          </SubscriptionBlocker>
+        );
       }} />
       <Route path="/plans" component={SubscriptionLanding} />
       <Route path="/checkout" component={SubscriptionCheckout} />
@@ -106,10 +121,26 @@ function Router() {
         <>
           <Route path="/booking" component={BookingWizard} />
           <Route path="/booking-wizard" component={BookingWizard} />
-          <Route path="/clients" component={Clients} />
-          <Route path="/medical-records" component={MedicalRecords} />
-          <Route path="/medical-appointments" component={MedicalAppointments} />
-          <Route path="/grooming-services" component={GroomingServices} />
+          <Route path="/clients" component={() => (
+            <SubscriptionBlocker companyId={getCompanyId()}>
+              <Clients />
+            </SubscriptionBlocker>
+          )} />
+          <Route path="/medical-records" component={() => (
+            <SubscriptionBlocker companyId={getCompanyId()}>
+              <MedicalRecords />
+            </SubscriptionBlocker>
+          )} />
+          <Route path="/medical-appointments" component={() => (
+            <SubscriptionBlocker companyId={getCompanyId()}>
+              <MedicalAppointments />
+            </SubscriptionBlocker>
+          )} />
+          <Route path="/grooming-services" component={() => (
+            <SubscriptionBlocker companyId={getCompanyId()}>
+              <GroomingServices />
+            </SubscriptionBlocker>
+          )} />
           <Route path="/follow-up-tasks" component={() => <FollowUpTasks tenantId="vetgroom1" />} />
           <Route path="/upload/:type/:appointmentId" component={MobileUpload} />
           <Route path="/inventory" component={Inventory} />
@@ -118,7 +149,11 @@ function Router() {
           <Route path="/sales-delivery" component={SalesDelivery} />
           <Route path="/billing" component={Billing} />
           <Route path="/cashier" component={Cashier} />
-          <Route path="/admin" component={Admin} />
+          <Route path="/admin" component={() => (
+            <SubscriptionBlocker companyId={getCompanyId()}>
+              <Admin />
+            </SubscriptionBlocker>
+          )} />
           <Route path="/admin/settings" component={AdminSettings} />
           <Route path="/admin/business-hours" component={AdminBusinessHours} />
           <Route path="/admin/billing-config" component={AdminBillingConfig} />
