@@ -5754,7 +5754,33 @@ This password expires in 24 hours.
     }
   });
 
+  // Create new subscription plan
+  app.post('/api/superadmin/subscription-plans', isSuperAdmin, async (req, res) => {
+    try {
+      const planData = req.body;
+      const newPlan = await storage.createSubscriptionPlan(planData);
+      res.json(newPlan);
+    } catch (error) {
+      console.error("Error creating subscription plan:", error);
+      res.status(500).json({ message: "Failed to create subscription plan" });
+    }
+  });
+
+  // Update existing subscription plan  
   app.patch('/api/superadmin/subscription-plans/:planId', isSuperAdmin, async (req, res) => {
+    try {
+      const { planId } = req.params;
+      const updates = req.body;
+      const updatedPlan = await storage.updateSubscriptionPlan(planId, updates);
+      res.json(updatedPlan);
+    } catch (error) {
+      console.error("Error updating subscription plan:", error);
+      res.status(500).json({ message: "Failed to update subscription plan" });
+    }
+  });
+
+  // Also support PUT method for compatibility
+  app.put('/api/superadmin/subscription-plans/:planId', isSuperAdmin, async (req, res) => {
     try {
       const { planId } = req.params;
       const updates = req.body;

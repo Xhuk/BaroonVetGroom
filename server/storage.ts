@@ -2271,7 +2271,7 @@ export class DatabaseStorage implements IStorage {
     return newPlan;
   }
 
-  async updateSubscriptionPlan(planId: string, updates: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
+  async updateSubscriptionPlan(planId: string, updates: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan> {
     const [updatedPlan] = await db
       .update(subscriptionPlans)
       .set({ ...updates, updatedAt: new Date() })
@@ -4047,9 +4047,9 @@ export class DatabaseStorage implements IStorage {
 
       const now = new Date();
       const categorized = {
-        expiringSoon: [],
-        expired: [],
-        active: []
+        expiringSoon: [] as any[],
+        expired: [] as any[],
+        active: [] as any[]
       };
 
       for (const sub of subscriptions) {
@@ -4064,11 +4064,11 @@ export class DatabaseStorage implements IStorage {
         };
 
         if (daysUntilExpiration < 0) {
-          categorized.expired.push(enrichedSub);
+          (categorized.expired as any[]).push(enrichedSub);
         } else if (daysUntilExpiration <= 7) {
-          categorized.expiringSoon.push(enrichedSub);
+          (categorized.expiringSoon as any[]).push(enrichedSub);
         } else {
-          categorized.active.push(enrichedSub);
+          (categorized.active as any[]).push(enrichedSub);
         }
       }
 
