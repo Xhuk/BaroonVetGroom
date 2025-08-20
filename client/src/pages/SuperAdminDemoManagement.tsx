@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/queryClient";
+import anime from "animejs/lib/anime.es.js";
 import { 
   Users, 
   Building, 
@@ -63,12 +64,36 @@ export default function SuperAdminDemoManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [showTrashAnimation, setShowTrashAnimation] = useState(false);
+  const trashAnimationRef = useRef<HTMLDivElement>(null);
   const [createForm, setCreateForm] = useState<CreateDemoForm>({
     tenantName: '',
     companyName: '',
     userCount: 5,
     appointmentDays: 7
   });
+
+  // Function to trigger floating trash animation
+  const triggerTrashAnimation = () => {
+    setShowTrashAnimation(true);
+    
+    // Animate the trash can
+    if (trashAnimationRef.current) {
+      anime({
+        targets: trashAnimationRef.current,
+        translateY: [-50, -120, -100, -80, -40],
+        translateX: [0, 20, -15, 10, -5, 0],
+        scale: [1, 1.2, 1.1, 1.3, 1.0],
+        rotate: [0, 10, -8, 5, -3, 0],
+        opacity: [1, 0.9, 1, 0.8, 0.6, 0],
+        duration: 4000,
+        easing: 'easeOutBounce',
+        complete: () => {
+          setShowTrashAnimation(false);
+        }
+      });
+    }
+  };
 
   // Fetch demo tenants
   const { data: demoTenants = [], isLoading: isLoadingTenants, refetch } = useQuery({
@@ -153,6 +178,9 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
       return response.json();
     },
     onSuccess: () => {
+      // Trigger the floating trash animation
+      triggerTrashAnimation();
+      
       toast({
         title: "Demo Tenant Purged",
         description: "Demo tenant and all associated data have been permanently deleted.",
@@ -169,8 +197,23 @@ Demo tenant is ready for demonstrations and can be refreshed or purged anytime.`
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
       <Header />
+      
+      {/* Floating Trash Animation */}
+      {showTrashAnimation && (
+        <div 
+          ref={trashAnimationRef}
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
+          style={{ 
+            filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))',
+            willChange: 'transform, opacity'
+          }}
+        >
+          <Trash2 className="w-16 h-16 text-red-500 fill-red-400" />
+        </div>
+      )}
+      
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground mb-2">Demo Tenant Management</h1>
