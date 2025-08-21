@@ -2,7 +2,7 @@ import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { and } from 'drizzle-orm';
-import { clients, rooms, services, staff, slotReservations, appointments } from '@shared/schema';
+import { clients, rooms, services, staff, slotReservations, appointments, userTenants } from '@shared/schema';
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { webhookMonitor } from "./webhookMonitor";
 import { advancedRouteOptimization, type OptimizedRoute, type RouteOptimizationOptions } from "./routeOptimizer";
@@ -465,13 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create company
       const company = await storage.createCompany({
         id: companyId,
-        name: companyName,
-        contactEmail,
-        contactName,
-        phone: phone || '',
-        address: address || '',
-        city: city || '',
-        country: country || 'México'
+        name: companyName
       });
       
       // Create tenant
@@ -479,7 +473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: tenantId,
         companyId: company.id,
         name: companyName,
-        timezone: 'America/Mexico_City'
+        subdomain: tenantName
       });
       
       // Get subscription plan details
@@ -530,7 +524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create user-tenant relationship
-      await storage.createUserTenant({
+      await db.insert(userTenants).values({
         userId: adminUser.id,
         tenantId: tenant.id,
         roleId: tenantAdminRole.id,
@@ -556,10 +550,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send credentials via email
       try {
         const emailSent = await emailService.sendVanillaTenantCredentials(
-          contactEmail,
+          adminEmail,
           companyName,
           tenant.id,
-          adminCredentials
+          {
+            email: adminUser.email!,
+            password: temporaryPassword,
+            loginUrl: adminCredentials.loginUrl
+          }
         );
         
         if (emailSent) {
@@ -6677,7 +6675,7 @@ This password expires in 24 hours.
       // - Handle payment method updates if needed
       
       // If changing from trial to paid plan, update the subscription status
-      if (subscription.status === 'trial' && planId !== 'trial') {
+      if (subscription && subscription.status === 'trial' && planId !== 'trial') {
         // Convert trial to paid subscription
         const now = new Date();
         const nextBillingDate = new Date();
@@ -6689,7 +6687,6 @@ This password expires in 24 hours.
           currentPeriodStart: now,
           currentPeriodEnd: nextBillingDate,
           trialEndsAt: null, // Clear trial end date
-          priceChangeEffectiveDate: priceChangeEffective,
           updatedAt: new Date()
         });
       }

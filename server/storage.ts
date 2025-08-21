@@ -2137,14 +2137,23 @@ export class DatabaseStorage implements IStorage {
         tasks.push({
           id: `task-${Date.now()}-${Math.random()}`,
           tenantId,
+          clientId: medical.clientId,
+          petId: medical.petId,
+          medicalAppointmentId: medical.appointmentId,
+          appointmentId: null,
+          groomingRecordId: null,
           taskType: 'missing_diagnosis',
-          referenceId: medical.appointmentId,
           title: 'Falta diagnóstico médico',
           description: `Completar diagnóstico para cita médica del ${medical.visitDate}`,
+          missingFields: ['diagnosis'],
           priority: 'high',
           status: 'pending',
           assignedTo: null,
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+          completedBy: null,
+          completedAt: null,
+          dueDate: medical.visitDate?.toISOString().split('T')[0] || null,
+          notes: null,
+          metadata: null,
           createdAt: new Date(),
           updatedAt: new Date()
         } as FollowUpTask);
@@ -3517,7 +3526,8 @@ export class DatabaseStorage implements IStorage {
         query = query.where(and(...conditions));
       }
       
-      return await query.orderBy(desc(followUpTasks.createdAt));
+      const result = await query.orderBy(desc(followUpTasks.createdAt));
+      return result;
     } catch (error) {
       console.error('Error fetching follow-up tasks:', error);
       return [];
@@ -3555,7 +3565,7 @@ export class DatabaseStorage implements IStorage {
       let tasksQuery = db.select().from(followUpTasks);
       
       if (whereClause) {
-        tasksQuery = tasksQuery.where(whereClause);
+          tasksQuery = tasksQuery.where(whereClause);
       }
 
       // Apply sorting
@@ -4433,12 +4443,9 @@ export class DatabaseStorage implements IStorage {
       for (let i = 1; i <= newUsers; i++) {
         const userId = `refresh-user-${tenantId}-${Date.now()}-${i}`;
         const [user] = await db.insert(users).values({
-          username: `refresh.user${Date.now()}${i}@demo.com`,
           email: `refresh.user${Date.now()}${i}@demo.com`,
           firstName: `Refresh`,
-          lastName: `User ${i}`,
-          phone: `+1555900${String(Date.now()).slice(-3)}`,
-          timezone: 'America/Mexico_City'
+          lastName: `User ${i}`
         }).returning();
 
         await db.insert(userTenants).values({
@@ -4497,7 +4504,7 @@ export class DatabaseStorage implements IStorage {
     try {
       // Update user role in userTenants table
       await db.update(userTenants)
-        .set({ roleId: newRoleId, updatedAt: new Date() })
+        .set({ roleId: newRoleId })
         .where(and(eq(userTenants.tenantId, tenantId), eq(userTenants.userId, userId)));
 
       // Get updated user with role info
@@ -4665,7 +4672,7 @@ export class DatabaseStorage implements IStorage {
     try {
       // Update user role in userTenants table
       await db.update(userTenants)
-        .set({ roleId, updatedAt: new Date() })
+        .set({ roleId })
         .where(and(eq(userTenants.userId, userId), eq(userTenants.tenantId, tenantId)));
 
       // Get updated user with role info
