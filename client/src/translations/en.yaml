@@ -1,3 +1,4 @@
+---
 # English Translations
 common:
   loading: "Loading..."
@@ -300,7 +301,7 @@ follow_up:
   task_details: "Task Details"
   task_type: "Task Type"
   priority: "Priority"
-  title: "Title"
+  task_title: "Title"
   description: "Description"
   due_date: "Due Date"
   assigned_to: "Assigned To"
@@ -340,7 +341,7 @@ subscription:
   features: "Features"
   contact_sales: "Contact Sales"
   free_trial: "Free Trial"
-  
+
   plans:
     trial:
       name: "Trial"
@@ -407,7 +408,7 @@ errors:
   not_found: "The requested resource was not found."
   server_error: "Server error. Please try again later."
   session_expired: "Your session has expired. Please log in again."
-  
+
 messages:
   save_success: "Changes saved successfully"
   delete_success: "Item deleted successfully"
@@ -430,7 +431,7 @@ datetime:
   afternoon: "Afternoon"
   evening: "Evening"
   night: "Night"
-  
+
   days:
     monday: "Monday"
     tuesday: "Tuesday"
@@ -439,7 +440,7 @@ datetime:
     friday: "Friday"
     saturday: "Saturday"
     sunday: "Sunday"
-    
+
   months:
     january: "January"
     february: "February"

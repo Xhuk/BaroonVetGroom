@@ -1,3 +1,4 @@
+---
 # Spanish Translations
 common:
   loading: "Cargando..."
@@ -17,7 +18,7 @@ common:
   submit: "Enviar"
   confirm: "Confirmar"
   close: "Cerrar"
-  yes: "Sí"
+  yes: "Si"
   no: "No"
   select: "Seleccionar"
   all: "Todos"
@@ -300,7 +301,7 @@ follow_up:
   task_details: "Detalles de la Tarea"
   task_type: "Tipo de Tarea"
   priority: "Prioridad"
-  title: "Título"
+  task_title: "Título"
   description: "Descripción"
   due_date: "Fecha de Vencimiento"
   assigned_to: "Asignado a"
@@ -340,7 +341,7 @@ subscription:
   features: "Características"
   contact_sales: "Contactar Ventas"
   free_trial: "Prueba Gratuita"
-  
+
   plans:
     trial:
       name: "Prueba"
@@ -407,7 +408,7 @@ errors:
   not_found: "El recurso solicitado no fue encontrado."
   server_error: "Error del servidor. Por favor intenta más tarde."
   session_expired: "Tu sesión ha expirado. Por favor inicia sesión nuevamente."
-  
+
 messages:
   save_success: "Cambios guardados exitosamente"
   delete_success: "Elemento eliminado exitosamente"
@@ -430,7 +431,7 @@ datetime:
   afternoon: "Tarde"
   evening: "Noche"
   night: "Madrugada"
-  
+
   days:
     monday: "Lunes"
     tuesday: "Martes"
@@ -439,7 +440,7 @@ datetime:
     friday: "Viernes"
     saturday: "Sábado"
     sunday: "Domingo"
-    
+
   months:
     january: "Enero"
     february: "Febrero"
