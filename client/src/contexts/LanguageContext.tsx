@@ -19,14 +19,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language || 'en');
 
   useEffect(() => {
-    // Load saved language from localStorage
+    // Load saved language from localStorage only on mount
     const savedLanguage = localStorage.getItem('app-language');
-    if (savedLanguage && savedLanguage !== currentLanguage) {
+    if (savedLanguage && savedLanguage !== i18n.language) {
       setCurrentLanguage(savedLanguage);
       i18n.changeLanguage(savedLanguage);
     }
     console.log('LanguageContext initialized:', { currentLanguage, savedLanguage, available: availableLanguages });
-  }, []);
+  }, []); // Empty dependency array to run only on mount
 
   const changeLanguage = (language: string) => {
     console.log('Changing language from', currentLanguage, 'to', language);

@@ -103,7 +103,7 @@ export function Navigation({ className }: NavigationProps) {
       className
     )} style={{ top: '90px', bottom: 'calc(10px + 96px)' }}>
       <div className="pt-4 px-4 pb-4 h-full flex flex-col">
-        <h3 className="text-lg font-semibold text-foreground mb-4">{nav.navigation || "Módulos"}</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Módulos</h3>
         <ul className="space-y-2 flex-1">
           {navigationItems.map((item) => (
             <li key={item.href}>
