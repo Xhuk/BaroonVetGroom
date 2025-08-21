@@ -34,7 +34,7 @@ export default function DemoSubscriptionUpgrade() {
     phone: '',
     address: '',
     city: '',
-    country: 'México'
+    country: 'United States'
   });
 
   const { data: plansData, isLoading } = useQuery<{plans: SubscriptionPlan[]}>({
@@ -44,9 +44,9 @@ export default function DemoSubscriptionUpgrade() {
 
   // Helper function to format price
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-MX', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'MXN',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
@@ -56,7 +56,7 @@ export default function DemoSubscriptionUpgrade() {
   const getPriceDisplay = (plan: SubscriptionPlan, cycle: 'monthly' | 'yearly') => {
     const price = cycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
     const formatted = formatPrice(price);
-    const period = cycle === 'monthly' ? '/mes' : '/año';
+    const period = cycle === 'monthly' ? '/month' : '/year';
     return { price: formatted, period };
   };
 
@@ -75,7 +75,7 @@ export default function DemoSubscriptionUpgrade() {
     },
     onSuccess: (data) => {
       toast({
-        title: "¡Solicitud Enviada Exitosamente!",
+        title: "Request Sent Successfully!",
         description: data.message,
         variant: "default",
       });
@@ -83,8 +83,8 @@ export default function DemoSubscriptionUpgrade() {
     },
     onError: (error) => {
       toast({
-        title: "Error al Enviar Solicitud",
-        description: "Por favor intenta nuevamente",
+        title: "Error Sending Request",
+        description: "Please try again",
         variant: "destructive",
       });
     },
@@ -97,8 +97,8 @@ export default function DemoSubscriptionUpgrade() {
   const handleContinue = () => {
     if (!selectedPlan) {
       toast({
-        title: "Selecciona un Plan",
-        description: "Por favor selecciona un plan para continuar",
+        title: "Select a Plan",
+        description: "Please select a plan to continue",
         variant: "destructive",
       });
       return;
@@ -109,8 +109,8 @@ export default function DemoSubscriptionUpgrade() {
   const handleSubmitRequest = () => {
     if (!formData.companyName || !formData.contactName || !formData.contactEmail) {
       toast({
-        title: "Campos Requeridos",
-        description: "Por favor completa todos los campos obligatorios",
+        title: "Required Fields",
+        description: "Please complete all required fields",
         variant: "destructive",
       });
       return;
@@ -252,10 +252,10 @@ export default function DemoSubscriptionUpgrade() {
 
               <div className="border-t pt-6 mt-6">
                 <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                  <h3 className="font-semibold text-blue-900 mb-2">Resumen de tu Selección:</h3>
+                  <h3 className="font-semibold text-blue-900 mb-2">Your Selection Summary:</h3>
                   <p className="text-blue-700">
-                    Plan {plansData?.plans.find((p: SubscriptionPlan) => p.id === selectedPlan)?.displayName} - 
-                    Facturación {billingCycle === 'monthly' ? 'Mensual' : 'Anual'}
+                    {plansData?.plans.find((p: SubscriptionPlan) => p.id === selectedPlan)?.displayName} Plan - 
+                    {billingCycle === 'monthly' ? 'Monthly' : 'Annual'} Billing
                   </p>
                 </div>
 
@@ -264,14 +264,14 @@ export default function DemoSubscriptionUpgrade() {
                     variant="outline"
                     onClick={() => setShowContactForm(false)}
                   >
-                    Volver a Planes
+                    Back to Plans
                   </Button>
                   <Button
                     onClick={handleSubmitRequest}
                     disabled={requestVanillaTenantMutation.isPending}
                     className="flex-1"
                   >
-                    {requestVanillaTenantMutation.isPending ? 'Enviando...' : 'Enviar Solicitud'}
+                    {requestVanillaTenantMutation.isPending ? 'Sending...' : 'Send Request'}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
@@ -287,8 +287,8 @@ export default function DemoSubscriptionUpgrade() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-6">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Actualiza tu Plan</h1>
-          <p className="text-xl text-gray-600 mb-6">Elige el plan perfecto para tu clínica veterinaria</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Upgrade Your Plan</h1>
+          <p className="text-xl text-gray-600 mb-6">Choose the perfect plan for your veterinary clinic</p>
           
           {/* Billing Toggle */}
           <div className="inline-flex bg-gray-100 p-1 rounded-lg mb-8">
@@ -300,7 +300,7 @@ export default function DemoSubscriptionUpgrade() {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Mensual
+              Monthly
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
@@ -310,7 +310,7 @@ export default function DemoSubscriptionUpgrade() {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Anual (ahorra 20%)
+              Annual (save 20%)
             </button>
           </div>
         </div>
@@ -329,7 +329,7 @@ export default function DemoSubscriptionUpgrade() {
             >
               {plan.id === 'large' && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-purple-600 text-white px-3 py-1">Más Popular</Badge>
+                  <Badge className="bg-purple-600 text-white px-3 py-1">Most Popular</Badge>
                 </div>
               )}
               

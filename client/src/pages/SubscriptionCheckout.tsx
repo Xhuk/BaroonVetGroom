@@ -37,17 +37,17 @@ const paymentProviders: PaymentProvider[] = [
     id: "mercado_pago",
     name: "mercado_pago",
     displayName: "Mercado Pago",
-    fees: "Variable (Contactar para precios específicos)",
-    payoutTime: "Inmediato disponible, estándar toma más tiempo",
+    fees: "Variable (Contact for specific pricing)",
+    payoutTime: "Immediate available, standard takes longer",
     pros: [
-      "Dominante en México",
-      "Pagos en efectivo via OXXO",
-      "Tarifas más bajas",
-      "Integración local fuerte"
+      "Dominant in Mexico",
+      "Cash payments via OXXO",
+      "Lower fees",
+      "Strong local integration"
     ],
     cons: [
-      "Precios menos transparentes",
-      "Algunos usuarios reportan retrasos de 30 días"
+      "Less transparent pricing",
+      "Some users report 30-day delays"
     ],
     recommended: true
   },
@@ -55,17 +55,17 @@ const paymentProviders: PaymentProvider[] = [
     id: "stripe",
     name: "stripe",
     displayName: "Stripe",
-    fees: "2.9% + $0.30 por transacción",
-    payoutTime: "2-7 días hábiles",
+    fees: "2.9% + $0.30 per transaction",
+    payoutTime: "2-7 business days",
     pros: [
-      "Precios transparentes",
-      "Herramientas de desarrollador excelentes",
-      "Plataforma global",
-      "Pagos más rápidos"
+      "Transparent pricing",
+      "Excellent developer tools",
+      "Global platform",
+      "Faster payments"
     ],
     cons: [
-      "Tarifas más altas",
-      "Métodos de pago locales limitados"
+      "Higher fees",
+      "Limited local payment methods"
     ],
     recommended: false
   },
@@ -73,16 +73,16 @@ const paymentProviders: PaymentProvider[] = [
     id: "paypal",
     name: "paypal",
     displayName: "PayPal",
-    fees: "Variable según tipo de transacción",
-    payoutTime: "1-3 días hábiles",
+    fees: "Variable based on transaction type",
+    payoutTime: "1-3 business days",
     pros: [
-      "Reconocimiento mundial",
-      "Múltiples métodos de pago",
-      "Protección de comprador"
+      "Global recognition",
+      "Multiple payment methods",
+      "Buyer protection"
     ],
     cons: [
-      "Tarifas variables",
-      "Menos integración local en México"
+      "Variable fees",
+      "Less local integration in Mexico"
     ],
     recommended: false
   }
@@ -103,29 +103,29 @@ export default function SubscriptionCheckout() {
     {
       id: "trial",
       name: "trial",
-      displayName: "Prueba / Básico",
-      description: "Perfecto para clínicas pequeñas que empiezan",
+      displayName: "Trial / Basic",
+      description: "Perfect for small clinics getting started",
       maxTenants: 1,
       monthlyPrice: 0,
       yearlyPrice: 0,
-      features: ["1 Clínica", "Citas básicas", "Gestión de clientes", "Soporte por email"],
+      features: ["1 Clinic", "Basic appointments", "Client management", "Email support"],
       isActive: true
     },
     {
       id: "medium",
       name: "medium",
-      displayName: "Mediano",
-      description: "Ideal para clínicas en crecimiento",
+      displayName: "Medium",
+      description: "Ideal for growing clinics",
       maxTenants: 3,
       monthlyPrice: 2999,
       yearlyPrice: 29990,
       features: [
-        "3 Clínicas",
-        "Gestión de citas avanzada",
-        "Reportes y analíticas",
-        "WhatsApp automático",
-        "Facturación integrada",
-        "Soporte prioritario"
+        "3 Clinics",
+        "Advanced appointment management",
+        "Reports and analytics",
+        "Automatic WhatsApp",
+        "Integrated billing",
+        "Priority support"
       ],
       isActive: true,
       popular: true
@@ -133,36 +133,36 @@ export default function SubscriptionCheckout() {
     {
       id: "large",
       name: "large",
-      displayName: "Grande",
-      description: "Para cadenas de clínicas establecidas",
+      displayName: "Large",
+      description: "For established clinic chains",
       maxTenants: 5,
       monthlyPrice: 4999,
       yearlyPrice: 49990,
       features: [
-        "5 Clínicas",
-        "Todas las características Medianas",
-        "API personalizada",
-        "Integraciones avanzadas",
-        "Gestión multi-sucursal",
-        "Soporte dedicado"
+        "5 Clinics",
+        "All Medium features",
+        "Custom API",
+        "Advanced integrations",
+        "Multi-branch management",
+        "Dedicated support"
       ],
       isActive: true
     },
     {
       id: "extra_large",
       name: "extra_large",
-      displayName: "Extra Grande",
-      description: "Para empresas veterinarias grandes",
+      displayName: "Extra Large",
+      description: "For large veterinary enterprises",
       maxTenants: 10,
       monthlyPrice: 7999,
       yearlyPrice: 79990,
       features: [
-        "10 Clínicas",
-        "Todas las características Grandes",
-        "Dashboard ejecutivo",
-        "Análisis predictivo",
-        "Implementación personalizada",
-        "Gerente de cuenta dedicado"
+        "10 Clinics",
+        "All Large features",
+        "Executive dashboard",
+        "Predictive analytics",
+        "Custom implementation",
+        "Dedicated account manager"
       ],
       isActive: true
     }
