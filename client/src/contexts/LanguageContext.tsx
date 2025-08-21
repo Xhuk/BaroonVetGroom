@@ -25,9 +25,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       setCurrentLanguage(savedLanguage);
       i18n.changeLanguage(savedLanguage);
     }
+    console.log('LanguageContext initialized:', { currentLanguage, savedLanguage, available: availableLanguages });
   }, []);
 
   const changeLanguage = (language: string) => {
+    console.log('Changing language from', currentLanguage, 'to', language);
     setCurrentLanguage(language);
     i18n.changeLanguage(language);
     localStorage.setItem('app-language', language);

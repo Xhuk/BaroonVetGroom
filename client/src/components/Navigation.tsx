@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { useAccessControl } from "@/hooks/useAccessControl";
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
+import { useTranslations } from "@/hooks/useTranslations";
 import { 
   BarChart3, 
   Calendar,
@@ -26,6 +27,7 @@ interface NavigationProps {
 export function Navigation({ className }: NavigationProps) {
   const { canAccessAdmin, canAccessSuperAdmin } = useAccessControl();
   const { currentTenant } = useTenant();
+  const { nav } = useTranslations();
 
   // Get follow-up count for heart animation
   const { data: followUpData } = useQuery<{ count: number }>({
@@ -75,23 +77,23 @@ export function Navigation({ className }: NavigationProps) {
   };
 
   const navigationItems = [
-    { icon: BarChart3, label: "Tablero", href: "/" },
-    { icon: Users, label: "Clientes", href: "/clients" },
-    { icon: Stethoscope, label: "Medical", href: "/medical-appointments" },
-    { icon: Scissors, label: "Estética", href: "/grooming-services" },
-    { icon: Heart, label: "Seguimientos", href: "/follow-up-tasks" },
-    { icon: Truck, label: "Plan de Entregas", href: "/delivery-plan" },
-    { icon: CreditCard, label: "Caja", href: "/cashier" },
+    { icon: BarChart3, label: nav.dashboard(), href: "/" },
+    { icon: Users, label: nav.clients(), href: "/clients" },
+    { icon: Stethoscope, label: nav.medical_records(), href: "/medical-appointments" },
+    { icon: Scissors, label: nav.grooming(), href: "/grooming-services" },
+    { icon: Heart, label: nav.follow_up(), href: "/follow-up-tasks" },
+    { icon: Truck, label: nav.delivery(), href: "/delivery-plan" },
+    { icon: CreditCard, label: nav.billing(), href: "/cashier" },
   ];
 
   const adminItems = [
     ...(canAccessAdmin ? [
-      { icon: Settings, label: "Admin Dashboard", href: "/admin" },
+      { icon: Settings, label: nav.admin(), href: "/admin" },
       { icon: Building2, label: "Empresa y Clínica", href: "/admin/company-clinic" },
       { icon: Receipt, label: "Plantillas de Recibo", href: "/admin/receipt-templates" }
     ] : []),
     ...(canAccessSuperAdmin ? [
-      { icon: Crown, label: "Super-Admin Dashboard", href: "/superadmin" }
+      { icon: Crown, label: nav.super_admin(), href: "/superadmin" }
     ] : []),
   ];
 
@@ -101,7 +103,7 @@ export function Navigation({ className }: NavigationProps) {
       className
     )} style={{ top: '90px', bottom: 'calc(10px + 96px)' }}>
       <div className="pt-4 px-4 pb-4 h-full flex flex-col">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Módulos</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">{nav.navigation || "Módulos"}</h3>
         <ul className="space-y-2 flex-1">
           {navigationItems.map((item) => (
             <li key={item.href}>
@@ -109,7 +111,7 @@ export function Navigation({ className }: NavigationProps) {
                 href={item.href}
                 className="flex items-center space-x-3 px-3 py-2 rounded-lg font-medium text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
               >
-                {item.label === "Seguimientos" ? (
+                {item.label === nav.follow_up() ? (
                   <div className="relative flex items-center">
                     <Heart 
                       className={cn(
