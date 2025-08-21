@@ -6,6 +6,7 @@ import { Calendar, Phone, Mail, LogOut, Moon, Sun, Settings, Clock } from "lucid
 import { VetGroomLogo } from "./VetGroomLogo";
 import { DebugControls } from "./DebugControls";
 import { TimezoneSettings } from "./TimezoneSettings";
+import { LanguageSelector } from "./LanguageSelector";
 import { getCurrentTimeCST1, getTodayCST1, getCurrentTimeInUserTimezone } from "@shared/timeUtils";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import { useScreenSize } from "@/hooks/useScreenSize";
@@ -82,6 +83,7 @@ export function Header() {
 
           {/* Compact User Info */}
           <div className="flex items-center space-x-2">
+            <LanguageSelector />
             <div className="text-right">
               <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
@@ -145,9 +147,7 @@ export function Header() {
             {/* Debug Controls */}
             <DebugControls />
             
-            <button className="text-sm text-primary hover:text-primary/80 font-medium">
-              English
-            </button>
+            <LanguageSelector />
             <div className="flex space-x-2">
               <Button
                 size="sm"

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle, Clock, CreditCard, Globe, Truck, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "@/hooks/useTranslations";
 
 interface SubscriptionPlan {
   id: string;
@@ -93,6 +94,7 @@ export default function SubscriptionCheckout() {
   const [selectedProvider, setSelectedProvider] = useState<string>("mercado_pago");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const { toast } = useToast();
+  const { subscription, common } = useTranslations();
 
   const { data: subscriptionPlans, isLoading } = useQuery({
     queryKey: ["/api/subscription-plans"],
@@ -103,49 +105,35 @@ export default function SubscriptionCheckout() {
     {
       id: "trial",
       name: "trial",
-      displayName: "Trial / Basic",
-      description: "Perfect for small clinics getting started",
+      displayName: subscription.plans.trial.name(),
+      description: subscription.plans.trial.description(),
       maxTenants: 1,
       monthlyPrice: 0,
       yearlyPrice: 0,
-      features: ["1 Clinic", "Basic appointments", "Client management", "Email support"],
+      features: subscription.plans.trial.features(),
       isActive: true
     },
     {
       id: "medium",
       name: "medium",
-      displayName: "Medium",
-      description: "Ideal for growing clinics",
+      displayName: subscription.plans.medium.name(),
+      description: subscription.plans.medium.description(),
       maxTenants: 3,
       monthlyPrice: 2999,
       yearlyPrice: 29990,
-      features: [
-        "3 Clinics",
-        "Advanced appointment management",
-        "Reports and analytics",
-        "Automatic WhatsApp",
-        "Integrated billing",
-        "Priority support"
-      ],
+      features: subscription.plans.medium.features(),
       isActive: true,
       popular: true
     },
     {
       id: "large",
       name: "large",
-      displayName: "Large",
-      description: "For established clinic chains",
+      displayName: subscription.plans.large.name(),
+      description: subscription.plans.large.description(),
       maxTenants: 5,
       monthlyPrice: 4999,
       yearlyPrice: 49990,
-      features: [
-        "5 Clinics",
-        "All Medium features",
-        "Custom API",
-        "Advanced integrations",
-        "Multi-branch management",
-        "Dedicated support"
-      ],
+      features: subscription.plans.large.features(),
       isActive: true
     },
     {

@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslations } from '@/hooks/useTranslations';
 import { Check, Crown, Building, Users, Zap, Shield, ArrowRight } from 'lucide-react';
 
 interface SubscriptionPlan {
@@ -24,6 +25,7 @@ interface SubscriptionPlan {
 
 export default function DemoSubscriptionUpgrade() {
   const { toast } = useToast();
+  const { subscription, common, errors, messages } = useTranslations();
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [showContactForm, setShowContactForm] = useState(false);
@@ -34,7 +36,7 @@ export default function DemoSubscriptionUpgrade() {
     phone: '',
     address: '',
     city: '',
-    country: 'United States'
+    country: 'Mexico'
   });
 
   const { data: plansData, isLoading } = useQuery<{plans: SubscriptionPlan[]}>({
@@ -44,9 +46,9 @@ export default function DemoSubscriptionUpgrade() {
 
   // Helper function to format price
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('es-MX', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'MXN',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
@@ -56,7 +58,7 @@ export default function DemoSubscriptionUpgrade() {
   const getPriceDisplay = (plan: SubscriptionPlan, cycle: 'monthly' | 'yearly') => {
     const price = cycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
     const formatted = formatPrice(price);
-    const period = cycle === 'monthly' ? '/month' : '/year';
+    const period = cycle === 'monthly' ? subscription.price_per_month() : subscription.price_per_year();
     return { price: formatted, period };
   };
 
@@ -75,7 +77,7 @@ export default function DemoSubscriptionUpgrade() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Request Sent Successfully!",
+        title: messages.operation_success(),
         description: data.message,
         variant: "default",
       });
@@ -83,7 +85,7 @@ export default function DemoSubscriptionUpgrade() {
     },
     onError: (error) => {
       toast({
-        title: "Error Sending Request",
+        title: errors.general_error(),
         description: "Please try again",
         variant: "destructive",
       });
@@ -255,7 +257,7 @@ export default function DemoSubscriptionUpgrade() {
                   <h3 className="font-semibold text-blue-900 mb-2">Your Selection Summary:</h3>
                   <p className="text-blue-700">
                     {plansData?.plans.find((p: SubscriptionPlan) => p.id === selectedPlan)?.displayName} Plan - 
-                    {billingCycle === 'monthly' ? 'Monthly' : 'Annual'} Billing
+                    {billingCycle === 'monthly' ? subscription.monthly() : subscription.yearly()} {subscription.billing_cycle()}
                   </p>
                 </div>
 
@@ -264,14 +266,14 @@ export default function DemoSubscriptionUpgrade() {
                     variant="outline"
                     onClick={() => setShowContactForm(false)}
                   >
-                    Back to Plans
+                    {common.back()} to Plans
                   </Button>
                   <Button
                     onClick={handleSubmitRequest}
                     disabled={requestVanillaTenantMutation.isPending}
                     className="flex-1"
                   >
-                    {requestVanillaTenantMutation.isPending ? 'Sending...' : 'Send Request'}
+                    {requestVanillaTenantMutation.isPending ? 'Sending...' : common.submit()}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
@@ -287,8 +289,8 @@ export default function DemoSubscriptionUpgrade() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-6">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Upgrade Your Plan</h1>
-          <p className="text-xl text-gray-600 mb-6">Choose the perfect plan for your veterinary clinic</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">{subscription.title()}</h1>
+          <p className="text-xl text-gray-600 mb-6">{subscription.subtitle()}</p>
           
           {/* Billing Toggle */}
           <div className="inline-flex bg-gray-100 p-1 rounded-lg mb-8">
@@ -300,7 +302,7 @@ export default function DemoSubscriptionUpgrade() {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Monthly
+              {subscription.monthly()}
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
@@ -310,7 +312,7 @@ export default function DemoSubscriptionUpgrade() {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Annual (save 20%)
+              {subscription.yearly()}
             </button>
           </div>
         </div>
@@ -329,7 +331,7 @@ export default function DemoSubscriptionUpgrade() {
             >
               {plan.id === 'large' && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-purple-600 text-white px-3 py-1">Most Popular</Badge>
+                  <Badge className="bg-purple-600 text-white px-3 py-1">{subscription.most_popular()}</Badge>
                 </div>
               )}
               

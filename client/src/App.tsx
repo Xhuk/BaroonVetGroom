@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { RoleImpersonationProvider } from "@/hooks/useRoleImpersonation";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useAuth } from "@/hooks/useAuth";
@@ -197,19 +198,21 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <ThemeProvider>
-            <TimezoneProvider>
-              <TenantProvider>
-                <RoleImpersonationProvider>
-                  <InstantNavigation />
-                  <Toaster />
-                  <Router />
-                </RoleImpersonationProvider>
-              </TenantProvider>
-            </TimezoneProvider>
-          </ThemeProvider>
-        </TooltipProvider>
+        <LanguageProvider>
+          <TooltipProvider>
+            <ThemeProvider>
+              <TimezoneProvider>
+                <TenantProvider>
+                  <RoleImpersonationProvider>
+                    <InstantNavigation />
+                    <Toaster />
+                    <Router />
+                  </RoleImpersonationProvider>
+                </TenantProvider>
+              </TimezoneProvider>
+            </ThemeProvider>
+          </TooltipProvider>
+        </LanguageProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

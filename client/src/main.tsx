@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import { initializeErrorSuppression } from "./lib/errorSuppression";
+import "./lib/i18n";
 
 // Ultra-aggressive global error handlers for join errors
 window.addEventListener('error', (event) => {
