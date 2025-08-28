@@ -77,6 +77,19 @@ export default function LeafletMap({
   
   const currentTileServer = tileServers[currentTileIndex];
 
+  // Debug current tile server on changes
+  useEffect(() => {
+    console.log(`🔧 [DEBUG] Tile server changed:`, {
+      index: currentTileIndex,
+      serverName: currentTileServer.attribution.includes('Google') ? 'Google Maps' : 
+                 currentTileServer.attribution.includes('Esri') ? 'ArcGIS' :
+                 currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap',
+      url: currentTileServer.url,
+      subdomains: currentTileServer.subdomains || 'none',
+      attribution: currentTileServer.attribution
+    });
+  }, [currentTileIndex, currentTileServer]);
+
   // Center map function that can be called externally
   const centerMapOnLocation = (lat: number, lng: number, zoomLevel: number = 16) => {
     if (mapRef.current) {
@@ -130,10 +143,28 @@ export default function LeafletMap({
         subdomains={currentTileServer.subdomains || []}
         crossOrigin={true}
         eventHandlers={{
-          tileload: () => {
-            console.log(`✅ Map tiles loading successfully`);
+          tileloadstart: (e) => {
+            console.log(`🚀 [DEBUG] Tile load started:`, {
+              server: currentTileIndex + 1,
+              serverName: currentTileServer.attribution.includes('Google') ? 'Google Maps' : 
+                         currentTileServer.attribution.includes('Esri') ? 'ArcGIS' :
+                         currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap',
+              url: currentTileServer.url,
+              coords: e.coords,
+              tile: e.tile
+            });
+          },
+          tileload: (e) => {
+            console.log(`✅ [DEBUG] Tile loaded successfully:`, {
+              server: currentTileIndex + 1,
+              serverName: currentTileServer.attribution.includes('Google') ? 'Google Maps' : 
+                         currentTileServer.attribution.includes('Esri') ? 'ArcGIS' :
+                         currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap',
+              coords: e.coords,
+              tileSize: e.tile ? `${e.tile.width}x${e.tile.height}` : 'unknown',
+              tileSrc: e.tile ? e.tile.src : 'no source'
+            });
             setTilesLoaded(true);
-            // Clear error count for this server on successful load
             setServerErrorCounts(prev => ({...prev, [currentTileIndex]: 0}));
             if (loadingTimeout) {
               clearTimeout(loadingTimeout);
@@ -141,34 +172,52 @@ export default function LeafletMap({
             }
           },
           tileerror: (e) => {
-            // Very patient error handling - only count severe persistent errors
+            console.log(`❌ [DEBUG] Tile error:`, {
+              server: currentTileIndex + 1,
+              serverName: currentTileServer.attribution.includes('Google') ? 'Google Maps' : 
+                         currentTileServer.attribution.includes('Esri') ? 'ArcGIS' :
+                         currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap',
+              coords: e.coords,
+              error: e.error,
+              tileSrc: e.tile ? e.tile.src : 'no source',
+              tileComplete: e.tile ? e.tile.complete : 'unknown'
+            });
+            
             const currentErrors = serverErrorCounts[currentTileIndex] || 0;
             const newErrorCount = currentErrors + 1;
-            
             setServerErrorCounts(prev => ({...prev, [currentTileIndex]: newErrorCount}));
             
-            // Only switch after 10 persistent errors (very patient)
             if (newErrorCount >= 10) {
-              console.log(`❌ Server ${currentTileIndex + 1} having persistent issues, trying next server...`);
+              console.log(`❌ [DEBUG] Server ${currentTileIndex + 1} consistently failing, switching...`);
               if (currentTileIndex < tileServers.length - 1) {
                 setCurrentTileIndex(prev => prev + 1);
               } else {
                 setHasTriedAllServers(true);
-                console.log('⚠️ All servers tried, using best available option');
+                console.log('⚠️ [DEBUG] All servers tried, using best available');
               }
             }
           },
           loading: () => {
-            console.log(`🔄 Loading map...`);
+            console.log(`🔄 [DEBUG] Loading event triggered:`, {
+              server: currentTileIndex + 1,
+              serverName: currentTileServer.attribution.includes('Google') ? 'Google Maps' : 
+                         currentTileServer.attribution.includes('Esri') ? 'ArcGIS' :
+                         currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap',
+              serverUrl: currentTileServer.url,
+              subdomains: currentTileServer.subdomains || 'none'
+            });
             setTilesLoaded(false);
             
-            // Very patient timeout - 20 seconds before considering a switch
             if (loadingTimeout) {
               clearTimeout(loadingTimeout);
             }
             
             const timeout = setTimeout(() => {
-              console.log(`⏰ Loading taking longer than expected, checking next server...`);
+              console.log(`⏰ [DEBUG] Server timeout reached:`, {
+                server: currentTileIndex + 1,
+                timeoutMs: 20000,
+                switchingToNext: currentTileIndex < tileServers.length - 1 && !hasTriedAllServers
+              });
               if (currentTileIndex < tileServers.length - 1 && !hasTriedAllServers) {
                 setCurrentTileIndex(prev => prev + 1);
               }
@@ -177,7 +226,14 @@ export default function LeafletMap({
             setLoadingTimeout(timeout);
           },
           load: () => {
-            console.log(`🎉 Map loaded successfully!`);
+            console.log(`🎉 [DEBUG] Load event complete:`, {
+              server: currentTileIndex + 1,
+              serverName: currentTileServer.attribution.includes('Google') ? 'Google Maps' : 
+                         currentTileServer.attribution.includes('Esri') ? 'ArcGIS' :
+                         currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap',
+              tilesLoaded: true,
+              mapReady: mapReady
+            });
             setTilesLoaded(true);
             setServerErrorCounts(prev => ({...prev, [currentTileIndex]: 0}));
             if (loadingTimeout) {
