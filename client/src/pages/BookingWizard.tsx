@@ -16,7 +16,10 @@ import { WhatsAppCopyModal } from "@/components/WhatsAppCopyModal";
 import { debounce } from "lodash";
 
 // Lazy load map component to prevent SSR issues
-const LeafletMap = lazy(() => import("@/components/LeafletMap"));
+const LeafletMap = lazy(() => {
+  console.log("🗺️ [DEBUG] LeafletMap component is being loaded...");
+  return import("@/components/LeafletMap");
+});
 
 interface CustomerData {
   name: string;
@@ -870,7 +873,15 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2">
                     <div className="h-96 rounded-lg overflow-hidden border-2 border-gray-200 shadow-md">
-                      <Suspense fallback={<div className="h-full w-full bg-gray-100 flex items-center justify-center">Cargando mapa...</div>}>
+                      <Suspense fallback={
+                        <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                            <p className="text-sm text-gray-600">Cargando mapa...</p>
+                            {(() => { console.log("🔄 [DEBUG] Map Suspense fallback is showing - component loading..."); return null; })()}
+                          </div>
+                        </div>
+                      }>
                         <LeafletMap
                           center={mapCenter}
                           zoom={13}

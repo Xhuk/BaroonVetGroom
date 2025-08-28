@@ -44,6 +44,8 @@ export default function LeafletMap({
   onMapMove,
   onCenterChange
 }: LeafletMapProps) {
+  console.log("🗺️ [DEBUG] LeafletMap component mounted and initializing...");
+  
   const mapRef = useRef<any>(null);
   const customerMarkerRef = useRef<any>(null);
   const [mapReady, setMapReady] = useState(false);
