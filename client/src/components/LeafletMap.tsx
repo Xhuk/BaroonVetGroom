@@ -50,6 +50,7 @@ export default function LeafletMap({
   const [tileServerIndex, setTileServerIndex] = useState(0);
   const [allServersFailed, setAllServersFailed] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [tileLoadTimeout, setTileLoadTimeout] = useState<NodeJS.Timeout | null>(null);
   
   // Multiple tile server options as fallbacks
   const tileServers = [
@@ -107,7 +108,29 @@ export default function LeafletMap({
   useEffect(() => {
     setTileServerIndex(0);
     setAllServersFailed(false);
+    if (tileLoadTimeout) {
+      clearTimeout(tileLoadTimeout);
+      setTileLoadTimeout(null);
+    }
   }, [center]);
+  
+  // Set timeout for tile loading - fallback if tiles don't load within 5 seconds
+  useEffect(() => {
+    if (tileLoadTimeout) {
+      clearTimeout(tileLoadTimeout);
+    }
+    
+    const timeout = setTimeout(() => {
+      console.log("Tile loading timeout reached, switching to offline map");
+      setAllServersFailed(true);
+    }, 5000);
+    
+    setTileLoadTimeout(timeout);
+    
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [tileServerIndex]);
 
   // Get current tile server safely
   const currentTileServer = tileServers[tileServerIndex] || tileServers[0];
@@ -139,15 +162,17 @@ export default function LeafletMap({
     );
   }
 
-  return (
-    <MapContainer
-      center={center}
-      zoom={zoom}
-      style={{ height: '100%', width: '100%', minHeight: '384px' }}
-      className="rounded-lg leaflet-container"
-      ref={mapRef}
-      key={`${center[0]}-${center[1]}`}
-    >
+  // Add error boundary to catch any Leaflet errors
+  try {
+    return (
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        style={{ height: '100%', width: '100%', minHeight: '384px' }}
+        className="rounded-lg leaflet-container"
+        ref={mapRef}
+        key={`${center[0]}-${center[1]}`}
+      >
       <TileLayer
         attribution={currentTileServer.attribution}
         url={currentTileServer.url}
@@ -174,6 +199,21 @@ export default function LeafletMap({
           },
           tileload: () => {
             console.log(`Tile server ${tileServerIndex} loaded successfully`);
+            // Clear timeout when tiles load successfully
+            if (tileLoadTimeout) {
+              clearTimeout(tileLoadTimeout);
+              setTileLoadTimeout(null);
+            }
+          },
+          loading: () => {
+            console.log(`Loading tiles from server ${tileServerIndex}...`);
+          },
+          load: () => {
+            console.log(`All tiles loaded successfully from server ${tileServerIndex}`);
+            if (tileLoadTimeout) {
+              clearTimeout(tileLoadTimeout);
+              setTileLoadTimeout(null);
+            }
           }
         }}
         key={tileServerIndex}
@@ -227,6 +267,27 @@ export default function LeafletMap({
           </Marker>
         );
       })()}
-    </MapContainer>
-  );
+      </MapContainer>
+    );
+  } catch (error) {
+    console.error("Leaflet map error, falling back to offline map:", error);
+    setAllServersFailed(true);
+    return (
+      <div className="relative">
+        <MonterreyOfflineMap
+          center={center}
+          zoom={zoom}
+          tenantLocation={tenantLocation ? { lat: tenantLocation.lat, lng: tenantLocation.lng } : undefined}
+          customerLocation={customerLocation ? { lat: customerLocation.lat, lng: customerLocation.lng } : undefined}
+          tenantName={tenantName}
+          onMapClick={onMapClick}
+          onMapMove={onMapMove}
+          onCenterChange={onCenterChange}
+        />
+        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-red-600 text-white rounded text-xs z-20">
+          ⚠️ Mapa en modo offline
+        </div>
+      </div>
+    );
+  }
 }

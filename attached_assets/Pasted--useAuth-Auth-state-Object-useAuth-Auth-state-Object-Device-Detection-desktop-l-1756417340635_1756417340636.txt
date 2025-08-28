@@ -1,0 +1,665 @@
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+ 🔍 [useAuth] Making network request to /api/auth/user
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Not authenticated, skipping
+ 🎯 [TenantContext] Final context value: Object
+ LanguageContext initialized: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Not authenticated, skipping
+ >=116
+ 🔍 [useAuth] Response: 200 
+ 🔍 [useAuth] User data received: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:40.306Z, returning 2025-08-28
+ Dashboard initialized with today: 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:40.308Z, returning 2025-08-28
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] Fetching user tenants...
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] User tenants response: 200
+ 🔍 [TenantContext] User tenants received: 1 tenants: Array(1)
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+ 📱 ResponsiveLayout: Device desktop, landscape: false, useRibbon: false, hideRibbon: false
+ 🔍 [useAuth] Auth state: Object
+ 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+ 🔍 [useAuth] Auth state: Object
+ 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+ 📱 ResponsiveNavigation: Device desktop, shouldCollapse: false, landscape: false
+ 🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+ Timezone changed to Mexico/General, new time: 2025-08-28T15:38:40.915Z
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:40.923Z, returning 2025-08-28
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3 skipped: Object
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveLayout: Device desktop, landscape: false, useRibbon: false, hideRibbon: false
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveNavigation: Device desktop, shouldCollapse: false, landscape: false
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveLayout: Device desktop, landscape: false, useRibbon: false, hideRibbon: false
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveNavigation: Device desktop, shouldCollapse: false, landscape: false
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.029Z, returning 2025-08-28
+ FastCalendar initialized with today: 2025-08-28
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.029Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.029Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.029Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.030Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.030Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.049Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.049Z, returning 2025-08-28
+ Calendar useEffect: selectedDate=2025-08-28, displayDate=2025-08-28, todayUserTZ=2025-08-28
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.049Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.049Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.049Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.049Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.049Z, returning 2025-08-28
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveLayout: Device desktop, landscape: false, useRibbon: false, hideRibbon: false
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveNavigation: Device desktop, shouldCollapse: false, landscape: false
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.124Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.124Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.124Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.125Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.125Z, returning 2025-08-28
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3 skipped: Object
+ 🔍 [useAuth] Auth state: Object
+ Auto-scrolled to position current time slot at 50% of card container height
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.195Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.196Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.196Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.196Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.196Z, returning 2025-08-28
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.212Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.213Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.213Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.213Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.213Z, returning 2025-08-28
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveLayout: Device desktop, landscape: false, useRibbon: false, hideRibbon: false
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveNavigation: Device desktop, shouldCollapse: false, landscape: false
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.231Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.231Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.231Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.231Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.231Z, returning 2025-08-28
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.234Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.234Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.234Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.234Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.234Z, returning 2025-08-28
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveLayout: Device desktop, landscape: false, useRibbon: false, hideRibbon: false
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveNavigation: Device desktop, shouldCollapse: false, landscape: false
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.293Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.293Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.293Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.294Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.294Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.295Z, returning 2025-08-28
+ 🎯 [TenantContext] Final context value: Object
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.296Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.296Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.296Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.296Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.296Z, returning 2025-08-28
+ Auto-scrolled to position current time slot at 50% of card container height
+ 📱 ResponsiveNavigation: Device desktop, shouldCollapse: false, landscape: false
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveLayout: Device desktop, landscape: false, useRibbon: false, hideRibbon: false
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveNavigation: Device desktop, shouldCollapse: false, landscape: false
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.642Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.642Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.642Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.642Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.642Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.643Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.643Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.643Z, returning 2025-08-28
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.644Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.644Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.644Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.644Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.644Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.645Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.645Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:41.645Z, returning 2025-08-28
+ 📱 ResponsiveNavigation: Device desktop, shouldCollapse: false, landscape: false
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveLayout: Device desktop, landscape: false, useRibbon: false, hideRibbon: false
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 ResponsiveNavigation: Device desktop, shouldCollapse: false, landscape: false
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.547Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.547Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.547Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.547Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.547Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.547Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.547Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.547Z, returning 2025-08-28
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.550Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.550Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.550Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.550Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.550Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.550Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.550Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:43.550Z, returning 2025-08-28
+ Auto-scrolled to position current time slot at 50% of card container height
+ getCurrentTimeSlotInfo: User timezone time -> 15:38
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:51.778Z, returning 2025-08-28
+ Display date: 2025-08-28, Today: 2025-08-28
+ Current time 15:38: 0 currently active appointments found
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:51.778Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:51.778Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:51.778Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:51.778Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:51.778Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:51.778Z, returning 2025-08-28
+ getTodayInUserTimezone: User time is 2025-08-28T15:38:51.778Z, returning 2025-08-28
+ Auto-scrolled to position current time slot at 50% of card container height
+LeafletMap-BQebEjqK.js:1 Map initialized and resized
+LeafletMap-BQebEjqK.js:1 Map initialized and resized
+LeafletMap-BQebEjqK.js:1 Tile server 0 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 1
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 0 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 1
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 0 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 1
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 0 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 1
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 0 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 1
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+LeafletMap-BQebEjqK.js:1 Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: false, useRibbon: false
+ 📱 Resize Event: desktop, landscape: false, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
+ Tile server 0 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 1
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 1 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 2
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 2 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ Switching to tile server 3
+ Tile server 3 failed, trying next... {error: {…}, tile: img.leaflet-tile, coords: U, type: 'tileerror', target: p, …}
+ All tile servers failed, showing fallback
