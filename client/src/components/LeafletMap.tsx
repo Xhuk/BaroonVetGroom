@@ -49,6 +49,8 @@ export default function LeafletMap({
   const [mapReady, setMapReady] = useState(false);
   const [currentTileIndex, setCurrentTileIndex] = useState(0);
   const [tilesLoaded, setTilesLoaded] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [errorCount, setErrorCount] = useState(0);
   
   // Multiple reliable tile servers for failover
   const tileServers = [
@@ -128,53 +130,80 @@ export default function LeafletMap({
         crossOrigin={true}
         eventHandlers={{
           tileload: () => {
-            console.log(`✅ Tiles loading from server ${currentTileIndex + 1}`);
+            console.log(`✅ Tiles loading successfully from ${currentTileServer.attribution.includes('Google') ? 'Google Maps' : currentTileServer.attribution.includes('Esri') ? 'ArcGIS' : currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap'}`);
             setTilesLoaded(true);
+            setErrorCount(0);
+            if (loadingTimeout) {
+              clearTimeout(loadingTimeout);
+              setLoadingTimeout(null);
+            }
           },
           tileerror: (e) => {
-            console.log(`❌ Tile server ${currentTileIndex + 1} failed, trying next...`);
-            if (currentTileIndex < tileServers.length - 1) {
-              setCurrentTileIndex(prev => prev + 1);
-              setTilesLoaded(false);
-            } else {
-              console.log('⚠️ All tile servers failed');
+            const newErrorCount = errorCount + 1;
+            setErrorCount(newErrorCount);
+            
+            // Only switch servers after multiple errors (less sensitive)
+            if (newErrorCount >= 5) {
+              console.log(`❌ Server ${currentTileIndex + 1} consistently failing, trying next...`);
+              if (currentTileIndex < tileServers.length - 1) {
+                setCurrentTileIndex(prev => prev + 1);
+                setErrorCount(0);
+              } else {
+                console.log('⚠️ All tile servers have issues, but continuing...');
+              }
             }
           },
           loading: () => {
-            console.log(`🔄 Loading tiles from server ${currentTileIndex + 1}...`);
+            console.log(`🔄 Loading map from ${currentTileServer.attribution.includes('Google') ? 'Google Maps' : currentTileServer.attribution.includes('Esri') ? 'ArcGIS' : currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap'}...`);
             setTilesLoaded(false);
+            
+            // Set a longer timeout for tile loading (10 seconds)
+            if (loadingTimeout) {
+              clearTimeout(loadingTimeout);
+            }
+            
+            const timeout = setTimeout(() => {
+              console.log(`⏰ Server ${currentTileIndex + 1} taking too long, trying next...`);
+              if (currentTileIndex < tileServers.length - 1) {
+                setCurrentTileIndex(prev => prev + 1);
+                setErrorCount(0);
+              }
+            }, 10000);
+            
+            setLoadingTimeout(timeout);
           },
           load: () => {
-            console.log(`🎉 All tiles loaded from server ${currentTileIndex + 1}`);
+            console.log(`🎉 Map fully loaded from ${currentTileServer.attribution.includes('Google') ? 'Google Maps' : currentTileServer.attribution.includes('Esri') ? 'ArcGIS' : currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap'}!`);
             setTilesLoaded(true);
+            setErrorCount(0);
+            if (loadingTimeout) {
+              clearTimeout(loadingTimeout);
+              setLoadingTimeout(null);
+            }
           }
         }}
         key={`tile-server-${currentTileIndex}`}
       />
       
-      {/* Loading overlay */}
-      {!tilesLoaded && (
-        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10 rounded-lg">
+      {/* Loading overlay - only show initially, not during server switches */}
+      {!tilesLoaded && !mapReady && (
+        <div className="absolute inset-0 bg-gray-50 bg-opacity-90 flex items-center justify-center z-10 rounded-lg">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-            <p className="text-sm text-gray-600">Cargando mapa...</p>
-            <p className="text-xs text-gray-500">Servidor {currentTileIndex + 1}/{tileServers.length}</p>
+            <p className="text-sm text-gray-700 font-medium">Cargando mapa...</p>
+            <p className="text-xs text-gray-500">
+              {currentTileServer.attribution.includes('Google') ? 'Google Maps' : 
+               currentTileServer.attribution.includes('Esri') ? 'ArcGIS' :
+               currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap'}
+            </p>
           </div>
         </div>
       )}
       
-      {/* Retry button if all servers fail */}
-      {currentTileIndex >= tileServers.length - 1 && !tilesLoaded && (
-        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-20">
-          <button 
-            onClick={() => {
-              setCurrentTileIndex(0);
-              setTilesLoaded(false);
-            }}
-            className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
-          >
-            🔄 Reintentar carga de mapa
-          </button>
+      {/* Success indicator */}
+      {tilesLoaded && (
+        <div className="absolute top-2 right-2 z-20 bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
+          ✅ Mapa cargado
         </div>
       )}
       
