@@ -47,12 +47,32 @@ export default function LeafletMap({
   const mapRef = useRef<any>(null);
   const customerMarkerRef = useRef<any>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [currentTileIndex, setCurrentTileIndex] = useState(0);
+  const [tilesLoaded, setTilesLoaded] = useState(false);
   
-  // Primary online tile server
-  const tileServer = {
-    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  };
+  // Multiple reliable tile servers for failover
+  const tileServers = [
+    {
+      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      subdomains: ['a', 'b', 'c']
+    },
+    {
+      url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+      attribution: 'Tiles &copy; Esri'
+    },
+    {
+      url: "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+      attribution: '&copy; Google Maps'
+    },
+    {
+      url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: ['a', 'b', 'c', 'd']
+    }
+  ];
+  
+  const currentTileServer = tileServers[currentTileIndex];
 
   // Center map function that can be called externally
   const centerMapOnLocation = (lat: number, lng: number, zoomLevel: number = 16) => {
@@ -93,27 +113,70 @@ export default function LeafletMap({
       key={`${center[0]}-${center[1]}`}
     >
       <TileLayer
-        attribution={tileServer.attribution}
-        url={tileServer.url}
-        maxZoom={18}
+        attribution={currentTileServer.attribution}
+        url={currentTileServer.url}
+        maxZoom={19}
         minZoom={1}
         tileSize={256}
+        zoomOffset={0}
         detectRetina={true}
         updateWhenIdle={false}
         updateWhenZooming={true}
-        keepBuffer={2}
+        keepBuffer={4}
+        maxNativeZoom={18}
+        subdomains={currentTileServer.subdomains || []}
+        crossOrigin={true}
         eventHandlers={{
           tileload: () => {
-            console.log('Map tiles loaded successfully');
+            console.log(`✅ Tiles loading from server ${currentTileIndex + 1}`);
+            setTilesLoaded(true);
+          },
+          tileerror: (e) => {
+            console.log(`❌ Tile server ${currentTileIndex + 1} failed, trying next...`);
+            if (currentTileIndex < tileServers.length - 1) {
+              setCurrentTileIndex(prev => prev + 1);
+              setTilesLoaded(false);
+            } else {
+              console.log('⚠️ All tile servers failed');
+            }
           },
           loading: () => {
-            console.log('Loading map tiles...');
+            console.log(`🔄 Loading tiles from server ${currentTileIndex + 1}...`);
+            setTilesLoaded(false);
           },
           load: () => {
-            console.log('All map tiles loaded successfully');
+            console.log(`🎉 All tiles loaded from server ${currentTileIndex + 1}`);
+            setTilesLoaded(true);
           }
         }}
+        key={`tile-server-${currentTileIndex}`}
       />
+      
+      {/* Loading overlay */}
+      {!tilesLoaded && (
+        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10 rounded-lg">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <p className="text-sm text-gray-600">Cargando mapa...</p>
+            <p className="text-xs text-gray-500">Servidor {currentTileIndex + 1}/{tileServers.length}</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Retry button if all servers fail */}
+      {currentTileIndex >= tileServers.length - 1 && !tilesLoaded && (
+        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-20">
+          <button 
+            onClick={() => {
+              setCurrentTileIndex(0);
+              setTilesLoaded(false);
+            }}
+            className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+          >
+            🔄 Reintentar carga de mapa
+          </button>
+        </div>
+      )}
       
       {/* Map Click Handler */}
       <MapClickHandler 

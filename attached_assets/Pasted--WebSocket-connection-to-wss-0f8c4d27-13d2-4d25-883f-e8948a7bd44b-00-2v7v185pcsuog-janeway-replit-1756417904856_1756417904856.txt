@@ -1,0 +1,123 @@
+ WebSocket connection to 'wss://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/?token=MGPklt2F9f2C' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) 
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+useScreenSize.ts:80 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+useAuth.ts:32 🔍 [useAuth] Making network request to /api/auth/user
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+LanguageContext.tsx:28 LanguageContext initialized: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+all.js:6 >=116
+useAuth.ts:34 🔍 [useAuth] Response: 200 OK
+useAuth.ts:38 🔍 [useAuth] User data received: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:51 🔍 [TenantContext] Fetching user tenants...
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:53 🔍 [TenantContext] User tenants response: 200
+TenantContext.tsx:58 🔍 [TenantContext] User tenants received: 1 tenants: Array(1)
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+InstantNavigation.tsx:17 🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:192 🔍 [TenantContext] Priority 3 skipped: Object
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:78 Map initialized and resized
+LeafletMap.tsx:78 Map initialized and resized
+LeafletMap.tsx:113 All map tiles loaded successfully
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:78 Map initialized and resized
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+LeafletMap.tsx:110 Loading map tiles...
+LeafletMap.tsx:113 All map tiles loaded successfully
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
