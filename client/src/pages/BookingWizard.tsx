@@ -534,6 +534,8 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     <Label htmlFor="name">Nombre completo *</Label>
                     <Input
                       id="name"
+                      name="customerName"
+                      autoComplete="name"
                       value={customerData.name}
                       onChange={(e) => {
                         const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
@@ -560,6 +562,9 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     <Label htmlFor="phone">Teléfono *</Label>
                     <Input
                       id="phone"
+                      name="customerPhone"
+                      type="tel"
+                      autoComplete="tel"
                       value={customerData.phone}
                       onChange={(e) => {
                         setCustomerData(prev => ({ ...prev, phone: e.target.value }));
@@ -584,7 +589,9 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
+                      name="customerEmail"
                       type="email"
+                      autoComplete="email"
                       value={customerData.email}
                       onChange={(e) => {
                         const emailValue = e.target.value.toLowerCase();
@@ -610,6 +617,8 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     <Label htmlFor="address">Dirección completa *</Label>
                     <Input
                       id="address"
+                      name="customerAddress"
+                      autoComplete="street-address"
                       value={customerData.address}
                       onChange={(e) => {
                         const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
@@ -627,6 +636,8 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     <Label htmlFor="fraccionamiento">Fraccionamiento *</Label>
                     <Input
                       id="fraccionamiento"
+                      name="customerFraccionamiento"
+                      autoComplete="address-level2"
                       value={customerData.fraccionamiento}
                       onChange={(e) => {
                         const formattedValue = e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
@@ -644,6 +655,8 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     <Label htmlFor="postalCode">Código Postal</Label>
                     <Input
                       id="postalCode"
+                      name="customerPostalCode"
+                      autoComplete="postal-code"
                       value={customerData.postalCode}
                       onChange={(e) => {
                         setCustomerData(prev => ({ ...prev, postalCode: e.target.value }));
@@ -682,6 +695,7 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                         >
                           <input
                             type="radio"
+                            id={`pet-${pet.id}`}
                             name="selectedPet"
                             value={pet.id}
                             checked={selectedPetId === pet.id}
@@ -721,6 +735,7 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                       >
                         <input
                           type="radio"
+                          id="pet-new"
                           name="selectedPet"
                           value="new"
                           checked={selectedPetId === "new"}
@@ -758,6 +773,8 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     <Label htmlFor="petName">Nombre de la mascota *</Label>
                     <Input
                       id="petName"
+                      name="petName"
+                      autoComplete="off"
                       value={petData.name}
                       onChange={(e) => setPetData(prev => ({ ...prev, name: e.target.value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) }))}
                       placeholder="Frodo"
@@ -783,7 +800,7 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                         }
                       }}
                     >
-                      <SelectTrigger data-testid="select-pet-species">
+                      <SelectTrigger id="species" name="petSpecies" data-testid="select-pet-species">
                         <SelectValue placeholder="Seleccionar especie" />
                       </SelectTrigger>
                       <SelectContent>
@@ -802,7 +819,7 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                       value={petData.breed} 
                       onValueChange={(value) => setPetData(prev => ({ ...prev, breed: value }))}
                     >
-                      <SelectTrigger data-testid="select-pet-breed">
+                      <SelectTrigger id="breed" name="petBreed" data-testid="select-pet-breed">
                         <SelectValue placeholder="Seleccionar raza" />
                       </SelectTrigger>
                       <SelectContent>
@@ -824,7 +841,11 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     <Label htmlFor="age">Edad (años) *</Label>
                     <Input
                       id="age"
+                      name="petAge"
                       type="number"
+                      autoComplete="off"
+                      min="0"
+                      max="30"
                       value={petData.age}
                       onChange={(e) => setPetData(prev => ({ ...prev, age: parseInt(e.target.value) || 0 }))}
                       placeholder="3"
@@ -836,6 +857,8 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     <Label htmlFor="weight">Peso *</Label>
                     <Input
                       id="weight"
+                      name="petWeight"
+                      autoComplete="off"
                       value={petData.weight}
                       onChange={(e) => setPetData(prev => ({ ...prev, weight: e.target.value }))}
                       placeholder="5.5 kg"
@@ -847,6 +870,8 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     <Label htmlFor="medicalHistory">Historial médico / Notas especiales</Label>
                     <Input
                       id="medicalHistory"
+                      name="petMedicalHistory"
+                      autoComplete="off"
                       value={petData.medicalHistory}
                       onChange={(e) => setPetData(prev => ({ ...prev, medicalHistory: e.target.value }))}
                       placeholder="Condiciones médicas, alergias, comportamiento especial..."
@@ -989,7 +1014,9 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     <Label htmlFor="requestedDate">Fecha preferida *</Label>
                     <Input
                       id="requestedDate"
+                      name="appointmentDate"
                       type="date"
+                      autoComplete="off"
                       value={bookingData.requestedDate}
                       onChange={(e) => setBookingData(prev => ({ ...prev, requestedDate: e.target.value }))}
                       min={new Date().toISOString().split('T')[0]}
@@ -1004,7 +1031,7 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                         value={bookingData.requestedTime} 
                         onValueChange={(value) => setBookingData(prev => ({ ...prev, requestedTime: value }))}
                       >
-                        <SelectTrigger data-testid="select-requested-time">
+                        <SelectTrigger id="requestedTime" name="appointmentTime" data-testid="select-requested-time">
                           <SelectValue placeholder="Selecciona una hora" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1022,7 +1049,9 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                     ) : (
                       <Input
                         id="requestedTime"
+                        name="appointmentTime"
                         type="time"
+                        autoComplete="off"
                         value={bookingData.requestedTime}
                         onChange={(e) => setBookingData(prev => ({ ...prev, requestedTime: e.target.value }))}
                         required
@@ -1296,7 +1325,9 @@ Nos pondremos en contacto contigo 30 minutos antes de la cita.
                       <Label htmlFor="requestedTime">Hora preferida *</Label>
                       <Input
                         id="requestedTime"
+                        name="appointmentTime"
                         type="time"
+                        autoComplete="off"
                         value={bookingData.requestedTime}
                         onChange={(e) => setBookingData(prev => ({ ...prev, requestedTime: e.target.value }))}
                         required
