@@ -47,22 +47,24 @@ export default function LeafletMap({
   const mapRef = useRef<any>(null);
   const customerMarkerRef = useRef<any>(null);
   const [tileServerIndex, setTileServerIndex] = useState(0);
+  const [allServersFailed, setAllServersFailed] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
   
   // Multiple tile server options as fallbacks
   const tileServers = [
+    {
+      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      subdomains: ""
+    },
     {
       url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | &copy; <a href="https://carto.com/">CARTO</a>',
       subdomains: "abcd"
     },
     {
-      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      subdomains: "abc"
-    },
-    {
-      url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | &copy; <a href="https://carto.com/">CARTO</a>',
+      url: "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}.png",
+      attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       subdomains: "abcd"
     }
   ];
@@ -77,12 +79,71 @@ export default function LeafletMap({
     }
   };
 
-  // Expose the center function
+  // Expose the center function and handle map initialization
   useEffect(() => {
     if (mapRef.current && onCenterChange) {
       (mapRef.current as any).centerMapOnLocation = centerMapOnLocation;
     }
+    
+    // Force map resize after a short delay
+    const timer = setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+        setMapReady(true);
+        console.log('Map initialized and resized');
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [mapRef.current]);
+  
+  // Reset tile server on center change
+  useEffect(() => {
+    setTileServerIndex(0);
+    setAllServersFailed(false);
+  }, [center]);
+
+  // Fallback component when all tile servers fail
+  if (allServersFailed) {
+    return (
+      <div 
+        className="w-full h-96 bg-gray-100 border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center text-center p-6"
+        onClick={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const lat = center[0] + (0.5 - y / rect.height) * 0.01;
+          const lng = center[1] + (x / rect.width - 0.5) * 0.01;
+          onMapClick(lat, lng);
+        }}
+      >
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">📍 Ubicación del Mapa</h3>
+          <p className="text-sm text-gray-600 mb-2">Los mapas están temporalmente no disponibles</p>
+          <div className="text-xs text-gray-500">
+            <p>Centro: {center[0].toFixed(4)}, {center[1].toFixed(4)}</p>
+            {tenantLocation && (
+              <p>Clínica: {tenantLocation.lat.toFixed(4)}, {tenantLocation.lng.toFixed(4)}</p>
+            )}
+            {customerLocation && (
+              <p>Cliente: {customerLocation.lat.toFixed(4)}, {customerLocation.lng.toFixed(4)}</p>
+            )}
+          </div>
+        </div>
+        <button 
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setTileServerIndex(0);
+            setAllServersFailed(false);
+          }}
+        >
+          🔄 Reintentar cargar mapa
+        </button>
+        <p className="text-xs text-gray-400 mt-2">Haz clic en cualquier lugar para establecer ubicación</p>
+      </div>
+    );
+  }
 
   return (
     <MapContainer
@@ -96,16 +157,23 @@ export default function LeafletMap({
       <TileLayer
         attribution={tileServers[tileServerIndex].attribution}
         url={tileServers[tileServerIndex].url}
-        maxZoom={19}
+        maxZoom={18}
+        minZoom={1}
+        tileSize={256}
         subdomains={tileServers[tileServerIndex].subdomains}
-        crossOrigin="anonymous"
         errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
         eventHandlers={{
-          tileerror: () => {
-            console.log(`Tile server ${tileServerIndex} failed, trying next...`);
+          tileerror: (e) => {
+            console.log(`Tile server ${tileServerIndex} failed, trying next...`, e);
             if (tileServerIndex < tileServers.length - 1) {
               setTileServerIndex(prev => prev + 1);
+            } else {
+              console.log("All tile servers failed");
+              setAllServersFailed(true);
             }
+          },
+          tileload: () => {
+            console.log(`Tile server ${tileServerIndex} loaded successfully`);
           }
         }}
         key={tileServerIndex}
