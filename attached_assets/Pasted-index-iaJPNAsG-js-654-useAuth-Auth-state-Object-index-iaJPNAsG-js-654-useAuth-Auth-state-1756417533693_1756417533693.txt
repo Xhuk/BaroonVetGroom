@@ -1,0 +1,82 @@
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:699 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+index-iaJPNAsG.js:698 🔍 [TenantContext] useEffect triggered: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Not authenticated, skipping
+index-iaJPNAsG.js:698 🎯 [TenantContext] Final context value: Object
+index-iaJPNAsG.js:698 LanguageContext initialized: Object
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] useEffect triggered: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Not authenticated, skipping
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] useEffect triggered: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Debug mode check: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Not a demo/vanilla user
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:699 📱 Resize Event: desktop, landscape: true, useRibbon: false
+all.js:6 >=116
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Fetching user tenants...
+index-iaJPNAsG.js:698 🔍 [TenantContext] useEffect triggered: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Debug mode check: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Not a demo/vanilla user
+index-iaJPNAsG.js:698 🎯 [TenantContext] Final context value: Object
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+LeafletMap-BQebEjqK.js:1 Map initialized and resized
+index-iaJPNAsG.js:698 🔍 [TenantContext] User tenants response: 200
+index-iaJPNAsG.js:698 🔍 [TenantContext] User tenants received: 1 tenants: Array(1)
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] useEffect triggered: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Debug mode check: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Not a demo/vanilla user
+index-iaJPNAsG.js:698 🎯 [TenantContext] Final context value: Object
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:1176 🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+index-iaJPNAsG.js:698 🔍 [TenantContext] useEffect triggered: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Debug mode check: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Priority 3 skipped: Object
+index-iaJPNAsG.js:698 🎯 [TenantContext] Final context value: Object
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+LeafletMap-BQebEjqK.js:1 Map initialized and resized
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] useEffect triggered: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Debug mode check: Object
+index-iaJPNAsG.js:698 🔍 [TenantContext] Priority 3 skipped: Object
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:654 🔍 [useAuth] Auth state: Object
+index-iaJPNAsG.js:698 🎯 [TenantContext] Final context value: Object
+LeafletMap-BQebEjqK.js:1 Tile server 0 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 1
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 0 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 1
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 1 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 2
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 2 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 Switching to tile server 3
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+LeafletMap-BQebEjqK.js:1 Tile server 3 failed, trying next... Object
+LeafletMap-BQebEjqK.js:1 All tile servers failed, showing fallback
+index-iaJPNAsG.js:699 📱 Resize Event: desktop, landscape: true, useRibbon: false
