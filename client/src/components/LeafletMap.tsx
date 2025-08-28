@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { customBlueIcon, customRedIcon } from '@/lib/leafletIcons';
+import MonterreyOfflineMap from './MonterreyOfflineMap';
 import 'leaflet/dist/leaflet.css';
 
 interface LeafletMapProps {
@@ -111,44 +112,29 @@ export default function LeafletMap({
   // Get current tile server safely
   const currentTileServer = tileServers[tileServerIndex] || tileServers[0];
   
-  // Fallback component when all tile servers fail or index out of bounds
+  // Use offline Monterrey map when all tile servers fail
   if (allServersFailed || tileServerIndex >= tileServers.length) {
     return (
-      <div 
-        className="w-full h-96 bg-gray-100 border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center text-center p-6"
-        onClick={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          const lat = center[0] + (0.5 - y / rect.height) * 0.01;
-          const lng = center[1] + (x / rect.width - 0.5) * 0.01;
-          onMapClick(lat, lng);
-        }}
-      >
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">📍 Ubicación del Mapa</h3>
-          <p className="text-sm text-gray-600 mb-2">Los mapas están temporalmente no disponibles</p>
-          <div className="text-xs text-gray-500">
-            <p>Centro: {center[0].toFixed(4)}, {center[1].toFixed(4)}</p>
-            {tenantLocation && (
-              <p>Clínica: {tenantLocation.lat.toFixed(4)}, {tenantLocation.lng.toFixed(4)}</p>
-            )}
-            {customerLocation && (
-              <p>Cliente: {customerLocation.lat.toFixed(4)}, {customerLocation.lng.toFixed(4)}</p>
-            )}
-          </div>
-        </div>
+      <div className="relative">
+        <MonterreyOfflineMap
+          center={center}
+          zoom={zoom}
+          tenantLocation={tenantLocation ? { lat: tenantLocation.lat, lng: tenantLocation.lng } : undefined}
+          customerLocation={customerLocation ? { lat: customerLocation.lat, lng: customerLocation.lng } : undefined}
+          tenantName={tenantName}
+          onMapClick={onMapClick}
+          onMapMove={onMapMove}
+          onCenterChange={onCenterChange}
+        />
         <button 
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-          onClick={(e) => {
-            e.stopPropagation();
+          className="absolute top-2 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 z-20"
+          onClick={() => {
             setTileServerIndex(0);
             setAllServersFailed(false);
           }}
         >
-          🔄 Reintentar cargar mapa
+          🔄 Reintentar mapa online
         </button>
-        <p className="text-xs text-gray-400 mt-2">Haz clic en cualquier lugar para establecer ubicación</p>
       </div>
     );
   }
