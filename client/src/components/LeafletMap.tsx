@@ -103,8 +103,11 @@ export default function LeafletMap({
     setAllServersFailed(false);
   }, [center]);
 
-  // Fallback component when all tile servers fail
-  if (allServersFailed) {
+  // Get current tile server safely
+  const currentTileServer = tileServers[tileServerIndex] || tileServers[0];
+  
+  // Fallback component when all tile servers fail or index out of bounds
+  if (allServersFailed || tileServerIndex >= tileServers.length) {
     return (
       <div 
         className="w-full h-96 bg-gray-100 border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center text-center p-6"
@@ -155,20 +158,22 @@ export default function LeafletMap({
       key={`${center[0]}-${center[1]}`}
     >
       <TileLayer
-        attribution={tileServers[tileServerIndex].attribution}
-        url={tileServers[tileServerIndex].url}
+        attribution={currentTileServer.attribution}
+        url={currentTileServer.url}
         maxZoom={18}
         minZoom={1}
         tileSize={256}
-        subdomains={tileServers[tileServerIndex].subdomains}
+        subdomains={currentTileServer.subdomains}
         errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
         eventHandlers={{
           tileerror: (e) => {
             console.log(`Tile server ${tileServerIndex} failed, trying next...`, e);
             if (tileServerIndex < tileServers.length - 1) {
-              setTileServerIndex(prev => prev + 1);
+              const nextIndex = tileServerIndex + 1;
+              console.log(`Switching to tile server ${nextIndex}`);
+              setTileServerIndex(nextIndex);
             } else {
-              console.log("All tile servers failed");
+              console.log("All tile servers failed, showing fallback");
               setAllServersFailed(true);
             }
           },

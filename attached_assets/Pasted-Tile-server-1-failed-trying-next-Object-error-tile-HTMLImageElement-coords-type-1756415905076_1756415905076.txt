@@ -1,0 +1,88 @@
+Tile server 1 failed, trying next... 
+Object {error: {…}, tile: HTMLImageElement, coords: {…}, type: "tileerror", target: NewClass, …}
+Tile server 1 failed, trying next... 
+Object {error: {…}, tile: HTMLImageElement, coords: {…}, type: "tileerror", target: NewClass, …}
+Tile server 1 failed, trying next... 
+Object {error: {…}, tile: HTMLImageElement, coords: {…}, type: "tileerror", target: NewClass, …}
+Tile server 1 failed, trying next... 
+Object {error: {…}, tile: HTMLImageElement, coords: {…}, type: "tileerror", target: NewClass, …}
+Tile server 1 failed, trying next... 
+Object {error: {…}, tile: HTMLImageElement, coords: {…}, type: "tileerror", target: NewClass, …}
+Tile server 1 failed, trying next... 
+Object {error: {…}, tile: HTMLImageElement, coords: {…}, type: "tileerror", target: NewClass, …}
+Tile server 1 failed, trying next... 
+Object {error: {…}, tile: HTMLImageElement, coords: {…}, type: "tileerror", target: NewClass, …}
+Tile server 1 failed, trying next... 
+Object {error: {…}, tile: HTMLImageElement, coords: {…}, type: "tileerror", target: NewClass, …}
+Cannot read properties of undefined (reading 'attribution')
+Cannot read properties of undefined (reading 'attribution')
+The above error occurred in the <LeafletMap> component:
+
+    at LeafletMap (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/LeafletMap.tsx:39:3)
+    at Suspense
+    at div
+    at div
+    at div
+    at div
+    at div
+    at div
+    at _c9 (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at BookingWizard (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/pages/BookingWizard.tsx:55:27)
+    at div
+    at BookingWizardPage
+    at Route (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=0c1acae0:191:16)
+    at Switch (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=0c1acae0:247:17)
+    at DeviceBlocker (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/DeviceBlocker.tsx:21:33)
+    at Router (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/App.tsx?v=9TWZ0taBytHOws4RBD2fJ:84:55)
+    at RoleImpersonationProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/hooks/useRoleImpersonation.ts:104:45)
+    at TenantProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TenantContext.tsx:27:34)
+    at TimezoneProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TimezoneContext.tsx:21:36)
+    at ThemeProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/ThemeContext.tsx:20:33)
+    at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=0c1acae0:38:15)
+    at TooltipProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=0c1acae0:63:5)
+    at LanguageProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/LanguageContext.tsx:25:36)
+    at QueryClientProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=0c1acae0:2805:3)
+    at ErrorBoundary (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ErrorBoundary.tsx:7:5)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+
+at LeafletMap (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/LeafletMap.tsx:39:3)
+at Suspense
+at div
+at div
+at div
+at div
+at div
+at div
+at _c9 (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+at div
+at _c (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+at div
+at BookingWizard (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/pages/BookingWizard.tsx:55:27)
+at div
+at BookingWizardPage
+at Route (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=0c1acae0:191:16)
+at Switch (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=0c1acae0:247:17)
+at DeviceBlocker (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/DeviceBlocker.tsx:21:33)
+at Router (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/App.tsx?v=9TWZ0taBytHOws4RBD2fJ:84:55)
+at RoleImpersonationProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/hooks/useRoleImpersonation.ts:104:45)
+at TenantProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TenantContext.tsx:27:34)
+at TimezoneProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TimezoneContext.tsx:21:36)
+at ThemeProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/ThemeContext.tsx:20:33)
+at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=0c1acae0:38:15)
+at TooltipProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=0c1acae0:63:5)
+at LanguageProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/LanguageContext.tsx:25:36)
+at QueryClientProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=0c1acae0:2805:3)
+at ErrorBoundary (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ErrorBoundary.tsx:7:5)
+at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+at new window.Error (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/lib/errorSuppression.ts?v=9TWZ0taBytHOws4RBD2fJ:77:12)
+at t.value (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
