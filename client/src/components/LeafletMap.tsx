@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { customBlueIcon, customRedIcon } from '@/lib/leafletIcons';
+import 'leaflet/dist/leaflet.css';
 
 interface LeafletMapProps {
   center: [number, number];
@@ -75,6 +76,8 @@ export default function LeafletMap({
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom={19}
+        crossOrigin={true}
       />
       
       {/* Map Click Handler */}
