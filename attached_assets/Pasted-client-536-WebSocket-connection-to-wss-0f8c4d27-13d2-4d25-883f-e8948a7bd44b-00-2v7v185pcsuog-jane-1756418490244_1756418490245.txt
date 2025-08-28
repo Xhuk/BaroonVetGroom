@@ -1,0 +1,203 @@
+client:536 WebSocket connection to 'wss://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/?token=Zq46L_EeWp8f' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=Zq46L_EeWp8f' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+useScreenSize.ts:80 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+LanguageContext.tsx:28 LanguageContext initialized: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+all.js:6 >=116
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:51 🔍 [TenantContext] Fetching user tenants...
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:53 🔍 [TenantContext] User tenants response: 200
+TenantContext.tsx:58 🔍 [TenantContext] User tenants received: 1 tenants: Array(1)
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+InstantNavigation.tsx:17 🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:192 🔍 [TenantContext] Priority 3 skipped: Object
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+LeafletMap.tsx:144 🔄 Loading tiles from server 1...
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:192 🔍 [TenantContext] Priority 3 skipped: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+LeafletMap.tsx:98 Map initialized and resized
+LeafletMap.tsx:135 ❌ Tile server 1 failed, trying next...
+LeafletMap.tsx:144 🔄 Loading tiles from server 2...
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+LeafletMap.tsx:144 🔄 Loading tiles from server 2...
+LeafletMap.tsx:98 Map initialized and resized
+LeafletMap.tsx:135 ❌ Tile server 2 failed, trying next...
+LeafletMap.tsx:144 🔄 Loading tiles from server 3...
+LeafletMap.tsx:135 ❌ Tile server 3 failed, trying next...
+LeafletMap.tsx:144 🔄 Loading tiles from server 4...
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:135 ❌ Tile server 4 failed, trying next...
+LeafletMap.tsx:140 ⚠️ All tile servers failed
+LeafletMap.tsx:148 🎉 All tiles loaded from server 4
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+Navigated to https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/booking
+client:536 WebSocket connection to 'wss://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/?token=Roj_NYM3VNsq' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=Roj_NYM3VNsq' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+useScreenSize.ts:80 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: false}
+LanguageContext.tsx:28 LanguageContext initialized: {currentLanguage: 'en', savedLanguage: 'en', available: Array(2)}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: false, allTenantsLength: 0}
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: {userEmail: 'dongadgetoshop@gmail.com', isDemo: false, isAdmin: false, userTenantsAvailable: false, userTenants: Array(0)}
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+all.js:6 >=116
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:51 🔍 [TenantContext] Fetching user tenants...
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: true}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 0}
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: {userEmail: 'dongadgetoshop@gmail.com', isDemo: false, isAdmin: false, userTenantsAvailable: false, userTenants: Array(0)}
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: true}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+LeafletMap.tsx:157 🔄 Loading map from OpenStreetMap...
+TenantContext.tsx:53 🔍 [TenantContext] User tenants response: 200
+TenantContext.tsx:58 🔍 [TenantContext] User tenants received: 1 tenants: [{…}]
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 1, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 0}
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: {userEmail: 'dongadgetoshop@gmail.com', isDemo: false, isAdmin: false, userTenantsAvailable: true, userTenants: Array(1)}
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: false}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+InstantNavigation.tsx:17 🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+ 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 1, currentTenant: 'vetgroom1', isLoadingTenants: false}
+ 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 0}
+ 🔍 [TenantContext] Priority 3 skipped: {hasEmail: true, hasCurrentTenant: true, debugMode: false}
+ 🎯 [TenantContext] Final context value: {currentTenant: 'vetgroom1', currentTenantName: 'vetgroom1', tenant: undefined, localCurrentTenant: 'vetgroom1', isLoading: true}
+ 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+ Map initialized and resized
+ ❌ Server 1 consistently failing, trying next...
+ 🔄 Loading map from ArcGIS...
+ 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+ 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 1, currentTenant: 'vetgroom1', isLoadingTenants: false}
+ 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 6}
+ 🔍 [TenantContext] Priority 3 skipped: {hasEmail: true, hasCurrentTenant: true, debugMode: false}
+ 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+ ❌ Server 2 consistently failing, trying next...
+ 🔄 Loading map from Google Maps...
+ 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+ 🎯 [TenantContext] Final context value: {currentTenant: 'vetgroom1', currentTenantName: 'Vetgroom1', tenant: 'vetgroom1', localCurrentTenant: 'vetgroom1', isLoading: false}
+ 🔄 Loading map from Google Maps...
+ Map initialized and resized
+ ❌ Server 3 consistently failing, trying next...
+ 🔄 Loading map from CARTO...
+ 🎉 Map fully loaded from CARTO!
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false
+ 📱 Resize Event: desktop, landscape: true, useRibbon: false

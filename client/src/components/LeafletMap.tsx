@@ -50,7 +50,8 @@ export default function LeafletMap({
   const [currentTileIndex, setCurrentTileIndex] = useState(0);
   const [tilesLoaded, setTilesLoaded] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [errorCount, setErrorCount] = useState(0);
+  const [serverErrorCounts, setServerErrorCounts] = useState<{[key: number]: number}>({});
+  const [hasTriedAllServers, setHasTriedAllServers] = useState(false);
   
   // Multiple reliable tile servers for failover
   const tileServers = [
@@ -130,52 +131,55 @@ export default function LeafletMap({
         crossOrigin={true}
         eventHandlers={{
           tileload: () => {
-            console.log(`✅ Tiles loading successfully from ${currentTileServer.attribution.includes('Google') ? 'Google Maps' : currentTileServer.attribution.includes('Esri') ? 'ArcGIS' : currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap'}`);
+            console.log(`✅ Map tiles loading successfully`);
             setTilesLoaded(true);
-            setErrorCount(0);
+            // Clear error count for this server on successful load
+            setServerErrorCounts(prev => ({...prev, [currentTileIndex]: 0}));
             if (loadingTimeout) {
               clearTimeout(loadingTimeout);
               setLoadingTimeout(null);
             }
           },
           tileerror: (e) => {
-            const newErrorCount = errorCount + 1;
-            setErrorCount(newErrorCount);
+            // Very patient error handling - only count severe persistent errors
+            const currentErrors = serverErrorCounts[currentTileIndex] || 0;
+            const newErrorCount = currentErrors + 1;
             
-            // Only switch servers after multiple errors (less sensitive)
-            if (newErrorCount >= 5) {
-              console.log(`❌ Server ${currentTileIndex + 1} consistently failing, trying next...`);
+            setServerErrorCounts(prev => ({...prev, [currentTileIndex]: newErrorCount}));
+            
+            // Only switch after 10 persistent errors (very patient)
+            if (newErrorCount >= 10) {
+              console.log(`❌ Server ${currentTileIndex + 1} having persistent issues, trying next server...`);
               if (currentTileIndex < tileServers.length - 1) {
                 setCurrentTileIndex(prev => prev + 1);
-                setErrorCount(0);
               } else {
-                console.log('⚠️ All tile servers have issues, but continuing...');
+                setHasTriedAllServers(true);
+                console.log('⚠️ All servers tried, using best available option');
               }
             }
           },
           loading: () => {
-            console.log(`🔄 Loading map from ${currentTileServer.attribution.includes('Google') ? 'Google Maps' : currentTileServer.attribution.includes('Esri') ? 'ArcGIS' : currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap'}...`);
+            console.log(`🔄 Loading map...`);
             setTilesLoaded(false);
             
-            // Set a longer timeout for tile loading (10 seconds)
+            // Very patient timeout - 20 seconds before considering a switch
             if (loadingTimeout) {
               clearTimeout(loadingTimeout);
             }
             
             const timeout = setTimeout(() => {
-              console.log(`⏰ Server ${currentTileIndex + 1} taking too long, trying next...`);
-              if (currentTileIndex < tileServers.length - 1) {
+              console.log(`⏰ Loading taking longer than expected, checking next server...`);
+              if (currentTileIndex < tileServers.length - 1 && !hasTriedAllServers) {
                 setCurrentTileIndex(prev => prev + 1);
-                setErrorCount(0);
               }
-            }, 10000);
+            }, 20000);
             
             setLoadingTimeout(timeout);
           },
           load: () => {
-            console.log(`🎉 Map fully loaded from ${currentTileServer.attribution.includes('Google') ? 'Google Maps' : currentTileServer.attribution.includes('Esri') ? 'ArcGIS' : currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap'}!`);
+            console.log(`🎉 Map loaded successfully!`);
             setTilesLoaded(true);
-            setErrorCount(0);
+            setServerErrorCounts(prev => ({...prev, [currentTileIndex]: 0}));
             if (loadingTimeout) {
               clearTimeout(loadingTimeout);
               setLoadingTimeout(null);
@@ -185,25 +189,13 @@ export default function LeafletMap({
         key={`tile-server-${currentTileIndex}`}
       />
       
-      {/* Loading overlay - only show initially, not during server switches */}
-      {!tilesLoaded && !mapReady && (
-        <div className="absolute inset-0 bg-gray-50 bg-opacity-90 flex items-center justify-center z-10 rounded-lg">
+      {/* Simplified loading overlay */}
+      {!tilesLoaded && (
+        <div className="absolute inset-0 bg-gray-50 bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-            <p className="text-sm text-gray-700 font-medium">Cargando mapa...</p>
-            <p className="text-xs text-gray-500">
-              {currentTileServer.attribution.includes('Google') ? 'Google Maps' : 
-               currentTileServer.attribution.includes('Esri') ? 'ArcGIS' :
-               currentTileServer.attribution.includes('CARTO') ? 'CARTO' : 'OpenStreetMap'}
-            </p>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <p className="text-sm text-gray-700">Cargando mapa...</p>
           </div>
-        </div>
-      )}
-      
-      {/* Success indicator */}
-      {tilesLoaded && (
-        <div className="absolute top-2 right-2 z-20 bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-          ✅ Mapa cargado
         </div>
       )}
       
