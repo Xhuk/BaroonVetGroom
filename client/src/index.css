@@ -1,6 +1,21 @@
 /* Import Leaflet CSS first */
 @import 'leaflet/dist/leaflet.css';
 
+/* Ensure Leaflet map displays properly */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  z-index: 1;
+}
+
+.leaflet-tile-pane {
+  opacity: 1 !important;
+}
+
+.leaflet-tile-loaded {
+  opacity: 1 !important;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

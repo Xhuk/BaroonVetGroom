@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { customBlueIcon, customRedIcon } from '@/lib/leafletIcons';
 import 'leaflet/dist/leaflet.css';
@@ -46,6 +46,26 @@ export default function LeafletMap({
 }: LeafletMapProps) {
   const mapRef = useRef<any>(null);
   const customerMarkerRef = useRef<any>(null);
+  const [tileServerIndex, setTileServerIndex] = useState(0);
+  
+  // Multiple tile server options as fallbacks
+  const tileServers = [
+    {
+      url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: "abcd"
+    },
+    {
+      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      subdomains: "abc"
+    },
+    {
+      url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: "abcd"
+    }
+  ];
 
   // Center map function that can be called externally
   const centerMapOnLocation = (lat: number, lng: number, zoomLevel: number = 16) => {
@@ -68,16 +88,27 @@ export default function LeafletMap({
     <MapContainer
       center={center}
       zoom={zoom}
-      style={{ height: '100%', width: '100%' }}
-      className="rounded-lg"
+      style={{ height: '100%', width: '100%', minHeight: '384px' }}
+      className="rounded-lg leaflet-container"
       ref={mapRef}
       key={`${center[0]}-${center[1]}`}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution={tileServers[tileServerIndex].attribution}
+        url={tileServers[tileServerIndex].url}
         maxZoom={19}
-        crossOrigin={true}
+        subdomains={tileServers[tileServerIndex].subdomains}
+        crossOrigin="anonymous"
+        errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+        eventHandlers={{
+          tileerror: () => {
+            console.log(`Tile server ${tileServerIndex} failed, trying next...`);
+            if (tileServerIndex < tileServers.length - 1) {
+              setTileServerIndex(prev => prev + 1);
+            }
+          }
+        }}
+        key={tileServerIndex}
       />
       
       {/* Map Click Handler */}
