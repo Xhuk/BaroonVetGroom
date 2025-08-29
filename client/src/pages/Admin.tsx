@@ -2313,7 +2313,14 @@ function Admin() {
                 </Dialog>
 
                 {/* Salary Configuration Dialog */}
-                <Dialog open={isSalaryConfigOpen} onOpenChange={setIsSalaryConfigOpen}>
+                <Dialog 
+                  open={isSalaryConfigOpen} 
+                  onOpenChange={(open) => {
+                    console.log('🔧 [Dialog] onOpenChange called with:', open);
+                    console.log('🔧 [Dialog] Current state before change:', isSalaryConfigOpen);
+                    setIsSalaryConfigOpen(open);
+                  }}
+                >
                   <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Configuración de Retenciones Salariales</DialogTitle>
