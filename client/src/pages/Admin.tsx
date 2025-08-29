@@ -47,7 +47,8 @@ import {
   CreditCard,
   Calendar,
   DollarSign,
-  Download
+  Download,
+  Calculator
 } from "lucide-react";
 import Sortable from 'sortablejs';
 
@@ -273,7 +274,10 @@ function Admin() {
     imssEnabled: true,
     infonavitEnabled: false,
     fonacotEnabled: false,
-    paymentFrequency: 'monthly'
+    paymentFrequency: 'monthly',
+    imssEmployeePercentage: '2.375',
+    imssEmployerPercentage: '10.525',
+    infonavitPercentage: '0'
   });
   
   // Employee payroll form state
