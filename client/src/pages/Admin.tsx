@@ -1769,7 +1769,7 @@ function Admin() {
             </Card>
           </div>
 
-          <Tabs defaultValue="rooms" className="w-full mt-8">
+          <Tabs defaultValue="rooms" className="w-full mt-12">
             <TabsList className={`grid w-full grid-rows-2 ${isVetGroomDeveloper ? 'grid-cols-7' : 'grid-cols-7'} gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg`}>
               {/* First Row - 7 tabs */}
               <TabsTrigger value="rooms" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
