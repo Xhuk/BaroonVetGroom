@@ -32,6 +32,7 @@ import {
   GripVertical,
   CheckCircle,
   XCircle,
+  FileText,
   Truck,
   MapPin,
   AlertTriangle,
@@ -1540,12 +1541,16 @@ function Admin() {
                 <Users className="w-4 h-4" />
                 Personal
               </TabsTrigger>
+              <TabsTrigger value="nomina" className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4" />
+                Nómina
+              </TabsTrigger>
               <TabsTrigger value="shifts" className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 Turnos
               </TabsTrigger>
               <TabsTrigger value="daily-closeout" className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
+                <BarChart3 className="w-4 h-4" />
                 Corte Diario
               </TabsTrigger>
               {isVetGroomDeveloper && (
@@ -3950,6 +3955,273 @@ function Admin() {
                         No se encontraron empleados
                       </div>
                     )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Payroll Management Tab */}
+            <TabsContent value="nomina" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Nómina</h2>
+                  <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    Configura salarios individuales y retenciones fiscales por empleado
+                  </p>
+                </div>
+                <Button 
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    // Calculate payroll for current period
+                    toast({
+                      title: "Procesando Nómina",
+                      description: "Calculando nómina del período actual...",
+                    });
+                  }}
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Procesar Nómina
+                </Button>
+              </div>
+
+              {/* Salary Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Empleados</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      {staff?.length || 0}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Personal activo</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Nómina Mensual</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      ${staff?.reduce((total, emp) => total + (emp.basicSalary || 15000), 0).toLocaleString()}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Salarios base estimados</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Retenciones</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                      ${Math.round(staff?.reduce((total, emp) => {
+                        const salary = emp.basicSalary || 15000;
+                        return total + calculateISR(salary) + (salary * 0.02375); // ISR + IMSS employee
+                      }, 0) || 0).toLocaleString()}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">ISR + IMSS estimado</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Individual Employee Salary Configuration */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Configuración Salarial Individual
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Configura salarios base y retenciones para cada empleado
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {staff && staff.length > 0 ? (
+                    <div className="space-y-4">
+                      {staff.map((employee: any) => (
+                        <div 
+                          key={employee.id} 
+                          className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                <span className="text-sm font-medium text-blue-600 dark:text-blue-300">
+                                  {employee.name?.split(' ').map((n: string) => n[0]).join('') || '??'}
+                                </span>
+                              </div>
+                              <div>
+                                <h3 className="font-medium text-gray-900 dark:text-gray-100">{employee.name}</h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {employee.role === 'veterinarian' ? 'Veterinario' :
+                                     employee.role === 'groomer' ? 'Peluquero' :
+                                     employee.role === 'receptionist' ? 'Recepcionista' :
+                                     employee.role === 'technician' ? 'Técnico' : employee.role}
+                                  </Badge>
+                                  {employee.specialization && (
+                                    <span className="text-xs text-gray-500">• {employee.specialization}</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-4">
+                              {/* Salary Range by Role */}
+                              <div className="text-right">
+                                <div className="text-sm text-gray-500">Rango Sugerido</div>
+                                <div className="text-sm font-medium">
+                                  {employee.role === 'veterinarian' ? '$25,000 - $50,000' :
+                                   employee.role === 'groomer' ? '$12,000 - $18,000' :
+                                   employee.role === 'receptionist' ? '$10,000 - $15,000' :
+                                   employee.role === 'technician' ? '$15,000 - $25,000' : '$10,000 - $20,000'}
+                                </div>
+                              </div>
+                              
+                              {/* Current Salary */}
+                              <div className="text-right">
+                                <div className="text-sm text-gray-500">Salario Actual</div>
+                                <div className="text-lg font-bold text-green-600">
+                                  ${(employee.basicSalary || 
+                                    (employee.role === 'veterinarian' ? 35000 :
+                                     employee.role === 'groomer' ? 15000 :
+                                     employee.role === 'receptionist' ? 12000 :
+                                     employee.role === 'technician' ? 20000 : 15000)
+                                  ).toLocaleString()}
+                                </div>
+                              </div>
+                              
+                              {/* Net Salary (after deductions) */}
+                              <div className="text-right">
+                                <div className="text-sm text-gray-500">Neto Estimado</div>
+                                <div className="text-lg font-bold text-blue-600">
+                                  ${(() => {
+                                    const basicSalary = employee.basicSalary || 
+                                      (employee.role === 'veterinarian' ? 35000 :
+                                       employee.role === 'groomer' ? 15000 :
+                                       employee.role === 'receptionist' ? 12000 :
+                                       employee.role === 'technician' ? 20000 : 15000);
+                                    const isr = calculateISR(basicSalary);
+                                    const imss = basicSalary * 0.02375;
+                                    return Math.round(basicSalary - isr - imss).toLocaleString();
+                                  })()}
+                                </div>
+                              </div>
+                              
+                              {/* Actions */}
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleOpenSalaryConfig(employee)}
+                                  title="Configurar salario y retenciones"
+                                >
+                                  <Edit className="w-4 h-4 mr-1" />
+                                  Configurar
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="border-green-200 text-green-700 hover:bg-green-50"
+                                  title="Ver recibo de nómina"
+                                >
+                                  <FileText className="w-4 h-4 mr-1" />
+                                  Recibo
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Quick Stats Row */}
+                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="grid grid-cols-4 gap-4 text-center">
+                              <div>
+                                <div className="text-xs text-gray-500">Base Salarial</div>
+                                <div className="text-sm font-medium">
+                                  {employee.salaryBasis === 'per_day' ? 'Por Día' : 'Por Mes'}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-gray-500">ISR</div>
+                                <div className="text-sm font-medium text-red-600">
+                                  -${calculateISR(employee.basicSalary || 15000).toFixed(0)}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-gray-500">IMSS</div>
+                                <div className="text-sm font-medium text-red-600">
+                                  -${((employee.basicSalary || 15000) * 0.02375).toFixed(0)}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-gray-500">Estado</div>
+                                <div className="text-sm font-medium">
+                                  <Badge 
+                                    variant={employee.isActive ? "default" : "secondary"}
+                                    className={employee.isActive ? "bg-green-100 text-green-800" : ""}
+                                  >
+                                    {employee.isActive ? 'Activo' : 'Inactivo'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Users className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay empleados</h3>
+                      <p className="text-gray-500 dark:text-gray-400 mb-4">
+                        Agrega empleados en la pestaña "Personal" para gestionar su nómina
+                      </p>
+                      <Button variant="outline" onClick={() => {
+                        // Switch to personnel tab
+                        const tabs = document.querySelector('[data-state="active"]');
+                        // This is a simple way to switch tabs - in a real app you'd use proper state management
+                      }}>
+                        <Users className="w-4 h-4 mr-2" />
+                        Ir a Personal
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Payroll Summary Report */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Resumen de Nómina por Departamento
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {['veterinarian', 'groomer', 'receptionist', 'technician'].map(role => {
+                      const roleStaff = staff?.filter((emp: any) => emp.role === role) || [];
+                      const totalSalary = roleStaff.reduce((sum: number, emp: any) => sum + (emp.basicSalary || 15000), 0);
+                      
+                      return (
+                        <div key={role} className="text-center p-4 border rounded-lg">
+                          <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                            {role === 'veterinarian' ? 'Veterinarios' :
+                             role === 'groomer' ? 'Peluqueros' :
+                             role === 'receptionist' ? 'Recepcionistas' :
+                             role === 'technician' ? 'Técnicos' : role}
+                          </div>
+                          <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            {roleStaff.length}
+                          </div>
+                          <div className="text-sm text-green-600 font-medium">
+                            ${totalSalary.toLocaleString()}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
