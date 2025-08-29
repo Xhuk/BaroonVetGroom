@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -143,6 +142,7 @@ function Admin() {
   });
 
   // State management with proper types
+  const [activeSection, setActiveSection] = useState('rooms');
   const [rooms, setRooms] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
@@ -1769,74 +1769,173 @@ function Admin() {
             </Card>
           </div>
 
-          <Tabs defaultValue="rooms" className="w-full mt-24">
-            <TabsList className={`grid w-full grid-rows-2 ${isVetGroomDeveloper ? 'grid-cols-7' : 'grid-cols-7'} gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg`}>
-              {/* First Row - 7 tabs */}
-              <TabsTrigger value="rooms" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+          {/* New Navigation System - All Options Visible */}
+          <div className="w-full mt-8">
+            {/* Navigation Buttons */}
+            <div className="flex flex-wrap gap-3 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+              <button
+                onClick={() => setActiveSection('rooms')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'rooms'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <DoorOpen className="w-4 h-4" />
                 Salas
-              </TabsTrigger>
-              <TabsTrigger value="roles" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              </button>
+              <button
+                onClick={() => setActiveSection('roles')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'roles'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <Shield className="w-4 h-4" />
                 Roles
-              </TabsTrigger>
-              <TabsTrigger value="users" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              </button>
+              <button
+                onClick={() => setActiveSection('users')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'users'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <Users className="w-4 h-4" />
                 Usuarios
-              </TabsTrigger>
-              <TabsTrigger value="staff" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              </button>
+              <button
+                onClick={() => setActiveSection('staff')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'staff'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <UserCheck className="w-4 h-4" />
                 Equipo
-              </TabsTrigger>
-              <TabsTrigger value="services" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              </button>
+              <button
+                onClick={() => setActiveSection('services')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'services'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <Clock className="w-4 h-4" />
                 Servicios
-              </TabsTrigger>
-              <TabsTrigger value="delivery-config" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              </button>
+              <button
+                onClick={() => setActiveSection('delivery-config')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'delivery-config'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <Truck className="w-4 h-4" />
                 Entregas
-              </TabsTrigger>
-              <TabsTrigger value="fraccionamientos" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              </button>
+              <button
+                onClick={() => setActiveSection('fraccionamientos')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'fraccionamientos'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <MapPin className="w-4 h-4" />
                 Fraccionamientos
-              </TabsTrigger>
+              </button>
               
-              {/* Second Row - 6 tabs + optional BETA */}
-              <TabsTrigger value="stats" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              <button
+                onClick={() => setActiveSection('stats')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'stats'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <BarChart3 className="w-4 h-4" />
                 Estadísticas
-              </TabsTrigger>
-              <TabsTrigger value="subscription" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              </button>
+              <button
+                onClick={() => setActiveSection('subscription')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'subscription'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <CreditCard className="w-4 h-4" />
                 Suscripción
-              </TabsTrigger>
-              <TabsTrigger value="personnel" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              </button>
+              <button
+                onClick={() => setActiveSection('personnel')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'personnel'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <Users className="w-4 h-4" />
                 Personal
-              </TabsTrigger>
-              <TabsTrigger value="nomina" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              </button>
+              <button
+                onClick={() => setActiveSection('nomina')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'nomina'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <DollarSign className="w-4 h-4" />
                 Nómina
-              </TabsTrigger>
-              <TabsTrigger value="shifts" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              </button>
+              <button
+                onClick={() => setActiveSection('shifts')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'shifts'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <Calendar className="w-4 h-4" />
                 Turnos
-              </TabsTrigger>
-              <TabsTrigger value="daily-closeout" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+              </button>
+              <button
+                onClick={() => setActiveSection('daily-closeout')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'daily-closeout'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
                 <BarChart3 className="w-4 h-4" />
                 Corte Diario
-              </TabsTrigger>
+              </button>
               {isVetGroomDeveloper && (
-                <TabsTrigger value="delivery-tracking" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
+                <button
+                  onClick={() => setActiveSection('delivery-tracking')}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeSection === 'delivery-tracking'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                  }`}
+                >
                   <MapPin className="w-4 h-4" />
                   <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">BETA</Badge>
                   Tracking
-                </TabsTrigger>
+                </button>
               )}
-            </TabsList>
+            </div>
 
-            {/* Rooms Management Tab */}
-            <TabsContent value="rooms" className="space-y-6">
+            {/* Content Sections */}
+            {activeSection === 'rooms' && (
+              <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Salas</h2>
                 <Dialog open={isRoomDialogOpen} onOpenChange={setIsRoomDialogOpen}>
@@ -1969,10 +2068,12 @@ function Admin() {
                   </Card>
                 ))}
               </div>
-            </TabsContent>
+              </div>
+            )}
 
-            {/* Staff Management Tab */}
-            <TabsContent value="staff" className="space-y-6">
+            {/* Staff Management Section */}
+            {activeSection === 'staff' && (
+              <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Equipo</h2>
                 <Dialog open={isStaffDialogOpen} onOpenChange={setIsStaffDialogOpen}>
@@ -2196,10 +2297,12 @@ function Admin() {
                   </div>
                 </DialogContent>
               </Dialog>
-            </TabsContent>
+              </div>
+            )}
 
-            {/* Roles Management Tab */}
-            <TabsContent value="roles" className="space-y-6">
+            {/* Roles Management Section */}
+            {activeSection === 'roles' && (
+              <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Roles y Permisos</h2>
                 <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
@@ -2603,12 +2706,12 @@ function Admin() {
                   </div>
                 )}
               </div>
-            </TabsContent>
+              </div>
+            )}
 
-
-                
-            {/* Services Management Tab */}
-            <TabsContent value="services" className="space-y-6">
+            {/* Services Management Section */}
+            {activeSection === 'services' && (
+              <div className="space-y-6">
               <div className="flex flex-col lg:flex-row gap-4 lg:justify-between lg:items-center">
                 <div>
                   <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Configuración de Servicios</h2>
@@ -2956,10 +3059,12 @@ function Admin() {
                   </div>
                 </DialogContent>
               </Dialog>
-            </TabsContent>
+              </div>
+            )}
 
-            {/* Users Management Tab */}
-            <TabsContent value="users" className="space-y-6">
+            {/* Users Management Section */}
+            {activeSection === 'users' && (
+              <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Usuarios</h2>
                 <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
@@ -3211,10 +3316,12 @@ function Admin() {
                   )}
                 </div>
               )}
-            </TabsContent>
+              </div>
+            )}
 
-            {/* Delivery Configuration Tab */}
-            <TabsContent value="delivery-config" className="space-y-6">
+            {/* Delivery Configuration Section */}
+            {activeSection === 'delivery-config' && (
+              <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Configuración de Entregas</h2>
@@ -3461,10 +3568,13 @@ function Admin() {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+            </div>
+            )}
+
 
             {/* Fraccionamientos Tab */}
-            <TabsContent value="fraccionamientos" className="space-y-6">
+            {activeSection === 'fraccionamientos' && (
+              <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                   Gestión de Fraccionamientos
@@ -3506,10 +3616,13 @@ function Admin() {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+            </div>
+            )}
+
 
             {/* Statistics Tab */}
-            <TabsContent value="stats" className="space-y-6">
+            {activeSection === 'stats' && (
+              <div className="space-y-6">
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Estadísticas del Sistema</h2>
               
               {/* Admin Stats */}
@@ -3642,10 +3755,13 @@ function Admin() {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+            </div>
+            )}
+
 
             {/* Subscription Management Tab */}
-            <TabsContent value="subscription" className="space-y-6">
+            {activeSection === 'subscription' && (
+              <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -3968,10 +4084,13 @@ function Admin() {
                   </Card>
                 </div>
               )}
-            </TabsContent>
+            </div>
+            )}
+
 
             {/* Personnel Management Tab */}
-            <TabsContent value="personnel" className="space-y-6">
+            {activeSection === 'personnel' && (
+              <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Personal</h2>
                 <Button className="bg-blue-600 hover:bg-blue-700">
@@ -4068,10 +4187,13 @@ function Admin() {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+            </div>
+            )}
+
 
             {/* Payroll Management Tab */}
-            <TabsContent value="nomina" className="space-y-6">
+            {activeSection === 'nomina' && (
+              <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Nómina</h2>
@@ -4371,10 +4493,13 @@ function Admin() {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+            </div>
+            )}
+
 
             {/* Shift Scheduling Tab */}
-            <TabsContent value="shifts" className="space-y-6">
+            {activeSection === 'shifts' && (
+              <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Programación de Turnos</h2>
                 {isEditingShifts && (
@@ -4601,10 +4726,13 @@ function Admin() {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
+            </div>
+            )}
+
 
             {/* Daily Close-out Tab */}
-            <TabsContent value="daily-closeout" className="space-y-6">
+            {activeSection === 'daily-closeout' && (
+              <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Corte Diario Financiero</h2>
               </div>
@@ -4687,11 +4815,13 @@ function Admin() {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+            </div>
+            )}
 
-            {/* Delivery Tracking Tab - VetGroom Developer Only */}
-            {isVetGroomDeveloper && (
-              <TabsContent value="delivery-tracking" className="space-y-6">
+
+            {/* Delivery Tracking Section - VetGroom Developer Only */}
+            {isVetGroomDeveloper && activeSection === 'delivery-tracking' && (
+              <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -4873,9 +5003,9 @@ function Admin() {
                     </div>
                   </div>
                 </div>
-              </TabsContent>
+              </div>
             )}
-          </Tabs>
+          </div>
 
           {/* General Payroll Configuration Modal */}
           <Dialog open={isPayrollConfigOpen} onOpenChange={setIsPayrollConfigOpen}>
