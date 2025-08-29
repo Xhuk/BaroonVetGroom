@@ -175,6 +175,16 @@ export const staff = pgTable("staff", {
   role: varchar("role").notNull(), // veterinarian, groomer, technician, receptionist
   specialization: varchar("specialization"),
   salaryBasis: varchar("salary_basis").default("per_month"), // per_day, per_month
+  // Salary configuration fields
+  basicSalary: decimal("basic_salary", { precision: 10, scale: 2 }).default("0.00"),
+  isrEnabled: boolean("isr_enabled").default(true),
+  imssEnabled: boolean("imss_enabled").default(true),
+  imssEmployeePercentage: decimal("imss_employee_percentage", { precision: 5, scale: 3 }).default("2.375"),
+  imssEmployerPercentage: decimal("imss_employer_percentage", { precision: 5, scale: 3 }).default("10.525"),
+  infonavitEnabled: boolean("infonavit_enabled").default(false),
+  infonavitPercentage: decimal("infonavit_percentage", { precision: 4, scale: 2 }).default("0.00"),
+  fonacotEnabled: boolean("fonacot_enabled").default(false),
+  fonacotAmount: decimal("fonacot_amount", { precision: 10, scale: 2 }).default("0.00"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

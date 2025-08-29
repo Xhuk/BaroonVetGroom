@@ -1231,23 +1231,69 @@ function Admin() {
   // Handle open salary configuration
   const handleOpenSalaryConfig = (employee: any) => {
     setSelectedEmployee(employee);
-    setSalaryConfigData(prev => ({
-      ...prev,
-      basicSalary: employee.basicSalary || 0,
-    }));
+    // Load existing salary configuration from employee data
+    setSalaryConfigData({
+      basicSalary: parseFloat(employee.basicSalary) || 0,
+      isrEnabled: employee.isrEnabled !== undefined ? employee.isrEnabled : true,
+      imssEnabled: employee.imssEnabled !== undefined ? employee.imssEnabled : true,
+      imssEmployeePercentage: parseFloat(employee.imssEmployeePercentage) || 2.375,
+      imssEmployerPercentage: parseFloat(employee.imssEmployerPercentage) || 10.525,
+      infonavitEnabled: employee.infonavitEnabled !== undefined ? employee.infonavitEnabled : false,
+      infonavitPercentage: parseFloat(employee.infonavitPercentage) || 0,
+      fonacotEnabled: employee.fonacotEnabled !== undefined ? employee.fonacotEnabled : false,
+      fonacotAmount: parseFloat(employee.fonacotAmount) || 0,
+    });
     setIsSalaryConfigOpen(true);
   };
 
   // Handle save salary configuration
-  const handleSaveSalaryConfig = () => {
-    if (selectedEmployee) {
-      // Here you would typically save to database
-      toast({
-        title: "Configuración salarial guardada",
-        description: `Configuración de retenciones para ${selectedEmployee.name} actualizada exitosamente`,
-      });
-      setIsSalaryConfigOpen(false);
-      setSelectedEmployee(null);
+  const handleSaveSalaryConfig = async () => {
+    if (selectedEmployee && currentTenant) {
+      try {
+        // Prepare salary configuration data
+        const salaryConfigUpdate = {
+          basicSalary: salaryConfigData.basicSalary.toString(),
+          isrEnabled: salaryConfigData.isrEnabled,
+          imssEnabled: salaryConfigData.imssEnabled,
+          imssEmployeePercentage: salaryConfigData.imssEmployeePercentage.toString(),
+          imssEmployerPercentage: salaryConfigData.imssEmployerPercentage.toString(),
+          infonavitEnabled: salaryConfigData.infonavitEnabled,
+          infonavitPercentage: salaryConfigData.infonavitPercentage.toString(),
+          fonacotEnabled: salaryConfigData.fonacotEnabled,
+          fonacotAmount: salaryConfigData.fonacotAmount.toString(),
+        };
+
+        // Update staff salary configuration via API
+        const response = await fetch(`/api/staff/${selectedEmployee.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(salaryConfigUpdate),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update salary configuration');
+        }
+
+        // Refetch staff data to update the UI
+        staffQuery.refetch();
+
+        toast({
+          title: "Configuración salarial guardada",
+          description: `Configuración de retenciones para ${selectedEmployee.name} actualizada exitosamente`,
+        });
+        
+        setIsSalaryConfigOpen(false);
+        setSelectedEmployee(null);
+      } catch (error) {
+        console.error('Error saving salary configuration:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo guardar la configuración salarial. Intenta de nuevo.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -4004,9 +4050,9 @@ function Admin() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      ${staff?.reduce((total, emp) => total + (emp.basicSalary || 15000), 0).toLocaleString()}
+                      ${staff?.reduce((total, emp) => total + (parseFloat(emp.basicSalary) || 15000), 0).toLocaleString()}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">Salarios base estimados</p>
+                    <p className="text-xs text-gray-500 mt-1">Salarios base registrados</p>
                   </CardContent>
                 </Card>
                 
@@ -4017,11 +4063,14 @@ function Admin() {
                   <CardContent>
                     <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                       ${Math.round(staff?.reduce((total, emp) => {
-                        const salary = emp.basicSalary || 15000;
-                        return total + calculateISR(salary) + (salary * 0.02375); // ISR + IMSS employee
+                        const salary = parseFloat(emp.basicSalary) || 15000;
+                        const isr = (emp.isrEnabled !== false) ? calculateISR(salary) : 0;
+                        const imssRate = parseFloat(emp.imssEmployeePercentage) || 2.375;
+                        const imss = (emp.imssEnabled !== false) ? salary * (imssRate / 100) : 0;
+                        return total + isr + imss;
                       }, 0) || 0).toLocaleString()}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">ISR + IMSS estimado</p>
+                    <p className="text-xs text-gray-500 mt-1">ISR + IMSS configurado</p>
                   </CardContent>
                 </Card>
               </div>
@@ -4084,7 +4133,7 @@ function Admin() {
                               <div className="text-right">
                                 <div className="text-sm text-gray-500">Salario Actual</div>
                                 <div className="text-lg font-bold text-green-600">
-                                  ${(employee.basicSalary || 
+                                  ${(parseFloat(employee.basicSalary) || 
                                     (employee.role === 'veterinarian' ? 35000 :
                                      employee.role === 'groomer' ? 15000 :
                                      employee.role === 'receptionist' ? 12000 :
@@ -4098,14 +4147,17 @@ function Admin() {
                                 <div className="text-sm text-gray-500">Neto Estimado</div>
                                 <div className="text-lg font-bold text-blue-600">
                                   ${(() => {
-                                    const basicSalary = employee.basicSalary || 
+                                    const basicSalary = parseFloat(employee.basicSalary) || 
                                       (employee.role === 'veterinarian' ? 35000 :
                                        employee.role === 'groomer' ? 15000 :
                                        employee.role === 'receptionist' ? 12000 :
                                        employee.role === 'technician' ? 20000 : 15000);
-                                    const isr = calculateISR(basicSalary);
-                                    const imss = basicSalary * 0.02375;
-                                    return Math.round(basicSalary - isr - imss).toLocaleString();
+                                    const isr = (employee.isrEnabled !== false) ? calculateISR(basicSalary) : 0;
+                                    const imssRate = parseFloat(employee.imssEmployeePercentage) || 2.375;
+                                    const imss = (employee.imssEnabled !== false) ? basicSalary * (imssRate / 100) : 0;
+                                    const infonavit = (employee.infonavitEnabled === true) ? basicSalary * (parseFloat(employee.infonavitPercentage) || 0) / 100 : 0;
+                                    const fonacot = (employee.fonacotEnabled === true) ? parseFloat(employee.fonacotAmount) || 0 : 0;
+                                    return Math.round(basicSalary - isr - imss - infonavit - fonacot).toLocaleString();
                                   })()}
                                 </div>
                               </div>
@@ -4146,13 +4198,21 @@ function Admin() {
                               <div>
                                 <div className="text-xs text-gray-500">ISR</div>
                                 <div className="text-sm font-medium text-red-600">
-                                  -${calculateISR(employee.basicSalary || 15000).toFixed(0)}
+                                  {employee.isrEnabled !== false ? (
+                                    `-$${calculateISR(parseFloat(employee.basicSalary) || 15000).toFixed(0)}`
+                                  ) : (
+                                    <span className="text-gray-400">Deshabilitado</span>
+                                  )}
                                 </div>
                               </div>
                               <div>
                                 <div className="text-xs text-gray-500">IMSS</div>
                                 <div className="text-sm font-medium text-red-600">
-                                  -${((employee.basicSalary || 15000) * 0.02375).toFixed(0)}
+                                  {employee.imssEnabled !== false ? (
+                                    `-$${((parseFloat(employee.basicSalary) || 15000) * (parseFloat(employee.imssEmployeePercentage) || 2.375) / 100).toFixed(0)}`
+                                  ) : (
+                                    <span className="text-gray-400">Deshabilitado</span>
+                                  )}
                                 </div>
                               </div>
                               <div>
