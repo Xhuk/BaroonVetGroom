@@ -2321,7 +2321,7 @@ function Admin() {
                     setIsSalaryConfigOpen(open);
                   }}
                 >
-                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto fixed z-50 bg-white dark:bg-gray-800 shadow-2xl">
                     <DialogHeader>
                       <DialogTitle>Configuración de Retenciones Salariales</DialogTitle>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
