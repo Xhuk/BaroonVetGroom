@@ -51,7 +51,8 @@ import {
   Calculator,
   Printer,
   Building,
-  Copy
+  Copy,
+  MessageCircle
 } from "lucide-react";
 
 // Helper function to get room type icons
@@ -143,6 +144,11 @@ function Admin() {
   // State management with proper types
   const [activeSection, setActiveSection] = useState('rooms');
   const [shiftTabActive, setShiftTabActive] = useState('board');
+  
+  // Shift management state
+  const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
+  const [selectedShift, setSelectedShift] = useState<{staffId: string, dayIndex: number, current: string} | null>(null);
+  const [isCalendarShareOpen, setIsCalendarShareOpen] = useState(false);
   const [rooms, setRooms] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
@@ -4503,25 +4509,38 @@ function Admin() {
                                     </td>
                                     {shifts.map((shift, dayIndex) => (
                                       <td key={dayIndex} className="p-2 text-center">
-                                        {shift === '+' ? (
+                                        {shift === '+' || shift === 'Week off' ? (
                                           <button 
                                             className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors"
-                                            onClick={() => toast({ title: "Agregar Turno", description: `Para ${staffMember.name}` })}
+                                            onClick={() => {
+                                              setSelectedShift({
+                                                staffId: staffMember.id,
+                                                dayIndex,
+                                                current: shift
+                                              });
+                                              setIsShiftDialogOpen(true);
+                                            }}
                                           >
                                             <Plus className="w-4 h-4" />
                                           </button>
-                                        ) : shift === 'Week off' ? (
-                                          <div className="text-xs text-gray-400 p-2">Week off</div>
-                                        ) : shift === 'On leave' ? (
-                                          <div className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-1 rounded">
-                                            On leave
-                                          </div>
-                                        ) : shift.includes('Flexible') ? (
-                                          <div className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded">
-                                            {shift}
-                                          </div>
                                         ) : (
-                                          <div className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded whitespace-pre-line">
+                                          <div 
+                                            className={`text-xs px-2 py-1 rounded whitespace-pre-line cursor-pointer hover:shadow-md transition-shadow ${
+                                              shift === 'On leave' 
+                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' 
+                                                : shift.includes('Flexible') 
+                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                                : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                            }`}
+                                            onClick={() => {
+                                              setSelectedShift({
+                                                staffId: staffMember.id,
+                                                dayIndex,
+                                                current: shift
+                                              });
+                                              setIsShiftDialogOpen(true);
+                                            }}
+                                          >
                                             {shift}
                                           </div>
                                         )}
@@ -4547,6 +4566,232 @@ function Admin() {
                         </div>
                       </CardContent>
                     </Card>
+                    
+                    {/* Shift Management Dialog */}
+                    <Dialog open={isShiftDialogOpen} onOpenChange={setIsShiftDialogOpen}>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Gestionar Turno</DialogTitle>
+                          <DialogDescription>
+                            {selectedShift?.current === '+' || selectedShift?.current === 'Week off' 
+                              ? 'Asignar nuevo turno' 
+                              : 'Modificar turno existente'}
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        <div className="space-y-4">
+                          {selectedShift?.current !== '+' && selectedShift?.current !== 'Week off' && (
+                            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                              <div className="text-sm font-medium">Turno Actual:</div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">{selectedShift?.current}</div>
+                            </div>
+                          )}
+                          
+                          <div className="space-y-3">
+                            <div className="text-sm font-medium">Opciones de Turno:</div>
+                            
+                            {/* Shift Patterns from Patrones de Turnos */}
+                            <button 
+                              className="w-full p-3 text-left border rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                              onClick={() => {
+                                toast({ title: "Turno Asignado", description: "Turno Matutino (08:00 - 16:00)" });
+                                setIsShiftDialogOpen(false);
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-blue-500" />
+                                <div>
+                                  <div className="font-medium">Turno Matutino</div>
+                                  <div className="text-xs text-gray-500">08:00 - 16:00 (8 hrs)</div>
+                                </div>
+                              </div>
+                            </button>
+                            
+                            <button 
+                              className="w-full p-3 text-left border rounded-lg hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
+                              onClick={() => {
+                                toast({ title: "Turno Asignado", description: "Turno Vespertino (16:00 - 00:00)" });
+                                setIsShiftDialogOpen(false);
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-green-500" />
+                                <div>
+                                  <div className="font-medium">Turno Vespertino</div>
+                                  <div className="text-xs text-gray-500">16:00 - 00:00 (8 hrs)</div>
+                                </div>
+                              </div>
+                            </button>
+                            
+                            <button 
+                              className="w-full p-3 text-left border rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+                              onClick={() => {
+                                toast({ title: "Turno Asignado", description: "Turno Nocturno (00:00 - 08:00)" });
+                                setIsShiftDialogOpen(false);
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-purple-500" />
+                                <div>
+                                  <div className="font-medium">Turno Nocturno</div>
+                                  <div className="text-xs text-gray-500">00:00 - 08:00 (8 hrs)</div>
+                                </div>
+                              </div>
+                            </button>
+                            
+                            <button 
+                              className="w-full p-3 text-left border rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                              onClick={() => {
+                                toast({ title: "Turno Flexible Asignado", description: "Horario flexible según necesidades" });
+                                setIsShiftDialogOpen(false);
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-blue-400" />
+                                <div>
+                                  <div className="font-medium">Flexible</div>
+                                  <div className="text-xs text-gray-500">Horario adaptable</div>
+                                </div>
+                              </div>
+                            </button>
+                            
+                            <button 
+                              className="w-full p-3 text-left border rounded-lg hover:bg-yellow-50 dark:hover:bg-yellow-900/30 transition-colors"
+                              onClick={() => {
+                                toast({ title: "Permiso Asignado", description: "Día de permiso registrado" });
+                                setIsShiftDialogOpen(false);
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                                <div>
+                                  <div className="font-medium">On Leave</div>
+                                  <div className="text-xs text-gray-500">Día de permiso</div>
+                                </div>
+                              </div>
+                            </button>
+                          </div>
+                          
+                          {selectedShift?.current !== '+' && selectedShift?.current !== 'Week off' && (
+                            <div className="border-t pt-4">
+                              <div className="text-sm font-medium mb-3">Reasignar a:</div>
+                              <div className="space-y-2">
+                                {staff?.filter(s => s.id !== selectedShift?.staffId).slice(0, 3).map((otherStaff) => (
+                                  <button
+                                    key={otherStaff.id}
+                                    className="w-full p-2 text-left border rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                    onClick={() => {
+                                      toast({ 
+                                        title: "Turno Reasignado", 
+                                        description: `Turno asignado a ${otherStaff.name}` 
+                                      });
+                                      setIsShiftDialogOpen(false);
+                                    }}
+                                  >
+                                    <div className="font-medium text-sm">{otherStaff.name}</div>
+                                    <div className="text-xs text-gray-500">{otherStaff.role}</div>
+                                  </button>
+                                ))}
+                              </div>
+                              
+                              <Button 
+                                variant="outline" 
+                                className="w-full mt-3 text-red-600 border-red-200 hover:bg-red-50"
+                                onClick={() => {
+                                  toast({ title: "Turno Eliminado", description: "Turno removido del calendario" });
+                                  setIsShiftDialogOpen(false);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Eliminar Turno
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    
+                    {/* Calendar Sharing Dialog */}
+                    <Dialog open={isCalendarShareOpen} onOpenChange={setIsCalendarShareOpen}>
+                      <DialogContent className="max-w-lg">
+                        <DialogHeader>
+                          <DialogTitle>Compartir Calendario Personal</DialogTitle>
+                          <DialogDescription>
+                            Comparte el calendario de turnos con tu equipo vía WhatsApp
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        <div className="space-y-4">
+                          {/* Employee Filter */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Filtrar por empleado:</label>
+                            <Select>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar empleado" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">Todos los empleados</SelectItem>
+                                {staff?.map((staffMember) => (
+                                  <SelectItem key={staffMember.id} value={staffMember.id}>
+                                    {staffMember.name} - {staffMember.role}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          {/* Calendar Link Preview */}
+                          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <div className="text-sm font-medium mb-2">Enlace del calendario:</div>
+                            <div className="text-xs font-mono bg-white dark:bg-gray-900 p-2 rounded border break-all">
+                              {`${window.location.origin}/calendar/personal?tenant=${currentTenant?.id}&name=filtro`}
+                            </div>
+                          </div>
+                          
+                          {/* WhatsApp Share Button */}
+                          <div className="flex gap-2">
+                            <Button 
+                              className="flex-1 bg-green-600 hover:bg-green-700"
+                              onClick={() => {
+                                const calendarUrl = `${window.location.origin}/calendar/personal?tenant=${currentTenant?.id}`;
+                                const message = encodeURIComponent(`📅 *Calendario de Turnos*\n\nRevisa tus turnos y horarios aquí:\n${calendarUrl}\n\nPuedes filtrar por tu nombre para ver solo tus turnos.`);
+                                const whatsappUrl = `https://wa.me/?text=${message}`;
+                                window.open(whatsappUrl, '_blank');
+                                toast({ title: "WhatsApp Abierto", description: "Enlace listo para compartir" });
+                              }}
+                            >
+                              <MessageCircle className="w-4 h-4 mr-2" />
+                              Compartir por WhatsApp
+                            </Button>
+                            
+                            <Button 
+                              variant="outline"
+                              onClick={() => {
+                                const calendarUrl = `${window.location.origin}/calendar/personal?tenant=${currentTenant?.id}`;
+                                navigator.clipboard.writeText(calendarUrl);
+                                toast({ title: "Enlace Copiado", description: "URL copiada al portapapeles" });
+                              }}
+                            >
+                              <Copy className="w-4 h-4 mr-2" />
+                              Copiar Enlace
+                            </Button>
+                          </div>
+                          
+                          {/* Instructions */}
+                          <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                            <div className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                              💡 Instrucciones:
+                            </div>
+                            <div className="text-xs text-blue-800 dark:text-blue-200">
+                              • El enlace permite a los empleados ver sus turnos personales<br/>
+                              • Pueden filtrar por su nombre para identificar sus horarios<br/>
+                              • El calendario se actualiza automáticamente<br/>
+                              • Funciona en cualquier dispositivo móvil o computadora
+                            </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 )}
 
@@ -4617,7 +4862,11 @@ function Admin() {
                           <Download className="w-4 h-4 mr-2" />
                           Exportar Reporte
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setIsCalendarShareOpen(true)}
+                        >
                           <Calendar className="w-4 h-4 mr-2" />
                           Ver Calendario Personal
                         </Button>

@@ -878,6 +878,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Personal calendar endpoint for WhatsApp sharing
+  app.get('/api/calendar/personal/:tenantId', async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { name, startDate, endDate } = req.query;
+      
+      // Get all staff for the tenant
+      const staffMembers = await storage.getStaff(tenantId);
+      
+      // Filter by name if provided
+      let filteredStaff = staffMembers;
+      if (name && name !== 'all') {
+        filteredStaff = staffMembers.filter(staff => 
+          staff.name.toLowerCase().includes(name.toLowerCase()) ||
+          staff.role.toLowerCase().includes(name.toLowerCase())
+        );
+      }
+      
+      // Get current week's date range if not provided
+      const today = new Date();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - today.getDay() + 1);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      
+      const weekStart = startDate || monday.toISOString().split('T')[0];
+      const weekEnd = endDate || sunday.toISOString().split('T')[0];
+      
+      // Create sample shift data for demonstration
+      const personalCalendar = {
+        tenant: { id: tenantId, name: `Tenant ${tenantId}` },
+        dateRange: { startDate: weekStart, endDate: weekEnd },
+        staff: filteredStaff.map((staff, index) => {
+          // Generate sample shifts based on staff index
+          const shifts = [];
+          for (let day = 0; day < 7; day++) {
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + day);
+            
+            let shiftData = null;
+            if (day < 5) { // Monday to Friday
+              const patterns = [
+                { time: '08:00 - 16:00', hours: 8, type: 'Matutino' },
+                { time: '16:00 - 00:00', hours: 8, type: 'Vespertino' },
+                { time: '09:00 - 18:00', hours: 9, type: 'Flexible' },
+                { time: 'On leave', hours: 0, type: 'Permiso' }
+              ];
+              
+              // Rotate patterns based on staff index and day
+              const patternIndex = (index + day) % patterns.length;
+              shiftData = patterns[patternIndex];
+            } else { // Weekend
+              shiftData = { time: 'Week off', hours: 0, type: 'Descanso' };
+            }
+            
+            shifts.push({
+              date: date.toISOString().split('T')[0],
+              dayName: ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'][date.getDay()],
+              shift: shiftData
+            });
+          }
+          
+          return {
+            id: staff.id,
+            name: staff.name,
+            role: staff.role,
+            shifts: shifts
+          };
+        })
+      };
+      
+      res.json(personalCalendar);
+    } catch (error) {
+      console.error("Error fetching personal calendar:", error);
+      res.status(500).json({ message: "Failed to fetch personal calendar" });
+    }
+  });
+
   // Get shift board data for visual display
   app.get('/api/shift-board/:tenantId', isAuthenticated, async (req: any, res) => {
     try {

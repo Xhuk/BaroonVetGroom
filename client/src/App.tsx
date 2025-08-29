@@ -62,6 +62,7 @@ import SalesDelivery from "@/pages/SalesDelivery";
 import ReceiptTemplatesAdmin from "@/pages/ReceiptTemplatesAdmin";
 import CompanyClinicAdmin from "@/pages/CompanyClinicAdmin";
 import { SalaryConfig } from "@/pages/SalaryConfig";
+import PersonalCalendar from "@/pages/PersonalCalendar";
 import { InstantNavigation } from "@/components/InstantNavigation";
 import { DebugBanner } from "@/components/DebugBanner";
 import { DeviceBlocker } from "@/components/DeviceBlocker";
@@ -188,6 +189,7 @@ function Router() {
       <Route path="/driver-mobile" component={DriverMobile} />
       <Route path="/driver-dashboard/:driverId" component={DriverMobile} />
       <Route path="/temp/:token" component={TempLinkHandler} />
+      <Route path="/calendar/personal" component={PersonalCalendar} />
       <Route component={NotFound} />
       </Switch>
     </DeviceBlocker>
