@@ -1772,62 +1772,62 @@ function Admin() {
           <Tabs defaultValue="rooms" className="w-full mt-16">
             <TabsList className={`grid w-full grid-rows-2 ${isVetGroomDeveloper ? 'grid-cols-7' : 'grid-cols-7'} gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg`}>
               {/* First Row - 7 tabs */}
-              <TabsTrigger value="rooms" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="rooms" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <DoorOpen className="w-4 h-4" />
                 Salas
               </TabsTrigger>
-              <TabsTrigger value="roles" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="roles" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <Shield className="w-4 h-4" />
                 Roles
               </TabsTrigger>
-              <TabsTrigger value="users" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="users" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <Users className="w-4 h-4" />
                 Usuarios
               </TabsTrigger>
-              <TabsTrigger value="staff" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="staff" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <UserCheck className="w-4 h-4" />
                 Equipo
               </TabsTrigger>
-              <TabsTrigger value="services" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="services" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <Clock className="w-4 h-4" />
                 Servicios
               </TabsTrigger>
-              <TabsTrigger value="delivery-config" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="delivery-config" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <Truck className="w-4 h-4" />
                 Entregas
               </TabsTrigger>
-              <TabsTrigger value="fraccionamientos" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="fraccionamientos" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <MapPin className="w-4 h-4" />
                 Fraccionamientos
               </TabsTrigger>
               
               {/* Second Row - 6 tabs + optional BETA */}
-              <TabsTrigger value="stats" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="stats" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <BarChart3 className="w-4 h-4" />
                 Estadísticas
               </TabsTrigger>
-              <TabsTrigger value="subscription" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="subscription" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <CreditCard className="w-4 h-4" />
                 Suscripción
               </TabsTrigger>
-              <TabsTrigger value="personnel" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="personnel" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <Users className="w-4 h-4" />
                 Personal
               </TabsTrigger>
-              <TabsTrigger value="nomina" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="nomina" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <DollarSign className="w-4 h-4" />
                 Nómina
               </TabsTrigger>
-              <TabsTrigger value="shifts" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="shifts" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <Calendar className="w-4 h-4" />
                 Turnos
               </TabsTrigger>
-              <TabsTrigger value="daily-closeout" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+              <TabsTrigger value="daily-closeout" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                 <BarChart3 className="w-4 h-4" />
                 Corte Diario
               </TabsTrigger>
               {isVetGroomDeveloper && (
-                <TabsTrigger value="delivery-tracking" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500 data-[state=active]:z-10 data-[state=active]:relative data-[state=active]:shadow-lg">
+                <TabsTrigger value="delivery-tracking" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:border-blue-500">
                   <MapPin className="w-4 h-4" />
                   <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">BETA</Badge>
                   Tracking
