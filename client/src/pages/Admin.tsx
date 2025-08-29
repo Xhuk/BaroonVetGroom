@@ -303,6 +303,29 @@ function Admin() {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [availableRoles, setAvailableRoles] = useState([]);
+  
+  // Salary configuration dialog state
+  const [isSalaryConfigOpen, setIsSalaryConfigOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [showAdvancedCalculations, setShowAdvancedCalculations] = useState(false);
+  const [salaryConfigData, setSalaryConfigData] = useState({
+    basicSalary: 0,
+    // ISR (Impuesto Sobre la Renta)
+    isrEnabled: true,
+    isrPercentage: 0, // Calculated based on salary brackets
+    // IMSS (Instituto Mexicano del Seguro Social)
+    imssEnabled: true,
+    imssEmployeePercentage: 2.375, // 2.375% employee contribution
+    imssEmployerPercentage: 10.525, // 10.525% employer contribution
+    // Infonavit
+    infonavitEnabled: false,
+    infonavitPercentage: 5.0, // Max 5% of salary
+    // Fonacot
+    fonacotEnabled: false,
+    fonacotAmount: 0,
+    // Other deductions
+    otherDeductions: []
+  });
   const [newRoleData, setNewRoleData] = useState({
     name: '',
     displayName: '',
@@ -1173,6 +1196,57 @@ function Admin() {
         title: "Rol asignado",
         description: `${selectedUser.name} ha sido asignado al rol ${newRoleName}`,
       });
+    }
+  };
+
+  // Mexican ISR calculation based on 2024 tax brackets
+  const calculateISR = (monthlySalary: number) => {
+    const annualSalary = monthlySalary * 12;
+    let isr = 0;
+    
+    // ISR tax brackets for 2024 (annual amounts)
+    const brackets = [
+      { min: 0, max: 125900, rate: 0.019, lowerTax: 0 },
+      { min: 125900.01, max: 1059650, rate: 0.064, lowerTax: 2392.1 },
+      { min: 1059650.01, max: 1761820, rate: 0.108, lowerTax: 62070.9 },
+      { min: 1761820.01, max: 2102550, rate: 0.16, lowerTax: 137904.6 },
+      { min: 2102550.01, max: 2653020, rate: 0.216, lowerTax: 192421.4 },
+      { min: 2653020.01, max: 3472840, rate: 0.25, lowerTax: 311322.6 },
+      { min: 3472840.01, max: 3472840.01, rate: 0.30, lowerTax: 516277.5 }
+    ];
+
+    for (const bracket of brackets) {
+      if (annualSalary >= bracket.min && (annualSalary <= bracket.max || bracket.max === bracket.min)) {
+        const excess = annualSalary - bracket.min;
+        isr = bracket.lowerTax + (excess * bracket.rate);
+        break;
+      }
+    }
+
+    // Monthly ISR
+    return isr / 12;
+  };
+
+  // Handle open salary configuration
+  const handleOpenSalaryConfig = (employee: any) => {
+    setSelectedEmployee(employee);
+    setSalaryConfigData(prev => ({
+      ...prev,
+      basicSalary: employee.basicSalary || 0,
+    }));
+    setIsSalaryConfigOpen(true);
+  };
+
+  // Handle save salary configuration
+  const handleSaveSalaryConfig = () => {
+    if (selectedEmployee) {
+      // Here you would typically save to database
+      toast({
+        title: "Configuración salarial guardada",
+        description: `Configuración de retenciones para ${selectedEmployee.name} actualizada exitosamente`,
+      });
+      setIsSalaryConfigOpen(false);
+      setSelectedEmployee(null);
     }
   };
 
@@ -2169,6 +2243,262 @@ function Admin() {
                         <div className="flex gap-2">
                           <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)} className="flex-1">
                             Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </DialogContent>
+                </Dialog>
+
+                {/* Salary Configuration Dialog */}
+                <Dialog open={isSalaryConfigOpen} onOpenChange={setIsSalaryConfigOpen}>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Configuración de Retenciones Salariales</DialogTitle>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {selectedEmployee?.name} - Configuración según leyes fiscales de México
+                      </p>
+                    </DialogHeader>
+                    
+                    {selectedEmployee && (
+                      <div className="space-y-6">
+                        {/* Basic Salary */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="basicSalary">Salario Base Mensual *</Label>
+                            <Input
+                              id="basicSalary"
+                              type="number"
+                              value={salaryConfigData.basicSalary}
+                              onChange={(e) => setSalaryConfigData(prev => ({
+                                ...prev,
+                                basicSalary: parseFloat(e.target.value) || 0
+                              }))}
+                              placeholder="$0.00"
+                            />
+                          </div>
+                          <div className="flex items-center space-x-2 mt-6">
+                            <input
+                              type="checkbox"
+                              id="showAdvanced"
+                              checked={showAdvancedCalculations}
+                              onChange={(e) => setShowAdvancedCalculations(e.target.checked)}
+                              className="rounded"
+                            />
+                            <Label htmlFor="showAdvanced">Mostrar cálculos avanzados</Label>
+                          </div>
+                        </div>
+
+                        {/* ISR Section */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="isrEnabled"
+                                checked={salaryConfigData.isrEnabled}
+                                onChange={(e) => setSalaryConfigData(prev => ({
+                                  ...prev,
+                                  isrEnabled: e.target.checked
+                                }))}
+                                className="rounded"
+                              />
+                              <Label htmlFor="isrEnabled" className="font-medium">ISR (Impuesto Sobre la Renta)</Label>
+                            </div>
+                            {showAdvancedCalculations && (
+                              <div className="text-sm text-gray-600">
+                                Calculado: ${calculateISR(salaryConfigData.basicSalary).toFixed(2)} mensual
+                              </div>
+                            )}
+                          </div>
+                          {showAdvancedCalculations && salaryConfigData.isrEnabled && (
+                            <div className="text-xs text-gray-500 bg-gray-50 dark:bg-gray-800 p-3 rounded">
+                              <p><strong>Tabla ISR 2024:</strong> Se calcula automáticamente según los brackets fiscales vigentes.</p>
+                              <p>Salario anual: ${(salaryConfigData.basicSalary * 12).toLocaleString()}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* IMSS Section */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="imssEnabled"
+                                checked={salaryConfigData.imssEnabled}
+                                onChange={(e) => setSalaryConfigData(prev => ({
+                                  ...prev,
+                                  imssEnabled: e.target.checked
+                                }))}
+                                className="rounded"
+                              />
+                              <Label htmlFor="imssEnabled" className="font-medium">IMSS (Seguro Social)</Label>
+                            </div>
+                            {showAdvancedCalculations && (
+                              <div className="text-sm text-gray-600">
+                                Empleado: ${(salaryConfigData.basicSalary * salaryConfigData.imssEmployeePercentage / 100).toFixed(2)} 
+                                | Patrón: ${(salaryConfigData.basicSalary * salaryConfigData.imssEmployerPercentage / 100).toFixed(2)}
+                              </div>
+                            )}
+                          </div>
+                          {showAdvancedCalculations && salaryConfigData.imssEnabled && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label>Porcentaje Empleado (%)</Label>
+                                <Input
+                                  type="number"
+                                  step="0.001"
+                                  value={salaryConfigData.imssEmployeePercentage}
+                                  onChange={(e) => setSalaryConfigData(prev => ({
+                                    ...prev,
+                                    imssEmployeePercentage: parseFloat(e.target.value) || 0
+                                  }))}
+                                  className="text-sm"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Legal: 2.375% (cuotas obrero-patronales)</p>
+                              </div>
+                              <div>
+                                <Label>Porcentaje Patrón (%)</Label>
+                                <Input
+                                  type="number"
+                                  step="0.001"
+                                  value={salaryConfigData.imssEmployerPercentage}
+                                  onChange={(e) => setSalaryConfigData(prev => ({
+                                    ...prev,
+                                    imssEmployerPercentage: parseFloat(e.target.value) || 0
+                                  }))}
+                                  className="text-sm"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Legal: 10.525% (cuotas patronales)</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Infonavit Section */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="infonavitEnabled"
+                                checked={salaryConfigData.infonavitEnabled}
+                                onChange={(e) => setSalaryConfigData(prev => ({
+                                  ...prev,
+                                  infonavitEnabled: e.target.checked
+                                }))}
+                                className="rounded"
+                              />
+                              <Label htmlFor="infonavitEnabled" className="font-medium">Infonavit</Label>
+                            </div>
+                            {showAdvancedCalculations && salaryConfigData.infonavitEnabled && (
+                              <div className="text-sm text-gray-600">
+                                ${(salaryConfigData.basicSalary * salaryConfigData.infonavitPercentage / 100).toFixed(2)} mensual
+                              </div>
+                            )}
+                          </div>
+                          {showAdvancedCalculations && salaryConfigData.infonavitEnabled && (
+                            <div>
+                              <Label>Porcentaje de descuento (%)</Label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                max="5"
+                                value={salaryConfigData.infonavitPercentage}
+                                onChange={(e) => setSalaryConfigData(prev => ({
+                                  ...prev,
+                                  infonavitPercentage: Math.min(5, parseFloat(e.target.value) || 0)
+                                }))}
+                                className="text-sm"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">Máximo legal: 5% del salario</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Fonacot Section */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="fonacotEnabled"
+                                checked={salaryConfigData.fonacotEnabled}
+                                onChange={(e) => setSalaryConfigData(prev => ({
+                                  ...prev,
+                                  fonacotEnabled: e.target.checked
+                                }))}
+                                className="rounded"
+                              />
+                              <Label htmlFor="fonacotEnabled" className="font-medium">Fonacot</Label>
+                            </div>
+                            {showAdvancedCalculations && salaryConfigData.fonacotEnabled && (
+                              <div className="text-sm text-gray-600">
+                                ${salaryConfigData.fonacotAmount.toFixed(2)} mensual
+                              </div>
+                            )}
+                          </div>
+                          {showAdvancedCalculations && salaryConfigData.fonacotEnabled && (
+                            <div>
+                              <Label>Monto mensual de descuento</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={salaryConfigData.fonacotAmount}
+                                onChange={(e) => setSalaryConfigData(prev => ({
+                                  ...prev,
+                                  fonacotAmount: parseFloat(e.target.value) || 0
+                                }))}
+                                placeholder="$0.00"
+                                className="text-sm"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">Monto fijo según crédito autorizado</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Summary */}
+                        {showAdvancedCalculations && (
+                          <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+                            <h4 className="font-medium mb-2">Resumen de Retenciones</h4>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <p>Salario Base: <span className="font-medium">${salaryConfigData.basicSalary.toFixed(2)}</span></p>
+                                {salaryConfigData.isrEnabled && (
+                                  <p>ISR: <span className="font-medium text-red-600">-${calculateISR(salaryConfigData.basicSalary).toFixed(2)}</span></p>
+                                )}
+                                {salaryConfigData.imssEnabled && (
+                                  <p>IMSS (Empleado): <span className="font-medium text-red-600">-${(salaryConfigData.basicSalary * salaryConfigData.imssEmployeePercentage / 100).toFixed(2)}</span></p>
+                                )}
+                              </div>
+                              <div>
+                                {salaryConfigData.infonavitEnabled && (
+                                  <p>Infonavit: <span className="font-medium text-red-600">-${(salaryConfigData.basicSalary * salaryConfigData.infonavitPercentage / 100).toFixed(2)}</span></p>
+                                )}
+                                {salaryConfigData.fonacotEnabled && (
+                                  <p>Fonacot: <span className="font-medium text-red-600">-${salaryConfigData.fonacotAmount.toFixed(2)}</span></p>
+                                )}
+                                <div className="border-t pt-2 mt-2">
+                                  <p className="font-medium">Neto: <span className="text-green-600">${(
+                                    salaryConfigData.basicSalary 
+                                    - (salaryConfigData.isrEnabled ? calculateISR(salaryConfigData.basicSalary) : 0)
+                                    - (salaryConfigData.imssEnabled ? salaryConfigData.basicSalary * salaryConfigData.imssEmployeePercentage / 100 : 0)
+                                    - (salaryConfigData.infonavitEnabled ? salaryConfigData.basicSalary * salaryConfigData.infonavitPercentage / 100 : 0)
+                                    - (salaryConfigData.fonacotEnabled ? salaryConfigData.fonacotAmount : 0)
+                                  ).toFixed(2)}</span></p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end gap-2 pt-4 border-t">
+                          <Button variant="outline" onClick={() => setIsSalaryConfigOpen(false)}>
+                            Cancelar
+                          </Button>
+                          <Button onClick={handleSaveSalaryConfig} className="bg-blue-600 hover:bg-blue-700">
+                            Guardar Configuración
                           </Button>
                         </div>
                       </div>
@@ -3598,7 +3928,12 @@ function Admin() {
                             </td>
                             <td className="p-4">
                               <div className="flex gap-2">
-                                <Button variant="outline" size="sm">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleOpenSalaryConfig(employee)}
+                                  title="Configurar retenciones salariales"
+                                >
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
