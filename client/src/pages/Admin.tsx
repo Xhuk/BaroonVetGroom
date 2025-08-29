@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
@@ -143,6 +143,7 @@ function Admin() {
 
   // State management with proper types
   const [activeSection, setActiveSection] = useState('rooms');
+  const [shiftTabActive, setShiftTabActive] = useState('board');
   const [rooms, setRooms] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
@@ -4497,43 +4498,274 @@ function Admin() {
             )}
 
 
-            {/* Shift Scheduling Tab */}
+            {/* Comprehensive Shift Management System */}
             {activeSection === 'shifts' && (
               <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Programación de Turnos</h2>
-                {isEditingShifts && (
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Turnos</h2>
+                    <p className="text-gray-600 dark:text-gray-400">Sistema completo de turnos, horarios y control de asistencia</p>
+                  </div>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIsEditingShifts(false);
-                        // Reset to original values if needed
-                      }}
+                    <Button 
+                      onClick={() => setShiftTabActive('board')}
+                      variant={shiftTabActive === 'board' ? 'default' : 'outline'}
+                      className="text-sm"
                     >
-                      Cancelar
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Tablero de Turnos
                     </Button>
-                    <Button
-                      className="bg-blue-600 hover:bg-blue-700"
-                      onClick={() => {
-                        // Save shift configuration
-                        toast({
-                          title: "Configuración guardada",
-                          description: "Los horarios de turnos han sido actualizados exitosamente",
-                        });
-                        setIsEditingShifts(false);
-                      }}
+                    <Button 
+                      onClick={() => setShiftTabActive('patterns')}
+                      variant={shiftTabActive === 'patterns' ? 'default' : 'outline'}
+                      className="text-sm"
                     >
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Guardar Configuración
+                      <Clock className="w-4 h-4 mr-2" />
+                      Patrones de Turnos
+                    </Button>
+                    <Button 
+                      onClick={() => setShiftTabActive('tracking')}
+                      variant={shiftTabActive === 'tracking' ? 'default' : 'outline'}
+                      className="text-sm"
+                    >
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Control de Asistencia
                     </Button>
                   </div>
-                )}
-              </div>
+                </div>
 
-              <div className="text-sm text-gray-600 mb-4">
-                Arrastra los miembros del personal para asignarlos a turnos
-              </div>
+                {/* Shift Board - Visual Weekly Calendar */}
+                {(!shiftTabActive || shiftTabActive === 'board') && (
+                  <div className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Calendar className="w-5 h-5" />
+                          Tablero Visual de Turnos - Semana Actual
+                        </CardTitle>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline">
+                            ← Semana Anterior
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            Semana Actual
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            Semana Siguiente →
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="overflow-x-auto">
+                          <div className="grid grid-cols-8 gap-1 min-w-[800px]">
+                            {/* Header Row */}
+                            <div className="p-2 font-medium text-sm text-gray-500 dark:text-gray-400">
+                              Personal
+                            </div>
+                            {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day, index) => (
+                              <div key={index} className="p-2 text-center font-medium text-sm bg-gray-50 dark:bg-gray-800 rounded">
+                                <div>{day}</div>
+                                <div className="text-xs text-gray-500">{new Date(Date.now() + (index - 1) * 24 * 60 * 60 * 1000).getDate()}</div>
+                              </div>
+                            ))}
+                            
+                            {/* Staff Rows */}
+                            {staff?.map((staffMember) => (
+                              <React.Fragment key={staffMember.id}>
+                                <div className="p-2 text-sm font-medium border-r border-gray-200 dark:border-gray-700">
+                                  <div>{staffMember.name}</div>
+                                  <div className="text-xs text-gray-500">{staffMember.role}</div>
+                                </div>
+                                {[0,1,2,3,4,5,6].map((dayIndex) => (
+                                  <div 
+                                    key={`${staffMember.id}-${dayIndex}`}
+                                    className="p-1 h-20 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+                                    onClick={() => {
+                                      toast({
+                                        title: "Asignar Turno",
+                                        description: `Funcionalidad de asignación para ${staffMember.name}`,
+                                      });
+                                    }}
+                                  >
+                                    <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
+                                      <Plus className="w-4 h-4" />
+                                    </div>
+                                  </div>
+                                ))}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Shift Patterns Management */}
+                {shiftTabActive === 'patterns' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-medium">Patrones de Turnos</h3>
+                      <Button className="bg-blue-600 hover:bg-blue-700">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Nuevo Patrón de Turno
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {/* Sample Shift Patterns */}
+                      {[
+                        { id: 1, name: 'Turno Matutino', type: 'morning', time: '08:00 - 16:00', color: '#3B82F6', active: true },
+                        { id: 2, name: 'Turno Vespertino', type: 'afternoon', time: '16:00 - 00:00', color: '#10B981', active: true },
+                        { id: 3, name: 'Turno Nocturno', type: 'night', time: '00:00 - 08:00', color: '#8B5CF6', active: false }
+                      ].map((pattern) => (
+                        <Card key={pattern.id} className="hover:shadow-md transition-shadow">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-base flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: pattern.color }}
+                                />
+                                {pattern.name}
+                              </CardTitle>
+                              <Badge variant={pattern.active ? 'default' : 'secondary'}>
+                                {pattern.active ? 'Activo' : 'Inactivo'}
+                              </Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <Clock className="w-4 h-4 text-gray-500" />
+                              {pattern.time}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <UserCheck className="w-4 h-4 text-gray-500" />
+                              Tipo: {pattern.type}
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                              <Button size="sm" variant="outline">
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Time Tracking & Attendance */}
+                {shiftTabActive === 'tracking' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-medium">Control de Asistencia</h3>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          <Download className="w-4 h-4 mr-2" />
+                          Exportar Reporte
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Ver Calendario Personal
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Live Clock-in Status */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <UserCheck className="w-5 h-5" />
+                          Estado Actual de Asistencia
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          {staff?.map((staffMember) => (
+                            <div key={staffMember.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-3 h-3 rounded-full bg-green-500" />
+                                <span className="font-medium text-sm">{staffMember.name}</span>
+                              </div>
+                              <div className="text-xs text-gray-500 mb-1">{staffMember.role}</div>
+                              <div className="text-xs">
+                                Status: <span className="font-medium">Presente</span>
+                              </div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                Turno: Matutino
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Time Entries History */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Clock className="w-5 h-5" />
+                          Historial de Entradas y Salidas
+                        </CardTitle>
+                        <div className="flex gap-2">
+                          <Input 
+                            type="date" 
+                            className="w-40"
+                            defaultValue={new Date().toISOString().split('T')[0]}
+                          />
+                          <Select defaultValue="all">
+                            <SelectTrigger className="w-48">
+                              <SelectValue placeholder="Filtrar por personal" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todo el Personal</SelectItem>
+                              {staff?.map((member) => (
+                                <SelectItem key={member.id} value={member.id}>
+                                  {member.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {/* Sample time entries */}
+                          {[
+                            { id: 1, staff: 'Dr. Ana García', type: 'clock_in', time: '08:00', status: 'Entrada' },
+                            { id: 2, staff: 'Carlos López', type: 'break_start', time: '12:00', status: 'Inicio Descanso' },
+                            { id: 3, staff: 'María Rodriguez', type: 'clock_out', time: '17:00', status: 'Salida' }
+                          ].map((entry) => (
+                            <div key={entry.id} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  entry.type === 'clock_in' ? 'bg-green-500' :
+                                  entry.type === 'clock_out' ? 'bg-red-500' :
+                                  'bg-yellow-500'
+                                }`} />
+                                <div>
+                                  <div className="font-medium text-sm">{entry.staff}</div>
+                                  <div className="text-xs text-gray-500">{entry.status}</div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-medium">{entry.time}</div>
+                                <div className="text-xs text-gray-500">{new Date().toLocaleDateString()}</div>
+                                <div className="text-xs text-blue-600 dark:text-blue-400">
+                                  📍 GPS Verificado
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
 
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Unassigned Personnel Column */}

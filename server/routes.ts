@@ -674,6 +674,273 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== SHIFT MANAGEMENT API ENDPOINTS =====
+
+  // Shift Patterns - Templates for recurring shifts
+  app.get('/api/shift-patterns/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const patterns = await storage.getShiftPatterns(tenantId);
+      res.json(patterns);
+    } catch (error) {
+      console.error("Error fetching shift patterns:", error);
+      res.status(500).json({ message: "Failed to fetch shift patterns" });
+    }
+  });
+
+  app.post('/api/shift-patterns', isAuthenticated, async (req: any, res) => {
+    try {
+      const patternData = req.body;
+      const newPattern = await storage.createShiftPattern(patternData);
+      res.json(newPattern);
+    } catch (error) {
+      console.error("Error creating shift pattern:", error);
+      res.status(500).json({ message: "Failed to create shift pattern" });
+    }
+  });
+
+  app.put('/api/shift-patterns/:patternId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { patternId } = req.params;
+      const patternData = req.body;
+      const updatedPattern = await storage.updateShiftPattern(patternId, patternData);
+      res.json(updatedPattern);
+    } catch (error) {
+      console.error("Error updating shift pattern:", error);
+      res.status(500).json({ message: "Failed to update shift pattern" });
+    }
+  });
+
+  app.delete('/api/shift-patterns/:patternId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { patternId } = req.params;
+      await storage.deleteShiftPattern(patternId);
+      res.json({ message: "Shift pattern deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting shift pattern:", error);
+      res.status(500).json({ message: "Failed to delete shift pattern" });
+    }
+  });
+
+  // Shift Assignments - Individual shift assignments
+  app.get('/api/shift-assignments/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { startDate, endDate, staffId } = req.query;
+      const assignments = await storage.getShiftAssignments(
+        tenantId, 
+        startDate as string, 
+        endDate as string, 
+        staffId as string
+      );
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching shift assignments:", error);
+      res.status(500).json({ message: "Failed to fetch shift assignments" });
+    }
+  });
+
+  app.post('/api/shift-assignments', isAuthenticated, async (req: any, res) => {
+    try {
+      const assignmentData = req.body;
+      const newAssignment = await storage.createShiftAssignment(assignmentData);
+      res.json(newAssignment);
+    } catch (error) {
+      console.error("Error creating shift assignment:", error);
+      res.status(500).json({ message: "Failed to create shift assignment" });
+    }
+  });
+
+  app.put('/api/shift-assignments/:assignmentId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { assignmentId } = req.params;
+      const assignmentData = req.body;
+      const updatedAssignment = await storage.updateShiftAssignment(assignmentId, assignmentData);
+      res.json(updatedAssignment);
+    } catch (error) {
+      console.error("Error updating shift assignment:", error);
+      res.status(500).json({ message: "Failed to update shift assignment" });
+    }
+  });
+
+  app.delete('/api/shift-assignments/:assignmentId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { assignmentId } = req.params;
+      await storage.deleteShiftAssignment(assignmentId);
+      res.json({ message: "Shift assignment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting shift assignment:", error);
+      res.status(500).json({ message: "Failed to delete shift assignment" });
+    }
+  });
+
+  // Bulk shift assignment creation for multiple days/staff
+  app.post('/api/shift-assignments/bulk', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId, assignments } = req.body;
+      const createdAssignments = await storage.bulkCreateShiftAssignments(tenantId, assignments);
+      res.json(createdAssignments);
+    } catch (error) {
+      console.error("Error bulk creating shift assignments:", error);
+      res.status(500).json({ message: "Failed to create bulk shift assignments" });
+    }
+  });
+
+  // Time Tracking - Clock in/out and break tracking
+  app.post('/api/time-entries/clock-in', isAuthenticated, async (req: any, res) => {
+    try {
+      const timeEntryData = req.body;
+      const clockInEntry = await storage.clockIn(timeEntryData);
+      res.json(clockInEntry);
+    } catch (error) {
+      console.error("Error clocking in:", error);
+      res.status(500).json({ message: "Failed to clock in" });
+    }
+  });
+
+  app.post('/api/time-entries/clock-out', isAuthenticated, async (req: any, res) => {
+    try {
+      const timeEntryData = req.body;
+      const clockOutEntry = await storage.clockOut(timeEntryData);
+      res.json(clockOutEntry);
+    } catch (error) {
+      console.error("Error clocking out:", error);
+      res.status(500).json({ message: "Failed to clock out" });
+    }
+  });
+
+  app.post('/api/time-entries/break-start', isAuthenticated, async (req: any, res) => {
+    try {
+      const timeEntryData = req.body;
+      const breakEntry = await storage.startBreak(timeEntryData);
+      res.json(breakEntry);
+    } catch (error) {
+      console.error("Error starting break:", error);
+      res.status(500).json({ message: "Failed to start break" });
+    }
+  });
+
+  app.post('/api/time-entries/break-end', isAuthenticated, async (req: any, res) => {
+    try {
+      const timeEntryData = req.body;
+      const breakEntry = await storage.endBreak(timeEntryData);
+      res.json(breakEntry);
+    } catch (error) {
+      console.error("Error ending break:", error);
+      res.status(500).json({ message: "Failed to end break" });
+    }
+  });
+
+  // Get time entries for staff member or tenant
+  app.get('/api/time-entries/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { staffId, startDate, endDate } = req.query;
+      const timeEntries = await storage.getTimeEntries(
+        tenantId, 
+        staffId as string, 
+        startDate as string, 
+        endDate as string
+      );
+      res.json(timeEntries);
+    } catch (error) {
+      console.error("Error fetching time entries:", error);
+      res.status(500).json({ message: "Failed to fetch time entries" });
+    }
+  });
+
+  // Calendar sharing endpoint for personnel to view their schedules
+  app.get('/api/staff-calendar/:staffId/export', async (req: any, res) => {
+    try {
+      const { staffId } = req.params;
+      const { startDate, endDate, format = 'json' } = req.query;
+      
+      const calendarData = await storage.getStaffScheduleCalendar(
+        staffId, 
+        startDate as string, 
+        endDate as string
+      );
+
+      if (format === 'ical') {
+        // Generate iCal format for calendar apps
+        const icalData = await storage.generateStaffICalendar(staffId, startDate as string, endDate as string);
+        res.set({
+          'Content-Type': 'text/calendar',
+          'Content-Disposition': `attachment; filename="schedule-${staffId}.ics"`
+        });
+        res.send(icalData);
+      } else {
+        res.json(calendarData);
+      }
+    } catch (error) {
+      console.error("Error exporting staff calendar:", error);
+      res.status(500).json({ message: "Failed to export calendar" });
+    }
+  });
+
+  // Get shift board data for visual display
+  app.get('/api/shift-board/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const { startDate, endDate } = req.query;
+      
+      const [shiftAssignments, shiftPatterns, staffMembers] = await Promise.all([
+        storage.getShiftAssignments(tenantId, startDate as string, endDate as string),
+        storage.getShiftPatterns(tenantId),
+        storage.getStaff(tenantId)
+      ]);
+
+      // Format data for visual shift board
+      const shiftBoardData = {
+        assignments: shiftAssignments,
+        patterns: shiftPatterns,
+        staff: staffMembers,
+        dateRange: { startDate, endDate }
+      };
+
+      res.json(shiftBoardData);
+    } catch (error) {
+      console.error("Error fetching shift board data:", error);
+      res.status(500).json({ message: "Failed to fetch shift board data" });
+    }
+  });
+
+  // Shift Rotations - Automatic rotation management
+  app.get('/api/shift-rotations/:tenantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { tenantId } = req.params;
+      const rotations = await storage.getShiftRotations(tenantId);
+      res.json(rotations);
+    } catch (error) {
+      console.error("Error fetching shift rotations:", error);
+      res.status(500).json({ message: "Failed to fetch shift rotations" });
+    }
+  });
+
+  app.post('/api/shift-rotations', isAuthenticated, async (req: any, res) => {
+    try {
+      const rotationData = req.body;
+      const newRotation = await storage.createShiftRotation(rotationData);
+      res.json(newRotation);
+    } catch (error) {
+      console.error("Error creating shift rotation:", error);
+      res.status(500).json({ message: "Failed to create shift rotation" });
+    }
+  });
+
+  // Generate rotation schedule for upcoming weeks
+  app.post('/api/shift-rotations/:rotationId/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const { rotationId } = req.params;
+      const { weeksToGenerate = 4 } = req.body;
+      const generatedSchedule = await storage.generateRotationSchedule(rotationId, weeksToGenerate);
+      res.json(generatedSchedule);
+    } catch (error) {
+      console.error("Error generating rotation schedule:", error);
+      res.status(500).json({ message: "Failed to generate rotation schedule" });
+    }
+  });
+
   app.get('/api/appointments/:tenantId', isAuthenticated, checkSubscriptionValidity, async (req: any, res) => {
     try {
       const { tenantId } = req.params;

@@ -188,6 +188,113 @@ export const staff = pgTable("staff", {
   paymentFrequency: varchar("payment_frequency").default("monthly"), // weekly, biweekly, monthly
   lastPaymentDate: timestamp("last_payment_date"),
   isActive: boolean("is_active").default(true),
+  // Shift management fields - Temporarily commented out until database migration completes
+  // allowsShiftSwap: boolean("allows_shift_swap").default(true),
+  // maxWeeklyHours: integer("max_weekly_hours").default(40),
+  // preferredShiftType: varchar("preferred_shift_type"), // morning, afternoon, evening, night
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Shift patterns/templates for dynamic scheduling
+export const shiftPatterns = pgTable("shift_patterns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  name: varchar("name").notNull(), // "Morning Shift", "Evening Shift", "Night Shift"
+  displayName: varchar("display_name").notNull(),
+  startTime: time("start_time").notNull(), // 09:00
+  endTime: time("end_time").notNull(), // 17:00
+  breakDuration: integer("break_duration").default(60), // minutes
+  shiftType: varchar("shift_type").notNull(), // morning, afternoon, evening, night
+  color: varchar("color").default("#3B82F6"), // hex color for UI
+  icon: varchar("icon").default("☀️"), // emoji or icon name
+  isActive: boolean("is_active").default(true),
+  allowOvertime: boolean("allow_overtime").default(false),
+  overtimeRate: decimal("overtime_rate", { precision: 4, scale: 2 }).default("1.50"), // 1.5x regular rate
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Shift assignments - who works when and where
+export const shiftAssignments = pgTable("shift_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  staffId: varchar("staff_id").notNull().references(() => staff.id),
+  shiftPatternId: varchar("shift_pattern_id").notNull().references(() => shiftPatterns.id),
+  assignedDate: date("assigned_date").notNull(),
+  status: varchar("status").default("scheduled"), // scheduled, in_progress, completed, cancelled, no_show
+  actualStartTime: timestamp("actual_start_time"),
+  actualEndTime: timestamp("actual_end_time"),
+  breakStartTime: timestamp("break_start_time"),
+  breakEndTime: timestamp("break_end_time"),
+  notes: text("notes"),
+  // GPS tracking
+  clockInLocation: jsonb("clock_in_location"), // {lat, lng, address}
+  clockOutLocation: jsonb("clock_out_location"), // {lat, lng, address}
+  isRemoteWork: boolean("is_remote_work").default(false),
+  approvedBy: varchar("approved_by").references(() => staff.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Shift rotation patterns for automatic scheduling
+export const shiftRotations = pgTable("shift_rotations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  name: varchar("name").notNull(), // "3 Week Rotation", "Monthly Rotation"
+  rotationFrequency: varchar("rotation_frequency").notNull(), // weekly, biweekly, monthly
+  rotationWeeks: integer("rotation_weeks").default(3), // how many weeks in cycle
+  isActive: boolean("is_active").default(true),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Team assignments for rotation patterns
+export const rotationTeams = pgTable("rotation_teams", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  rotationId: varchar("rotation_id").notNull().references(() => shiftRotations.id),
+  teamNumber: integer("team_number").notNull(), // 1, 2, 3
+  teamName: varchar("team_name"), // "Team A", "Team 1"
+  maxEmployees: integer("max_employees").default(10),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Staff assignments to rotation teams
+export const rotationTeamMembers = pgTable("rotation_team_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  teamId: varchar("team_id").notNull().references(() => rotationTeams.id),
+  staffId: varchar("staff_id").notNull().references(() => staff.id),
+  isActive: boolean("is_active").default(true),
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+// Rotation schedule - which team works which shift pattern during which week
+export const rotationSchedules = pgTable("rotation_schedules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  rotationId: varchar("rotation_id").notNull().references(() => shiftRotations.id),
+  teamId: varchar("team_id").notNull().references(() => rotationTeams.id),
+  shiftPatternId: varchar("shift_pattern_id").notNull().references(() => shiftPatterns.id),
+  weekNumber: integer("week_number").notNull(), // 1, 2, 3 (relative to rotation cycle)
+  dayOfWeek: integer("day_of_week").notNull(), // 1=Monday, 7=Sunday
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Time tracking and attendance details
+export const timeEntries = pgTable("time_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  staffId: varchar("staff_id").notNull().references(() => staff.id),
+  shiftAssignmentId: varchar("shift_assignment_id").references(() => shiftAssignments.id),
+  entryType: varchar("entry_type").notNull(), // clock_in, clock_out, break_start, break_end
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  location: jsonb("location"), // {lat, lng, address, accuracy}
+  deviceInfo: jsonb("device_info"), // device details for security
+  ipAddress: varchar("ip_address"),
+  photo: varchar("photo"), // optional selfie for clock in/out
+  notes: text("notes"),
+  isManualEntry: boolean("is_manual_entry").default(false),
+  approvedBy: varchar("approved_by").references(() => staff.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -1696,6 +1803,122 @@ export const externalServiceSubscriptionsRelations = relations(externalServiceSu
   company: one(companies, {
     fields: [externalServiceSubscriptions.companyId],
     references: [companies.id],
+  }),
+}));
+
+// Shift Management Relations
+
+// Staff relations with shift management
+export const staffRelations = relations(staff, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [staff.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [staff.userId],
+    references: [users.id],
+  }),
+  shiftAssignments: many(shiftAssignments),
+  timeEntries: many(timeEntries),
+  rotationTeamMemberships: many(rotationTeamMembers),
+}));
+
+// Shift pattern relations
+export const shiftPatternsRelations = relations(shiftPatterns, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [shiftPatterns.tenantId],
+    references: [tenants.id],
+  }),
+  assignments: many(shiftAssignments),
+  rotationSchedules: many(rotationSchedules),
+}));
+
+// Shift assignment relations
+export const shiftAssignmentsRelations = relations(shiftAssignments, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [shiftAssignments.tenantId],
+    references: [tenants.id],
+  }),
+  staff: one(staff, {
+    fields: [shiftAssignments.staffId],
+    references: [staff.id],
+  }),
+  shiftPattern: one(shiftPatterns, {
+    fields: [shiftAssignments.shiftPatternId],
+    references: [shiftPatterns.id],
+  }),
+  approver: one(staff, {
+    fields: [shiftAssignments.approvedBy],
+    references: [staff.id],
+  }),
+  timeEntries: many(timeEntries),
+}));
+
+// Shift rotation relations
+export const shiftRotationsRelations = relations(shiftRotations, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [shiftRotations.tenantId],
+    references: [tenants.id],
+  }),
+  teams: many(rotationTeams),
+  schedules: many(rotationSchedules),
+}));
+
+// Rotation team relations
+export const rotationTeamsRelations = relations(rotationTeams, ({ one, many }) => ({
+  rotation: one(shiftRotations, {
+    fields: [rotationTeams.rotationId],
+    references: [shiftRotations.id],
+  }),
+  members: many(rotationTeamMembers),
+  schedules: many(rotationSchedules),
+}));
+
+// Rotation team member relations
+export const rotationTeamMembersRelations = relations(rotationTeamMembers, ({ one }) => ({
+  team: one(rotationTeams, {
+    fields: [rotationTeamMembers.teamId],
+    references: [rotationTeams.id],
+  }),
+  staff: one(staff, {
+    fields: [rotationTeamMembers.staffId],
+    references: [staff.id],
+  }),
+}));
+
+// Rotation schedule relations
+export const rotationSchedulesRelations = relations(rotationSchedules, ({ one }) => ({
+  rotation: one(shiftRotations, {
+    fields: [rotationSchedules.rotationId],
+    references: [shiftRotations.id],
+  }),
+  team: one(rotationTeams, {
+    fields: [rotationSchedules.teamId],
+    references: [rotationTeams.id],
+  }),
+  shiftPattern: one(shiftPatterns, {
+    fields: [rotationSchedules.shiftPatternId],
+    references: [shiftPatterns.id],
+  }),
+}));
+
+// Time entry relations
+export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [timeEntries.tenantId],
+    references: [tenants.id],
+  }),
+  staff: one(staff, {
+    fields: [timeEntries.staffId],
+    references: [staff.id],
+  }),
+  shiftAssignment: one(shiftAssignments, {
+    fields: [timeEntries.shiftAssignmentId],
+    references: [shiftAssignments.id],
+  }),
+  approver: one(staff, {
+    fields: [timeEntries.approvedBy],
+    references: [staff.id],
   }),
 }));
 
