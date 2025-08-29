@@ -188,10 +188,10 @@ export const staff = pgTable("staff", {
   paymentFrequency: varchar("payment_frequency").default("monthly"), // weekly, biweekly, monthly
   lastPaymentDate: timestamp("last_payment_date"),
   isActive: boolean("is_active").default(true),
-  // Shift management fields - Temporarily commented out until database migration completes
-  // allowsShiftSwap: boolean("allows_shift_swap").default(true),
-  // maxWeeklyHours: integer("max_weekly_hours").default(40),
-  // preferredShiftType: varchar("preferred_shift_type"), // morning, afternoon, evening, night
+  // Shift management fields
+  allowsShiftSwap: boolean("allows_shift_swap").default(true),
+  maxWeeklyHours: integer("max_weekly_hours").default(40),
+  preferredShiftType: varchar("preferred_shift_type"), // morning, afternoon, evening, night
   createdAt: timestamp("created_at").defaultNow(),
 });
 
