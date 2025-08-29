@@ -4446,46 +4446,104 @@ function Admin() {
                           </Button>
                         </div>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="p-0">
                         <div className="overflow-x-auto">
-                          <div className="grid grid-cols-8 gap-1 min-w-[800px]">
-                            {/* Header Row */}
-                            <div className="p-2 font-medium text-sm text-gray-500 dark:text-gray-400">
-                              Personal
-                            </div>
-                            {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day, index) => (
-                              <div key={index} className="p-2 text-center font-medium text-sm bg-gray-50 dark:bg-gray-800 rounded">
-                                <div>{day}</div>
-                                <div className="text-xs text-gray-500">{new Date(Date.now() + (index - 1) * 24 * 60 * 60 * 1000).getDate()}</div>
-                              </div>
-                            ))}
-                            
-                            {/* Staff Rows */}
-                            {staff?.map((staffMember) => (
-                              <React.Fragment key={staffMember.id}>
-                                <div className="p-2 text-sm font-medium border-r border-gray-200 dark:border-gray-700">
-                                  <div>{staffMember.name}</div>
-                                  <div className="text-xs text-gray-500">{staffMember.role}</div>
-                                </div>
-                                {[0,1,2,3,4,5,6].map((dayIndex) => (
-                                  <div 
-                                    key={`${staffMember.id}-${dayIndex}`}
-                                    className="p-1 h-20 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
-                                    onClick={() => {
-                                      toast({
-                                        title: "Asignar Turno",
-                                        description: `Funcionalidad de asignación para ${staffMember.name}`,
-                                      });
-                                    }}
-                                  >
-                                    <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
-                                      <Plus className="w-4 h-4" />
-                                    </div>
-                                  </div>
-                                ))}
-                              </React.Fragment>
-                            ))}
-                          </div>
+                          {/* Weekly Shift Board Table */}
+                          <table className="w-full min-w-[900px]">
+                            <thead>
+                              <tr className="border-b border-gray-200 dark:border-gray-700">
+                                <th className="text-left p-3 font-medium text-sm text-gray-700 dark:text-gray-300 w-40">
+                                  Employee Name
+                                </th>
+                                {(() => {
+                                  const today = new Date();
+                                  const startOfWeek = new Date(today);
+                                  startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Monday
+                                  
+                                  return Array.from({ length: 7 }, (_, i) => {
+                                    const date = new Date(startOfWeek);
+                                    date.setDate(startOfWeek.getDate() + i);
+                                    const dayNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+                                    
+                                    return (
+                                      <th key={i} className="text-center p-3 font-medium text-sm text-gray-700 dark:text-gray-300 min-w-[120px]">
+                                        <div className="text-lg font-bold">{date.getDate()}</div>
+                                        <div className="text-xs text-gray-500">{dayNames[i]}</div>
+                                      </th>
+                                    );
+                                  });
+                                })()}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {staff?.map((staffMember, staffIndex) => {
+                                // Define sample shifts for demonstration
+                                const sampleShifts = [
+                                  ['9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', '9:00 - 18:00\n09 hrs', 'Week off', 'Week off'],
+                                  ['9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', 'Week off', 'Week off'],
+                                  ['On leave', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', '10:00 - 19:00\n09 hrs', '9:00 - 18:00\n09 hrs', 'Week off', 'Week off'],
+                                  ['9:00 - 18:00\n09 hrs', 'Flexible\n09 hrs', 'Flexible\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', 'Week off', 'Week off'],
+                                  ['+', '9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'On leave', 'Week off', 'Week off'],
+                                  ['9:00 - 18:00\n09 hrs', 'On leave', '9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '+', 'Week off', 'Week off']
+                                ];
+                                
+                                const employeeColors = ['bg-green-100', 'bg-blue-100', 'bg-yellow-100', 'bg-purple-100', 'bg-pink-100', 'bg-indigo-100'];
+                                const shifts = sampleShifts[staffIndex % sampleShifts.length];
+                                
+                                return (
+                                  <tr key={staffMember.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30">
+                                    <td className="p-3 font-medium text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${employeeColors[staffIndex % employeeColors.length]}`} />
+                                        <div>
+                                          <div className="font-medium text-gray-900 dark:text-gray-100">{staffMember.name}</div>
+                                          <div className="text-xs text-gray-500">{staffMember.role}</div>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    {shifts.map((shift, dayIndex) => (
+                                      <td key={dayIndex} className="p-2 text-center">
+                                        {shift === '+' ? (
+                                          <button 
+                                            className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors"
+                                            onClick={() => toast({ title: "Agregar Turno", description: `Para ${staffMember.name}` })}
+                                          >
+                                            <Plus className="w-4 h-4" />
+                                          </button>
+                                        ) : shift === 'Week off' ? (
+                                          <div className="text-xs text-gray-400 p-2">Week off</div>
+                                        ) : shift === 'On leave' ? (
+                                          <div className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-1 rounded">
+                                            On leave
+                                          </div>
+                                        ) : shift.includes('Flexible') ? (
+                                          <div className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded">
+                                            {shift}
+                                          </div>
+                                        ) : (
+                                          <div className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded whitespace-pre-line">
+                                            {shift}
+                                          </div>
+                                        )}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                        
+                        {/* Add Employee Button */}
+                        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                          <Button 
+                            variant="outline" 
+                            className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
+                            onClick={() => toast({ title: "Agregar Empleado", description: "Funcionalidad para agregar empleado" })}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Employee
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -4658,50 +4716,6 @@ function Admin() {
                   </div>
                 )}
 
-              {/* Simple Staff List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="w-5 h-5" />
-                    Lista de Personal
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {staff?.map((employee: any) => (
-                      <div 
-                        key={employee.id} 
-                        className="p-4 border rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-medium text-gray-900 dark:text-gray-100">{employee.name}</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">{employee.role}</div>
-                            {employee.specialization && (
-                              <div className="text-xs text-blue-600 dark:text-blue-400">{employee.specialization}</div>
-                            )}
-                            <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                              Max Horas: {employee.max_weekly_hours || 40} hrs/semana
-                            </div>
-                          </div>
-                          <div className="flex gap-2 items-center">
-                            {employee.allows_shift_swap && (
-                              <Badge variant="secondary" className="text-xs">
-                                Permite Intercambios
-                              </Badge>
-                            )}
-                            {employee.preferred_shift_type && (
-                              <Badge variant="outline" className="text-xs">
-                                {employee.preferred_shift_type}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )) || <div className="text-center py-8 text-gray-500 dark:text-gray-400">No hay personal registrado</div>}
-                  </div>
-                </CardContent>
-              </Card>
             </div>
             )}
 
