@@ -167,11 +167,6 @@ function Admin() {
     if (rolesData) setRoles(rolesData);
     if (staffData) {
       setStaff(staffData);
-      // Initialize shift assignments with all staff unassigned
-      setShiftAssignments(prev => ({
-        ...prev,
-        unassigned: staffData || []
-      }));
     }
     if (usersData) setUsers(usersData);
     if (deliveryConfigData) {
