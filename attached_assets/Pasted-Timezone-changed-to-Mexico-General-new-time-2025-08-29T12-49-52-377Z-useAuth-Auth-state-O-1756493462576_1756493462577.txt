@@ -1,0 +1,93 @@
+Timezone changed to Mexico/General, new time: 2025-08-29T12:49:52.377Z
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+error: undefined
+isAuthenticated: true
+isLoading: false
+user: Object
+[[Prototype]]: Object
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+error: undefined
+isAuthenticated: true
+isLoading: false
+user: Object
+email: "dongadgetoshop@gmail.com"
+firstName: "Don"
+id: "45804040"
+[[Prototype]]: Object
+constructor: ƒ Object()
+assign: ƒ assign()
+create: ƒ create()
+defineProperties: ƒ defineProperties()
+defineProperty: ƒ defineProperty()
+entries: ƒ entries()
+freeze: ƒ freeze()
+fromEntries: ƒ fromEntries()
+getOwnPropertyDescriptor: ƒ getOwnPropertyDescriptor()
+getOwnPropertyDescriptors: ƒ getOwnPropertyDescriptors()
+getOwnPropertyNames: ƒ getOwnPropertyNames()
+getOwnPropertySymbols: ƒ getOwnPropertySymbols()
+getPrototypeOf: ƒ getPrototypeOf()
+groupBy: ƒ groupBy()
+hasOwn: ƒ hasOwn()
+is: ƒ is()
+isExtensible: ƒ isExtensible()
+isFrozen: ƒ isFrozen()
+isSealed: ƒ isSealed()
+keys: ƒ (obj)
+length: 1
+name: "Object"
+preventExtensions: ƒ preventExtensions()
+prototype: Object
+seal: ƒ seal()
+setPrototypeOf: ƒ setPrototypeOf()
+values: ƒ values()
+[[Prototype]]: ƒ ()
+hasOwnProperty: ƒ hasOwnProperty()
+isPrototypeOf: ƒ isPrototypeOf()
+propertyIsEnumerable: ƒ propertyIsEnumerable()
+toLocaleString: ƒ toLocaleString()
+toString: ƒ toString()
+valueOf: ƒ valueOf()
+__defineGetter__: ƒ __defineGetter__()
+__defineSetter__: ƒ __defineSetter__()
+__lookupGetter__: ƒ __lookupGetter__()
+__lookupSetter__: ƒ __lookupSetter__()
+__proto__: Object
+get __proto__: ƒ get __proto__()
+set __proto__: ƒ set __proto__()
+[[Prototype]]: Object
+constructor: ƒ Object()
+hasOwnProperty: ƒ hasOwnProperty()
+isPrototypeOf: ƒ isPrototypeOf()
+propertyIsEnumerable: ƒ propertyIsEnumerable()
+toLocaleString: ƒ toLocaleString()
+toString: ƒ toString()
+valueOf: ƒ valueOf()
+__defineGetter__: ƒ __defineGetter__()
+__defineSetter__: ƒ __defineSetter__()
+__lookupGetter__: ƒ __lookupGetter__()
+__lookupSetter__: ƒ __lookupSetter__()
+__proto__: Object
+constructor: ƒ Object()
+hasOwnProperty: ƒ hasOwnProperty()
+isPrototypeOf: ƒ isPrototypeOf()
+propertyIsEnumerable: ƒ propertyIsEnumerable()
+toLocaleString: ƒ toLocaleString()
+toString: ƒ toString()
+length: 0
+name: "toString"
+[[Prototype]]: ƒ ()
+valueOf: ƒ valueOf()
+__defineGetter__: ƒ __defineGetter__()
+__defineSetter__: ƒ __defineSetter__()
+__lookupGetter__: ƒ __lookupGetter__()
+__lookupSetter__: ƒ __lookupSetter__()
+__proto__: Object
+get __proto__: ƒ get __proto__()
+set __proto__: ƒ set __proto__()
+get __proto__: ƒ get __proto__()
+set __proto__: ƒ set __proto__()
