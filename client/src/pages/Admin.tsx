@@ -3969,9 +3969,11 @@ function Admin() {
                     <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                       ${Math.round(staff?.reduce((total, emp) => {
                         const salary = parseFloat(emp.basicSalary) || 15000;
-                        const isr = (emp.isrEnabled !== false) ? calculateISR(salary) : 0;
+                        // ISR applies only if BOTH global AND individual settings are enabled
+                        const isr = (payrollSettings.isrEnabled && emp.isrEnabled !== false) ? calculateISR(salary) : 0;
                         const imssRate = parseFloat(emp.imssEmployeePercentage) || 2.375;
-                        const imss = (emp.imssEnabled !== false) ? salary * (imssRate / 100) : 0;
+                        // IMSS applies only if BOTH global AND individual settings are enabled
+                        const imss = (payrollSettings.imssEnabled && emp.imssEnabled !== false) ? salary * (imssRate / 100) : 0;
                         return total + isr + imss;
                       }, 0) || 0).toLocaleString()}
                     </div>
@@ -4048,9 +4050,11 @@ function Admin() {
                                        employee.role === 'groomer' ? 15000 :
                                        employee.role === 'receptionist' ? 12000 :
                                        employee.role === 'technician' ? 20000 : 15000);
-                                    const isr = (employee.isrEnabled !== false) ? calculateISR(basicSalary) : 0;
+                                    // ISR applies only if BOTH global AND individual settings are enabled
+                                    const isr = (payrollSettings.isrEnabled && employee.isrEnabled !== false) ? calculateISR(basicSalary) : 0;
                                     const imssRate = parseFloat(employee.imssEmployeePercentage) || 2.375;
-                                    const imss = (employee.imssEnabled !== false) ? basicSalary * (imssRate / 100) : 0;
+                                    // IMSS applies only if BOTH global AND individual settings are enabled
+                                    const imss = (payrollSettings.imssEnabled && employee.imssEnabled !== false) ? basicSalary * (imssRate / 100) : 0;
                                     const infonavit = (employee.infonavitEnabled === true) ? basicSalary * (parseFloat(employee.infonavitPercentage) || 0) / 100 : 0;
                                     const fonacot = (employee.fonacotEnabled === true) ? parseFloat(employee.fonacotAmount) || 0 : 0;
                                     return Math.round(basicSalary - isr - imss - infonavit - fonacot).toLocaleString();
@@ -4111,7 +4115,7 @@ function Admin() {
                               <div>
                                 <div className="text-xs text-gray-500">ISR</div>
                                 <div className="text-sm font-medium text-red-600">
-                                  {employee.isrEnabled !== false ? (
+                                  {(payrollSettings.isrEnabled && employee.isrEnabled !== false) ? (
                                     `-$${calculateISR(parseFloat(employee.basicSalary) || 15000).toFixed(0)}`
                                   ) : (
                                     <span className="text-gray-400">Deshabilitado</span>
@@ -4121,7 +4125,7 @@ function Admin() {
                               <div>
                                 <div className="text-xs text-gray-500">IMSS</div>
                                 <div className="text-sm font-medium text-red-600">
-                                  {employee.imssEnabled !== false ? (
+                                  {(payrollSettings.imssEnabled && employee.imssEnabled !== false) ? (
                                     `-$${((parseFloat(employee.basicSalary) || 15000) * (parseFloat(employee.imssEmployeePercentage) || 2.375) / 100).toFixed(0)}`
                                   ) : (
                                     <span className="text-gray-400">Deshabilitado</span>
@@ -4713,10 +4717,20 @@ function Admin() {
                   Configura los parámetros generales para el cálculo de nómina
                 </p>
               </DialogHeader>
-              <div className="space-y-6">
-                {/* Default Settings */}
+              <div className="space-y-6 max-h-[70vh] overflow-y-auto">
+                {/* Global Enable/Disable Settings */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Configuración por Defecto</h3>
+                  <h3 className="text-lg font-medium">Configuración Global de Retenciones</h3>
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Control Global</span>
+                    </div>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                      Estas configuraciones afectan a TODOS los empleados. Para aplicar una retención, 
+                      debe estar habilitada TANTO aquí (global) COMO en la configuración individual del empleado.
+                    </p>
+                  </div>
                   
                   {/* ISR Configuration */}
                   <div className="border rounded-lg p-4">
@@ -4781,6 +4795,203 @@ function Admin() {
                         <SelectItem value="monthly">Mensual</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+
+                {/* ISR Tax Brackets Table */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium flex items-center gap-2">
+                    <Calculator className="w-5 h-5" />
+                    Tabla ISR 2024 (Anual)
+                  </h3>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-200 dark:border-gray-700">
+                            <th className="text-left py-2 px-3">Límite Inferior</th>
+                            <th className="text-left py-2 px-3">Límite Superior</th>
+                            <th className="text-left py-2 px-3">Tasa (%)</th>
+                            <th className="text-left py-2 px-3">Cuota Fija</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-xs">
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 px-3">$0.01</td>
+                            <td className="py-2 px-3">$125,900.00</td>
+                            <td className="py-2 px-3 text-green-600">1.92%</td>
+                            <td className="py-2 px-3">$0.00</td>
+                          </tr>
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 px-3">$125,900.01</td>
+                            <td className="py-2 px-3">$1,059,650.00</td>
+                            <td className="py-2 px-3 text-green-600">6.40%</td>
+                            <td className="py-2 px-3">$2,392.10</td>
+                          </tr>
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 px-3">$1,059,650.01</td>
+                            <td className="py-2 px-3">$1,761,820.00</td>
+                            <td className="py-2 px-3 text-orange-600">10.88%</td>
+                            <td className="py-2 px-3">$62,070.90</td>
+                          </tr>
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 px-3">$1,761,820.01</td>
+                            <td className="py-2 px-3">$2,102,550.00</td>
+                            <td className="py-2 px-3 text-red-600">16.00%</td>
+                            <td className="py-2 px-3">$137,904.60</td>
+                          </tr>
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 px-3">$2,102,550.01</td>
+                            <td className="py-2 px-3">$2,653,020.00</td>
+                            <td className="py-2 px-3 text-red-600">21.36%</td>
+                            <td className="py-2 px-3">$192,421.40</td>
+                          </tr>
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 px-3">$2,653,020.01</td>
+                            <td className="py-2 px-3">$3,472,840.00</td>
+                            <td className="py-2 px-3 text-red-600">23.52%</td>
+                            <td className="py-2 px-3">$311,322.60</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-3">$3,472,840.01</td>
+                            <td className="py-2 px-3">En adelante</td>
+                            <td className="py-2 px-3 text-red-700 font-medium">30.00%</td>
+                            <td className="py-2 px-3">$516,277.50</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-500">
+                      * Última actualización: Enero 2024 según disposiciones fiscales SAT
+                    </div>
+                  </div>
+                </div>
+
+                {/* IMSS Rates Table */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium flex items-center gap-2">
+                    <Shield className="w-5 h-5" />
+                    Cuotas IMSS 2024
+                  </h3>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-200 dark:border-gray-700">
+                            <th className="text-left py-2 px-3">Concepto</th>
+                            <th className="text-left py-2 px-3">Trabajador (%)</th>
+                            <th className="text-left py-2 px-3">Patrón (%)</th>
+                            <th className="text-left py-2 px-3">Total (%)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-xs">
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 px-3 font-medium">Enfermedades y Maternidad</td>
+                            <td className="py-2 px-3 text-blue-600">1.125%</td>
+                            <td className="py-2 px-3 text-green-600">0.70%</td>
+                            <td className="py-2 px-3">1.825%</td>
+                          </tr>
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 px-3 font-medium">Invalidez y Vida</td>
+                            <td className="py-2 px-3 text-blue-600">0.625%</td>
+                            <td className="py-2 px-3 text-green-600">1.75%</td>
+                            <td className="py-2 px-3">2.375%</td>
+                          </tr>
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 px-3 font-medium">Retiro</td>
+                            <td className="py-2 px-3 text-blue-600">0.000%</td>
+                            <td className="py-2 px-3 text-green-600">2.00%</td>
+                            <td className="py-2 px-3">2.00%</td>
+                          </tr>
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 px-3 font-medium">Cesantía en Edad Avanzada y Vejez</td>
+                            <td className="py-2 px-3 text-blue-600">1.125%</td>
+                            <td className="py-2 px-3 text-green-600">3.150%</td>
+                            <td className="py-2 px-3">4.275%</td>
+                          </tr>
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 px-3 font-medium">Infonavit</td>
+                            <td className="py-2 px-3 text-blue-600">0.000%</td>
+                            <td className="py-2 px-3 text-green-600">5.00%</td>
+                            <td className="py-2 px-3">5.00%</td>
+                          </tr>
+                          <tr className="border-b border-gray-100 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
+                            <td className="py-2 px-3 font-bold">TOTAL APLICADO</td>
+                            <td className="py-2 px-3 font-bold text-blue-600">2.375%</td>
+                            <td className="py-2 px-3 font-bold text-green-600">10.525%</td>
+                            <td className="py-2 px-3 font-bold">12.90%</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-500">
+                      * Según Ley del Seguro Social vigente 2024. Solo se descuenta al trabajador el 2.375%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Editable Default Rates */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium flex items-center gap-2">
+                    <Settings className="w-5 h-5" />
+                    Tasas por Defecto (Editables)
+                  </h3>
+                  
+                  {/* Default IMSS Rates */}
+                  <div className="border rounded-lg p-4">
+                    <Label className="font-medium mb-3 block">Porcentajes IMSS por Defecto</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm">Descuento Trabajador (%)</Label>
+                        <Input
+                          type="number"
+                          step="0.001"
+                          value={payrollSettings.imssEmployeePercentage}
+                          onChange={(e) => setPayrollSettings(prev => ({
+                            ...prev,
+                            imssEmployeePercentage: e.target.value
+                          }))}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Cuota Patrón (%)</Label>
+                        <Input
+                          type="number"
+                          step="0.001"
+                          value={payrollSettings.imssEmployerPercentage}
+                          onChange={(e) => setPayrollSettings(prev => ({
+                            ...prev,
+                            imssEmployerPercentage: e.target.value
+                          }))}
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Estos porcentajes se aplicarán por defecto a nuevos empleados
+                    </p>
+                  </div>
+
+                  {/* Default Infonavit Rate */}
+                  <div className="border rounded-lg p-4">
+                    <Label className="font-medium mb-3 block">Porcentaje Infonavit por Defecto</Label>
+                    <div className="max-w-xs">
+                      <Input
+                        type="number"
+                        step="0.1"
+                        max="5"
+                        value={payrollSettings.infonavitPercentage}
+                        onChange={(e) => setPayrollSettings(prev => ({
+                          ...prev,
+                          infonavitPercentage: e.target.value
+                        }))}
+                        className="text-sm"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Máximo legal: 5% del salario base
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -4849,7 +5060,11 @@ function Admin() {
                         />
                         {employeePayrollData.basicSalary && (
                           <div className="text-sm text-gray-600 mt-1">
-                            ISR estimado: ${calculateISR(parseFloat(employeePayrollData.basicSalary) || 0).toFixed(2)} mensual
+                            ISR estimado: ${(payrollSettings.isrEnabled && employeePayrollData.isrEnabled) ? 
+                              calculateISR(parseFloat(employeePayrollData.basicSalary) || 0).toFixed(2) : '0.00'} mensual
+                            {(!payrollSettings.isrEnabled || !employeePayrollData.isrEnabled) && (
+                              <span className="text-gray-400 ml-2">(Deshabilitado)</span>
+                            )}
                           </div>
                         )}
                       </div>
