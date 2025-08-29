@@ -2126,11 +2126,11 @@ function Admin() {
                         <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                           <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                             <span className="text-sm font-medium text-blue-600 dark:text-blue-300">
-                              {selectedUser.name ? selectedUser.name.split(' ').map(n => n[0]).join('') : '??'}
+                              {selectedUser.name ? selectedUser.name.split(' ').map((n: any) => n[0]).join('') : (selectedUser.email ? selectedUser.email[0].toUpperCase() : '??')}
                             </span>
                           </div>
                           <div>
-                            <div className="font-medium text-gray-900 dark:text-gray-100">{selectedUser.name}</div>
+                            <div className="font-medium text-gray-900 dark:text-gray-100">{selectedUser.name || 'Usuario sin nombre'}</div>
                             <div className="text-sm text-gray-600 dark:text-gray-400">{selectedUser.email}</div>
                           </div>
                         </div>
@@ -2138,7 +2138,7 @@ function Admin() {
                         <div>
                           <Label>Seleccionar Nuevo Rol</Label>
                           <div className="space-y-2 mt-3">
-                            {availableRoles.map((role) => (
+                            {(availableRoles || []).map((role: any) => (
                               <div
                                 key={role.id}
                                 className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
@@ -2157,8 +2157,8 @@ function Admin() {
                                       {role.department} • {Array.isArray(role.permissions) ? role.permissions.length : 0} permisos
                                     </div>
                                   </div>
-                                  <Badge className={getDepartmentColor(role.department)}>
-                                    {role.department}
+                                  <Badge className={getDepartmentColor(role.department || 'admin')}>
+                                    {role.department || 'Sin departamento'}
                                   </Badge>
                                 </div>
                               </div>
