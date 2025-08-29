@@ -275,6 +275,78 @@ function Admin() {
     fonacotEnabled: false,
     paymentFrequency: 'monthly'
   });
+  
+  // Employee payroll form state
+  const [employeePayrollData, setEmployeePayrollData] = useState({
+    basicSalary: '',
+    paymentFrequency: 'monthly',
+    isrEnabled: true,
+    imssEnabled: true,
+    imssEmployeePercentage: '2.375',
+    imssEmployerPercentage: '10.525',
+    infonavitEnabled: false,
+    infonavitPercentage: '0',
+    fonacotEnabled: false,
+    fonacotAmount: '0'
+  });
+  const [isSavingPayroll, setIsSavingPayroll] = useState(false);
+
+  // Calculate ISR tax based on monthly salary
+  const calculateISR = (monthlySalary: number) => {
+    const annualSalary = monthlySalary * 12;
+    if (annualSalary <= 125900) return 0;
+    if (annualSalary <= 212300) return (annualSalary - 125900) * 0.0640 / 12;
+    if (annualSalary <= 426400) return ((annualSalary - 212300) * 0.1088 + 5529.20) / 12;
+    if (annualSalary <= 639600) return ((annualSalary - 426400) * 0.1600 + 28665.44) / 12;
+    if (annualSalary <= 766800) return ((annualSalary - 639600) * 0.2112 + 62817.28) / 12;
+    if (annualSalary <= 1838800) return ((annualSalary - 766800) * 0.2352 + 89670.40) / 12;
+    return ((annualSalary - 1838800) * 0.30 + 341876.32) / 12;
+  };
+
+  // Save employee payroll configuration
+  const handleSaveEmployeePayroll = async () => {
+    if (!selectedEmployee) return;
+    
+    setIsSavingPayroll(true);
+    try {
+      const response = await fetch(`/api/staff/${selectedEmployee.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          basicSalary: employeePayrollData.basicSalary,
+          paymentFrequency: employeePayrollData.paymentFrequency,
+          isrEnabled: employeePayrollData.isrEnabled,
+          imssEnabled: employeePayrollData.imssEnabled,
+          imssEmployeePercentage: employeePayrollData.imssEmployeePercentage,
+          imssEmployerPercentage: employeePayrollData.imssEmployerPercentage,
+          infonavitEnabled: employeePayrollData.infonavitEnabled,
+          infonavitPercentage: employeePayrollData.infonavitPercentage,
+          fonacotEnabled: employeePayrollData.fonacotEnabled,
+          fonacotAmount: employeePayrollData.fonacotAmount,
+        })
+      });
+
+      if (response.ok) {
+        await queryClient.invalidateQueries({ queryKey: ['/api/staff'] });
+        toast({
+          title: "Configuración guardada",
+          description: `Configuración de nómina actualizada para ${selectedEmployee.name}`,
+        });
+        setIsEmployeePayrollOpen(false);
+      } else {
+        throw new Error('Error al guardar la configuración');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la configuración de nómina",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingPayroll(false);
+    }
+  };
+
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isStaffDialogOpen, setIsStaffDialogOpen] = useState(false);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
@@ -1211,33 +1283,6 @@ function Admin() {
     }
   };
 
-  // Mexican ISR calculation based on 2024 tax brackets
-  const calculateISR = (monthlySalary: number) => {
-    const annualSalary = monthlySalary * 12;
-    let isr = 0;
-    
-    // ISR tax brackets for 2024 (annual amounts)
-    const brackets = [
-      { min: 0, max: 125900, rate: 0.019, lowerTax: 0 },
-      { min: 125900.01, max: 1059650, rate: 0.064, lowerTax: 2392.1 },
-      { min: 1059650.01, max: 1761820, rate: 0.108, lowerTax: 62070.9 },
-      { min: 1761820.01, max: 2102550, rate: 0.16, lowerTax: 137904.6 },
-      { min: 2102550.01, max: 2653020, rate: 0.216, lowerTax: 192421.4 },
-      { min: 2653020.01, max: 3472840, rate: 0.25, lowerTax: 311322.6 },
-      { min: 3472840.01, max: 3472840.01, rate: 0.30, lowerTax: 516277.5 }
-    ];
-
-    for (const bracket of brackets) {
-      if (annualSalary >= bracket.min && (annualSalary <= bracket.max || bracket.max === bracket.min)) {
-        const excess = annualSalary - bracket.min;
-        isr = bracket.lowerTax + (excess * bracket.rate);
-        break;
-      }
-    }
-
-    // Monthly ISR
-    return isr / 12;
-  };
 
   // Force modal open with useEffect
   useEffect(() => {
@@ -3818,6 +3863,19 @@ function Admin() {
                                   size="sm"
                                   onClick={() => {
                                     setSelectedEmployee(employee);
+                                    // Initialize form with current employee data
+                                    setEmployeePayrollData({
+                                      basicSalary: employee.basicSalary || '15000',
+                                      paymentFrequency: employee.paymentFrequency || 'monthly',
+                                      isrEnabled: employee.isrEnabled !== false,
+                                      imssEnabled: employee.imssEnabled !== false,
+                                      imssEmployeePercentage: employee.imssEmployeePercentage || '2.375',
+                                      imssEmployerPercentage: employee.imssEmployerPercentage || '10.525',
+                                      infonavitEnabled: employee.infonavitEnabled || false,
+                                      infonavitPercentage: employee.infonavitPercentage || '0',
+                                      fonacotEnabled: employee.fonacotEnabled || false,
+                                      fonacotAmount: employee.fonacotAmount || '0'
+                                    });
                                     setIsEmployeePayrollOpen(true);
                                   }}
                                   title="Editar configuración de nómina"
@@ -4006,9 +4064,25 @@ function Admin() {
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                onClick={() => handleOpenBasicSalaryEdit(employee)}
+                                onClick={() => {
+                                  setSelectedEmployee(employee);
+                                  // Initialize form with current employee data
+                                  setEmployeePayrollData({
+                                    basicSalary: employee.basicSalary || '15000',
+                                    paymentFrequency: employee.paymentFrequency || 'monthly',
+                                    isrEnabled: employee.isrEnabled !== false,
+                                    imssEnabled: employee.imssEnabled !== false,
+                                    imssEmployeePercentage: employee.imssEmployeePercentage || '2.375',
+                                    imssEmployerPercentage: employee.imssEmployerPercentage || '10.525',
+                                    infonavitEnabled: employee.infonavitEnabled || false,
+                                    infonavitPercentage: employee.infonavitPercentage || '0',
+                                    fonacotEnabled: employee.fonacotEnabled || false,
+                                    fonacotAmount: employee.fonacotAmount || '0'
+                                  });
+                                  setIsEmployeePayrollOpen(true);
+                                }}
                                 className="text-xs"
-                                title="Editar salario básico"
+                                title="Editar configuración de nómina"
                               >
                                 <Edit className="w-4 h-4 mr-1" />
                                 Editar
@@ -4766,13 +4840,28 @@ function Admin() {
                         <Input
                           type="number"
                           placeholder="$15,000.00"
-                          defaultValue={selectedEmployee.basicSalary || '15000'}
+                          value={employeePayrollData.basicSalary}
+                          onChange={(e) => setEmployeePayrollData(prev => ({
+                            ...prev,
+                            basicSalary: e.target.value
+                          }))}
                           className="text-lg font-medium"
                         />
+                        {employeePayrollData.basicSalary && (
+                          <div className="text-sm text-gray-600 mt-1">
+                            ISR estimado: ${calculateISR(parseFloat(employeePayrollData.basicSalary) || 0).toFixed(2)} mensual
+                          </div>
+                        )}
                       </div>
                       <div>
                         <Label>Frecuencia de Pago</Label>
-                        <Select defaultValue={selectedEmployee.paymentFrequency || 'monthly'}>
+                        <Select 
+                          value={employeePayrollData.paymentFrequency}
+                          onValueChange={(value) => setEmployeePayrollData(prev => ({
+                            ...prev,
+                            paymentFrequency: value
+                          }))}
+                        >
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -4796,7 +4885,11 @@ function Admin() {
                         <input
                           type="checkbox"
                           id="empISR"
-                          defaultChecked={selectedEmployee.isrEnabled !== false}
+                          checked={employeePayrollData.isrEnabled}
+                          onChange={(e) => setEmployeePayrollData(prev => ({
+                            ...prev,
+                            isrEnabled: e.target.checked
+                          }))}
                           className="rounded"
                         />
                         <Label htmlFor="empISR" className="font-medium">ISR (Impuesto Sobre la Renta)</Label>
@@ -4812,7 +4905,11 @@ function Admin() {
                         <input
                           type="checkbox"
                           id="empIMSS"
-                          defaultChecked={selectedEmployee.imssEnabled !== false}
+                          checked={employeePayrollData.imssEnabled}
+                          onChange={(e) => setEmployeePayrollData(prev => ({
+                            ...prev,
+                            imssEnabled: e.target.checked
+                          }))}
                           className="rounded"
                         />
                         <Label htmlFor="empIMSS" className="font-medium">IMSS (Seguro Social)</Label>
@@ -4823,7 +4920,11 @@ function Admin() {
                           <Input
                             type="number"
                             step="0.001"
-                            defaultValue={selectedEmployee.imssEmployeePercentage || '2.375'}
+                            value={employeePayrollData.imssEmployeePercentage}
+                            onChange={(e) => setEmployeePayrollData(prev => ({
+                              ...prev,
+                              imssEmployeePercentage: e.target.value
+                            }))}
                             className="text-sm"
                           />
                           <p className="text-xs text-gray-500 mt-1">Legal: 2.375%</p>
@@ -4833,7 +4934,11 @@ function Admin() {
                           <Input
                             type="number"
                             step="0.001"
-                            defaultValue={selectedEmployee.imssEmployerPercentage || '10.525'}
+                            value={employeePayrollData.imssEmployerPercentage}
+                            onChange={(e) => setEmployeePayrollData(prev => ({
+                              ...prev,
+                              imssEmployerPercentage: e.target.value
+                            }))}
                             className="text-sm"
                           />
                           <p className="text-xs text-gray-500 mt-1">Legal: 10.525%</p>
@@ -4847,7 +4952,11 @@ function Admin() {
                         <input
                           type="checkbox"
                           id="empInfonavit"
-                          defaultChecked={selectedEmployee.infonavitEnabled || false}
+                          checked={employeePayrollData.infonavitEnabled}
+                          onChange={(e) => setEmployeePayrollData(prev => ({
+                            ...prev,
+                            infonavitEnabled: e.target.checked
+                          }))}
                           className="rounded"
                         />
                         <Label htmlFor="empInfonavit" className="font-medium">Infonavit</Label>
@@ -4858,7 +4967,11 @@ function Admin() {
                           type="number"
                           step="0.1"
                           max="5"
-                          defaultValue={selectedEmployee.infonavitPercentage || '0'}
+                          value={employeePayrollData.infonavitPercentage}
+                          onChange={(e) => setEmployeePayrollData(prev => ({
+                            ...prev,
+                            infonavitPercentage: e.target.value
+                          }))}
                           className="text-sm"
                         />
                         <p className="text-xs text-gray-500 mt-1">Máximo legal: 5% del salario</p>
@@ -4871,7 +4984,11 @@ function Admin() {
                         <input
                           type="checkbox"
                           id="empFonacot"
-                          defaultChecked={selectedEmployee.fonacotEnabled || false}
+                          checked={employeePayrollData.fonacotEnabled}
+                          onChange={(e) => setEmployeePayrollData(prev => ({
+                            ...prev,
+                            fonacotEnabled: e.target.checked
+                          }))}
                           className="rounded"
                         />
                         <Label htmlFor="empFonacot" className="font-medium">Fonacot</Label>
@@ -4881,7 +4998,11 @@ function Admin() {
                         <Input
                           type="number"
                           step="0.01"
-                          defaultValue={selectedEmployee.fonacotAmount || '0'}
+                          value={employeePayrollData.fonacotAmount}
+                          onChange={(e) => setEmployeePayrollData(prev => ({
+                            ...prev,
+                            fonacotAmount: e.target.value
+                          }))}
                           placeholder="$0.00"
                           className="text-sm"
                         />
@@ -4895,15 +5016,17 @@ function Admin() {
                       Cancelar
                     </Button>
                     <Button 
-                      onClick={() => {
-                        toast({
-                          title: "Configuración guardada",
-                          description: `Configuración de nómina actualizada para ${selectedEmployee.name}`,
-                        });
-                        setIsEmployeePayrollOpen(false);
-                      }}
+                      onClick={handleSaveEmployeePayroll}
+                      disabled={isSavingPayroll}
                     >
-                      Guardar Cambios
+                      {isSavingPayroll ? (
+                        <>
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                          Guardando...
+                        </>
+                      ) : (
+                        'Guardar Cambios'
+                      )}
                     </Button>
                   </div>
                 </div>
