@@ -174,6 +174,7 @@ export const staff = pgTable("staff", {
   name: varchar("name").notNull(),
   role: varchar("role").notNull(), // veterinarian, groomer, technician, receptionist
   specialization: varchar("specialization"),
+  salaryBasis: varchar("salary_basis").default("per_month"), // per_day, per_month
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -769,9 +770,40 @@ export const staffRoomAssignments = pgTable("staff_room_assignments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Shift configurations table
+export const shiftConfigurations = pgTable("shift_configurations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  shiftType: varchar("shift_type").notNull(), // morning, afternoon, evening
+  name: varchar("name").notNull(), // TURNO MATUTINO, TURNO VESPERTINO, TURNO NOCTURNO
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Staff shift assignments table
+export const staffShiftAssignments = pgTable("staff_shift_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  staffId: varchar("staff_id").notNull().references(() => staff.id, { onDelete: "cascade" }),
+  shiftType: varchar("shift_type").notNull(), // morning, afternoon, evening
+  assignedDate: date("assigned_date").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // New type exports
 export type MedicalAppointment = typeof medicalAppointments.$inferSelect;
 export type InsertMedicalAppointment = typeof medicalAppointments.$inferInsert;
+
+export type ShiftConfiguration = typeof shiftConfigurations.$inferSelect;
+export type InsertShiftConfiguration = typeof shiftConfigurations.$inferInsert;
+
+export type StaffShiftAssignment = typeof staffShiftAssignments.$inferSelect;
+export type InsertStaffShiftAssignment = typeof staffShiftAssignments.$inferInsert;
 
 export type InvoiceQueue = typeof invoiceQueue.$inferSelect;
 export type InsertInvoiceQueue = typeof invoiceQueue.$inferInsert;

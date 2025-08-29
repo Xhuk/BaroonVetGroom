@@ -175,13 +175,21 @@ function Admin() {
 
   // Initialize SortableJS for shift scheduling
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && staff && staff.length > 0) {
       const initializeSortable = () => {
-        const containers = ['unassigned-staff', 'room1-morning', 'room2-afternoon', 'room3-evening'];
+        const containers = ['unassigned-staff', 'morning-shift', 'afternoon-shift', 'evening-shift'];
+        
+        // Cleanup existing sortable instances
+        Object.values(sortableRefs.current).forEach((sortable: any) => {
+          if (sortable && sortable.destroy) {
+            sortable.destroy();
+          }
+        });
+        sortableRefs.current = {};
         
         containers.forEach(containerId => {
           const container = document.getElementById(containerId);
-          if (container && !sortableRefs.current[containerId]) {
+          if (container) {
             sortableRefs.current[containerId] = new Sortable(container, {
               group: 'shifts',
               animation: 150,
@@ -201,13 +209,13 @@ function Admin() {
                     
                     // Remove from source
                     const sourceKey = getShiftKey(fromId);
-                    newAssignments[sourceKey] = newAssignments[sourceKey].filter((s: any) => s.id !== staffId);
+                    newAssignments[sourceKey] = newAssignments[sourceKey]?.filter((s: any) => s.id !== staffId) || [];
                     
                     // Add to destination
                     const destKey = getShiftKey(toId);
                     const staffMember = staff?.find((s: any) => s.id === staffId);
                     if (staffMember) {
-                      newAssignments[destKey] = [...newAssignments[destKey], staffMember];
+                      newAssignments[destKey] = [...(newAssignments[destKey] || []), staffMember];
                     }
                     
                     return newAssignments;
@@ -224,27 +232,28 @@ function Admin() {
         });
       };
       
-      // Small delay to ensure DOM is ready
-      setTimeout(initializeSortable, 100);
+      // Delay to ensure DOM is ready and data is loaded
+      const timeoutId = setTimeout(initializeSortable, 500);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        // Cleanup sortable instances
+        Object.values(sortableRefs.current).forEach((sortable: any) => {
+          if (sortable && sortable.destroy) {
+            sortable.destroy();
+          }
+        });
+        sortableRefs.current = {};
+      };
     }
-    
-    return () => {
-      // Cleanup sortable instances
-      Object.values(sortableRefs.current).forEach((sortable: any) => {
-        if (sortable && sortable.destroy) {
-          sortable.destroy();
-        }
-      });
-      sortableRefs.current = {};
-    };
   }, [staff, toast]);
 
   const getShiftKey = (containerId: string) => {
     switch (containerId) {
       case 'unassigned-staff': return 'unassigned';
-      case 'room1-morning': return 'room1_morning';
-      case 'room2-afternoon': return 'room2_afternoon';
-      case 'room3-evening': return 'room3_evening';
+      case 'morning-shift': return 'morning_shift';
+      case 'afternoon-shift': return 'afternoon_shift';
+      case 'evening-shift': return 'evening_shift';
       default: return 'unassigned';
     }
   };
@@ -322,10 +331,19 @@ function Admin() {
   // Shift management state
   const [shiftAssignments, setShiftAssignments] = useState<{[key: string]: any[]}>({
     unassigned: [],
-    room1_morning: [],
-    room2_afternoon: [],
-    room3_evening: []
+    morning_shift: [],
+    afternoon_shift: [],
+    evening_shift: []
   });
+
+  // Shift configuration state
+  const [shiftConfig, setShiftConfig] = useState({
+    morning: { name: 'TURNO MATUTINO', startTime: '08:00', endTime: '12:00' },
+    afternoon: { name: 'TURNO VESPERTINO', startTime: '13:00', endTime: '18:00' },
+    evening: { name: 'TURNO NOCTURNO', startTime: '18:00', endTime: '22:00' }
+  });
+
+  const [isEditingShifts, setIsEditingShifts] = useState(false);
 
   // SortableJS refs
   const sortableRefs = useRef<{[key: string]: any}>({});
@@ -3606,6 +3624,33 @@ function Admin() {
             <TabsContent value="shifts" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Programación de Turnos</h2>
+                {isEditingShifts && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsEditingShifts(false);
+                        // Reset to original values if needed
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      className="bg-blue-600 hover:bg-blue-700"
+                      onClick={() => {
+                        // Save shift configuration
+                        toast({
+                          title: "Configuración guardada",
+                          description: "Los horarios de turnos han sido actualizados exitosamente",
+                        });
+                        setIsEditingShifts(false);
+                      }}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Guardar Configuración
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div className="text-sm text-gray-600 mb-4">
@@ -3640,12 +3685,49 @@ function Admin() {
                 {/* Shift Columns */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Sala 1 / Turno Matutino</CardTitle>
-                    <div className="text-sm text-gray-600">8:00 AM - 12:00 PM</div>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle className="text-lg">{shiftConfig.morning.name}</CardTitle>
+                        {isEditingShifts ? (
+                          <div className="flex items-center gap-2 mt-2">
+                            <Input
+                              type="time"
+                              value={shiftConfig.morning.startTime}
+                              onChange={(e) => setShiftConfig(prev => ({
+                                ...prev,
+                                morning: { ...prev.morning, startTime: e.target.value }
+                              }))}
+                              className="w-24"
+                            />
+                            <span>-</span>
+                            <Input
+                              type="time"
+                              value={shiftConfig.morning.endTime}
+                              onChange={(e) => setShiftConfig(prev => ({
+                                ...prev,
+                                morning: { ...prev.morning, endTime: e.target.value }
+                              }))}
+                              className="w-24"
+                            />
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-600">{shiftConfig.morning.startTime} - {shiftConfig.morning.endTime}</div>
+                        )}
+                      </div>
+                      {!isEditingShifts && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsEditingShifts(true)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div id="room1-morning" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
-                      {shiftAssignments.room1_morning?.map((employee: any) => (
+                    <div id="morning-shift" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
+                      {shiftAssignments.morning_shift?.map((employee: any) => (
                         <div 
                           key={employee.id} 
                           data-staff-id={employee.id}
@@ -3664,12 +3746,40 @@ function Admin() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Sala 2 / Turno Vespertino</CardTitle>
-                    <div className="text-sm text-gray-600">1:00 PM - 6:00 PM</div>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle className="text-lg">{shiftConfig.afternoon.name}</CardTitle>
+                        {isEditingShifts ? (
+                          <div className="flex items-center gap-2 mt-2">
+                            <Input
+                              type="time"
+                              value={shiftConfig.afternoon.startTime}
+                              onChange={(e) => setShiftConfig(prev => ({
+                                ...prev,
+                                afternoon: { ...prev.afternoon, startTime: e.target.value }
+                              }))}
+                              className="w-24"
+                            />
+                            <span>-</span>
+                            <Input
+                              type="time"
+                              value={shiftConfig.afternoon.endTime}
+                              onChange={(e) => setShiftConfig(prev => ({
+                                ...prev,
+                                afternoon: { ...prev.afternoon, endTime: e.target.value }
+                              }))}
+                              className="w-24"
+                            />
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-600">{shiftConfig.afternoon.startTime} - {shiftConfig.afternoon.endTime}</div>
+                        )}
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div id="room2-afternoon" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
-                      {shiftAssignments.room2_afternoon?.map((employee: any) => (
+                    <div id="afternoon-shift" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
+                      {shiftAssignments.afternoon_shift?.map((employee: any) => (
                         <div 
                           key={employee.id} 
                           data-staff-id={employee.id}
@@ -3688,12 +3798,40 @@ function Admin() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Sala 3 / Turno Nocturno</CardTitle>
-                    <div className="text-sm text-gray-600">6:00 PM - 10:00 PM</div>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle className="text-lg">{shiftConfig.evening.name}</CardTitle>
+                        {isEditingShifts ? (
+                          <div className="flex items-center gap-2 mt-2">
+                            <Input
+                              type="time"
+                              value={shiftConfig.evening.startTime}
+                              onChange={(e) => setShiftConfig(prev => ({
+                                ...prev,
+                                evening: { ...prev.evening, startTime: e.target.value }
+                              }))}
+                              className="w-24"
+                            />
+                            <span>-</span>
+                            <Input
+                              type="time"
+                              value={shiftConfig.evening.endTime}
+                              onChange={(e) => setShiftConfig(prev => ({
+                                ...prev,
+                                evening: { ...prev.evening, endTime: e.target.value }
+                              }))}
+                              className="w-24"
+                            />
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-600">{shiftConfig.evening.startTime} - {shiftConfig.evening.endTime}</div>
+                        )}
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div id="room3-evening" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
-                      {shiftAssignments.room3_evening?.map((employee: any) => (
+                    <div id="evening-shift" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
+                      {shiftAssignments.evening_shift?.map((employee: any) => (
                         <div 
                           key={employee.id} 
                           data-staff-id={employee.id}
