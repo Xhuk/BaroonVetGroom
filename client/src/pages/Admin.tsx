@@ -157,6 +157,16 @@ function Admin() {
   });
 
   useEffect(() => {
+    // Debug data loading
+    console.log('🔍 [Admin] Data loading state:', {
+      currentTenant: currentTenant?.id,
+      roomsData: roomsData?.length,
+      servicesData: servicesData?.length,
+      staffData: staffData?.length,
+      usersData: usersData?.length,
+      rolesData: rolesData?.length
+    });
+
     if (roomsData) setRooms(roomsData);
     if (servicesData) setServices(servicesData);
     if (rolesData) setRoles(rolesData);
@@ -172,7 +182,7 @@ function Admin() {
     if (deliveryConfigData) {
       setDeliveryConfig(deliveryConfigData);
     }
-  }, [roomsData, servicesData, rolesData, staffData, usersData, deliveryConfigData]);
+  }, [currentTenant?.id, roomsData, servicesData, rolesData, staffData, usersData, deliveryConfigData]);
 
   // Initialize SortableJS for shift scheduling
   useEffect(() => {
