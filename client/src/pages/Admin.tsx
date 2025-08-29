@@ -53,7 +53,6 @@ import {
   Building,
   Copy
 } from "lucide-react";
-import Sortable from 'sortablejs';
 
 // Helper function to get room type icons
 function getRoomTypeIcon(type: string) {
@@ -180,90 +179,6 @@ function Admin() {
     }
   }, [currentTenant?.id, roomsData, servicesData, rolesData, staffData, usersData, deliveryConfigData]);
 
-  // Initialize SortableJS for shift scheduling
-  useEffect(() => {
-    if (typeof window !== 'undefined' && staff && staff.length > 0) {
-      const initializeSortable = () => {
-        const containers = ['unassigned-staff', 'morning-shift', 'afternoon-shift', 'evening-shift'];
-        
-        // Cleanup existing sortable instances
-        Object.values(sortableRefs.current).forEach((sortable: any) => {
-          if (sortable && sortable.destroy) {
-            sortable.destroy();
-          }
-        });
-        sortableRefs.current = {};
-        
-        containers.forEach(containerId => {
-          const container = document.getElementById(containerId);
-          if (container) {
-            sortableRefs.current[containerId] = new Sortable(container, {
-              group: 'shifts',
-              animation: 150,
-              ghostClass: 'sortable-ghost',
-              chosenClass: 'sortable-chosen',
-              dragClass: 'sortable-drag',
-              onEnd: (evt) => {
-                const { from, to, item } = evt;
-                const fromId = from.id;
-                const toId = to.id;
-                const staffId = item.dataset.staffId;
-                
-                if (fromId !== toId && staffId) {
-                  // Move staff between shifts
-                  setShiftAssignments(prev => {
-                    const newAssignments = { ...prev };
-                    
-                    // Remove from source
-                    const sourceKey = getShiftKey(fromId);
-                    newAssignments[sourceKey] = newAssignments[sourceKey]?.filter((s: any) => s.id !== staffId) || [];
-                    
-                    // Add to destination
-                    const destKey = getShiftKey(toId);
-                    const staffMember = staff?.find((s: any) => s.id === staffId);
-                    if (staffMember) {
-                      newAssignments[destKey] = [...(newAssignments[destKey] || []), staffMember];
-                    }
-                    
-                    return newAssignments;
-                  });
-                  
-                  toast({
-                    title: "Asignación actualizada",
-                    description: "El personal ha sido asignado al turno exitosamente",
-                  });
-                }
-              }
-            });
-          }
-        });
-      };
-      
-      // Delay to ensure DOM is ready and data is loaded
-      const timeoutId = setTimeout(initializeSortable, 500);
-      
-      return () => {
-        clearTimeout(timeoutId);
-        // Cleanup sortable instances
-        Object.values(sortableRefs.current).forEach((sortable: any) => {
-          if (sortable && sortable.destroy) {
-            sortable.destroy();
-          }
-        });
-        sortableRefs.current = {};
-      };
-    }
-  }, [staff, toast]);
-
-  const getShiftKey = (containerId: string) => {
-    switch (containerId) {
-      case 'unassigned-staff': return 'unassigned';
-      case 'morning-shift': return 'morning_shift';
-      case 'afternoon-shift': return 'afternoon_shift';
-      case 'evening-shift': return 'evening_shift';
-      default: return 'unassigned';
-    }
-  };
 
 
   // Dialog states
@@ -602,25 +517,6 @@ function Admin() {
   const [bulkRoleId, setBulkRoleId] = useState<string>('');  
   const [roleFilter, setRoleFilter] = useState<string>('all');
 
-  // Shift management state
-  const [shiftAssignments, setShiftAssignments] = useState<{[key: string]: any[]}>({
-    unassigned: [],
-    morning_shift: [],
-    afternoon_shift: [],
-    evening_shift: []
-  });
-
-  // Shift configuration state
-  const [shiftConfig, setShiftConfig] = useState({
-    morning: { name: 'TURNO MATUTINO', startTime: '08:00', endTime: '12:00' },
-    afternoon: { name: 'TURNO VESPERTINO', startTime: '13:00', endTime: '18:00' },
-    evening: { name: 'TURNO NOCTURNO', startTime: '18:00', endTime: '22:00' }
-  });
-
-  const [isEditingShifts, setIsEditingShifts] = useState(false);
-
-  // SortableJS refs
-  const sortableRefs = useRef<{[key: string]: any}>({});
 
   // Core consolidated roles for the veterinary clinic
   const CORE_ROLES = [
@@ -4767,197 +4663,50 @@ function Admin() {
                   </div>
                 )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Unassigned Personnel Column */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Personal Sin Asignar</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div id="unassigned-staff" className="space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
-                      {shiftAssignments.unassigned?.map((employee: any) => (
-                        <div 
-                          key={employee.id} 
-                          data-staff-id={employee.id}
-                          className="staff-card p-3 bg-white border rounded-lg shadow-sm cursor-move hover:shadow-md transition-shadow"
-                        >
-                          <div className="font-medium">{employee.name}</div>
-                          <div className="text-sm text-gray-600">{employee.role}</div>
-                          {employee.specialization && (
-                            <div className="text-xs text-blue-600">{employee.specialization}</div>
-                          )}
-                        </div>
-                      )) || []}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Shift Columns */}
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle className="text-lg">{shiftConfig.morning.name}</CardTitle>
-                        {isEditingShifts ? (
-                          <div className="flex items-center gap-2 mt-2">
-                            <Input
-                              type="time"
-                              value={shiftConfig.morning.startTime}
-                              onChange={(e) => setShiftConfig(prev => ({
-                                ...prev,
-                                morning: { ...prev.morning, startTime: e.target.value }
-                              }))}
-                              className="w-24"
-                            />
-                            <span>-</span>
-                            <Input
-                              type="time"
-                              value={shiftConfig.morning.endTime}
-                              onChange={(e) => setShiftConfig(prev => ({
-                                ...prev,
-                                morning: { ...prev.morning, endTime: e.target.value }
-                              }))}
-                              className="w-24"
-                            />
+              {/* Simple Staff List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Lista de Personal
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {staff?.map((employee: any) => (
+                      <div 
+                        key={employee.id} 
+                        className="p-4 border rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-medium text-gray-900 dark:text-gray-100">{employee.name}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">{employee.role}</div>
+                            {employee.specialization && (
+                              <div className="text-xs text-blue-600 dark:text-blue-400">{employee.specialization}</div>
+                            )}
+                            <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                              Max Horas: {employee.max_weekly_hours || 40} hrs/semana
+                            </div>
                           </div>
-                        ) : (
-                          <div className="text-sm text-gray-600">{shiftConfig.morning.startTime} - {shiftConfig.morning.endTime}</div>
-                        )}
-                      </div>
-                      {!isEditingShifts && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsEditingShifts(true)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div id="morning-shift" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
-                      {shiftAssignments.morning_shift?.map((employee: any) => (
-                        <div 
-                          key={employee.id} 
-                          data-staff-id={employee.id}
-                          className="staff-card p-3 bg-white border rounded-lg shadow-sm cursor-move hover:shadow-md transition-shadow"
-                        >
-                          <div className="font-medium">{employee.name}</div>
-                          <div className="text-sm text-gray-600">{employee.role}</div>
-                          {employee.specialization && (
-                            <div className="text-xs text-blue-600">{employee.specialization}</div>
-                          )}
-                        </div>
-                      )) || []}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle className="text-lg">{shiftConfig.afternoon.name}</CardTitle>
-                        {isEditingShifts ? (
-                          <div className="flex items-center gap-2 mt-2">
-                            <Input
-                              type="time"
-                              value={shiftConfig.afternoon.startTime}
-                              onChange={(e) => setShiftConfig(prev => ({
-                                ...prev,
-                                afternoon: { ...prev.afternoon, startTime: e.target.value }
-                              }))}
-                              className="w-24"
-                            />
-                            <span>-</span>
-                            <Input
-                              type="time"
-                              value={shiftConfig.afternoon.endTime}
-                              onChange={(e) => setShiftConfig(prev => ({
-                                ...prev,
-                                afternoon: { ...prev.afternoon, endTime: e.target.value }
-                              }))}
-                              className="w-24"
-                            />
+                          <div className="flex gap-2 items-center">
+                            {employee.allows_shift_swap && (
+                              <Badge variant="secondary" className="text-xs">
+                                Permite Intercambios
+                              </Badge>
+                            )}
+                            {employee.preferred_shift_type && (
+                              <Badge variant="outline" className="text-xs">
+                                {employee.preferred_shift_type}
+                              </Badge>
+                            )}
                           </div>
-                        ) : (
-                          <div className="text-sm text-gray-600">{shiftConfig.afternoon.startTime} - {shiftConfig.afternoon.endTime}</div>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div id="afternoon-shift" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
-                      {shiftAssignments.afternoon_shift?.map((employee: any) => (
-                        <div 
-                          key={employee.id} 
-                          data-staff-id={employee.id}
-                          className="staff-card p-3 bg-white border rounded-lg shadow-sm cursor-move hover:shadow-md transition-shadow"
-                        >
-                          <div className="font-medium">{employee.name}</div>
-                          <div className="text-sm text-gray-600">{employee.role}</div>
-                          {employee.specialization && (
-                            <div className="text-xs text-blue-600">{employee.specialization}</div>
-                          )}
                         </div>
-                      )) || []}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle className="text-lg">{shiftConfig.evening.name}</CardTitle>
-                        {isEditingShifts ? (
-                          <div className="flex items-center gap-2 mt-2">
-                            <Input
-                              type="time"
-                              value={shiftConfig.evening.startTime}
-                              onChange={(e) => setShiftConfig(prev => ({
-                                ...prev,
-                                evening: { ...prev.evening, startTime: e.target.value }
-                              }))}
-                              className="w-24"
-                            />
-                            <span>-</span>
-                            <Input
-                              type="time"
-                              value={shiftConfig.evening.endTime}
-                              onChange={(e) => setShiftConfig(prev => ({
-                                ...prev,
-                                evening: { ...prev.evening, endTime: e.target.value }
-                              }))}
-                              className="w-24"
-                            />
-                          </div>
-                        ) : (
-                          <div className="text-sm text-gray-600">{shiftConfig.evening.startTime} - {shiftConfig.evening.endTime}</div>
-                        )}
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div id="evening-shift" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
-                      {shiftAssignments.evening_shift?.map((employee: any) => (
-                        <div 
-                          key={employee.id} 
-                          data-staff-id={employee.id}
-                          className="staff-card p-3 bg-white border rounded-lg shadow-sm cursor-move hover:shadow-md transition-shadow"
-                        >
-                          <div className="font-medium">{employee.name}</div>
-                          <div className="text-sm text-gray-600">{employee.role}</div>
-                          {employee.specialization && (
-                            <div className="text-xs text-blue-600">{employee.specialization}</div>
-                          )}
-                        </div>
-                      )) || []}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                    )) || <div className="text-center py-8 text-gray-500 dark:text-gray-400">No hay personal registrado</div>}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
             )}
 
