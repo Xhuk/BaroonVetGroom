@@ -1228,13 +1228,20 @@ function Admin() {
     return isr / 12;
   };
 
+  // Force modal open with useEffect
+  useEffect(() => {
+    if (selectedEmployee && !isSalaryConfigOpen) {
+      console.log('🔧 [ForceOpen] Opening modal for:', selectedEmployee.name);
+      setIsSalaryConfigOpen(true);
+    }
+  }, [selectedEmployee, isSalaryConfigOpen]);
+
   // Handle open salary configuration
   const handleOpenSalaryConfig = (employee: any) => {
     console.log('🔧 [Configurar] Button clicked for employee:', employee?.name);
     console.log('🔧 [Configurar] Employee data:', employee);
     console.log('🔧 [Configurar] Current modal state before:', isSalaryConfigOpen);
     
-    setSelectedEmployee(employee);
     // Load existing salary configuration from employee data
     setSalaryConfigData({
       basicSalary: parseFloat(employee.basicSalary) || 0,
@@ -1248,13 +1255,8 @@ function Admin() {
       fonacotAmount: parseFloat(employee.fonacotAmount) || 0,
     });
     
-    console.log('🔧 [Configurar] Setting modal to open...');
-    setIsSalaryConfigOpen(true);
-    
-    // Debug after state change
-    setTimeout(() => {
-      console.log('🔧 [Configurar] Modal state after timeout:', isSalaryConfigOpen);
-    }, 100);
+    console.log('🔧 [Configurar] Setting selected employee...');
+    setSelectedEmployee(employee);
   };
 
   // Handle save salary configuration
