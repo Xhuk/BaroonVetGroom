@@ -1770,63 +1770,66 @@ function Admin() {
           </div>
 
           <Tabs defaultValue="rooms" className="w-full">
-            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-13' : 'grid-cols-12'}`}>
-              <TabsTrigger value="rooms" className="flex items-center gap-2">
-                <DoorOpen className="w-4 h-4" />
+            <TabsList className={`grid w-full grid-rows-2 ${isVetGroomDeveloper ? 'grid-cols-7' : 'grid-cols-7'} gap-1`}>
+              {/* First Row - 7 tabs */}
+              <TabsTrigger value="rooms" className="flex items-center gap-1 text-xs">
+                <DoorOpen className="w-3 h-3" />
                 Salas
               </TabsTrigger>
-              <TabsTrigger value="roles" className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
+              <TabsTrigger value="roles" className="flex items-center gap-1 text-xs">
+                <Shield className="w-3 h-3" />
                 Roles
               </TabsTrigger>
-              <TabsTrigger value="users" className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
+              <TabsTrigger value="users" className="flex items-center gap-1 text-xs">
+                <Users className="w-3 h-3" />
                 Usuarios
               </TabsTrigger>
-              <TabsTrigger value="staff" className="flex items-center gap-2">
-                <UserCheck className="w-4 h-4" />
+              <TabsTrigger value="staff" className="flex items-center gap-1 text-xs">
+                <UserCheck className="w-3 h-3" />
                 Equipo
               </TabsTrigger>
-              <TabsTrigger value="services" className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
+              <TabsTrigger value="services" className="flex items-center gap-1 text-xs">
+                <Clock className="w-3 h-3" />
                 Servicios
               </TabsTrigger>
-              <TabsTrigger value="delivery-config" className="flex items-center gap-2">
-                <Truck className="w-4 h-4" />
+              <TabsTrigger value="delivery-config" className="flex items-center gap-1 text-xs">
+                <Truck className="w-3 h-3" />
                 Entregas
               </TabsTrigger>
-              <TabsTrigger value="fraccionamientos" className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
+              <TabsTrigger value="fraccionamientos" className="flex items-center gap-1 text-xs">
+                <MapPin className="w-3 h-3" />
                 Fraccionamientos
               </TabsTrigger>
-              <TabsTrigger value="stats" className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
+              
+              {/* Second Row - 6 tabs + optional BETA */}
+              <TabsTrigger value="stats" className="flex items-center gap-1 text-xs">
+                <BarChart3 className="w-3 h-3" />
                 Estadísticas
               </TabsTrigger>
-              <TabsTrigger value="subscription" className="flex items-center gap-2">
-                <CreditCard className="w-4 h-4" />
+              <TabsTrigger value="subscription" className="flex items-center gap-1 text-xs">
+                <CreditCard className="w-3 h-3" />
                 Suscripción
               </TabsTrigger>
-              <TabsTrigger value="personnel" className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
+              <TabsTrigger value="personnel" className="flex items-center gap-1 text-xs">
+                <Users className="w-3 h-3" />
                 Personal
               </TabsTrigger>
-              <TabsTrigger value="nomina" className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
+              <TabsTrigger value="nomina" className="flex items-center gap-1 text-xs">
+                <DollarSign className="w-3 h-3" />
                 Nómina
               </TabsTrigger>
-              <TabsTrigger value="shifts" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
+              <TabsTrigger value="shifts" className="flex items-center gap-1 text-xs">
+                <Calendar className="w-3 h-3" />
                 Turnos
               </TabsTrigger>
-              <TabsTrigger value="daily-closeout" className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
+              <TabsTrigger value="daily-closeout" className="flex items-center gap-1 text-xs">
+                <BarChart3 className="w-3 h-3" />
                 Corte Diario
               </TabsTrigger>
               {isVetGroomDeveloper && (
-                <TabsTrigger value="delivery-tracking" className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <Badge variant="secondary" className="ml-1 text-xs">BETA</Badge>
+                <TabsTrigger value="delivery-tracking" className="flex items-center gap-1 text-xs">
+                  <MapPin className="w-3 h-3" />
+                  <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">BETA</Badge>
                   Tracking
                 </TabsTrigger>
               )}
