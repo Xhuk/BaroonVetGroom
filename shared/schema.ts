@@ -236,6 +236,12 @@ export const shiftAssignments = pgTable("shift_assignments", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export type ShiftPattern = typeof shiftPatterns.$inferSelect;
+export type InsertShiftPattern = typeof shiftPatterns.$inferInsert;
+
+export type ShiftAssignment = typeof shiftAssignments.$inferSelect;
+export type InsertShiftAssignment = typeof shiftAssignments.$inferInsert;
+
 // Shift rotation patterns for automatic scheduling
 export const shiftRotations = pgTable("shift_rotations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -249,6 +255,9 @@ export const shiftRotations = pgTable("shift_rotations", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export type ShiftRotation = typeof shiftRotations.$inferSelect;
+export type InsertShiftRotation = typeof shiftRotations.$inferInsert;
 
 // Team assignments for rotation patterns
 export const rotationTeams = pgTable("rotation_teams", {

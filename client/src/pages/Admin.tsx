@@ -52,7 +52,8 @@ import {
   Printer,
   Building,
   Copy,
-  MessageCircle
+  MessageCircle,
+  Coffee
 } from "lucide-react";
 
 // Helper function to get room type icons
@@ -116,6 +117,58 @@ function Admin() {
     enabled: !!currentTenant?.id,
   });
 
+  // Shift management queries
+  const { data: shiftPatternsData, isLoading: shiftPatternsLoading, refetch: refetchShiftPatterns } = useQuery({
+    queryKey: [`/api/shift-patterns/${currentTenant?.id}`],
+    enabled: !!currentTenant?.id,
+  });
+
+  const { data: shiftAssignmentsData, isLoading: shiftAssignmentsLoading } = useQuery({
+    queryKey: [`/api/shift-assignments/${currentTenant?.id}`],
+    enabled: !!currentTenant?.id,
+  });
+
+  // Shift pattern mutations
+  const createShiftPatternMutation = useMutation({
+    mutationFn: async (patternData: any) => {
+      return await apiRequest('/api/shift-patterns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...patternData, tenantId: currentTenant?.id }),
+      });
+    },
+    onSuccess: () => {
+      refetchShiftPatterns();
+      toast({ title: "Patrón de Turno Creado", description: "El patrón de turno ha sido creado exitosamente" });
+    },
+  });
+
+  const updateShiftPatternMutation = useMutation({
+    mutationFn: async ({ patternId, patternData }: { patternId: string; patternData: any }) => {
+      return await apiRequest(`/api/shift-patterns/${patternId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patternData),
+      });
+    },
+    onSuccess: () => {
+      refetchShiftPatterns();
+      toast({ title: "Patrón de Turno Actualizado", description: "El patrón de turno ha sido actualizado exitosamente" });
+    },
+  });
+
+  const deleteShiftPatternMutation = useMutation({
+    mutationFn: async (patternId: string) => {
+      return await apiRequest(`/api/shift-patterns/${patternId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      refetchShiftPatterns();
+      toast({ title: "Patrón de Turno Eliminado", description: "El patrón de turno ha sido eliminado exitosamente" });
+    },
+  });
+
   // Fetch current subscription information
   const { data: subscriptionData, isLoading: subscriptionLoading } = useQuery({
     queryKey: ["/api/subscription/status", currentTenant?.companyId],
@@ -160,6 +213,22 @@ function Admin() {
   const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
   const [newEmployeeName, setNewEmployeeName] = useState('');
   const [newEmployeeRole, setNewEmployeeRole] = useState('');
+  
+  // Shift pattern management state
+  const [isShiftPatternDialogOpen, setIsShiftPatternDialogOpen] = useState(false);
+  const [editingShiftPattern, setEditingShiftPattern] = useState<any>(null);
+  const [shiftPatternForm, setShiftPatternForm] = useState({
+    name: '',
+    displayName: '',
+    startTime: '',
+    endTime: '',
+    shiftType: 'morning',
+    color: '#3B82F6',
+    icon: '☀️',
+    breakDuration: 60,
+    allowOvertime: false,
+    overtimeRate: '1.50'
+  });
   
   // Initialize shift data when staff loads
   useEffect(() => {
@@ -4969,57 +5038,294 @@ function Admin() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <h3 className="text-lg font-medium">Patrones de Turnos</h3>
-                      <Button className="bg-blue-600 hover:bg-blue-700">
+                      <Button 
+                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => {
+                          setEditingShiftPattern(null);
+                          setShiftPatternForm({
+                            name: '',
+                            displayName: '',
+                            startTime: '',
+                            endTime: '',
+                            shiftType: 'morning',
+                            color: '#3B82F6',
+                            icon: '☀️',
+                            breakDuration: 60,
+                            allowOvertime: false,
+                            overtimeRate: '1.50'
+                          });
+                          setIsShiftPatternDialogOpen(true);
+                        }}
+                      >
                         <Plus className="w-4 h-4 mr-2" />
                         Nuevo Patrón de Turno
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {/* Sample Shift Patterns */}
-                      {[
-                        { id: 1, name: 'Turno Matutino', type: 'morning', time: '08:00 - 16:00', color: '#3B82F6', active: true },
-                        { id: 2, name: 'Turno Vespertino', type: 'afternoon', time: '16:00 - 00:00', color: '#10B981', active: true },
-                        { id: 3, name: 'Turno Nocturno', type: 'night', time: '00:00 - 08:00', color: '#8B5CF6', active: false }
-                      ].map((pattern) => (
-                        <Card key={pattern.id} className="hover:shadow-md transition-shadow">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                              <CardTitle className="text-base flex items-center gap-2">
-                                <div 
-                                  className="w-3 h-3 rounded-full"
-                                  style={{ backgroundColor: pattern.color }}
-                                />
-                                {pattern.name}
-                              </CardTitle>
-                              <Badge variant={pattern.active ? 'default' : 'secondary'}>
-                                {pattern.active ? 'Activo' : 'Inactivo'}
-                              </Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Clock className="w-4 h-4 text-gray-500" />
-                              {pattern.time}
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <UserCheck className="w-4 h-4 text-gray-500" />
-                              Tipo: {pattern.type}
-                            </div>
-                            <div className="flex gap-2 pt-2">
-                              <Button size="sm" variant="outline">
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                              <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                    {shiftPatternsLoading ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[1, 2, 3].map((i) => (
+                          <Card key={i} className="animate-pulse">
+                            <CardHeader>
+                              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {(shiftPatternsData || []).map((pattern: any) => (
+                          <Card key={pattern.id} className="hover:shadow-md transition-shadow">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-center justify-between">
+                                <CardTitle className="text-base flex items-center gap-2">
+                                  <div 
+                                    className="w-3 h-3 rounded-full"
+                                    style={{ backgroundColor: pattern.color }}
+                                  />
+                                  {pattern.displayName || pattern.name}
+                                </CardTitle>
+                                <Badge variant={pattern.isActive ? 'default' : 'secondary'}>
+                                  {pattern.isActive ? 'Activo' : 'Inactivo'}
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Clock className="w-4 h-4 text-gray-500" />
+                                {pattern.startTime} - {pattern.endTime}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <UserCheck className="w-4 h-4 text-gray-500" />
+                                Tipo: {pattern.shiftType}
+                              </div>
+                              {pattern.breakDuration > 0 && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Coffee className="w-4 h-4 text-gray-500" />
+                                  Descanso: {pattern.breakDuration} min
+                                </div>
+                              )}
+                              <div className="flex gap-2 pt-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingShiftPattern(pattern);
+                                    setShiftPatternForm({
+                                      name: pattern.name,
+                                      displayName: pattern.displayName,
+                                      startTime: pattern.startTime,
+                                      endTime: pattern.endTime,
+                                      shiftType: pattern.shiftType,
+                                      color: pattern.color,
+                                      icon: pattern.icon,
+                                      breakDuration: pattern.breakDuration,
+                                      allowOvertime: pattern.allowOvertime,
+                                      overtimeRate: pattern.overtimeRate.toString()
+                                    });
+                                    setIsShiftPatternDialogOpen(true);
+                                  }}
+                                >
+                                  <Edit className="w-3 h-3" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-red-600 hover:text-red-700"
+                                  onClick={() => {
+                                    if (confirm('¿Está seguro de que desea eliminar este patrón de turno?')) {
+                                      deleteShiftPatternMutation.mutate(pattern.id);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+
+                    {!shiftPatternsLoading && (!shiftPatternsData || shiftPatternsData.length === 0) && (
+                      <div className="text-center py-12">
+                        <Clock className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                          No hay patrones de turno
+                        </h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-4">
+                          Comience creando su primer patrón de turno para organizar los horarios de trabajo.
+                        </p>
+                        <Button 
+                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            setEditingShiftPattern(null);
+                            setShiftPatternForm({
+                              name: '',
+                              displayName: '',
+                              startTime: '',
+                              endTime: '',
+                              shiftType: 'morning',
+                              color: '#3B82F6',
+                              icon: '☀️',
+                              breakDuration: 60,
+                              allowOvertime: false,
+                              overtimeRate: '1.50'
+                            });
+                            setIsShiftPatternDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Crear Primer Patrón
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
+
+                {/* Shift Pattern Dialog */}
+                <Dialog open={isShiftPatternDialogOpen} onOpenChange={setIsShiftPatternDialogOpen}>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingShiftPattern ? 'Editar Patrón de Turno' : 'Nuevo Patrón de Turno'}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name">Nombre Interno</Label>
+                        <Input
+                          id="name"
+                          value={shiftPatternForm.name}
+                          onChange={(e) => setShiftPatternForm(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="ej: turno_matutino"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="displayName">Nombre a Mostrar</Label>
+                        <Input
+                          id="displayName"
+                          value={shiftPatternForm.displayName}
+                          onChange={(e) => setShiftPatternForm(prev => ({ ...prev, displayName: e.target.value }))}
+                          placeholder="ej: Turno Matutino"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="startTime">Hora de Inicio</Label>
+                        <Input
+                          id="startTime"
+                          type="time"
+                          value={shiftPatternForm.startTime}
+                          onChange={(e) => setShiftPatternForm(prev => ({ ...prev, startTime: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="endTime">Hora de Fin</Label>
+                        <Input
+                          id="endTime"
+                          type="time"
+                          value={shiftPatternForm.endTime}
+                          onChange={(e) => setShiftPatternForm(prev => ({ ...prev, endTime: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="shiftType">Tipo de Turno</Label>
+                        <Select value={shiftPatternForm.shiftType} onValueChange={(value) => setShiftPatternForm(prev => ({ ...prev, shiftType: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar tipo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="morning">Matutino</SelectItem>
+                            <SelectItem value="afternoon">Vespertino</SelectItem>
+                            <SelectItem value="night">Nocturno</SelectItem>
+                            <SelectItem value="split">Turno Partido</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="color">Color</Label>
+                        <Input
+                          id="color"
+                          type="color"
+                          value={shiftPatternForm.color}
+                          onChange={(e) => setShiftPatternForm(prev => ({ ...prev, color: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="breakDuration">Duración de Descanso (minutos)</Label>
+                        <Input
+                          id="breakDuration"
+                          type="number"
+                          value={shiftPatternForm.breakDuration}
+                          onChange={(e) => setShiftPatternForm(prev => ({ ...prev, breakDuration: parseInt(e.target.value) || 0 }))}
+                          min="0"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="overtimeRate">Tasa de Horas Extra</Label>
+                        <Input
+                          id="overtimeRate"
+                          type="number"
+                          step="0.01"
+                          value={shiftPatternForm.overtimeRate}
+                          onChange={(e) => setShiftPatternForm(prev => ({ ...prev, overtimeRate: e.target.value }))}
+                          placeholder="1.50"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="allowOvertime"
+                            checked={shiftPatternForm.allowOvertime}
+                            onChange={(e) => setShiftPatternForm(prev => ({ ...prev, allowOvertime: e.target.checked }))}
+                            className="rounded"
+                          />
+                          <Label htmlFor="allowOvertime">Permitir Horas Extra</Label>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-6">
+                      <Button variant="outline" onClick={() => setIsShiftPatternDialogOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          if (!shiftPatternForm.name || !shiftPatternForm.displayName || !shiftPatternForm.startTime || !shiftPatternForm.endTime) {
+                            toast({ title: "Error", description: "Por favor complete todos los campos requeridos", variant: "destructive" });
+                            return;
+                          }
+
+                          const patternData = {
+                            ...shiftPatternForm,
+                            breakDuration: parseInt(shiftPatternForm.breakDuration.toString()) || 0,
+                            overtimeRate: parseFloat(shiftPatternForm.overtimeRate) || 1.5,
+                            isActive: true
+                          };
+
+                          if (editingShiftPattern) {
+                            updateShiftPatternMutation.mutate({ 
+                              patternId: editingShiftPattern.id, 
+                              patternData 
+                            });
+                          } else {
+                            createShiftPatternMutation.mutate(patternData);
+                          }
+                          setIsShiftPatternDialogOpen(false);
+                        }}
+                        disabled={createShiftPatternMutation.isPending || updateShiftPatternMutation.isPending}
+                      >
+                        {editingShiftPattern ? 'Actualizar' : 'Crear'} Patrón
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
                 {/* Time Tracking & Attendance */}
                 {shiftTabActive === 'tracking' && (

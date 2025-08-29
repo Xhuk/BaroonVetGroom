@@ -61,6 +61,11 @@ import {
   salesOrderItems,
   externalServiceSubscriptions,
   followUpTasks,
+  shiftPatterns,
+  shiftAssignments,
+  shiftRotations,
+  rotationTeams,
+  rotationSchedules,
   type User,
   type UpsertUser,
   type Company,
@@ -173,6 +178,12 @@ import {
   type InsertReceiptTemplate,
   type FollowUpTask,
   type InsertFollowUpTask,
+  type ShiftPattern,
+  type InsertShiftPattern,
+  type ShiftAssignment,
+  type InsertShiftAssignment,
+  type ShiftRotation,
+  type InsertShiftRotation,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
@@ -599,6 +610,78 @@ export class DatabaseStorage implements IStorage {
   // Staff operations
   async getStaff(tenantId: string): Promise<Staff[]> {
     return await db.select().from(staff).where(eq(staff.tenantId, tenantId));
+  }
+
+  // Shift Pattern methods
+  async getShiftPatterns(tenantId: string): Promise<ShiftPattern[]> {
+    return await db.select().from(shiftPatterns).where(eq(shiftPatterns.tenantId, tenantId));
+  }
+
+  async createShiftPattern(patternData: InsertShiftPattern): Promise<ShiftPattern> {
+    const [pattern] = await db.insert(shiftPatterns).values(patternData).returning();
+    return pattern;
+  }
+
+  async updateShiftPattern(patternId: string, patternData: Partial<InsertShiftPattern>): Promise<ShiftPattern> {
+    const [pattern] = await db.update(shiftPatterns)
+      .set(patternData)
+      .where(eq(shiftPatterns.id, patternId))
+      .returning();
+    return pattern;
+  }
+
+  async deleteShiftPattern(patternId: string): Promise<void> {
+    await db.delete(shiftPatterns).where(eq(shiftPatterns.id, patternId));
+  }
+
+  // Shift Assignment methods
+  async getShiftAssignments(tenantId: string, startDate?: string, endDate?: string, staffId?: string): Promise<ShiftAssignment[]> {
+    let query = db.select().from(shiftAssignments).where(eq(shiftAssignments.tenantId, tenantId));
+    
+    if (startDate && endDate) {
+      query = query.where(and(
+        gte(shiftAssignments.assignedDate, startDate),
+        lte(shiftAssignments.assignedDate, endDate)
+      ));
+    }
+    
+    if (staffId) {
+      query = query.where(eq(shiftAssignments.staffId, staffId));
+    }
+    
+    return await query;
+  }
+
+  async createShiftAssignment(assignmentData: InsertShiftAssignment): Promise<ShiftAssignment> {
+    const [assignment] = await db.insert(shiftAssignments).values(assignmentData).returning();
+    return assignment;
+  }
+
+  async updateShiftAssignment(assignmentId: string, assignmentData: Partial<InsertShiftAssignment>): Promise<ShiftAssignment> {
+    const [assignment] = await db.update(shiftAssignments)
+      .set(assignmentData)
+      .where(eq(shiftAssignments.id, assignmentId))
+      .returning();
+    return assignment;
+  }
+
+  async deleteShiftAssignment(assignmentId: string): Promise<void> {
+    await db.delete(shiftAssignments).where(eq(shiftAssignments.id, assignmentId));
+  }
+
+  // Shift Rotation methods
+  async getShiftRotations(tenantId: string): Promise<ShiftRotation[]> {
+    return await db.select().from(shiftRotations).where(eq(shiftRotations.tenantId, tenantId));
+  }
+
+  async createShiftRotation(rotationData: InsertShiftRotation): Promise<ShiftRotation> {
+    const [rotation] = await db.insert(shiftRotations).values(rotationData).returning();
+    return rotation;
+  }
+
+  async generateRotationSchedule(rotationId: string, weeksToGenerate: number): Promise<any[]> {
+    // This is a placeholder - would implement the rotation generation logic
+    return [];
   }
 
   async createStaff(staffMember: InsertStaff): Promise<Staff> {
