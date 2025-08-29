@@ -185,6 +185,8 @@ export const staff = pgTable("staff", {
   infonavitPercentage: decimal("infonavit_percentage", { precision: 4, scale: 2 }).default("0.00"),
   fonacotEnabled: boolean("fonacot_enabled").default(false),
   fonacotAmount: decimal("fonacot_amount", { precision: 10, scale: 2 }).default("0.00"),
+  paymentFrequency: varchar("payment_frequency").default("monthly"), // weekly, biweekly, monthly
+  lastPaymentDate: timestamp("last_payment_date"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

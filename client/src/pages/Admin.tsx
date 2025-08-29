@@ -263,6 +263,18 @@ function Admin() {
   // Dialog states
   const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
+  
+  // Payroll configuration state
+  const [isPayrollConfigOpen, setIsPayrollConfigOpen] = useState(false);
+  const [isEmployeePayrollOpen, setIsEmployeePayrollOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [payrollSettings, setPayrollSettings] = useState({
+    isrEnabled: true,
+    imssEnabled: true,
+    infonavitEnabled: false,
+    fonacotEnabled: false,
+    paymentFrequency: 'monthly'
+  });
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isStaffDialogOpen, setIsStaffDialogOpen] = useState(false);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
@@ -307,7 +319,6 @@ function Admin() {
   
   // Salary configuration dialog state
   const [isSalaryConfigOpen, setIsSalaryConfigOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showAdvancedCalculations, setShowAdvancedCalculations] = useState(false);
   const [salaryConfigData, setSalaryConfigData] = useState({
     basicSalary: 0,
@@ -2380,173 +2391,6 @@ function Admin() {
               </div>
             </TabsContent>
 
-                        <div className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id="isrEnabled"
-                                checked={salaryConfigData.isrEnabled}
-                                onChange={(e) => setSalaryConfigData(prev => ({
-                                  ...prev,
-                                  isrEnabled: e.target.checked
-                                }))}
-                                className="rounded"
-                              />
-                              <Label htmlFor="isrEnabled" className="font-medium">ISR (Impuesto Sobre la Renta)</Label>
-                            </div>
-                            {showAdvancedCalculations && (
-                              <div className="text-sm text-gray-600">
-                                Calculado: ${calculateISR(salaryConfigData.basicSalary).toFixed(2)} mensual
-                              </div>
-                            )}
-                          </div>
-                          {showAdvancedCalculations && salaryConfigData.isrEnabled && (
-                            <div className="text-xs text-gray-500 bg-gray-50 dark:bg-gray-800 p-3 rounded">
-                              <p><strong>Tabla ISR 2024:</strong> Se calcula automáticamente según los brackets fiscales vigentes.</p>
-                              <p>Salario anual: ${(salaryConfigData.basicSalary * 12).toLocaleString()}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* IMSS Section */}
-                        <div className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id="imssEnabled"
-                                checked={salaryConfigData.imssEnabled}
-                                onChange={(e) => setSalaryConfigData(prev => ({
-                                  ...prev,
-                                  imssEnabled: e.target.checked
-                                }))}
-                                className="rounded"
-                              />
-                              <Label htmlFor="imssEnabled" className="font-medium">IMSS (Seguro Social)</Label>
-                            </div>
-                            {showAdvancedCalculations && (
-                              <div className="text-sm text-gray-600">
-                                Empleado: ${(salaryConfigData.basicSalary * salaryConfigData.imssEmployeePercentage / 100).toFixed(2)} 
-                                | Patrón: ${(salaryConfigData.basicSalary * salaryConfigData.imssEmployerPercentage / 100).toFixed(2)}
-                              </div>
-                            )}
-                          </div>
-                          {showAdvancedCalculations && salaryConfigData.imssEnabled && (
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label>Porcentaje Empleado (%)</Label>
-                                <Input
-                                  type="number"
-                                  step="0.001"
-                                  value={salaryConfigData.imssEmployeePercentage}
-                                  onChange={(e) => setSalaryConfigData(prev => ({
-                                    ...prev,
-                                    imssEmployeePercentage: parseFloat(e.target.value) || 0
-                                  }))}
-                                  className="text-sm"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Legal: 2.375% (cuotas obrero-patronales)</p>
-                              </div>
-                              <div>
-                                <Label>Porcentaje Patrón (%)</Label>
-                                <Input
-                                  type="number"
-                                  step="0.001"
-                                  value={salaryConfigData.imssEmployerPercentage}
-                                  onChange={(e) => setSalaryConfigData(prev => ({
-                                    ...prev,
-                                    imssEmployerPercentage: parseFloat(e.target.value) || 0
-                                  }))}
-                                  className="text-sm"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Legal: 10.525% (cuotas patronales)</p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Infonavit Section */}
-                        <div className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id="infonavitEnabled"
-                                checked={salaryConfigData.infonavitEnabled}
-                                onChange={(e) => setSalaryConfigData(prev => ({
-                                  ...prev,
-                                  infonavitEnabled: e.target.checked
-                                }))}
-                                className="rounded"
-                              />
-                              <Label htmlFor="infonavitEnabled" className="font-medium">Infonavit</Label>
-                            </div>
-                            {showAdvancedCalculations && salaryConfigData.infonavitEnabled && (
-                              <div className="text-sm text-gray-600">
-                                ${(salaryConfigData.basicSalary * salaryConfigData.infonavitPercentage / 100).toFixed(2)} mensual
-                              </div>
-                            )}
-                          </div>
-                          {showAdvancedCalculations && salaryConfigData.infonavitEnabled && (
-                            <div>
-                              <Label>Porcentaje de descuento (%)</Label>
-                              <Input
-                                type="number"
-                                step="0.1"
-                                max="5"
-                                value={salaryConfigData.infonavitPercentage}
-                                onChange={(e) => setSalaryConfigData(prev => ({
-                                  ...prev,
-                                  infonavitPercentage: Math.min(5, parseFloat(e.target.value) || 0)
-                                }))}
-                                className="text-sm"
-                              />
-                              <p className="text-xs text-gray-500 mt-1">Máximo legal: 5% del salario</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Fonacot Section */}
-                        <div className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id="fonacotEnabled"
-                                checked={salaryConfigData.fonacotEnabled}
-                                onChange={(e) => setSalaryConfigData(prev => ({
-                                  ...prev,
-                                  fonacotEnabled: e.target.checked
-                                }))}
-                                className="rounded"
-                              />
-                              <Label htmlFor="fonacotEnabled" className="font-medium">Fonacot</Label>
-                            </div>
-                            {showAdvancedCalculations && salaryConfigData.fonacotEnabled && (
-                              <div className="text-sm text-gray-600">
-                                ${salaryConfigData.fonacotAmount.toFixed(2)} mensual
-                              </div>
-                            )}
-                          </div>
-                          {showAdvancedCalculations && salaryConfigData.fonacotEnabled && (
-                            <div>
-                              <Label>Monto mensual de descuento</Label>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={salaryConfigData.fonacotAmount}
-                                onChange={(e) => setSalaryConfigData(prev => ({
-                                  ...prev,
-                                  fonacotAmount: parseFloat(e.target.value) || 0
-                                }))}
-                                placeholder="$0.00"
-                                className="text-sm"
-                              />
-                              <p className="text-xs text-gray-500 mt-1">Monto fijo según crédito autorizado</p>
-                            </div>
-                          )}
-                        </div>
 
                 
             {/* Services Management Tab */}
@@ -3972,8 +3816,11 @@ function Admin() {
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleOpenBasicSalaryEdit(employee)}
-                                  title="Editar salario básico"
+                                  onClick={() => {
+                                    setSelectedEmployee(employee);
+                                    setIsEmployeePayrollOpen(true);
+                                  }}
+                                  title="Editar configuración de nómina"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </Button>
@@ -4009,7 +3856,7 @@ function Admin() {
                   <Button 
                     variant="outline"
                     className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                    onClick={() => window.location.href = '/admin/salary-config'}
+                    onClick={() => setIsPayrollConfigOpen(true)}
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     Configurar
@@ -4782,6 +4629,287 @@ function Admin() {
               </TabsContent>
             )}
           </Tabs>
+
+          {/* General Payroll Configuration Modal */}
+          <Dialog open={isPayrollConfigOpen} onOpenChange={setIsPayrollConfigOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Configuración General de Nómina</DialogTitle>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Configura los parámetros generales para el cálculo de nómina
+                </p>
+              </DialogHeader>
+              <div className="space-y-6">
+                {/* Default Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Configuración por Defecto</h3>
+                  
+                  {/* ISR Configuration */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="defaultISR"
+                          checked={payrollSettings.isrEnabled}
+                          onChange={(e) => setPayrollSettings(prev => ({
+                            ...prev,
+                            isrEnabled: e.target.checked
+                          }))}
+                          className="rounded"
+                        />
+                        <Label htmlFor="defaultISR" className="font-medium">ISR (Impuesto Sobre la Renta)</Label>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Se aplicará automáticamente a nuevos empleados según la tabla ISR 2024
+                    </p>
+                  </div>
+
+                  {/* IMSS Configuration */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="defaultIMSS"
+                          checked={payrollSettings.imssEnabled}
+                          onChange={(e) => setPayrollSettings(prev => ({
+                            ...prev,
+                            imssEnabled: e.target.checked
+                          }))}
+                          className="rounded"
+                        />
+                        <Label htmlFor="defaultIMSS" className="font-medium">IMSS (Seguro Social)</Label>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Empleado: 2.375% | Patrón: 10.525% (según ley vigente)
+                    </p>
+                  </div>
+
+                  {/* Payment Frequency */}
+                  <div className="border rounded-lg p-4">
+                    <Label className="font-medium mb-3 block">Frecuencia de Pago por Defecto</Label>
+                    <Select 
+                      value={payrollSettings.paymentFrequency}
+                      onValueChange={(value) => setPayrollSettings(prev => ({
+                        ...prev,
+                        paymentFrequency: value
+                      }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="biweekly">Quincenal</SelectItem>
+                        <SelectItem value="monthly">Mensual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button variant="outline" onClick={() => setIsPayrollConfigOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      toast({
+                        title: "Configuración guardada",
+                        description: "La configuración general de nómina ha sido actualizada",
+                      });
+                      setIsPayrollConfigOpen(false);
+                    }}
+                  >
+                    Guardar Configuración
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Individual Employee Payroll Modal */}
+          <Dialog open={isEmployeePayrollOpen} onOpenChange={setIsEmployeePayrollOpen}>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Configuración de Nómina - {selectedEmployee?.name}</DialogTitle>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Configura salario y retenciones fiscales para este empleado
+                </p>
+              </DialogHeader>
+              {selectedEmployee && (
+                <div className="space-y-6">
+                  {/* Employee Info */}
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                        <span className="text-lg font-medium text-blue-600 dark:text-blue-300">
+                          {selectedEmployee.name?.split(' ').map((n: string) => n[0]).join('') || '??'}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-medium">{selectedEmployee.name}</h3>
+                        <Badge variant="outline">{selectedEmployee.role}</Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Salary Configuration */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Configuración Salarial</h3>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Salario Base Mensual</Label>
+                        <Input
+                          type="number"
+                          placeholder="$15,000.00"
+                          defaultValue={selectedEmployee.basicSalary || '15000'}
+                          className="text-lg font-medium"
+                        />
+                      </div>
+                      <div>
+                        <Label>Frecuencia de Pago</Label>
+                        <Select defaultValue={selectedEmployee.paymentFrequency || 'monthly'}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly">Semanal</SelectItem>
+                            <SelectItem value="biweekly">Quincenal</SelectItem>
+                            <SelectItem value="monthly">Mensual</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tax Configuration */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Retenciones Fiscales</h3>
+                    
+                    {/* ISR Section */}
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <input
+                          type="checkbox"
+                          id="empISR"
+                          defaultChecked={selectedEmployee.isrEnabled !== false}
+                          className="rounded"
+                        />
+                        <Label htmlFor="empISR" className="font-medium">ISR (Impuesto Sobre la Renta)</Label>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Se calcula automáticamente según la tabla ISR 2024 vigente
+                      </p>
+                    </div>
+
+                    {/* IMSS Section */}
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <input
+                          type="checkbox"
+                          id="empIMSS"
+                          defaultChecked={selectedEmployee.imssEnabled !== false}
+                          className="rounded"
+                        />
+                        <Label htmlFor="empIMSS" className="font-medium">IMSS (Seguro Social)</Label>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 mt-3">
+                        <div>
+                          <Label className="text-sm">Porcentaje Empleado (%)</Label>
+                          <Input
+                            type="number"
+                            step="0.001"
+                            defaultValue={selectedEmployee.imssEmployeePercentage || '2.375'}
+                            className="text-sm"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Legal: 2.375%</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm">Porcentaje Patrón (%)</Label>
+                          <Input
+                            type="number"
+                            step="0.001"
+                            defaultValue={selectedEmployee.imssEmployerPercentage || '10.525'}
+                            className="text-sm"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Legal: 10.525%</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Infonavit Section */}
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <input
+                          type="checkbox"
+                          id="empInfonavit"
+                          defaultChecked={selectedEmployee.infonavitEnabled || false}
+                          className="rounded"
+                        />
+                        <Label htmlFor="empInfonavit" className="font-medium">Infonavit</Label>
+                      </div>
+                      <div>
+                        <Label className="text-sm">Porcentaje de descuento (%)</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          max="5"
+                          defaultValue={selectedEmployee.infonavitPercentage || '0'}
+                          className="text-sm"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Máximo legal: 5% del salario</p>
+                      </div>
+                    </div>
+
+                    {/* Fonacot Section */}
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <input
+                          type="checkbox"
+                          id="empFonacot"
+                          defaultChecked={selectedEmployee.fonacotEnabled || false}
+                          className="rounded"
+                        />
+                        <Label htmlFor="empFonacot" className="font-medium">Fonacot</Label>
+                      </div>
+                      <div>
+                        <Label className="text-sm">Monto mensual de descuento</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          defaultValue={selectedEmployee.fonacotAmount || '0'}
+                          placeholder="$0.00"
+                          className="text-sm"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Monto fijo según crédito autorizado</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4">
+                    <Button variant="outline" onClick={() => setIsEmployeePayrollOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        toast({
+                          title: "Configuración guardada",
+                          description: `Configuración de nómina actualizada para ${selectedEmployee.name}`,
+                        });
+                        setIsEmployeePayrollOpen(false);
+                      }}
+                    >
+                      Guardar Cambios
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
     </div>
