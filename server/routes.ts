@@ -777,9 +777,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Bulk shift assignment creation for multiple days/staff
   app.post('/api/shift-assignments/bulk', isAuthenticated, async (req: any, res) => {
     try {
-      const { tenantId, assignments } = req.body;
-      const createdAssignments = await storage.bulkCreateShiftAssignments(tenantId, assignments);
-      res.json(createdAssignments);
+      // TODO: Implement bulkCreateShiftAssignments in storage interface
+      res.status(501).json({ message: "Bulk shift assignment creation not implemented yet" });
     } catch (error) {
       console.error("Error bulk creating shift assignments:", error);
       res.status(500).json({ message: "Failed to create bulk shift assignments" });
@@ -789,9 +788,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Time Tracking - Clock in/out and break tracking
   app.post('/api/time-entries/clock-in', isAuthenticated, async (req: any, res) => {
     try {
-      const timeEntryData = req.body;
-      const clockInEntry = await storage.clockIn(timeEntryData);
-      res.json(clockInEntry);
+      // TODO: Implement clockIn in storage interface
+      res.status(501).json({ message: "Clock in functionality not implemented yet" });
     } catch (error) {
       console.error("Error clocking in:", error);
       res.status(500).json({ message: "Failed to clock in" });
@@ -800,9 +798,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/time-entries/clock-out', isAuthenticated, async (req: any, res) => {
     try {
-      const timeEntryData = req.body;
-      const clockOutEntry = await storage.clockOut(timeEntryData);
-      res.json(clockOutEntry);
+      // TODO: Implement clockOut in storage interface
+      res.status(501).json({ message: "Clock out functionality not implemented yet" });
     } catch (error) {
       console.error("Error clocking out:", error);
       res.status(500).json({ message: "Failed to clock out" });
@@ -811,9 +808,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/time-entries/break-start', isAuthenticated, async (req: any, res) => {
     try {
-      const timeEntryData = req.body;
-      const breakEntry = await storage.startBreak(timeEntryData);
-      res.json(breakEntry);
+      // TODO: Implement startBreak in storage interface
+      res.status(501).json({ message: "Break start functionality not implemented yet" });
     } catch (error) {
       console.error("Error starting break:", error);
       res.status(500).json({ message: "Failed to start break" });
@@ -822,9 +818,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/time-entries/break-end', isAuthenticated, async (req: any, res) => {
     try {
-      const timeEntryData = req.body;
-      const breakEntry = await storage.endBreak(timeEntryData);
-      res.json(breakEntry);
+      // TODO: Implement endBreak in storage interface
+      res.status(501).json({ message: "Break end functionality not implemented yet" });
     } catch (error) {
       console.error("Error ending break:", error);
       res.status(500).json({ message: "Failed to end break" });
@@ -834,15 +829,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get time entries for staff member or tenant
   app.get('/api/time-entries/:tenantId', isAuthenticated, async (req: any, res) => {
     try {
-      const { tenantId } = req.params;
-      const { staffId, startDate, endDate } = req.query;
-      const timeEntries = await storage.getTimeEntries(
-        tenantId, 
-        staffId as string, 
-        startDate as string, 
-        endDate as string
-      );
-      res.json(timeEntries);
+      // TODO: Implement getTimeEntries in storage interface
+      res.status(501).json({ message: "Time entries retrieval not implemented yet" });
     } catch (error) {
       console.error("Error fetching time entries:", error);
       res.status(500).json({ message: "Failed to fetch time entries" });
@@ -852,26 +840,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Calendar sharing endpoint for personnel to view their schedules
   app.get('/api/staff-calendar/:staffId/export', async (req: any, res) => {
     try {
-      const { staffId } = req.params;
-      const { startDate, endDate, format = 'json' } = req.query;
-      
-      const calendarData = await storage.getStaffScheduleCalendar(
-        staffId, 
-        startDate as string, 
-        endDate as string
-      );
-
-      if (format === 'ical') {
-        // Generate iCal format for calendar apps
-        const icalData = await storage.generateStaffICalendar(staffId, startDate as string, endDate as string);
-        res.set({
-          'Content-Type': 'text/calendar',
-          'Content-Disposition': `attachment; filename="schedule-${staffId}.ics"`
-        });
-        res.send(icalData);
-      } else {
-        res.json(calendarData);
-      }
+      // TODO: Implement getStaffScheduleCalendar and generateStaffICalendar in storage interface
+      res.status(501).json({ message: "Staff calendar export not implemented yet" });
     } catch (error) {
       console.error("Error exporting staff calendar:", error);
       res.status(500).json({ message: "Failed to export calendar" });

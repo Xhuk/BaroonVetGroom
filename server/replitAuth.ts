@@ -16,13 +16,60 @@ if (!process.env.REPLIT_DOMAINS) {
 
 const getOidcConfig = memoize(
   async () => {
-    return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
-    );
+    try {
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('OIDC discovery timeout')), 10000)
+      );
+      
+      const discoveryPromise = client.discovery(
+        new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
+        process.env.REPL_ID!
+      );
+      
+      return await Promise.race([discoveryPromise, timeoutPromise]) as any;
+    } catch (error) {
+      console.error('OIDC configuration failed:', error);
+      throw error;
+    }
   },
   { maxAge: 12 * 3600 * 1000 } // Cache for 12 hours instead of 1 hour
 );
+
+// Setup OIDC strategies asynchronously to avoid blocking server startup
+async function setupOidcStrategiesAsync() {
+  try {
+    console.log('🔐 Setting up OIDC authentication strategies...');
+    const config = await getOidcConfig();
+    
+    const verify: VerifyFunction = async (
+      tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
+      verified: passport.AuthenticateCallback
+    ) => {
+      const user = {};
+      updateUserSession(user, tokens);
+      await upsertUser(tokens.claims());
+      verified(null, user);
+    };
+
+    for (const domain of process.env.REPLIT_DOMAINS!.split(",")) {
+      const strategy = new Strategy(
+        {
+          name: `replitauth:${domain}`,
+          config,
+          scope: "openid email profile offline_access",
+          callbackURL: `https://${domain}/api/callback`,
+        },
+        verify,
+      );
+      passport.use(strategy);
+    }
+    
+    console.log('✅ OIDC authentication strategies setup complete');
+  } catch (error) {
+    console.error('❌ Failed to setup OIDC strategies, continuing with local auth only:', error);
+    // Server continues to work with local authentication only
+  }
+}
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -75,7 +122,8 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  const config = await getOidcConfig();
+  // Setup OIDC strategies asynchronously to avoid blocking server startup
+  setupOidcStrategiesAsync();
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
@@ -86,20 +134,6 @@ export async function setupAuth(app: Express) {
     await upsertUser(tokens.claims());
     verified(null, user);
   };
-
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
-    const strategy = new Strategy(
-      {
-        name: `replitauth:${domain}`,
-        config,
-        scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
-      },
-      verify,
-    );
-    passport.use(strategy);
-  }
 
   // Local strategy for demo AND vanilla users
   passport.use(new LocalStrategy({
@@ -157,6 +191,11 @@ export async function setupAuth(app: Express) {
       console.log(`🔐 Password validation: provided="${password}" stored="${storedUser.password}"`);
       
       // Verify password against stored hash
+      if (!storedUser.password) {
+        console.log(`❌ No password stored for user: ${email}`);
+        return done(null, false, { message: 'Invalid password' });
+      }
+      
       const isValidPassword = await storage.verifyPassword(password, storedUser.password);
       if (!isValidPassword) {
         console.log(`❌ Password mismatch for ${email}: provided="${password}" stored="${storedUser.password}"`);
@@ -207,17 +246,33 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    const strategyName = `replitauth:${req.hostname}`;
+    
+    // Try to authenticate with OIDC, fallback to local login if not available
+    try {
+      passport.authenticate(strategyName, {
+        prompt: "login consent",
+        scope: ["openid", "email", "profile", "offline_access"],
+      })(req, res, next);
+    } catch (error) {
+      console.log('OIDC strategy not available yet, redirecting to local login');
+      return res.redirect('/login-local');
+    }
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
-    })(req, res, next);
+    const strategyName = `replitauth:${req.hostname}`;
+    
+    // Try to authenticate with OIDC, fallback to local login if not available
+    try {
+      passport.authenticate(strategyName, {
+        successReturnToOrRedirect: "/",
+        failureRedirect: "/api/login",
+      })(req, res, next);
+    } catch (error) {
+      console.log('OIDC strategy not available for callback, redirecting to local login');
+      return res.redirect('/login-local');
+    }
   });
 
   // Local login endpoint for demo and vanilla users
