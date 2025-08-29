@@ -149,6 +149,64 @@ function Admin() {
   const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
   const [selectedShift, setSelectedShift] = useState<{staffId: string, dayIndex: number, current: string} | null>(null);
   const [isCalendarShareOpen, setIsCalendarShareOpen] = useState(false);
+  
+  // Dynamic shift data state
+  const [shiftData, setShiftData] = useState<Record<string, string[]>>({});
+  const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
+  const [newEmployeeName, setNewEmployeeName] = useState('');
+  const [newEmployeeRole, setNewEmployeeRole] = useState('');
+  
+  // Initialize shift data when staff loads
+  useEffect(() => {
+    if (staff && staff.length > 0 && Object.keys(shiftData).length === 0) {
+      const initialShifts: Record<string, string[]> = {};
+      
+      // Default shift patterns for initialization
+      const sampleShifts = [
+        ['9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', '9:00 - 18:00\n09 hrs', 'Week off', 'Week off'],
+        ['9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', 'Week off', 'Week off'],
+        ['On leave', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', '10:00 - 19:00\n09 hrs', '9:00 - 18:00\n09 hrs', 'Week off', 'Week off'],
+        ['9:00 - 18:00\n09 hrs', 'Flexible\n09 hrs', 'Flexible\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', 'Week off', 'Week off'],
+        ['+', '9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'On leave', 'Week off', 'Week off'],
+        ['9:00 - 18:00\n09 hrs', 'On leave', '9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '+', 'Week off', 'Week off']
+      ];
+      
+      staff.forEach((staffMember, index) => {
+        initialShifts[staffMember.id] = sampleShifts[index % sampleShifts.length];
+      });
+      
+      setShiftData(initialShifts);
+    }
+  }, [staff, shiftData]);
+  
+  // Function to update shift data
+  const updateShift = (staffId: string, dayIndex: number, newShift: string) => {
+    setShiftData(prev => ({
+      ...prev,
+      [staffId]: prev[staffId]?.map((shift, index) => 
+        index === dayIndex ? newShift : shift
+      ) || []
+    }));
+  };
+  
+  // Function to reassign shift between staff members
+  const reassignShift = (fromStaffId: string, toStaffId: string, dayIndex: number) => {
+    const fromShifts = shiftData[fromStaffId] || [];
+    const toShifts = shiftData[toStaffId] || [];
+    const shiftToMove = fromShifts[dayIndex];
+    
+    if (shiftToMove && shiftToMove !== '+' && shiftToMove !== 'Week off') {
+      setShiftData(prev => ({
+        ...prev,
+        [fromStaffId]: fromShifts.map((shift, index) => 
+          index === dayIndex ? '+' : shift
+        ),
+        [toStaffId]: toShifts.map((shift, index) => 
+          index === dayIndex ? shiftToMove : shift
+        )
+      }));
+    }
+  };
   const [rooms, setRooms] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
@@ -4483,18 +4541,8 @@ function Admin() {
                             </thead>
                             <tbody>
                               {staff?.map((staffMember, staffIndex) => {
-                                // Define sample shifts for demonstration
-                                const sampleShifts = [
-                                  ['9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', '9:00 - 18:00\n09 hrs', 'Week off', 'Week off'],
-                                  ['9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', 'Week off', 'Week off'],
-                                  ['On leave', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', '10:00 - 19:00\n09 hrs', '9:00 - 18:00\n09 hrs', 'Week off', 'Week off'],
-                                  ['9:00 - 18:00\n09 hrs', 'Flexible\n09 hrs', 'Flexible\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', 'Week off', 'Week off'],
-                                  ['+', '9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'On leave', 'Week off', 'Week off'],
-                                  ['9:00 - 18:00\n09 hrs', 'On leave', '9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '+', 'Week off', 'Week off']
-                                ];
-                                
                                 const employeeColors = ['bg-green-100', 'bg-blue-100', 'bg-yellow-100', 'bg-purple-100', 'bg-pink-100', 'bg-indigo-100'];
-                                const shifts = sampleShifts[staffIndex % sampleShifts.length];
+                                const shifts = shiftData[staffMember.id] || ['+', '+', '+', '+', '+', 'Week off', 'Week off'];
                                 
                                 return (
                                   <tr key={staffMember.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30">
@@ -4594,8 +4642,11 @@ function Admin() {
                             <button 
                               className="w-full p-3 text-left border rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                               onClick={() => {
-                                toast({ title: "Turno Asignado", description: "Turno Matutino (08:00 - 16:00)" });
-                                setIsShiftDialogOpen(false);
+                                if (selectedShift) {
+                                  updateShift(selectedShift.staffId, selectedShift.dayIndex, "08:00 - 16:00\n08 hrs");
+                                  toast({ title: "Turno Asignado", description: "Turno Matutino (08:00 - 16:00)" });
+                                  setIsShiftDialogOpen(false);
+                                }
                               }}
                             >
                               <div className="flex items-center gap-2">
@@ -4610,8 +4661,11 @@ function Admin() {
                             <button 
                               className="w-full p-3 text-left border rounded-lg hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
                               onClick={() => {
-                                toast({ title: "Turno Asignado", description: "Turno Vespertino (16:00 - 00:00)" });
-                                setIsShiftDialogOpen(false);
+                                if (selectedShift) {
+                                  updateShift(selectedShift.staffId, selectedShift.dayIndex, "16:00 - 00:00\n08 hrs");
+                                  toast({ title: "Turno Asignado", description: "Turno Vespertino (16:00 - 00:00)" });
+                                  setIsShiftDialogOpen(false);
+                                }
                               }}
                             >
                               <div className="flex items-center gap-2">
@@ -4626,8 +4680,11 @@ function Admin() {
                             <button 
                               className="w-full p-3 text-left border rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
                               onClick={() => {
-                                toast({ title: "Turno Asignado", description: "Turno Nocturno (00:00 - 08:00)" });
-                                setIsShiftDialogOpen(false);
+                                if (selectedShift) {
+                                  updateShift(selectedShift.staffId, selectedShift.dayIndex, "00:00 - 08:00\n08 hrs");
+                                  toast({ title: "Turno Asignado", description: "Turno Nocturno (00:00 - 08:00)" });
+                                  setIsShiftDialogOpen(false);
+                                }
                               }}
                             >
                               <div className="flex items-center gap-2">
@@ -4642,8 +4699,11 @@ function Admin() {
                             <button 
                               className="w-full p-3 text-left border rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                               onClick={() => {
-                                toast({ title: "Turno Flexible Asignado", description: "Horario flexible según necesidades" });
-                                setIsShiftDialogOpen(false);
+                                if (selectedShift) {
+                                  updateShift(selectedShift.staffId, selectedShift.dayIndex, "Flexible\n09 hrs");
+                                  toast({ title: "Turno Flexible Asignado", description: "Horario flexible según necesidades" });
+                                  setIsShiftDialogOpen(false);
+                                }
                               }}
                             >
                               <div className="flex items-center gap-2">
@@ -4658,8 +4718,11 @@ function Admin() {
                             <button 
                               className="w-full p-3 text-left border rounded-lg hover:bg-yellow-50 dark:hover:bg-yellow-900/30 transition-colors"
                               onClick={() => {
-                                toast({ title: "Permiso Asignado", description: "Día de permiso registrado" });
-                                setIsShiftDialogOpen(false);
+                                if (selectedShift) {
+                                  updateShift(selectedShift.staffId, selectedShift.dayIndex, "On leave");
+                                  toast({ title: "Permiso Asignado", description: "Día de permiso registrado" });
+                                  setIsShiftDialogOpen(false);
+                                }
                               }}
                             >
                               <div className="flex items-center gap-2">
@@ -4676,30 +4739,48 @@ function Admin() {
                             <div className="border-t pt-4">
                               <div className="text-sm font-medium mb-3">Reasignar a:</div>
                               <div className="space-y-2">
-                                {staff?.filter(s => s.id !== selectedShift?.staffId).slice(0, 3).map((otherStaff) => (
-                                  <button
-                                    key={otherStaff.id}
-                                    className="w-full p-2 text-left border rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                                    onClick={() => {
-                                      toast({ 
-                                        title: "Turno Reasignado", 
-                                        description: `Turno asignado a ${otherStaff.name}` 
-                                      });
-                                      setIsShiftDialogOpen(false);
-                                    }}
-                                  >
-                                    <div className="font-medium text-sm">{otherStaff.name}</div>
-                                    <div className="text-xs text-gray-500">{otherStaff.role}</div>
-                                  </button>
-                                ))}
+                                {(() => {
+                                  const otherStaff = staff?.filter(s => s.id !== selectedShift?.staffId) || [];
+                                  
+                                  if (otherStaff.length === 0) {
+                                    return (
+                                      <div className="p-3 text-center text-gray-500 bg-gray-50 dark:bg-gray-800 rounded">
+                                        No hay empleados por asignar
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  return otherStaff.slice(0, 3).map((staff) => (
+                                    <button
+                                      key={staff.id}
+                                      className="w-full p-2 text-left border rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                      onClick={() => {
+                                        if (selectedShift) {
+                                          reassignShift(selectedShift.staffId, staff.id, selectedShift.dayIndex);
+                                          toast({ 
+                                            title: "Turno Reasignado", 
+                                            description: `Turno asignado a ${staff.name}` 
+                                          });
+                                          setIsShiftDialogOpen(false);
+                                        }
+                                      }}
+                                    >
+                                      <div className="font-medium text-sm">{staff.name}</div>
+                                      <div className="text-xs text-gray-500">{staff.role}</div>
+                                    </button>
+                                  ));
+                                })()}
                               </div>
                               
                               <Button 
                                 variant="outline" 
                                 className="w-full mt-3 text-red-600 border-red-200 hover:bg-red-50"
                                 onClick={() => {
-                                  toast({ title: "Turno Eliminado", description: "Turno removido del calendario" });
-                                  setIsShiftDialogOpen(false);
+                                  if (selectedShift) {
+                                    updateShift(selectedShift.staffId, selectedShift.dayIndex, "+");
+                                    toast({ title: "Turno Eliminado", description: "Turno removido del calendario" });
+                                    setIsShiftDialogOpen(false);
+                                  }
                                 }}
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
