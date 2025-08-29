@@ -4160,22 +4160,11 @@ function Admin() {
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => handleOpenSalaryConfig(employee)}
-                                className="text-xs flex flex-col items-center py-2 px-3 h-auto"
-                                title={`Rango sugerido: ${
-                                  employee.role === 'veterinarian' ? '$25,000 - $50,000' :
-                                  employee.role === 'groomer' ? '$12,000 - $18,000' :
-                                  employee.role === 'receptionist' ? '$10,000 - $15,000' :
-                                  employee.role === 'technician' ? '$15,000 - $25,000' : '$10,000 - $20,000'
-                                }`}
+                                className="text-xs"
+                                title="Configurar salario y retenciones"
                               >
-                                <Edit className="w-3 h-3 mb-1" />
-                                <span>Configurar</span>
-                                <span className="text-xs text-gray-500 font-normal mt-1">
-                                  {employee.role === 'veterinarian' ? '$25K - $50K' :
-                                   employee.role === 'groomer' ? '$12K - $18K' :
-                                   employee.role === 'receptionist' ? '$10K - $15K' :
-                                   employee.role === 'technician' ? '$15K - $25K' : '$10K - $20K'}
-                                </span>
+                                <Edit className="w-4 h-4 mr-1" />
+                                Configurar
                               </Button>
                               <Button 
                                 variant="outline" 
