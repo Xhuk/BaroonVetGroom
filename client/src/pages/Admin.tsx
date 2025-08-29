@@ -150,6 +150,11 @@ function Admin() {
   const [selectedShift, setSelectedShift] = useState<{staffId: string, dayIndex: number, current: string} | null>(null);
   const [isCalendarShareOpen, setIsCalendarShareOpen] = useState(false);
   
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
+  const [staff, setStaff] = useState<any[]>([]);
+  
   // Dynamic shift data state
   const [shiftData, setShiftData] = useState<Record<string, string[]>>({});
   const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
@@ -207,10 +212,7 @@ function Admin() {
       }));
     }
   };
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [services, setServices] = useState<any[]>([]);
-  const [roles, setRoles] = useState<any[]>([]);
-  const [staff, setStaff] = useState<any[]>([]);
+  
   const [users, setUsers] = useState<any[]>([]);
   const [deliveryConfig, setDeliveryConfig] = useState({
     mode: 'wave',
@@ -4606,7 +4608,7 @@ function Admin() {
                           <Button 
                             variant="outline" 
                             className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
-                            onClick={() => toast({ title: "Agregar Empleado", description: "Funcionalidad para agregar empleado" })}
+                            onClick={() => setIsAddEmployeeDialogOpen(true)}
                           >
                             <Plus className="w-4 h-4 mr-2" />
                             Add Employee
@@ -4869,6 +4871,92 @@ function Admin() {
                               • El calendario se actualiza automáticamente<br/>
                               • Funciona en cualquier dispositivo móvil o computadora
                             </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    
+                    {/* Add Employee Dialog */}
+                    <Dialog open={isAddEmployeeDialogOpen} onOpenChange={setIsAddEmployeeDialogOpen}>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Agregar Empleado</DialogTitle>
+                          <DialogDescription>
+                            Agregar un nuevo empleado al tablero de turnos
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Nombre:</label>
+                            <Input
+                              placeholder="Nombre completo del empleado"
+                              value={newEmployeeName}
+                              onChange={(e) => setNewEmployeeName(e.target.value)}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Rol:</label>
+                            <Select value={newEmployeeRole} onValueChange={setNewEmployeeRole}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar rol" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Veterinario">Veterinario</SelectItem>
+                                <SelectItem value="Asistente">Asistente</SelectItem>
+                                <SelectItem value="Recepcionista">Recepcionista</SelectItem>
+                                <SelectItem value="Técnico">Técnico</SelectItem>
+                                <SelectItem value="Limpieza">Limpieza</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="flex gap-2 pt-4">
+                            <Button
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => {
+                                setIsAddEmployeeDialogOpen(false);
+                                setNewEmployeeName('');
+                                setNewEmployeeRole('');
+                              }}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button
+                              className="flex-1 bg-blue-600 hover:bg-blue-700"
+                              disabled={!newEmployeeName.trim() || !newEmployeeRole}
+                              onClick={() => {
+                                if (newEmployeeName.trim() && newEmployeeRole) {
+                                  const newEmployee = {
+                                    id: `new-staff-${Date.now()}`,
+                                    name: newEmployeeName.trim(),
+                                    role: newEmployeeRole
+                                  };
+                                  
+                                  // Add to staff list
+                                  setStaff(prev => [...prev, newEmployee]);
+                                  
+                                  // Initialize shift data for new employee
+                                  setShiftData(prev => ({
+                                    ...prev,
+                                    [newEmployee.id]: ['+', '+', '+', '+', '+', 'Week off', 'Week off']
+                                  }));
+                                  
+                                  toast({ 
+                                    title: "Empleado Agregado", 
+                                    description: `${newEmployee.name} ha sido agregado al tablero` 
+                                  });
+                                  
+                                  setIsAddEmployeeDialogOpen(false);
+                                  setNewEmployeeName('');
+                                  setNewEmployeeRole('');
+                                }
+                              }}
+                            >
+                              Agregar
+                            </Button>
                           </div>
                         </div>
                       </DialogContent>
