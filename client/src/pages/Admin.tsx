@@ -3761,17 +3761,18 @@ function Admin() {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">$2,450.00</div>
+                        <div className="text-2xl font-bold text-green-600">--</div>
                         <div className="text-sm text-green-800">Ingresos Totales</div>
                       </div>
                       <div className="text-center p-4 bg-red-50 rounded-lg">
-                        <div className="text-2xl font-bold text-red-600">$380.00</div>
+                        <div className="text-2xl font-bold text-red-600">--</div>
                         <div className="text-sm text-red-800">Gastos Totales</div>
                       </div>
                     </div>
                     <div className="text-center p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                      <div className="text-3xl font-bold text-blue-600">$2,070.00</div>
+                      <div className="text-3xl font-bold text-blue-600">--</div>
                       <div className="text-sm text-blue-800">Total Neto</div>
+                      <div className="text-xs text-gray-600 mt-2">Selecciona una fecha y ejecuta el corte diario</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -3787,41 +3788,10 @@ function Admin() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Pagos Recibidos</h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Consultas médicas</span>
-                            <span className="text-green-600">$1,200.00</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Servicios de grooming</span>
-                            <span className="text-green-600">$800.00</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Vacunaciones</span>
-                            <span className="text-green-600">$450.00</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="font-medium mb-2">Gastos Registrados</h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Medicamentos</span>
-                            <span className="text-red-600">$150.00</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Suministros</span>
-                            <span className="text-red-600">$120.00</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Otros gastos</span>
-                            <span className="text-red-600">$110.00</span>
-                          </div>
-                        </div>
-                      </div>
+                    <div className="text-center py-8 text-gray-500">
+                      <Receipt className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <div className="text-lg font-medium">No hay datos de transacciones</div>
+                      <div className="text-sm">Ejecuta el corte diario para ver el detalle de transacciones</div>
                     </div>
                   </div>
                 </CardContent>
