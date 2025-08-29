@@ -61,6 +61,7 @@ import DriverMobile from "@/pages/DriverMobile";
 import SalesDelivery from "@/pages/SalesDelivery";
 import ReceiptTemplatesAdmin from "@/pages/ReceiptTemplatesAdmin";
 import CompanyClinicAdmin from "@/pages/CompanyClinicAdmin";
+import { SalaryConfig } from "@/pages/SalaryConfig";
 import { InstantNavigation } from "@/components/InstantNavigation";
 import { DebugBanner } from "@/components/DebugBanner";
 import { DeviceBlocker } from "@/components/DeviceBlocker";
@@ -166,6 +167,7 @@ function Router() {
           <Route path="/admin/fraccionamientos" component={AdminFraccionamientos} />
           <Route path="/admin/receipt-templates" component={ReceiptTemplatesAdmin} />
           <Route path="/admin/company-clinic" component={CompanyClinicAdmin} />
+          <Route path="/admin/salary-config" component={SalaryConfig} />
           <Route path="/store" component={ServiceStore} />
           <Route path="/superadmin" component={SuperAdmin} />
           <Route path="/superadmin/monitoring" component={SuperAdminMonitoring} />

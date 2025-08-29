@@ -1235,22 +1235,17 @@ function Admin() {
     }
   }, [selectedEmployee, isSalaryConfigOpen]);
 
-  // Handle open salary configuration
-  const handleOpenSalaryConfig = (employee: any) => {
-    // Load existing salary configuration from employee data
-    setSalaryConfigData({
-      basicSalary: parseFloat(employee.basicSalary) || 0,
-      isrEnabled: employee.isrEnabled !== undefined ? employee.isrEnabled : true,
-      imssEnabled: employee.imssEnabled !== undefined ? employee.imssEnabled : true,
-      imssEmployeePercentage: parseFloat(employee.imssEmployeePercentage) || 2.375,
-      imssEmployerPercentage: parseFloat(employee.imssEmployerPercentage) || 10.525,
-      infonavitEnabled: employee.infonavitEnabled !== undefined ? employee.infonavitEnabled : false,
-      infonavitPercentage: parseFloat(employee.infonavitPercentage) || 0,
-      fonacotEnabled: employee.fonacotEnabled !== undefined ? employee.fonacotEnabled : false,
-      fonacotAmount: parseFloat(employee.fonacotAmount) || 0,
+  // Simple basic salary edit modal state
+  const [isBasicSalaryEditOpen, setIsBasicSalaryEditOpen] = useState(false);
+  const [basicSalaryEdit, setBasicSalaryEdit] = useState({ basicSalary: 0, employee: null });
+
+  // Handle open basic salary edit
+  const handleOpenBasicSalaryEdit = (employee: any) => {
+    setBasicSalaryEdit({
+      basicSalary: parseFloat(employee.basicSalary) || 15000,
+      employee: employee
     });
-    
-    setSelectedEmployee(employee);
+    setIsBasicSalaryEditOpen(true);
   };
 
   // Handle save salary configuration
@@ -2308,51 +2303,95 @@ function Admin() {
                   </DialogContent>
                 </Dialog>
 
-                {/* Salary Configuration Dialog */}
-                {isSalaryConfigOpen && (
+                {/* Basic Salary Edit Dialog */}
+                {isBasicSalaryEditOpen && (
                   <div className="fixed inset-0 z-[9999] flex items-center justify-center">
                     {/* Overlay */}
                     <div 
                       className="absolute inset-0 bg-black bg-opacity-50" 
-                      onClick={() => setIsSalaryConfigOpen(false)}
+                      onClick={() => setIsBasicSalaryEditOpen(false)}
                     ></div>
                     {/* Modal Content */}
-                    <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl max-h-[90vh] overflow-y-auto w-full mx-4 p-6">
+                    <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
                       <div className="mb-6">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Configuración de Retenciones Salariales</h2>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Editar Salario Básico</h2>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {selectedEmployee?.name} - Configuración según leyes fiscales de México
+                          {basicSalaryEdit.employee?.name}
                         </p>
                       </div>
-                    
-                    {selectedEmployee && (
-                      <div className="space-y-6">
-                        {/* Basic Salary */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor="basicSalary">Salario Base Mensual *</Label>
-                            <Input
-                              id="basicSalary"
-                              type="number"
-                              value={salaryConfigData.basicSalary}
-                              onChange={(e) => setSalaryConfigData(prev => ({
-                                ...prev,
-                                basicSalary: parseFloat(e.target.value) || 0
-                              }))}
-                              placeholder="$0.00"
-                            />
-                          </div>
-                          <div className="flex items-center space-x-2 mt-6">
-                            <input
-                              type="checkbox"
-                              id="showAdvanced"
-                              checked={showAdvancedCalculations}
-                              onChange={(e) => setShowAdvancedCalculations(e.target.checked)}
-                              className="rounded"
-                            />
-                            <Label htmlFor="showAdvanced">Mostrar cálculos avanzados</Label>
-                          </div>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="basicSalary">Salario Base Mensual</Label>
+                          <Input
+                            id="basicSalary"
+                            type="number"
+                            value={basicSalaryEdit.basicSalary}
+                            onChange={(e) => setBasicSalaryEdit(prev => ({
+                              ...prev,
+                              basicSalary: parseFloat(e.target.value) || 0
+                            }))}
+                            placeholder="$15,000.00"
+                            className="text-lg font-medium"
+                          />
                         </div>
+                        
+                        <div className="flex justify-end gap-2 pt-4 border-t">
+                          <Button variant="outline" onClick={() => setIsBasicSalaryEditOpen(false)}>
+                            Cancelar
+                          </Button>
+                          <Button 
+                            onClick={async () => {
+                              if (basicSalaryEdit.employee && currentTenant) {
+                                try {
+                                  await apiRequest(`/api/staff/${basicSalaryEdit.employee.id}`, {
+                                    method: 'PATCH',
+                                    body: JSON.stringify({
+                                      basicSalary: basicSalaryEdit.basicSalary.toString(),
+                                    }),
+                                  });
+                                  
+                                  queryClient.invalidateQueries({ queryKey: ['/api', 'staff', currentTenant.id] });
+                                  setIsBasicSalaryEditOpen(false);
+                                  
+                                  toast({
+                                    title: "Salario Actualizado",
+                                    description: `Salario de ${basicSalaryEdit.employee.name} actualizado a $${basicSalaryEdit.basicSalary.toLocaleString()}`,
+                                  });
+                                } catch (error) {
+                                  console.error('Error updating basic salary:', error);
+                                  toast({
+                                    title: "Error",
+                                    description: "No se pudo actualizar el salario. Intenta de nuevo.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            Guardar
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Services Management Tab */}
+            <TabsContent value="services" className="space-y-6">
+              <div className="flex flex-col lg:flex-row gap-4 lg:justify-between lg:items-center">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Configuración de Servicios</h2>
+                  {totalFilteredServices !== services?.length && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Mostrando {totalFilteredServices} de {services?.length || 0} servicios
+                      {hasActiveFilters && ' (filtrado)'}
+                    </p>
+                  )}
+                </div>
 
                         {/* ISR Section */}
                         <div className="border rounded-lg p-4">
@@ -3997,8 +4036,8 @@ function Admin() {
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleOpenSalaryConfig(employee)}
-                                  title="Configurar retenciones salariales"
+                                  onClick={() => handleOpenBasicSalaryEdit(employee)}
+                                  title="Editar salario básico"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </Button>
@@ -4030,19 +4069,29 @@ function Admin() {
                     Configura salarios individuales y retenciones fiscales por empleado
                   </p>
                 </div>
-                <Button 
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => {
-                    // Calculate payroll for current period
-                    toast({
-                      title: "Procesando Nómina",
-                      description: "Calculando nómina del período actual...",
-                    });
-                  }}
-                >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Procesar Nómina
-                </Button>
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    onClick={() => window.location.href = '/admin/salary-config'}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Configurar
+                  </Button>
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => {
+                      // Calculate payroll for current period
+                      toast({
+                        title: "Procesando Nómina",
+                        description: "Calculando nómina del período actual...",
+                      });
+                    }}
+                  >
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Procesar Nómina
+                  </Button>
+                </div>
               </div>
 
               {/* Salary Overview Cards */}
@@ -4174,12 +4223,12 @@ function Admin() {
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                onClick={() => handleOpenSalaryConfig(employee)}
+                                onClick={() => handleOpenBasicSalaryEdit(employee)}
                                 className="text-xs"
-                                title="Configurar salario y retenciones"
+                                title="Editar salario básico"
                               >
                                 <Edit className="w-4 h-4 mr-1" />
-                                Configurar
+                                Editar
                               </Button>
                               <Button 
                                 variant="outline" 
