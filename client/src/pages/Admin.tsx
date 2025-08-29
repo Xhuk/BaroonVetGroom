@@ -230,28 +230,56 @@ function Admin() {
     overtimeRate: '1.50'
   });
   
-  // Initialize shift data when staff loads
+  // Initialize shift data from database when staff and patterns load
   useEffect(() => {
-    if (staff && staff.length > 0 && Object.keys(shiftData).length === 0) {
+    if (staff && staff.length > 0 && shiftPatternsData && Object.keys(shiftData).length === 0) {
       const initialShifts: Record<string, string[]> = {};
       
-      // Default shift patterns for initialization
-      const sampleShifts = [
-        ['9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', '9:00 - 18:00\n09 hrs', 'Week off', 'Week off'],
-        ['9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', 'Week off', 'Week off'],
-        ['On leave', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', '10:00 - 19:00\n09 hrs', '9:00 - 18:00\n09 hrs', 'Week off', 'Week off'],
-        ['9:00 - 18:00\n09 hrs', 'Flexible\n09 hrs', 'Flexible\n09 hrs', '10:00 - 19:00\n09 hrs', 'Flexible\n09 hrs', 'Week off', 'Week off'],
-        ['+', '9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '10:00 - 19:00\n09 hrs', 'On leave', 'Week off', 'Week off'],
-        ['9:00 - 18:00\n09 hrs', 'On leave', '9:00 - 18:00\n09 hrs', '9:00 - 18:00\n09 hrs', '+', 'Week off', 'Week off']
+      // Create pattern lookup by name for easy access
+      const patternLookup = (shiftPatternsData || []).reduce((acc: any, pattern: any) => {
+        acc[pattern.name] = pattern;
+        return acc;
+      }, {});
+      
+      // Generate database-driven shift assignments for current week
+      const sampleShiftAssignments = [
+        ['morning_shift', 'morning_shift', 'afternoon_shift', 'flexible_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
+        ['morning_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
+        ['leave_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
+        ['morning_shift', 'flexible_shift', 'flexible_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
+        ['+', 'morning_shift', 'morning_shift', 'afternoon_shift', 'leave_shift', 'weekend_off', 'weekend_off'],
+        ['morning_shift', 'leave_shift', 'morning_shift', 'morning_shift', '+', 'weekend_off', 'weekend_off']
       ];
       
       staff.forEach((staffMember, index) => {
-        initialShifts[staffMember.id] = sampleShifts[index % sampleShifts.length];
+        const assignments = sampleShiftAssignments[index % sampleShiftAssignments.length];
+        initialShifts[staffMember.id] = assignments.map(patternName => {
+          if (patternName === '+') return '+';
+          
+          const pattern = patternLookup[patternName];
+          if (!pattern) return '+';
+          
+          // Format display based on pattern type
+          if (pattern.name === 'weekend_off') return 'Week off';
+          if (pattern.name === 'leave_shift') return 'On leave';
+          if (pattern.name === 'flexible_shift') return 'Flexible\n09 hrs';
+          
+          // Calculate hours difference
+          const start = new Date(`2000-01-01T${pattern.startTime}`);
+          const end = new Date(`2000-01-01T${pattern.endTime}`);
+          let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+          if (hours < 0) hours += 24; // Handle overnight shifts
+          
+          const breakHours = pattern.breakDuration / 60;
+          const workHours = Math.max(0, hours - breakHours);
+          
+          return `${pattern.startTime} - ${pattern.endTime}\n${workHours.toFixed(0).padStart(2, '0')} hrs`;
+        });
       });
       
       setShiftData(initialShifts);
     }
-  }, [staff, shiftData]);
+  }, [staff, shiftPatternsData, shiftData]);
   
   // Function to update shift data
   const updateShift = (staffId: string, dayIndex: number, newShift: string) => {
