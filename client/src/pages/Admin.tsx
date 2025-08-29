@@ -4095,6 +4095,7 @@ function Admin() {
                           className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         >
                           <div className="flex items-center justify-between">
+                            {/* Employee Info - Left Side */}
                             <div className="flex items-center gap-4">
                               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                                 <span className="text-sm font-medium text-blue-600 dark:text-blue-300">
@@ -4117,20 +4118,10 @@ function Admin() {
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-3 gap-4 text-center">
-                              {/* Salary Range by Role */}
-                              <div className="min-w-0">
-                                <div className="text-sm text-gray-500 mb-1">Rango Sugerido</div>
-                                <div className="text-sm font-medium">
-                                  {employee.role === 'veterinarian' ? '$25,000 - $50,000' :
-                                   employee.role === 'groomer' ? '$12,000 - $18,000' :
-                                   employee.role === 'receptionist' ? '$10,000 - $15,000' :
-                                   employee.role === 'technician' ? '$15,000 - $25,000' : '$10,000 - $20,000'}
-                                </div>
-                              </div>
-                              
+                            {/* Salary Info - Center */}
+                            <div className="flex items-center gap-8">
                               {/* Current Salary */}
-                              <div className="min-w-0">
+                              <div className="text-center min-w-0">
                                 <div className="text-sm text-gray-500 mb-1">Salario Actual</div>
                                 <div className="text-lg font-bold text-green-600">
                                   ${(parseFloat(employee.basicSalary) || 
@@ -4143,7 +4134,7 @@ function Admin() {
                               </div>
                               
                               {/* Net Salary (after deductions) */}
-                              <div className="min-w-0">
+                              <div className="text-center min-w-0">
                                 <div className="text-sm text-gray-500 mb-1">Neto Estimado</div>
                                 <div className="text-lg font-bold text-blue-600">
                                   ${(() => {
@@ -4161,28 +4152,40 @@ function Admin() {
                                   })()}
                                 </div>
                               </div>
-                              
-                              {/* Actions */}
-                              <div className="flex gap-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleOpenSalaryConfig(employee)}
-                                  title="Configurar salario y retenciones"
-                                >
-                                  <Edit className="w-4 h-4 mr-1" />
-                                  Configurar
-                                </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  className="border-green-200 text-green-700 hover:bg-green-50"
-                                  title="Ver recibo de nómina"
-                                >
-                                  <FileText className="w-4 h-4 mr-1" />
-                                  Recibo
-                                </Button>
-                              </div>
+                            </div>
+                            
+                            {/* Actions - Right Side */}
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleOpenSalaryConfig(employee)}
+                                className="text-xs flex flex-col items-center py-2 px-3 h-auto"
+                                title={`Rango sugerido: ${
+                                  employee.role === 'veterinarian' ? '$25,000 - $50,000' :
+                                  employee.role === 'groomer' ? '$12,000 - $18,000' :
+                                  employee.role === 'receptionist' ? '$10,000 - $15,000' :
+                                  employee.role === 'technician' ? '$15,000 - $25,000' : '$10,000 - $20,000'
+                                }`}
+                              >
+                                <Edit className="w-3 h-3 mb-1" />
+                                <span>Configurar</span>
+                                <span className="text-xs text-gray-500 font-normal mt-1">
+                                  {employee.role === 'veterinarian' ? '$25K - $50K' :
+                                   employee.role === 'groomer' ? '$12K - $18K' :
+                                   employee.role === 'receptionist' ? '$10K - $15K' :
+                                   employee.role === 'technician' ? '$15K - $25K' : '$10K - $20K'}
+                                </span>
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="text-xs border-green-200 text-green-700 hover:bg-green-50 flex flex-col items-center py-2 px-3 h-auto"
+                                title="Ver recibo de nómina"
+                              >
+                                <FileText className="w-3 h-3 mb-1" />
+                                <span>Recibo</span>
+                              </Button>
                             </div>
                           </div>
                           
