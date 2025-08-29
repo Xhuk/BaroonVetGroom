@@ -1231,17 +1231,12 @@ function Admin() {
   // Force modal open with useEffect
   useEffect(() => {
     if (selectedEmployee && !isSalaryConfigOpen) {
-      console.log('🔧 [ForceOpen] Opening modal for:', selectedEmployee.name);
       setIsSalaryConfigOpen(true);
     }
   }, [selectedEmployee, isSalaryConfigOpen]);
 
   // Handle open salary configuration
   const handleOpenSalaryConfig = (employee: any) => {
-    console.log('🔧 [Configurar] Button clicked for employee:', employee?.name);
-    console.log('🔧 [Configurar] Employee data:', employee);
-    console.log('🔧 [Configurar] Current modal state before:', isSalaryConfigOpen);
-    
     // Load existing salary configuration from employee data
     setSalaryConfigData({
       basicSalary: parseFloat(employee.basicSalary) || 0,
@@ -1255,7 +1250,6 @@ function Admin() {
       fonacotAmount: parseFloat(employee.fonacotAmount) || 0,
     });
     
-    console.log('🔧 [Configurar] Setting selected employee...');
     setSelectedEmployee(employee);
   };
 
@@ -2315,14 +2309,7 @@ function Admin() {
                 </Dialog>
 
                 {/* Salary Configuration Dialog */}
-                <Dialog 
-                  open={isSalaryConfigOpen} 
-                  onOpenChange={(open) => {
-                    console.log('🔧 [Dialog] onOpenChange called with:', open);
-                    console.log('🔧 [Dialog] Current state before change:', isSalaryConfigOpen);
-                    setIsSalaryConfigOpen(open);
-                  }}
-                >
+                <Dialog open={isSalaryConfigOpen} onOpenChange={setIsSalaryConfigOpen}>
                   <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto fixed z-50 bg-white dark:bg-gray-800 shadow-2xl">
                     <DialogHeader>
                       <DialogTitle>Configuración de Retenciones Salariales</DialogTitle>
