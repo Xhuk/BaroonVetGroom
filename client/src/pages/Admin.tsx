@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
+import jsPDF from 'jspdf';
 import { Header } from "@/components/Header";
 import { Navigation } from "@/components/Navigation";
 import { BackButton } from "@/components/BackButton";
@@ -309,6 +310,163 @@ function Admin() {
     if (annualSalary <= 766800) return ((annualSalary - 639600) * 0.2112 + 62817.28) / 12;
     if (annualSalary <= 1838800) return ((annualSalary - 766800) * 0.2352 + 89670.40) / 12;
     return ((annualSalary - 1838800) * 0.30 + 341876.32) / 12;
+  };
+
+  // Generate PDF payslip
+  const generatePayslipPDF = () => {
+    if (!selectedEmployee) return;
+    
+    const doc = new jsPDF();
+    const basicSalary = parseFloat(employeePayrollData.basicSalary || '0');
+    const isrDeduction = (payrollSettings.isrEnabled && employeePayrollData.isrEnabled) ? 
+      calculateISR(basicSalary) : 0;
+    const imssDeduction = (payrollSettings.imssEnabled && employeePayrollData.imssEnabled) ? 
+      (basicSalary * parseFloat(employeePayrollData.imssEmployeePercentage)) / 100 : 0;
+    const infonavitDeduction = employeePayrollData.infonavitEnabled ? 
+      (basicSalary * parseFloat(employeePayrollData.infonavitPercentage)) / 100 : 0;
+    const fonacotDeduction = employeePayrollData.fonacotEnabled ? 
+      parseFloat(employeePayrollData.fonacotAmount || '0') : 0;
+    const totalDeductions = isrDeduction + imssDeduction + infonavitDeduction + fonacotDeduction;
+    const netSalary = basicSalary - totalDeductions;
+    
+    // Header
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RECIBO DE NÓMINA', 105, 25, { align: 'center' });
+    
+    // Company Info
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${currentTenant?.companyName || 'Veterinaria'}`, 20, 45);
+    doc.text('RFC: VET123456ABC', 20, 52);
+    doc.text('Calle Principal 123, Ciudad', 20, 59);
+    
+    // Receipt Info
+    const receiptNumber = `NOM-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${selectedEmployee.id?.slice(-4)}`;
+    doc.text(`N° DE RECIBO: ${receiptNumber}`, 140, 45);
+    doc.text(`FECHA: ${new Date().toLocaleDateString('es-MX')}`, 140, 52);
+    doc.text(`PERÍODO: ${new Date().toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}`, 140, 59);
+    
+    // Employee Info
+    doc.setFont('helvetica', 'bold');
+    doc.text('EMPLEADO:', 20, 75);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Nombre: ${selectedEmployee.name}`, 20, 82);
+    doc.text(`Puesto: ${selectedEmployee.role}`, 20, 89);
+    doc.text(`ID: ${selectedEmployee.id}`, 20, 96);
+    
+    // Work Period Info
+    doc.setFont('helvetica', 'bold');
+    doc.text('PERÍODO DE TRABAJO:', 140, 75);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Días trabajados: 30', 140, 82);
+    doc.text('Horas trabajadas: 240', 140, 89);
+    doc.text('Faltas: 0', 140, 96);
+    
+    // Table Header
+    doc.setFont('helvetica', 'bold');
+    doc.text('CONCEPTO', 20, 115);
+    doc.text('PERCEPCIÓN', 120, 115);
+    doc.text('DEDUCCIÓN', 160, 115);
+    doc.line(20, 118, 190, 118);
+    
+    // Table Content
+    let yPos = 125;
+    doc.setFont('helvetica', 'normal');
+    
+    // Base Salary
+    doc.text('Salario Base Mensual', 20, yPos);
+    doc.text(`$${basicSalary.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, 120, yPos);
+    doc.text('-', 160, yPos);
+    yPos += 7;
+    
+    // ISR
+    if (payrollSettings.isrEnabled && employeePayrollData.isrEnabled) {
+      doc.text('ISR (Impuesto Sobre la Renta)', 20, yPos);
+      doc.text('-', 120, yPos);
+      doc.text(`$${isrDeduction.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, 160, yPos);
+      yPos += 7;
+    }
+    
+    // IMSS
+    if (payrollSettings.imssEnabled && employeePayrollData.imssEnabled) {
+      doc.text(`IMSS (Seguro Social) - ${employeePayrollData.imssEmployeePercentage}%`, 20, yPos);
+      doc.text('-', 120, yPos);
+      doc.text(`$${imssDeduction.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, 160, yPos);
+      yPos += 7;
+    }
+    
+    // Infonavit
+    if (employeePayrollData.infonavitEnabled && parseFloat(employeePayrollData.infonavitPercentage) > 0) {
+      doc.text(`Infonavit - ${employeePayrollData.infonavitPercentage}%`, 20, yPos);
+      doc.text('-', 120, yPos);
+      doc.text(`$${infonavitDeduction.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, 160, yPos);
+      yPos += 7;
+    }
+    
+    // Fonacot
+    if (employeePayrollData.fonacotEnabled && parseFloat(employeePayrollData.fonacotAmount) > 0) {
+      doc.text('Fonacot (Crédito)', 20, yPos);
+      doc.text('-', 120, yPos);
+      doc.text(`$${fonacotDeduction.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, 160, yPos);
+      yPos += 7;
+    }
+    
+    // Additional Deductions
+    yPos += 5;
+    doc.setFont('helvetica', 'bold');
+    doc.text('OTRAS DEDUCCIONES:', 20, yPos);
+    yPos += 7;
+    doc.setFont('helvetica', 'normal');
+    doc.text('• Faltas / Incidencias', 25, yPos);
+    doc.text('-', 120, yPos);
+    doc.text('$0.00', 160, yPos);
+    yPos += 7;
+    doc.text('• Retardos', 25, yPos);
+    doc.text('-', 120, yPos);
+    doc.text('$0.00', 160, yPos);
+    yPos += 7;
+    doc.text('• Préstamos de empresa', 25, yPos);
+    doc.text('-', 120, yPos);
+    doc.text('$0.00', 160, yPos);
+    yPos += 7;
+    doc.text('• Uniformes / Equipo', 25, yPos);
+    doc.text('-', 120, yPos);
+    doc.text('$0.00', 160, yPos);
+    
+    // Summary
+    yPos += 15;
+    doc.line(20, yPos, 190, yPos);
+    yPos += 10;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL PERCEPCIONES:', 20, yPos);
+    doc.text(`$${basicSalary.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, 120, yPos);
+    yPos += 7;
+    
+    doc.text('TOTAL DEDUCCIONES:', 20, yPos);
+    doc.text(`$${totalDeductions.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, 160, yPos);
+    yPos += 7;
+    
+    doc.setFontSize(12);
+    doc.text('NETO A PAGAR:', 20, yPos);
+    doc.text(`$${netSalary.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, 140, yPos);
+    
+    // Footer
+    yPos += 20;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Este recibo cumple con las disposiciones fiscales vigentes', 105, yPos, { align: 'center' });
+    doc.text(`Generado el ${new Date().toLocaleDateString('es-MX')} - Sistema VetGroom`, 105, yPos + 7, { align: 'center' });
+    
+    // Download PDF
+    const fileName = `Recibo_${selectedEmployee.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 7)}.pdf`;
+    doc.save(fileName);
+    
+    toast({
+      title: "PDF Generado",
+      description: `Recibo de nómina descargado: ${fileName}`,
+    });
   };
 
   // Save employee payroll configuration
@@ -5238,12 +5396,12 @@ function Admin() {
                     {/* Left side - Recibo button */}
                     <Button 
                       variant="secondary"
-                      onClick={() => setIsPayslipModalOpen(true)}
+                      onClick={generatePayslipPDF}
                       className="flex items-center gap-2"
                       data-testid="button-generate-payslip"
                     >
                       <Receipt className="w-4 h-4" />
-                      Generar Recibo
+                      Descargar Recibo PDF
                     </Button>
                     
                     {/* Right side - Save/Cancel buttons */}
@@ -5271,268 +5429,6 @@ function Admin() {
             </DialogContent>
           </Dialog>
 
-          {/* Payslip Modal */}
-          <Dialog open={isPayslipModalOpen} onOpenChange={setIsPayslipModalOpen}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Receipt className="w-5 h-5" />
-                  Recibo de Nómina - {selectedEmployee?.name}
-                </DialogTitle>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Período: {new Date().toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}
-                </p>
-              </DialogHeader>
-              {selectedEmployee && (
-                <div className="space-y-6">
-                  {/* Header Section */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-xl font-bold text-blue-900 dark:text-blue-100">RECIBO DE NÓMINA</h3>
-                        <div className="mt-4 space-y-1 text-sm">
-                          <div><strong>Empresa:</strong> {currentTenant?.companyName || 'Veterinaria'}</div>
-                          <div><strong>RFC:</strong> VET123456ABC</div>
-                          <div><strong>Dirección:</strong> Calle Principal 123, Ciudad</div>
-                        </div>
-                      </div>
-                      <div className="text-right text-sm">
-                        <div className="space-y-1">
-                          <div><strong>N° DE RECIBO:</strong> NOM-{new Date().getFullYear()}-{String(new Date().getMonth() + 1).padStart(2, '0')}-{selectedEmployee.id?.slice(-4)}</div>
-                          <div><strong>FECHA:</strong> {new Date().toLocaleDateString('es-MX')}</div>
-                          <div><strong>PERÍODO:</strong> {new Date().toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Employee Information */}
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                      <h4 className="font-medium mb-3">INFORMACIÓN DEL EMPLEADO</h4>
-                      <div className="space-y-2 text-sm">
-                        <div><strong>Nombre:</strong> {selectedEmployee.name}</div>
-                        <div><strong>Puesto:</strong> {selectedEmployee.role}</div>
-                        <div><strong>ID Empleado:</strong> {selectedEmployee.id}</div>
-                        <div><strong>Frecuencia:</strong> {
-                          employeePayrollData.paymentFrequency === 'weekly' ? 'Semanal' :
-                          employeePayrollData.paymentFrequency === 'biweekly' ? 'Quincenal' : 'Mensual'
-                        }</div>
-                      </div>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                      <h4 className="font-medium mb-3">PERÍODO DE PAGO</h4>
-                      <div className="space-y-2 text-sm">
-                        <div><strong>Días trabajados:</strong> 30</div>
-                        <div><strong>Horas trabajadas:</strong> 240</div>
-                        <div><strong>Faltas:</strong> 0</div>
-                        <div><strong>Incidencias:</strong> 0</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Salary Calculations */}
-                  <div className="border rounded-lg overflow-hidden">
-                    <div className="bg-gray-100 dark:bg-gray-700 p-4">
-                      <h4 className="font-medium">DETALLE DE PERCEPCIONES Y DEDUCCIONES</h4>
-                    </div>
-                    <div className="p-4">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-gray-200 dark:border-gray-700">
-                            <th className="text-left py-2 font-medium">CONCEPTO</th>
-                            <th className="text-right py-2 font-medium w-32">PERCEPCIÓN</th>
-                            <th className="text-right py-2 font-medium w-32">DEDUCCIÓN</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {/* Salary */}
-                          <tr className="border-b border-gray-100 dark:border-gray-700">
-                            <td className="py-2">Salario Base Mensual</td>
-                            <td className="text-right py-2 font-medium text-green-600">
-                              ${parseFloat(employeePayrollData.basicSalary || '0').toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                            </td>
-                            <td className="text-right py-2">-</td>
-                          </tr>
-                          
-                          {/* ISR */}
-                          {(payrollSettings.isrEnabled && employeePayrollData.isrEnabled) && (
-                            <tr className="border-b border-gray-100 dark:border-gray-700">
-                              <td className="py-2">ISR (Impuesto Sobre la Renta)</td>
-                              <td className="text-right py-2">-</td>
-                              <td className="text-right py-2 font-medium text-red-600">
-                                ${calculateISR(parseFloat(employeePayrollData.basicSalary || '0')).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                              </td>
-                            </tr>
-                          )}
-                          
-                          {/* IMSS */}
-                          {(payrollSettings.imssEnabled && employeePayrollData.imssEnabled) && (
-                            <tr className="border-b border-gray-100 dark:border-gray-700">
-                              <td className="py-2">IMSS (Seguro Social) - {employeePayrollData.imssEmployeePercentage}%</td>
-                              <td className="text-right py-2">-</td>
-                              <td className="text-right py-2 font-medium text-red-600">
-                                ${((parseFloat(employeePayrollData.basicSalary || '0') * parseFloat(employeePayrollData.imssEmployeePercentage)) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                              </td>
-                            </tr>
-                          )}
-                          
-                          {/* Infonavit */}
-                          {employeePayrollData.infonavitEnabled && parseFloat(employeePayrollData.infonavitPercentage) > 0 && (
-                            <tr className="border-b border-gray-100 dark:border-gray-700">
-                              <td className="py-2">Infonavit - {employeePayrollData.infonavitPercentage}%</td>
-                              <td className="text-right py-2">-</td>
-                              <td className="text-right py-2 font-medium text-red-600">
-                                ${((parseFloat(employeePayrollData.basicSalary || '0') * parseFloat(employeePayrollData.infonavitPercentage)) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                              </td>
-                            </tr>
-                          )}
-                          
-                          {/* Fonacot */}
-                          {employeePayrollData.fonacotEnabled && parseFloat(employeePayrollData.fonacotAmount) > 0 && (
-                            <tr className="border-b border-gray-100 dark:border-gray-700">
-                              <td className="py-2">Fonacot (Crédito)</td>
-                              <td className="text-right py-2">-</td>
-                              <td className="text-right py-2 font-medium text-red-600">
-                                ${parseFloat(employeePayrollData.fonacotAmount || '0').toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                              </td>
-                            </tr>
-                          )}
-                          
-                          {/* Additional Deductions Section */}
-                          <tr className="bg-gray-50 dark:bg-gray-800">
-                            <td className="py-2 font-medium">OTRAS DEDUCCIONES</td>
-                            <td className="text-right py-2">-</td>
-                            <td className="text-right py-2">-</td>
-                          </tr>
-                          
-                          <tr className="border-b border-gray-100 dark:border-gray-700">
-                            <td className="py-2 pl-4">• Faltas / Incidencias</td>
-                            <td className="text-right py-2">-</td>
-                            <td className="text-right py-2 font-medium text-red-600">$0.00</td>
-                          </tr>
-                          
-                          <tr className="border-b border-gray-100 dark:border-gray-700">
-                            <td className="py-2 pl-4">• Retardos</td>
-                            <td className="text-right py-2">-</td>
-                            <td className="text-right py-2 font-medium text-red-600">$0.00</td>
-                          </tr>
-                          
-                          <tr className="border-b border-gray-100 dark:border-gray-700">
-                            <td className="py-2 pl-4">• Préstamos de empresa</td>
-                            <td className="text-right py-2">-</td>
-                            <td className="text-right py-2 font-medium text-red-600">$0.00</td>
-                          </tr>
-                          
-                          <tr className="border-b border-gray-100 dark:border-gray-700">
-                            <td className="py-2 pl-4">• Uniformes / Equipo</td>
-                            <td className="text-right py-2">-</td>
-                            <td className="text-right py-2 font-medium text-red-600">$0.00</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* Summary Section */}
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-                    <div className="space-y-3">
-                      {(() => {
-                        const basicSalary = parseFloat(employeePayrollData.basicSalary || '0');
-                        const isrDeduction = (payrollSettings.isrEnabled && employeePayrollData.isrEnabled) ? 
-                          calculateISR(basicSalary) : 0;
-                        const imssDeduction = (payrollSettings.imssEnabled && employeePayrollData.imssEnabled) ? 
-                          (basicSalary * parseFloat(employeePayrollData.imssEmployeePercentage)) / 100 : 0;
-                        const infonavitDeduction = employeePayrollData.infonavitEnabled ? 
-                          (basicSalary * parseFloat(employeePayrollData.infonavitPercentage)) / 100 : 0;
-                        const fonacotDeduction = employeePayrollData.fonacotEnabled ? 
-                          parseFloat(employeePayrollData.fonacotAmount || '0') : 0;
-                        
-                        const totalDeductions = isrDeduction + imssDeduction + infonavitDeduction + fonacotDeduction;
-                        const netSalary = basicSalary - totalDeductions;
-                        
-                        return (
-                          <>
-                            <div className="flex justify-between text-sm">
-                              <span>TOTAL PERCEPCIONES:</span>
-                              <span className="font-medium text-green-600">
-                                ${basicSalary.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span>TOTAL DEDUCCIONES:</span>
-                              <span className="font-medium text-red-600">
-                                ${totalDeductions.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                              </span>
-                            </div>
-                            <hr className="border-gray-300 dark:border-gray-600" />
-                            <div className="flex justify-between text-lg font-bold">
-                              <span>NETO A PAGAR:</span>
-                              <span className="text-blue-600 dark:text-blue-400">
-                                ${netSalary.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                              </span>
-                            </div>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Footer Information */}
-                  <div className="text-center space-y-2">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Este recibo cumple con las disposiciones fiscales vigentes
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Generado el {new Date().toLocaleDateString('es-MX')} - Sistema VetGroom
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => window.print()}
-                      className="flex items-center gap-2"
-                      data-testid="button-print-payslip"
-                    >
-                      <Printer className="w-4 h-4" />
-                      Imprimir
-                    </Button>
-                    
-                    <div className="flex gap-3">
-                      <Button 
-                        variant="outline"
-                        onClick={() => {
-                          const payslipData = `RECIBO DE NÓMINA - ${selectedEmployee.name}\n` +
-                            `Período: ${new Date().toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}\n` +
-                            `Salario Base: $${employeePayrollData.basicSalary}\n` +
-                            `Neto a Pagar: $${(() => {
-                              const basicSalary = parseFloat(employeePayrollData.basicSalary || '0');
-                              const isrDeduction = (payrollSettings.isrEnabled && employeePayrollData.isrEnabled) ? calculateISR(basicSalary) : 0;
-                              const imssDeduction = (payrollSettings.imssEnabled && employeePayrollData.imssEnabled) ? (basicSalary * parseFloat(employeePayrollData.imssEmployeePercentage)) / 100 : 0;
-                              return (basicSalary - isrDeduction - imssDeduction).toFixed(2);
-                            })()}`;
-                          navigator.clipboard.writeText(payslipData);
-                          toast({
-                            title: "Copiado",
-                            description: "Resumen del recibo copiado al portapapeles",
-                          });
-                        }}
-                        className="flex items-center gap-2"
-                      >
-                        <Copy className="w-4 h-4" />
-                        Copiar
-                      </Button>
-                      <Button onClick={() => setIsPayslipModalOpen(false)}>
-                        Cerrar
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
         </div>
       </main>
     </div>
