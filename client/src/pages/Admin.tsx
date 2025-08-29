@@ -1230,6 +1230,10 @@ function Admin() {
 
   // Handle open salary configuration
   const handleOpenSalaryConfig = (employee: any) => {
+    console.log('🔧 [Configurar] Button clicked for employee:', employee?.name);
+    console.log('🔧 [Configurar] Employee data:', employee);
+    console.log('🔧 [Configurar] Current modal state before:', isSalaryConfigOpen);
+    
     setSelectedEmployee(employee);
     // Load existing salary configuration from employee data
     setSalaryConfigData({
@@ -1243,7 +1247,14 @@ function Admin() {
       fonacotEnabled: employee.fonacotEnabled !== undefined ? employee.fonacotEnabled : false,
       fonacotAmount: parseFloat(employee.fonacotAmount) || 0,
     });
+    
+    console.log('🔧 [Configurar] Setting modal to open...');
     setIsSalaryConfigOpen(true);
+    
+    // Debug after state change
+    setTimeout(() => {
+      console.log('🔧 [Configurar] Modal state after timeout:', isSalaryConfigOpen);
+    }, 100);
   };
 
   // Handle save salary configuration
