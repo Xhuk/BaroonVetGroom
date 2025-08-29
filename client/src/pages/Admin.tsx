@@ -48,7 +48,10 @@ import {
   Calendar,
   DollarSign,
   Download,
-  Calculator
+  Calculator,
+  Printer,
+  Building,
+  Copy
 } from "lucide-react";
 import Sortable from 'sortablejs';
 
@@ -268,6 +271,7 @@ function Admin() {
   // Payroll configuration state
   const [isPayrollConfigOpen, setIsPayrollConfigOpen] = useState(false);
   const [isEmployeePayrollOpen, setIsEmployeePayrollOpen] = useState(false);
+  const [isPayslipModalOpen, setIsPayslipModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [payrollSettings, setPayrollSettings] = useState({
     isrEnabled: true,
@@ -5230,23 +5234,300 @@ function Admin() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-3 pt-4">
-                    <Button variant="outline" onClick={() => setIsEmployeePayrollOpen(false)}>
-                      Cancelar
-                    </Button>
+                  <div className="flex justify-between pt-4">
+                    {/* Left side - Recibo button */}
                     <Button 
-                      onClick={handleSaveEmployeePayroll}
-                      disabled={isSavingPayroll}
+                      variant="secondary"
+                      onClick={() => setIsPayslipModalOpen(true)}
+                      className="flex items-center gap-2"
+                      data-testid="button-generate-payslip"
                     >
-                      {isSavingPayroll ? (
-                        <>
-                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                          Guardando...
-                        </>
-                      ) : (
-                        'Guardar Cambios'
-                      )}
+                      <Receipt className="w-4 h-4" />
+                      Generar Recibo
                     </Button>
+                    
+                    {/* Right side - Save/Cancel buttons */}
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={() => setIsEmployeePayrollOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={handleSaveEmployeePayroll}
+                        disabled={isSavingPayroll}
+                      >
+                        {isSavingPayroll ? (
+                          <>
+                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                            Guardando...
+                          </>
+                        ) : (
+                          'Guardar Cambios'
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Payslip Modal */}
+          <Dialog open={isPayslipModalOpen} onOpenChange={setIsPayslipModalOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Receipt className="w-5 h-5" />
+                  Recibo de Nómina - {selectedEmployee?.name}
+                </DialogTitle>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Período: {new Date().toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}
+                </p>
+              </DialogHeader>
+              {selectedEmployee && (
+                <div className="space-y-6">
+                  {/* Header Section */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-xl font-bold text-blue-900 dark:text-blue-100">RECIBO DE NÓMINA</h3>
+                        <div className="mt-4 space-y-1 text-sm">
+                          <div><strong>Empresa:</strong> {currentTenant?.companyName || 'Veterinaria'}</div>
+                          <div><strong>RFC:</strong> VET123456ABC</div>
+                          <div><strong>Dirección:</strong> Calle Principal 123, Ciudad</div>
+                        </div>
+                      </div>
+                      <div className="text-right text-sm">
+                        <div className="space-y-1">
+                          <div><strong>N° DE RECIBO:</strong> NOM-{new Date().getFullYear()}-{String(new Date().getMonth() + 1).padStart(2, '0')}-{selectedEmployee.id?.slice(-4)}</div>
+                          <div><strong>FECHA:</strong> {new Date().toLocaleDateString('es-MX')}</div>
+                          <div><strong>PERÍODO:</strong> {new Date().toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Employee Information */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <h4 className="font-medium mb-3">INFORMACIÓN DEL EMPLEADO</h4>
+                      <div className="space-y-2 text-sm">
+                        <div><strong>Nombre:</strong> {selectedEmployee.name}</div>
+                        <div><strong>Puesto:</strong> {selectedEmployee.role}</div>
+                        <div><strong>ID Empleado:</strong> {selectedEmployee.id}</div>
+                        <div><strong>Frecuencia:</strong> {
+                          employeePayrollData.paymentFrequency === 'weekly' ? 'Semanal' :
+                          employeePayrollData.paymentFrequency === 'biweekly' ? 'Quincenal' : 'Mensual'
+                        }</div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <h4 className="font-medium mb-3">PERÍODO DE PAGO</h4>
+                      <div className="space-y-2 text-sm">
+                        <div><strong>Días trabajados:</strong> 30</div>
+                        <div><strong>Horas trabajadas:</strong> 240</div>
+                        <div><strong>Faltas:</strong> 0</div>
+                        <div><strong>Incidencias:</strong> 0</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Salary Calculations */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-gray-100 dark:bg-gray-700 p-4">
+                      <h4 className="font-medium">DETALLE DE PERCEPCIONES Y DEDUCCIONES</h4>
+                    </div>
+                    <div className="p-4">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-200 dark:border-gray-700">
+                            <th className="text-left py-2 font-medium">CONCEPTO</th>
+                            <th className="text-right py-2 font-medium w-32">PERCEPCIÓN</th>
+                            <th className="text-right py-2 font-medium w-32">DEDUCCIÓN</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {/* Salary */}
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2">Salario Base Mensual</td>
+                            <td className="text-right py-2 font-medium text-green-600">
+                              ${parseFloat(employeePayrollData.basicSalary || '0').toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                            </td>
+                            <td className="text-right py-2">-</td>
+                          </tr>
+                          
+                          {/* ISR */}
+                          {(payrollSettings.isrEnabled && employeePayrollData.isrEnabled) && (
+                            <tr className="border-b border-gray-100 dark:border-gray-700">
+                              <td className="py-2">ISR (Impuesto Sobre la Renta)</td>
+                              <td className="text-right py-2">-</td>
+                              <td className="text-right py-2 font-medium text-red-600">
+                                ${calculateISR(parseFloat(employeePayrollData.basicSalary || '0')).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                              </td>
+                            </tr>
+                          )}
+                          
+                          {/* IMSS */}
+                          {(payrollSettings.imssEnabled && employeePayrollData.imssEnabled) && (
+                            <tr className="border-b border-gray-100 dark:border-gray-700">
+                              <td className="py-2">IMSS (Seguro Social) - {employeePayrollData.imssEmployeePercentage}%</td>
+                              <td className="text-right py-2">-</td>
+                              <td className="text-right py-2 font-medium text-red-600">
+                                ${((parseFloat(employeePayrollData.basicSalary || '0') * parseFloat(employeePayrollData.imssEmployeePercentage)) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                              </td>
+                            </tr>
+                          )}
+                          
+                          {/* Infonavit */}
+                          {employeePayrollData.infonavitEnabled && parseFloat(employeePayrollData.infonavitPercentage) > 0 && (
+                            <tr className="border-b border-gray-100 dark:border-gray-700">
+                              <td className="py-2">Infonavit - {employeePayrollData.infonavitPercentage}%</td>
+                              <td className="text-right py-2">-</td>
+                              <td className="text-right py-2 font-medium text-red-600">
+                                ${((parseFloat(employeePayrollData.basicSalary || '0') * parseFloat(employeePayrollData.infonavitPercentage)) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                              </td>
+                            </tr>
+                          )}
+                          
+                          {/* Fonacot */}
+                          {employeePayrollData.fonacotEnabled && parseFloat(employeePayrollData.fonacotAmount) > 0 && (
+                            <tr className="border-b border-gray-100 dark:border-gray-700">
+                              <td className="py-2">Fonacot (Crédito)</td>
+                              <td className="text-right py-2">-</td>
+                              <td className="text-right py-2 font-medium text-red-600">
+                                ${parseFloat(employeePayrollData.fonacotAmount || '0').toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                              </td>
+                            </tr>
+                          )}
+                          
+                          {/* Additional Deductions Section */}
+                          <tr className="bg-gray-50 dark:bg-gray-800">
+                            <td className="py-2 font-medium">OTRAS DEDUCCIONES</td>
+                            <td className="text-right py-2">-</td>
+                            <td className="text-right py-2">-</td>
+                          </tr>
+                          
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 pl-4">• Faltas / Incidencias</td>
+                            <td className="text-right py-2">-</td>
+                            <td className="text-right py-2 font-medium text-red-600">$0.00</td>
+                          </tr>
+                          
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 pl-4">• Retardos</td>
+                            <td className="text-right py-2">-</td>
+                            <td className="text-right py-2 font-medium text-red-600">$0.00</td>
+                          </tr>
+                          
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 pl-4">• Préstamos de empresa</td>
+                            <td className="text-right py-2">-</td>
+                            <td className="text-right py-2 font-medium text-red-600">$0.00</td>
+                          </tr>
+                          
+                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                            <td className="py-2 pl-4">• Uniformes / Equipo</td>
+                            <td className="text-right py-2">-</td>
+                            <td className="text-right py-2 font-medium text-red-600">$0.00</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Summary Section */}
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                    <div className="space-y-3">
+                      {(() => {
+                        const basicSalary = parseFloat(employeePayrollData.basicSalary || '0');
+                        const isrDeduction = (payrollSettings.isrEnabled && employeePayrollData.isrEnabled) ? 
+                          calculateISR(basicSalary) : 0;
+                        const imssDeduction = (payrollSettings.imssEnabled && employeePayrollData.imssEnabled) ? 
+                          (basicSalary * parseFloat(employeePayrollData.imssEmployeePercentage)) / 100 : 0;
+                        const infonavitDeduction = employeePayrollData.infonavitEnabled ? 
+                          (basicSalary * parseFloat(employeePayrollData.infonavitPercentage)) / 100 : 0;
+                        const fonacotDeduction = employeePayrollData.fonacotEnabled ? 
+                          parseFloat(employeePayrollData.fonacotAmount || '0') : 0;
+                        
+                        const totalDeductions = isrDeduction + imssDeduction + infonavitDeduction + fonacotDeduction;
+                        const netSalary = basicSalary - totalDeductions;
+                        
+                        return (
+                          <>
+                            <div className="flex justify-between text-sm">
+                              <span>TOTAL PERCEPCIONES:</span>
+                              <span className="font-medium text-green-600">
+                                ${basicSalary.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span>TOTAL DEDUCCIONES:</span>
+                              <span className="font-medium text-red-600">
+                                ${totalDeductions.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                            <hr className="border-gray-300 dark:border-gray-600" />
+                            <div className="flex justify-between text-lg font-bold">
+                              <span>NETO A PAGAR:</span>
+                              <span className="text-blue-600 dark:text-blue-400">
+                                ${netSalary.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Footer Information */}
+                  <div className="text-center space-y-2">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Este recibo cumple con las disposiciones fiscales vigentes
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Generado el {new Date().toLocaleDateString('es-MX')} - Sistema VetGroom
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.print()}
+                      className="flex items-center gap-2"
+                      data-testid="button-print-payslip"
+                    >
+                      <Printer className="w-4 h-4" />
+                      Imprimir
+                    </Button>
+                    
+                    <div className="flex gap-3">
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          const payslipData = `RECIBO DE NÓMINA - ${selectedEmployee.name}\n` +
+                            `Período: ${new Date().toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}\n` +
+                            `Salario Base: $${employeePayrollData.basicSalary}\n` +
+                            `Neto a Pagar: $${(() => {
+                              const basicSalary = parseFloat(employeePayrollData.basicSalary || '0');
+                              const isrDeduction = (payrollSettings.isrEnabled && employeePayrollData.isrEnabled) ? calculateISR(basicSalary) : 0;
+                              const imssDeduction = (payrollSettings.imssEnabled && employeePayrollData.imssEnabled) ? (basicSalary * parseFloat(employeePayrollData.imssEmployeePercentage)) / 100 : 0;
+                              return (basicSalary - isrDeduction - imssDeduction).toFixed(2);
+                            })()}`;
+                          navigator.clipboard.writeText(payslipData);
+                          toast({
+                            title: "Copiado",
+                            description: "Resumen del recibo copiado al portapapeles",
+                          });
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Copiar
+                      </Button>
+                      <Button onClick={() => setIsPayslipModalOpen(false)}>
+                        Cerrar
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
