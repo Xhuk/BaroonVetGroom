@@ -2380,20 +2380,6 @@ function Admin() {
               </div>
             </TabsContent>
 
-            {/* Services Management Tab */}
-            <TabsContent value="services" className="space-y-6">
-              <div className="flex flex-col lg:flex-row gap-4 lg:justify-between lg:items-center">
-                <div>
-                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Configuración de Servicios</h2>
-                  {totalFilteredServices !== services?.length && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      Mostrando {totalFilteredServices} de {services?.length || 0} servicios
-                      {hasActiveFilters && ' (filtrado)'}
-                    </p>
-                  )}
-                </div>
-
-                        {/* ISR Section */}
                         <div className="border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
@@ -2562,57 +2548,7 @@ function Admin() {
                           )}
                         </div>
 
-                        {/* Summary */}
-                        {showAdvancedCalculations && (
-                          <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
-                            <h4 className="font-medium mb-2">Resumen de Retenciones</h4>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <p>Salario Base: <span className="font-medium">${salaryConfigData.basicSalary.toFixed(2)}</span></p>
-                                {salaryConfigData.isrEnabled && (
-                                  <p>ISR: <span className="font-medium text-red-600">-${calculateISR(salaryConfigData.basicSalary).toFixed(2)}</span></p>
-                                )}
-                                {salaryConfigData.imssEnabled && (
-                                  <p>IMSS (Empleado): <span className="font-medium text-red-600">-${(salaryConfigData.basicSalary * salaryConfigData.imssEmployeePercentage / 100).toFixed(2)}</span></p>
-                                )}
-                              </div>
-                              <div>
-                                {salaryConfigData.infonavitEnabled && (
-                                  <p>Infonavit: <span className="font-medium text-red-600">-${(salaryConfigData.basicSalary * salaryConfigData.infonavitPercentage / 100).toFixed(2)}</span></p>
-                                )}
-                                {salaryConfigData.fonacotEnabled && (
-                                  <p>Fonacot: <span className="font-medium text-red-600">-${salaryConfigData.fonacotAmount.toFixed(2)}</span></p>
-                                )}
-                                <div className="border-t pt-2 mt-2">
-                                  <p className="font-medium">Neto: <span className="text-green-600">${(
-                                    salaryConfigData.basicSalary 
-                                    - (salaryConfigData.isrEnabled ? calculateISR(salaryConfigData.basicSalary) : 0)
-                                    - (salaryConfigData.imssEnabled ? salaryConfigData.basicSalary * salaryConfigData.imssEmployeePercentage / 100 : 0)
-                                    - (salaryConfigData.infonavitEnabled ? salaryConfigData.basicSalary * salaryConfigData.infonavitPercentage / 100 : 0)
-                                    - (salaryConfigData.fonacotEnabled ? salaryConfigData.fonacotAmount : 0)
-                                  ).toFixed(2)}</span></p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex justify-end gap-2 pt-4 border-t">
-                          <Button variant="outline" onClick={() => setIsSalaryConfigOpen(false)}>
-                            Cancelar
-                          </Button>
-                          <Button onClick={handleSaveSalaryConfig} className="bg-blue-600 hover:bg-blue-700">
-                            Guardar Configuración
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
+                
             {/* Services Management Tab */}
             <TabsContent value="services" className="space-y-6">
               <div className="flex flex-col lg:flex-row gap-4 lg:justify-between lg:items-center">
