@@ -157,16 +157,6 @@ function Admin() {
   });
 
   useEffect(() => {
-    // Debug data loading
-    console.log('🔍 [Admin] Data loading state:', {
-      currentTenant: currentTenant?.id,
-      roomsData: roomsData?.length,
-      servicesData: servicesData?.length,
-      staffData: staffData?.length,
-      usersData: usersData?.length,
-      rolesData: rolesData?.length
-    });
-
     if (roomsData) setRooms(roomsData);
     if (servicesData) setServices(servicesData);
     if (rolesData) setRoles(rolesData);
