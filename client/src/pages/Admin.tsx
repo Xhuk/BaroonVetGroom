@@ -126,7 +126,7 @@ function Admin() {
     select: (data) => isDemoUser ? data?.plans : data,
   });
 
-  const { data: staffData, isLoading: staffLoading } = useQuery({
+  const { data: staffData, isLoading: staffLoading, refetch: refetchStaff } = useQuery({
     queryKey: ['/api', 'staff', currentTenant?.id].filter(Boolean),
     enabled: !!currentTenant?.id,
   });
@@ -1277,7 +1277,7 @@ function Admin() {
         }
 
         // Refetch staff data to update the UI
-        staffQuery.refetch();
+        refetchStaff();
 
         toast({
           title: "Configuración salarial guardada",
@@ -4117,10 +4117,10 @@ function Admin() {
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-4">
+                            <div className="grid grid-cols-3 gap-4 text-center">
                               {/* Salary Range by Role */}
-                              <div className="text-right">
-                                <div className="text-sm text-gray-500">Rango Sugerido</div>
+                              <div className="min-w-0">
+                                <div className="text-sm text-gray-500 mb-1">Rango Sugerido</div>
                                 <div className="text-sm font-medium">
                                   {employee.role === 'veterinarian' ? '$25,000 - $50,000' :
                                    employee.role === 'groomer' ? '$12,000 - $18,000' :
@@ -4130,8 +4130,8 @@ function Admin() {
                               </div>
                               
                               {/* Current Salary */}
-                              <div className="text-right">
-                                <div className="text-sm text-gray-500">Salario Actual</div>
+                              <div className="min-w-0">
+                                <div className="text-sm text-gray-500 mb-1">Salario Actual</div>
                                 <div className="text-lg font-bold text-green-600">
                                   ${(parseFloat(employee.basicSalary) || 
                                     (employee.role === 'veterinarian' ? 35000 :
@@ -4143,8 +4143,8 @@ function Admin() {
                               </div>
                               
                               {/* Net Salary (after deductions) */}
-                              <div className="text-right">
-                                <div className="text-sm text-gray-500">Neto Estimado</div>
+                              <div className="min-w-0">
+                                <div className="text-sm text-gray-500 mb-1">Neto Estimado</div>
                                 <div className="text-lg font-bold text-blue-600">
                                   ${(() => {
                                     const basicSalary = parseFloat(employee.basicSalary) || 
