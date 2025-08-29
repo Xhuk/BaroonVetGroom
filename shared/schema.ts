@@ -1977,3 +1977,30 @@ export type InsertExternalServiceSubscription = typeof externalServiceSubscripti
 export type ReceiptTemplate = typeof receiptTemplates.$inferSelect;
 export type InsertReceiptTemplate = typeof receiptTemplates.$inferInsert;
 
+// Calendar Shares - for sharing shift calendars via WhatsApp
+export const calendarShares = pgTable("calendar_shares", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").references(() => tenants.id).notNull(),
+  staffId: varchar("staff_id").references(() => staff.id).notNull(),
+  staffName: varchar("staff_name").notNull(),
+  shareToken: varchar("share_token").unique().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  accessCount: integer("access_count").default(0),
+  lastAccessedAt: timestamp("last_accessed_at"),
+});
+
+export const calendarSharesRelations = relations(calendarShares, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [calendarShares.tenantId],
+    references: [tenants.id],
+  }),
+  staff: one(staff, {
+    fields: [calendarShares.staffId],
+    references: [staff.id],
+  }),
+}));
+
+export type CalendarShare = typeof calendarShares.$inferSelect;
+export type InsertCalendarShare = typeof calendarShares.$inferInsert;
+

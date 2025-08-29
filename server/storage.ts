@@ -66,6 +66,7 @@ import {
   shiftRotations,
   rotationTeams,
   rotationSchedules,
+  calendarShares,
   type User,
   type UpsertUser,
   type Company,
@@ -456,6 +457,16 @@ export interface IStorage {
   // Subscription Management operations
   getSubscriptionExpirationStatus(): Promise<any>;
   sendSubscriptionReminders(): Promise<any>;
+  
+  // Attendance Tracking operations
+  getAttendanceStatus(tenantId: string, date: string): Promise<any[]>;
+  clockInOut(tenantId: string, staffId: string, action: 'in' | 'out', location?: any, method?: string): Promise<any>;
+  getAttendanceHistory(tenantId: string, staffId: string, startDate?: string, endDate?: string): Promise<any[]>;
+  
+  // Calendar Sharing operations
+  generateCalendarShareToken(tenantId: string, staffId: string, staffName: string, expiresInDays: number): Promise<string>;
+  getCalendarShareData(token: string): Promise<any>;
+  getStaffShifts(tenantId: string, staffId: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4779,6 +4790,257 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error updating user tenant role:', error);
       throw new Error('Failed to update user role');
+    }
+  }
+
+  // Attendance Tracking operations
+  async getAttendanceStatus(tenantId: string, date: string): Promise<any[]> {
+    try {
+      const currentTime = new Date();
+      const today = date || currentTime.toISOString().split('T')[0];
+      
+      // Get all staff with their current shift assignments and clock status
+      const staffAttendance = await db
+        .select({
+          staffId: staff.id,
+          staffName: staff.name,
+          staffRole: staff.role,
+          patternName: shiftPatterns.name,
+          patternStartTime: shiftPatterns.startTime,
+          patternEndTime: shiftPatterns.endTime,
+          actualStartTime: shiftAssignments.actualStartTime,
+          actualEndTime: shiftAssignments.actualEndTime,
+          status: shiftAssignments.status,
+          clockInLocation: shiftAssignments.clockInLocation,
+          clockOutLocation: shiftAssignments.clockOutLocation,
+          notes: shiftAssignments.notes,
+        })
+        .from(staff)
+        .leftJoin(shiftAssignments, and(
+          eq(staff.id, shiftAssignments.staffId),
+          eq(shiftAssignments.assignedDate, today)
+        ))
+        .leftJoin(shiftPatterns, eq(shiftAssignments.shiftPatternId, shiftPatterns.id))
+        .where(eq(staff.tenantId, tenantId))
+        .orderBy(staff.name);
+
+      return staffAttendance.map(attendance => ({
+        ...attendance,
+        currentStatus: this.calculateAttendanceStatus(attendance, currentTime),
+        isPresent: !!attendance.actualStartTime && !attendance.actualEndTime,
+        shift: attendance.patternName || 'Sin asignar',
+      }));
+    } catch (error) {
+      console.error('Error fetching attendance status:', error);
+      throw error;
+    }
+  }
+
+  async clockInOut(tenantId: string, staffId: string, action: 'in' | 'out', location?: any, method: string = 'manual'): Promise<any> {
+    try {
+      const currentTime = new Date();
+      const today = currentTime.toISOString().split('T')[0];
+      
+      // Find or create shift assignment for today
+      let [assignment] = await db
+        .select()
+        .from(shiftAssignments)
+        .where(and(
+          eq(shiftAssignments.tenantId, tenantId),
+          eq(shiftAssignments.staffId, staffId),
+          eq(shiftAssignments.assignedDate, today)
+        ));
+
+      if (!assignment) {
+        // Create new assignment if none exists
+        [assignment] = await db
+          .insert(shiftAssignments)
+          .values({
+            id: `sa-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            tenantId,
+            staffId,
+            assignedDate: today,
+            status: 'present',
+            shiftPatternId: 'default', // Will need to be set properly
+          })
+          .returning();
+      }
+
+      // Update with clock in/out data
+      const updateData: any = {
+        updatedAt: currentTime,
+      };
+
+      if (action === 'in') {
+        updateData.actualStartTime = currentTime;
+        updateData.clockInLocation = location ? JSON.stringify(location) : null;
+        updateData.clockInMethod = method;
+        updateData.status = 'present';
+      } else {
+        updateData.actualEndTime = currentTime;
+        updateData.clockOutLocation = location ? JSON.stringify(location) : null;
+        updateData.clockOutMethod = method;
+        updateData.status = 'completed';
+      }
+
+      const [updatedAssignment] = await db
+        .update(shiftAssignments)
+        .set(updateData)
+        .where(eq(shiftAssignments.id, assignment.id))
+        .returning();
+
+      return {
+        success: true,
+        assignment: updatedAssignment,
+        action,
+        timestamp: currentTime,
+      };
+    } catch (error) {
+      console.error('Error processing clock in/out:', error);
+      throw error;
+    }
+  }
+
+  async getAttendanceHistory(tenantId: string, staffId: string, startDate?: string, endDate?: string): Promise<any[]> {
+    try {
+      const end = endDate || new Date().toISOString().split('T')[0];
+      const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      const history = await db
+        .select({
+          date: shiftAssignments.assignedDate,
+          patternName: shiftPatterns.name,
+          actualStartTime: shiftAssignments.actualStartTime,
+          actualEndTime: shiftAssignments.actualEndTime,
+          status: shiftAssignments.status,
+          overtimeHours: shiftAssignments.overtimeHours,
+          totalBreakMinutes: shiftAssignments.totalBreakMinutes,
+          notes: shiftAssignments.notes,
+        })
+        .from(shiftAssignments)
+        .leftJoin(shiftPatterns, eq(shiftAssignments.shiftPatternId, shiftPatterns.id))
+        .where(and(
+          eq(shiftAssignments.tenantId, tenantId),
+          eq(shiftAssignments.staffId, staffId),
+          sql`assigned_date >= ${start}`,
+          sql`assigned_date <= ${end}`
+        ))
+        .orderBy(sql`assigned_date DESC`);
+
+      return history;
+    } catch (error) {
+      console.error('Error fetching attendance history:', error);
+      throw error;
+    }
+  }
+
+  // Calendar Sharing operations
+  async generateCalendarShareToken(tenantId: string, staffId: string, staffName: string, expiresInDays: number): Promise<string> {
+    try {
+      const shareToken = `cal_${Math.random().toString(36).substr(2, 12)}_${Date.now()}`;
+      const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
+      
+      await db.insert(calendarShares).values({
+        tenantId,
+        staffId,
+        staffName,
+        shareToken,
+        expiresAt,
+      });
+
+      return shareToken;
+    } catch (error) {
+      console.error('Error generating calendar share token:', error);
+      throw error;
+    }
+  }
+
+  async getCalendarShareData(token: string): Promise<any> {
+    try {
+      const [shareData] = await db
+        .select()
+        .from(calendarShares)
+        .where(and(
+          eq(calendarShares.shareToken, token),
+          sql`expires_at > NOW()`
+        ));
+
+      if (shareData) {
+        // Update access count and last accessed time
+        await db
+          .update(calendarShares)
+          .set({
+            accessCount: sql`access_count + 1`,
+            lastAccessedAt: new Date(),
+          })
+          .where(eq(calendarShares.id, shareData.id));
+      }
+
+      return shareData;
+    } catch (error) {
+      console.error('Error getting calendar share data:', error);
+      throw error;
+    }
+  }
+
+  async getStaffShifts(tenantId: string, staffId: string): Promise<any> {
+    try {
+      const startDate = new Date();
+      startDate.setDate(1); // First day of current month
+      const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0); // Last day of current month
+      
+      const shifts = await db
+        .select({
+          date: shiftAssignments.assignedDate,
+          patternName: shiftPatterns.name,
+          startTime: shiftPatterns.startTime,
+          endTime: shiftPatterns.endTime,
+          status: shiftAssignments.status,
+        })
+        .from(shiftAssignments)
+        .leftJoin(shiftPatterns, eq(shiftAssignments.shiftPatternId, shiftPatterns.id))
+        .where(and(
+          eq(shiftAssignments.tenantId, tenantId),
+          eq(shiftAssignments.staffId, staffId),
+          sql`assigned_date >= ${startDate.toISOString().split('T')[0]}`,
+          sql`assigned_date <= ${endDate.toISOString().split('T')[0]}`
+        ));
+
+      // Format for calendar display
+      const shiftData: Record<string, string> = {};
+      shifts.forEach(shift => {
+        const dateKey = shift.date;
+        if (shift.patternName && shift.startTime && shift.endTime) {
+          shiftData[dateKey] = `${shift.startTime}-${shift.endTime}`;
+        }
+      });
+
+      return shiftData;
+    } catch (error) {
+      console.error('Error getting staff shifts:', error);
+      throw error;
+    }
+  }
+
+  private calculateAttendanceStatus(attendance: any, currentTime: Date): string {
+    if (!attendance.patternStartTime) return 'Sin turno';
+    
+    const now = currentTime.getHours() * 60 + currentTime.getMinutes();
+    const [startHour, startMin] = attendance.patternStartTime.split(':').map(Number);
+    const [endHour, endMin] = attendance.patternEndTime.split(':').map(Number);
+    const shiftStart = startHour * 60 + startMin;
+    const shiftEnd = endHour * 60 + endMin;
+    
+    if (attendance.actualStartTime && attendance.actualEndTime) {
+      return 'Turno completado';
+    } else if (attendance.actualStartTime) {
+      return 'Presente';
+    } else if (now > shiftStart + 15) { // 15 minutes late
+      return 'Tardanza';
+    } else if (now >= shiftStart - 15) { // 15 minutes before start
+      return 'Próximo a iniciar';
+    } else {
+      return 'Fuera de horario';
     }
   }
 }

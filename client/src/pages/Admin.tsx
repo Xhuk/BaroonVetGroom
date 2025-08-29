@@ -53,7 +53,8 @@ import {
   Building,
   Copy,
   MessageCircle,
-  Coffee
+  Coffee,
+  Share
 } from "lucide-react";
 
 // Helper function to get room type icons
@@ -127,6 +128,66 @@ function Admin() {
     queryKey: [`/api/shift-assignments/${currentTenant?.id}`],
     enabled: !!currentTenant?.id,
   });
+
+  // Attendance status query
+  const { data: attendanceData, isLoading: attendanceLoading, refetch: refetchAttendance } = useQuery({
+    queryKey: [`/api/attendance/status/${currentTenant?.id}`],
+    enabled: !!currentTenant?.id,
+    refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
+  });
+
+  // Calendar sharing state
+  const [selectedStaffForCalendar, setSelectedStaffForCalendar] = useState<string>('');
+
+  // Calendar sharing mutation
+  const generateCalendarShareMutation = useMutation({
+    mutationFn: async (staffData: any) => {
+      return apiRequest('POST', `/api/calendar/generate-share-link/${currentTenant?.id}`, staffData);
+    },
+    onSuccess: (data) => {
+      // Copy WhatsApp link to clipboard
+      navigator.clipboard.writeText(data.whatsappUrl);
+      toast({
+        title: "Enlace de calendario generado",
+        description: "El enlace de WhatsApp se ha copiado al portapapeles. Puedes compartirlo con el personal.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo generar el enlace de calendario",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle calendar share generation
+  const handleGenerateCalendarShare = () => {
+    if (!selectedStaffForCalendar) {
+      toast({
+        title: "Selecciona un empleado",
+        description: "Debes seleccionar un empleado para generar el calendario de turnos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const selectedStaff = staff?.find(s => s.id === selectedStaffForCalendar);
+    if (!selectedStaff) {
+      toast({
+        title: "Error",
+        description: "Empleado no encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    generateCalendarShareMutation.mutate({
+      staffId: selectedStaff.id,
+      staffName: selectedStaff.name,
+      expiresInDays: 30
+    });
+  };
 
   // Shift pattern mutations
   const createShiftPatternMutation = useMutation({
@@ -5365,14 +5426,29 @@ function Admin() {
                           <Download className="w-4 h-4 mr-2" />
                           Exportar Reporte
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setIsCalendarShareOpen(true)}
-                        >
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Ver Calendario Personal
-                        </Button>
+                        <div className="flex gap-2 items-center">
+                          <Select value={selectedStaffForCalendar} onValueChange={setSelectedStaffForCalendar}>
+                            <SelectTrigger className="w-[200px]">
+                              <SelectValue placeholder="Selecciona empleado..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {staff?.map((staffMember) => (
+                                <SelectItem key={staffMember.id} value={staffMember.id}>
+                                  {staffMember.name} - {staffMember.role}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={handleGenerateCalendarShare}
+                            disabled={!selectedStaffForCalendar || generateCalendarShareMutation.isPending}
+                          >
+                            <Share className="w-4 h-4 mr-2" />
+                            Compartir Calendario
+                          </Button>
+                        </div>
                       </div>
                     </div>
 
@@ -5386,21 +5462,36 @@ function Admin() {
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                          {staff?.map((staffMember) => (
-                            <div key={staffMember.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="w-3 h-3 rounded-full bg-green-500" />
-                                <span className="font-medium text-sm">{staffMember.name}</span>
+                          {attendanceData?.map((attendance) => {
+                            const statusColor = attendance.currentStatus === 'Presente' ? 'bg-green-500' :
+                                              attendance.currentStatus === 'Tardanza' ? 'bg-red-500' :
+                                              attendance.currentStatus === 'Próximo a iniciar' ? 'bg-yellow-500' :
+                                              'bg-gray-400';
+                            
+                            return (
+                              <div key={attendance.staffId} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className={`w-3 h-3 rounded-full ${statusColor}`} />
+                                  <span className="font-medium text-sm">{attendance.staffName}</span>
+                                </div>
+                                <div className="text-xs text-gray-500 mb-1">{attendance.staffRole}</div>
+                                <div className="text-xs">
+                                  Status: <span className="font-medium">{attendance.currentStatus}</span>
+                                </div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                  Turno: {attendance.shift}
+                                </div>
+                                {attendance.actualStartTime && (
+                                  <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                                    Entrada: {new Date(attendance.actualStartTime).toLocaleTimeString('es-ES', {
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </div>
+                                )}
                               </div>
-                              <div className="text-xs text-gray-500 mb-1">{staffMember.role}</div>
-                              <div className="text-xs">
-                                Status: <span className="font-medium">Presente</span>
-                              </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                Turno: Matutino
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </CardContent>
                     </Card>
