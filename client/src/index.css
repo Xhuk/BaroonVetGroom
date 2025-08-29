@@ -548,3 +548,53 @@ html.dark select option {
     background-color: hsl(207, 90%, 97%);
   }
 }
+
+/* SortableJS styling for shift scheduling */
+.sortable-ghost {
+  opacity: 0.4;
+  background: #f3f4f6 !important;
+  border: 2px dashed #6b7280 !important;
+  transform: rotate(2deg);
+}
+
+.sortable-chosen {
+  transform: scale(1.02);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  z-index: 999;
+}
+
+.sortable-drag {
+  opacity: 0.8;
+  transform: rotate(-2deg);
+  background: #ffffff !important;
+  border: 2px solid #3b82f6 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.staff-card {
+  transition: all 0.2s ease;
+}
+
+.staff-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced drag target areas */
+.shift-column:empty::before {
+  content: "Arrastra personal aquí";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  color: #9ca3af;
+  font-size: 14px;
+  border: 2px dashed #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.shift-column.sortable-drag-over {
+  background: #eff6ff !important;
+  border-color: #3b82f6 !important;
+}

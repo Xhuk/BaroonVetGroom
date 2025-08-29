@@ -68,11 +68,59 @@ navigation:
   settings: "Settings"
   reports: "Reports"
   help: "Help"
+  personnel: "Personnel"
+  shifts: "Shifts"
+  daily_closeout: "Daily Close-out"
 
 # Authentication
 auth:
   login: "Login"
   logout: "Logout"
+
+# Personnel Management
+personnel:
+  title: "Personnel Management"
+  employee_list: "Employee List"
+  employee_name: "Employee Name"
+  role: "Role"
+  salary_basis: "Salary Basis"
+  per_day: "Per Day"
+  per_month: "Per Month"
+  add_employee: "Add Employee"
+  edit_employee: "Edit Employee"
+  delete_employee: "Delete Employee"
+  no_employees: "No employees found"
+  salary_updated: "Salary basis updated successfully"
+
+# Shift Scheduling
+shifts:
+  title: "Shift Scheduling"
+  unassigned_personnel: "Unassigned Personnel"
+  morning_shift: "Morning Shift"
+  afternoon_shift: "Afternoon Shift"
+  evening_shift: "Evening Shift"
+  room: "Room"
+  assign_staff: "Assign Staff"
+  drag_to_assign: "Drag staff members to assign them to shifts"
+  shift_updated: "Shift assignment updated successfully"
+  no_shifts: "No shifts scheduled"
+
+# Daily Close-out
+daily_closeout:
+  title: "Daily Financial Closing"
+  select_date: "Select Date"
+  total_income: "Total Income"
+  total_expenses: "Total Expenses"
+  net_total: "Net Total"
+  run_closeout: "Run Daily Close-out"
+  download_report: "Download Report"
+  processing: "Processing..."
+  closeout_complete: "Daily close-out completed successfully"
+  report_generated: "Report generated successfully"
+  financial_summary: "Financial Summary"
+  transactions: "Transactions"
+  payments_received: "Payments Received"
+  expenses_recorded: "Expenses Recorded"
   email: "Email"
   password: "Password"
   remember_me: "Remember me"

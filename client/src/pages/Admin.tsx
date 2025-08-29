@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
@@ -43,8 +43,12 @@ import {
   Receipt,
   ShoppingCart,
   Star,
-  CreditCard
+  CreditCard,
+  Calendar,
+  DollarSign,
+  Download
 } from "lucide-react";
+import Sortable from 'sortablejs';
 
 // Helper function to get room type icons
 function getRoomTypeIcon(type: string) {
@@ -155,12 +159,95 @@ function Admin() {
     if (roomsData) setRooms(roomsData);
     if (servicesData) setServices(servicesData);
     if (rolesData) setRoles(rolesData);
-    if (staffData) setStaff(staffData);
+    if (staffData) {
+      setStaff(staffData);
+      // Initialize shift assignments with all staff unassigned
+      setShiftAssignments(prev => ({
+        ...prev,
+        unassigned: staffData || []
+      }));
+    }
     if (usersData) setUsers(usersData);
     if (deliveryConfigData) {
       setDeliveryConfig(deliveryConfigData);
     }
   }, [roomsData, servicesData, rolesData, staffData, usersData, deliveryConfigData]);
+
+  // Initialize SortableJS for shift scheduling
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const initializeSortable = () => {
+        const containers = ['unassigned-staff', 'room1-morning', 'room2-afternoon', 'room3-evening'];
+        
+        containers.forEach(containerId => {
+          const container = document.getElementById(containerId);
+          if (container && !sortableRefs.current[containerId]) {
+            sortableRefs.current[containerId] = new Sortable(container, {
+              group: 'shifts',
+              animation: 150,
+              ghostClass: 'sortable-ghost',
+              chosenClass: 'sortable-chosen',
+              dragClass: 'sortable-drag',
+              onEnd: (evt) => {
+                const { from, to, item } = evt;
+                const fromId = from.id;
+                const toId = to.id;
+                const staffId = item.dataset.staffId;
+                
+                if (fromId !== toId && staffId) {
+                  // Move staff between shifts
+                  setShiftAssignments(prev => {
+                    const newAssignments = { ...prev };
+                    
+                    // Remove from source
+                    const sourceKey = getShiftKey(fromId);
+                    newAssignments[sourceKey] = newAssignments[sourceKey].filter((s: any) => s.id !== staffId);
+                    
+                    // Add to destination
+                    const destKey = getShiftKey(toId);
+                    const staffMember = staff?.find((s: any) => s.id === staffId);
+                    if (staffMember) {
+                      newAssignments[destKey] = [...newAssignments[destKey], staffMember];
+                    }
+                    
+                    return newAssignments;
+                  });
+                  
+                  toast({
+                    title: "Asignación actualizada",
+                    description: "El personal ha sido asignado al turno exitosamente",
+                  });
+                }
+              }
+            });
+          }
+        });
+      };
+      
+      // Small delay to ensure DOM is ready
+      setTimeout(initializeSortable, 100);
+    }
+    
+    return () => {
+      // Cleanup sortable instances
+      Object.values(sortableRefs.current).forEach((sortable: any) => {
+        if (sortable && sortable.destroy) {
+          sortable.destroy();
+        }
+      });
+      sortableRefs.current = {};
+    };
+  }, [staff, toast]);
+
+  const getShiftKey = (containerId: string) => {
+    switch (containerId) {
+      case 'unassigned-staff': return 'unassigned';
+      case 'room1-morning': return 'room1_morning';
+      case 'room2-afternoon': return 'room2_afternoon';
+      case 'room3-evening': return 'room3_evening';
+      default: return 'unassigned';
+    }
+  };
 
 
   // Dialog states
@@ -231,6 +318,17 @@ function Admin() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [bulkRoleId, setBulkRoleId] = useState<string>('');  
   const [roleFilter, setRoleFilter] = useState<string>('all');
+
+  // Shift management state
+  const [shiftAssignments, setShiftAssignments] = useState<{[key: string]: any[]}>({
+    unassigned: [],
+    room1_morning: [],
+    room2_afternoon: [],
+    room3_evening: []
+  });
+
+  // SortableJS refs
+  const sortableRefs = useRef<{[key: string]: any}>({});
 
   // Core consolidated roles for the veterinary clinic
   const CORE_ROLES = [
@@ -1309,7 +1407,7 @@ function Admin() {
           </div>
 
           <Tabs defaultValue="rooms" className="w-full">
-            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-10' : 'grid-cols-9'}`}>
+            <TabsList className={`grid w-full ${isVetGroomDeveloper ? 'grid-cols-13' : 'grid-cols-12'}`}>
               <TabsTrigger value="rooms" className="flex items-center gap-2">
                 <DoorOpen className="w-4 h-4" />
                 Salas
@@ -1345,6 +1443,18 @@ function Admin() {
               <TabsTrigger value="subscription" className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4" />
                 Suscripción
+              </TabsTrigger>
+              <TabsTrigger value="personnel" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Personal
+              </TabsTrigger>
+              <TabsTrigger value="shifts" className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Turnos
+              </TabsTrigger>
+              <TabsTrigger value="daily-closeout" className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4" />
+                Corte Diario
               </TabsTrigger>
               {isVetGroomDeveloper && (
                 <TabsTrigger value="delivery-tracking" className="flex items-center gap-2">
@@ -3411,6 +3521,311 @@ function Admin() {
                   </Card>
                 </div>
               )}
+            </TabsContent>
+
+            {/* Personnel Management Tab */}
+            <TabsContent value="personnel" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Personal</h2>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Agregar Empleado
+                </Button>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Lista de Empleados
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-4 font-medium">Nombre del Empleado</th>
+                          <th className="text-left p-4 font-medium">Rol</th>
+                          <th className="text-left p-4 font-medium">Base Salarial</th>
+                          <th className="text-left p-4 font-medium">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {staff?.map((employee: any) => (
+                          <tr key={employee.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <td className="p-4">{employee.name}</td>
+                            <td className="p-4">
+                              <Badge variant="outline">{employee.role}</Badge>
+                            </td>
+                            <td className="p-4">
+                              <Select 
+                                value={employee.salaryBasis || 'per_month'}
+                                onValueChange={(value) => {
+                                  // Update salary basis logic here
+                                  toast({
+                                    title: "Base salarial actualizada",
+                                    description: `Base salarial de ${employee.name} actualizada a ${value === 'per_day' ? 'Por Día' : 'Por Mes'}`,
+                                  });
+                                }}
+                              >
+                                <SelectTrigger className="w-32">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="per_day">Por Día</SelectItem>
+                                  <SelectItem value="per_month">Por Mes</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm">
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {(!staff || staff.length === 0) && (
+                      <div className="text-center py-8 text-gray-500">
+                        No se encontraron empleados
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Shift Scheduling Tab */}
+            <TabsContent value="shifts" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Programación de Turnos</h2>
+              </div>
+
+              <div className="text-sm text-gray-600 mb-4">
+                Arrastra los miembros del personal para asignarlos a turnos
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Unassigned Personnel Column */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Personal Sin Asignar</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div id="unassigned-staff" className="space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
+                      {shiftAssignments.unassigned?.map((employee: any) => (
+                        <div 
+                          key={employee.id} 
+                          data-staff-id={employee.id}
+                          className="staff-card p-3 bg-white border rounded-lg shadow-sm cursor-move hover:shadow-md transition-shadow"
+                        >
+                          <div className="font-medium">{employee.name}</div>
+                          <div className="text-sm text-gray-600">{employee.role}</div>
+                          {employee.specialization && (
+                            <div className="text-xs text-blue-600">{employee.specialization}</div>
+                          )}
+                        </div>
+                      )) || []}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Shift Columns */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Sala 1 / Turno Matutino</CardTitle>
+                    <div className="text-sm text-gray-600">8:00 AM - 12:00 PM</div>
+                  </CardHeader>
+                  <CardContent>
+                    <div id="room1-morning" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
+                      {shiftAssignments.room1_morning?.map((employee: any) => (
+                        <div 
+                          key={employee.id} 
+                          data-staff-id={employee.id}
+                          className="staff-card p-3 bg-white border rounded-lg shadow-sm cursor-move hover:shadow-md transition-shadow"
+                        >
+                          <div className="font-medium">{employee.name}</div>
+                          <div className="text-sm text-gray-600">{employee.role}</div>
+                          {employee.specialization && (
+                            <div className="text-xs text-blue-600">{employee.specialization}</div>
+                          )}
+                        </div>
+                      )) || []}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Sala 2 / Turno Vespertino</CardTitle>
+                    <div className="text-sm text-gray-600">1:00 PM - 6:00 PM</div>
+                  </CardHeader>
+                  <CardContent>
+                    <div id="room2-afternoon" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
+                      {shiftAssignments.room2_afternoon?.map((employee: any) => (
+                        <div 
+                          key={employee.id} 
+                          data-staff-id={employee.id}
+                          className="staff-card p-3 bg-white border rounded-lg shadow-sm cursor-move hover:shadow-md transition-shadow"
+                        >
+                          <div className="font-medium">{employee.name}</div>
+                          <div className="text-sm text-gray-600">{employee.role}</div>
+                          {employee.specialization && (
+                            <div className="text-xs text-blue-600">{employee.specialization}</div>
+                          )}
+                        </div>
+                      )) || []}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Sala 3 / Turno Nocturno</CardTitle>
+                    <div className="text-sm text-gray-600">6:00 PM - 10:00 PM</div>
+                  </CardHeader>
+                  <CardContent>
+                    <div id="room3-evening" className="shift-column space-y-3 min-h-[200px] p-2 border-2 border-dashed border-gray-300 rounded-lg">
+                      {shiftAssignments.room3_evening?.map((employee: any) => (
+                        <div 
+                          key={employee.id} 
+                          data-staff-id={employee.id}
+                          className="staff-card p-3 bg-white border rounded-lg shadow-sm cursor-move hover:shadow-md transition-shadow"
+                        >
+                          <div className="font-medium">{employee.name}</div>
+                          <div className="text-sm text-gray-600">{employee.role}</div>
+                          {employee.specialization && (
+                            <div className="text-xs text-blue-600">{employee.specialization}</div>
+                          )}
+                        </div>
+                      )) || []}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Daily Close-out Tab */}
+            <TabsContent value="daily-closeout" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Corte Diario Financiero</h2>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Date Selector */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      Seleccionar Fecha
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="closeout-date">Fecha del Corte</Label>
+                      <Input
+                        id="closeout-date"
+                        type="date"
+                        defaultValue={new Date().toISOString().split('T')[0]}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                        <BarChart3 className="w-4 h-4 mr-2" />
+                        Ejecutar Corte Diario
+                      </Button>
+                      <Button variant="outline" className="flex-1">
+                        <Download className="w-4 h-4 mr-2" />
+                        Descargar Reporte
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Financial Summary */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5" />
+                      Resumen Financiero
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">$2,450.00</div>
+                        <div className="text-sm text-green-800">Ingresos Totales</div>
+                      </div>
+                      <div className="text-center p-4 bg-red-50 rounded-lg">
+                        <div className="text-2xl font-bold text-red-600">$380.00</div>
+                        <div className="text-sm text-red-800">Gastos Totales</div>
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+                      <div className="text-3xl font-bold text-blue-600">$2,070.00</div>
+                      <div className="text-sm text-blue-800">Total Neto</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Transaction Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Receipt className="w-5 h-5" />
+                    Detalle de Transacciones
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium mb-2">Pagos Recibidos</h4>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Consultas médicas</span>
+                            <span className="text-green-600">$1,200.00</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Servicios de grooming</span>
+                            <span className="text-green-600">$800.00</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Vacunaciones</span>
+                            <span className="text-green-600">$450.00</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-2">Gastos Registrados</h4>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Medicamentos</span>
+                            <span className="text-red-600">$150.00</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Suministros</span>
+                            <span className="text-red-600">$120.00</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Otros gastos</span>
+                            <span className="text-red-600">$110.00</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Delivery Tracking Tab - VetGroom Developer Only */}

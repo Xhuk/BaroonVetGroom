@@ -68,11 +68,59 @@ navigation:
   settings: "Configuración"
   reports: "Reportes"
   help: "Ayuda"
+  personnel: "Personal"
+  shifts: "Turnos"
+  daily_closeout: "Corte Diario"
 
 # Authentication
 auth:
   login: "Iniciar sesión"
   logout: "Cerrar sesión"
+
+# Personnel Management
+personnel:
+  title: "Gestión de Personal"
+  employee_list: "Lista de Empleados"
+  employee_name: "Nombre del Empleado"
+  role: "Rol"
+  salary_basis: "Base Salarial"
+  per_day: "Por Día"
+  per_month: "Por Mes"
+  add_employee: "Agregar Empleado"
+  edit_employee: "Editar Empleado"
+  delete_employee: "Eliminar Empleado"
+  no_employees: "No se encontraron empleados"
+  salary_updated: "Base salarial actualizada exitosamente"
+
+# Shift Scheduling
+shifts:
+  title: "Programación de Turnos"
+  unassigned_personnel: "Personal Sin Asignar"
+  morning_shift: "Turno Matutino"
+  afternoon_shift: "Turno Vespertino"
+  evening_shift: "Turno Nocturno"
+  room: "Sala"
+  assign_staff: "Asignar Personal"
+  drag_to_assign: "Arrastra los miembros del personal para asignarlos a turnos"
+  shift_updated: "Asignación de turno actualizada exitosamente"
+  no_shifts: "No hay turnos programados"
+
+# Daily Close-out
+daily_closeout:
+  title: "Corte Diario Financiero"
+  select_date: "Seleccionar Fecha"
+  total_income: "Ingresos Totales"
+  total_expenses: "Gastos Totales"
+  net_total: "Total Neto"
+  run_closeout: "Ejecutar Corte Diario"
+  download_report: "Descargar Reporte"
+  processing: "Procesando..."
+  closeout_complete: "Corte diario completado exitosamente"
+  report_generated: "Reporte generado exitosamente"
+  financial_summary: "Resumen Financiero"
+  transactions: "Transacciones"
+  payments_received: "Pagos Recibidos"
+  expenses_recorded: "Gastos Registrados"
   email: "Correo electrónico"
   password: "Contraseña"
   remember_me: "Recordarme"
