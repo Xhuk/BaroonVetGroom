@@ -3911,6 +3911,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Medical Documents Routes - for saving file references to appointments
+  app.post('/api/appointments/:tenantId/:appointmentId/documents', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId, appointmentId } = req.params;
+      const { documentType, fileName, fileUrl, uploadDate, description } = req.body;
+      const userId = (req as AuthenticatedRequest).user.claims.sub;
+
+      // Validate tenant access
+      const userTenants = await storage.getUserTenants(userId);
+      const hasAccess = userTenants.some(ut => ut.tenantId === tenantId);
+      if (!hasAccess && !(await isSystemAdmin(req))) {
+        return res.status(403).json({ error: "Access denied to this tenant" });
+      }
+
+      // Get appointment info to get pet ID
+      const appointment = await storage.getMedicalAppointment(appointmentId);
+      if (!appointment) {
+        return res.status(404).json({ error: "Appointment not found" });
+      }
+
+      // Create medical document record
+      const documentData = {
+        id: `med-doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        tenantId: tenantId,
+        petId: appointment.petId,
+        appointmentId: appointmentId,
+        fileName: fileName || 'Uploaded file',
+        fileUrl: fileUrl,
+        fileType: fileName?.split('.').pop() || 'unknown',
+        documentType: documentType || 'medical_image',
+        description: description || 'Medical document'
+      };
+
+      await storage.createMedicalDocument(documentData);
+
+      res.json({ 
+        success: true, 
+        message: "Document saved successfully",
+        document: documentData
+      });
+    } catch (error) {
+      console.error('Error saving medical document:', error);
+      res.status(500).json({ 
+        error: "Failed to save medical document",
+        success: false
+      });
+    }
+  });
+
   // Object Storage Routes - simplified for logo uploads
   app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
     try {

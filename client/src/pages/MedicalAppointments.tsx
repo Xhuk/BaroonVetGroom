@@ -1062,13 +1062,49 @@ Gracias!`
                       maxNumberOfFiles={10}
                       maxFileSize={10485760}
                       onGetUploadParameters={async () => {
-                        const response = await apiRequest("/api/objects/upload", "POST");
+                        const response = await apiRequest("/api/objects/upload", "POST", {
+                          tenantId: currentTenant,
+                          companyId: `${currentTenant}-corp`,
+                          templateType: 'medical'
+                        });
                         const data = await response.json();
                         return { method: "PUT" as const, url: data.uploadURL };
                       }}
-                      onComplete={(result) => {
+                      onComplete={async (result) => {
                         console.log("Files uploaded:", result);
-                        // TODO: Save file references to appointment
+                        
+                        // Save file references to appointment
+                        if (result.successful && result.successful.length > 0 && selectedAppointment) {
+                          try {
+                            for (const file of result.successful) {
+                              const uploadUrl = file.uploadURL;
+                              
+                              // Create document record for the uploaded file
+                              await apiRequest(`/api/appointments/${currentTenant}/${selectedAppointment.id}/documents`, "POST", {
+                                documentType: 'medical_image',
+                                fileName: file.meta?.name || 'Uploaded file',
+                                fileUrl: uploadUrl,
+                                uploadDate: new Date().toISOString(),
+                                description: 'Imagen médica subida durante diagnóstico'
+                              });
+                            }
+                            
+                            toast({
+                              title: "Archivos subidos",
+                              description: `${result.successful.length} archivo(s) subido(s) exitosamente`,
+                            });
+                            
+                            // Refresh the appointment data
+                            fastRefetch();
+                          } catch (error) {
+                            console.error("Error saving file references:", error);
+                            toast({
+                              title: "Error",
+                              description: "Los archivos se subieron pero no se pudieron vincular a la cita",
+                              variant: "destructive",
+                            });
+                          }
+                        }
                       }}
                       buttonClassName="w-full mb-2"
                     >
