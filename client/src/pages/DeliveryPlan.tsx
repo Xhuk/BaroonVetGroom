@@ -714,10 +714,9 @@ export default function DeliveryPlan() {
                               }}
                             >
                               <TileLayer
-                                attribution={mapApiKeyReady ? '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>' : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}
-                                url={mapApiKeyReady ? `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY}` : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
-                                tileSize={512}
-                                zoomOffset={-1}
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                maxZoom={19}
                               />
                               
                               {/* Clinic Location */}
@@ -773,10 +772,9 @@ export default function DeliveryPlan() {
                             }}
                           >
                             <TileLayer
-                              attribution={mapApiKeyReady ? '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>' : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}
-                              url={mapApiKeyReady ? `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY}` : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
-                              tileSize={mapApiKeyReady ? 512 : 256}
-                              zoomOffset={mapApiKeyReady ? -1 : 0}
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                              maxZoom={19}
                             />
                           
                           {/* Clinic Location */}
