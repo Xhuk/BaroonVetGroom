@@ -141,9 +141,23 @@ export default function DemoMap() {
                       console.log(`🗺️ Map created with: ${currentServer.name}`);
                       console.log(`🗺️ Map key: ${mapKey}`);
                       console.log(`🗺️ Using URL: ${currentServer.url}`);
+                      console.log(`🗺️ Map center: [24.8066, -107.3938]`);
+                      console.log(`🗺️ Map zoom: 12`);
+                      
+                      // Add event listeners for tile requests
+                      mapInstance.on('tileerror', (e) => {
+                        console.error(`🚨 Tile error event:`, e);
+                      });
+                      
+                      mapInstance.on('tileload', (e) => {
+                        console.log(`📥 Tile loaded:`, e.url);
+                      });
+                      
                       setTimeout(() => {
                         mapInstance.invalidateSize();
                         console.log('🗺️ Map size invalidated');
+                        console.log(`🗺️ Current bounds:`, mapInstance.getBounds());
+                        console.log(`🗺️ Current zoom:`, mapInstance.getZoom());
                       }, 100);
                     }}
                   >
@@ -152,15 +166,40 @@ export default function DemoMap() {
                       url={currentServer.url}
                       maxZoom={currentServer.maxZoom}
                       subdomains={currentServer.subdomains}
-                      onLoad={() => {
+                      onLoad={(e) => {
                         console.log(`✅ ${currentServer.name} tile loaded successfully`);
-                        console.log(`URL: ${currentServer.url}`);
+                        console.log(`✅ Event:`, e);
+                        console.log(`✅ Template URL: ${currentServer.url}`);
                       }}
                       onError={(e) => {
                         console.error(`❌ ${currentServer.name} tile loading error:`, e);
-                        console.log(`Failed URL: ${currentServer.url}`);
+                        console.error(`❌ Error details:`, e.error);
+                        console.error(`❌ Coordinates:`, e.coords);
+                        console.error(`❌ Template URL: ${currentServer.url}`);
+                        // Try to construct the actual URL being requested
+                        if (e.coords) {
+                          const actualUrl = currentServer.url
+                            .replace('{z}', e.coords.z)
+                            .replace('{x}', e.coords.x)
+                            .replace('{y}', e.coords.y)
+                            .replace('{r}', '')
+                            .replace('{s}', currentServer.subdomains ? currentServer.subdomains[0] : '');
+                          console.error(`❌ Actual URL that failed: ${actualUrl}`);
+                        }
                       }}
-                      onLoading={() => console.log(`🔄 ${currentServer.name} tiles loading...`)}
+                      onLoading={(e) => {
+                        console.log(`🔄 ${currentServer.name} tiles loading...`);
+                        console.log(`🔄 Loading coords:`, e.coords);
+                        if (e.coords) {
+                          const actualUrl = currentServer.url
+                            .replace('{z}', e.coords.z)
+                            .replace('{x}', e.coords.x)
+                            .replace('{y}', e.coords.y)
+                            .replace('{r}', '')
+                            .replace('{s}', currentServer.subdomains ? currentServer.subdomains[0] : '');
+                          console.log(`🔄 Requesting: ${actualUrl}`);
+                        }
+                      }}
                       errorTileUrl=""
                     />
                     
