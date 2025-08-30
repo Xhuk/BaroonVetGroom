@@ -7,6 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+// Debug MapTiler SDK loading
+console.log(`🔍 MapTiler SDK Status:`, {
+  maptilerExists: typeof (L as any).maptiler,
+  maptilerLayerExists: typeof (L as any).maptiler?.maptilerLayer,
+  leafletVersion: L.version
+});
+
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -166,15 +173,30 @@ export default function DemoMap() {
                       // If this is a MapTiler SDK layer, add it directly to the map
                       if (currentServer.type === 'maptiler') {
                         console.log(`🎯 Creating MapTiler SDK layer with API key: ${currentServer.apiKey}`);
+                        console.log(`🎯 MapTiler SDK available:`, typeof (L as any).maptiler);
+                        console.log(`🎯 maptilerLayer function:`, typeof (L as any).maptiler?.maptilerLayer);
+                        
                         try {
+                          // Check if MapTiler SDK is properly loaded
+                          if (!(L as any).maptiler || !(L as any).maptiler.maptilerLayer) {
+                            console.error(`❌ MapTiler SDK not properly loaded!`);
+                            console.log(`L.maptiler:`, (L as any).maptiler);
+                            return;
+                          }
+                          
                           const mtLayer = new (L as any).maptiler.maptilerLayer({
                             apiKey: currentServer.apiKey,
                           });
+                          
+                          console.log(`🎯 MapTiler layer created:`, mtLayer);
                           mtLayer.addTo(mapInstance);
                           console.log(`✅ MapTiler SDK layer added successfully`);
                         } catch (error) {
                           console.error(`❌ Error creating MapTiler SDK layer:`, error);
+                          console.error(`❌ Error stack:`, error.stack);
                         }
+                      } else {
+                        console.log(`🎯 Using regular tile layer for: ${currentServer.name}`);
                       }
                       
                       setTimeout(() => {
