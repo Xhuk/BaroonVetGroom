@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "@maptiler/leaflet-maptilersdk";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +49,15 @@ export default function DemoMap() {
       name: "MapTiler Basic (using API key)",
       url: `https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=${import.meta.env.VITE_MAPTILER_API_KEY || 'VnIIfVkMlKSgr3pNklzl'}`,
       attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-      maxZoom: 19
+      maxZoom: 19,
+      type: "tile"
+    },
+    {
+      name: "MapTiler SDK Layer (Official)",
+      apiKey: import.meta.env.VITE_MAPTILER_API_KEY || 'VnIIfVkMlKSgr3pNklzl',
+      attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+      maxZoom: 19,
+      type: "maptiler"
     }
   ];
 
@@ -141,7 +150,7 @@ export default function DemoMap() {
                     whenCreated={(mapInstance) => {
                       console.log(`🗺️ Map created with: ${currentServer.name}`);
                       console.log(`🗺️ Map key: ${mapKey}`);
-                      console.log(`🗺️ Using URL: ${currentServer.url}`);
+                      console.log(`🗺️ Server type: ${currentServer.type || 'tile'}`);
                       console.log(`🗺️ Map center: [24.8066, -107.3938]`);
                       console.log(`🗺️ Map zoom: 12`);
                       
@@ -154,6 +163,20 @@ export default function DemoMap() {
                         console.log(`📥 Tile loaded:`, e.url);
                       });
                       
+                      // If this is a MapTiler SDK layer, add it directly to the map
+                      if (currentServer.type === 'maptiler') {
+                        console.log(`🎯 Creating MapTiler SDK layer with API key: ${currentServer.apiKey}`);
+                        try {
+                          const mtLayer = new (L as any).maptiler.maptilerLayer({
+                            apiKey: currentServer.apiKey,
+                          });
+                          mtLayer.addTo(mapInstance);
+                          console.log(`✅ MapTiler SDK layer added successfully`);
+                        } catch (error) {
+                          console.error(`❌ Error creating MapTiler SDK layer:`, error);
+                        }
+                      }
+                      
                       setTimeout(() => {
                         mapInstance.invalidateSize();
                         console.log('🗺️ Map size invalidated');
@@ -162,47 +185,49 @@ export default function DemoMap() {
                       }, 100);
                     }}
                   >
-                    <TileLayer
-                      attribution={currentServer.attribution}
-                      url={currentServer.url}
-                      maxZoom={currentServer.maxZoom}
-                      subdomains={currentServer.subdomains}
-                      onLoad={(e) => {
-                        console.log(`✅ ${currentServer.name} tile loaded successfully`);
-                        console.log(`✅ Event:`, e);
-                        console.log(`✅ Template URL: ${currentServer.url}`);
-                      }}
-                      onError={(e) => {
-                        console.error(`❌ ${currentServer.name} tile loading error:`, e);
-                        console.error(`❌ Error details:`, e.error);
-                        console.error(`❌ Coordinates:`, e.coords);
-                        console.error(`❌ Template URL: ${currentServer.url}`);
-                        // Try to construct the actual URL being requested
-                        if (e.coords) {
-                          const actualUrl = currentServer.url
-                            .replace('{z}', e.coords.z)
-                            .replace('{x}', e.coords.x)
-                            .replace('{y}', e.coords.y)
-                            .replace('{r}', '')
-                            .replace('{s}', currentServer.subdomains ? currentServer.subdomains[0] : '');
-                          console.error(`❌ Actual URL that failed: ${actualUrl}`);
-                        }
-                      }}
-                      onLoading={(e) => {
-                        console.log(`🔄 ${currentServer.name} tiles loading...`);
-                        console.log(`🔄 Loading coords:`, e.coords);
-                        if (e.coords) {
-                          const actualUrl = currentServer.url
-                            .replace('{z}', e.coords.z)
-                            .replace('{x}', e.coords.x)
-                            .replace('{y}', e.coords.y)
-                            .replace('{r}', '')
-                            .replace('{s}', currentServer.subdomains ? currentServer.subdomains[0] : '');
-                          console.log(`🔄 Requesting: ${actualUrl}`);
-                        }
-                      }}
-                      errorTileUrl=""
-                    />
+                    {currentServer.type !== 'maptiler' && (
+                      <TileLayer
+                        attribution={currentServer.attribution}
+                        url={currentServer.url}
+                        maxZoom={currentServer.maxZoom}
+                        subdomains={currentServer.subdomains}
+                        onLoad={(e) => {
+                          console.log(`✅ ${currentServer.name} tile loaded successfully`);
+                          console.log(`✅ Event:`, e);
+                          console.log(`✅ Template URL: ${currentServer.url}`);
+                        }}
+                        onError={(e) => {
+                          console.error(`❌ ${currentServer.name} tile loading error:`, e);
+                          console.error(`❌ Error details:`, e.error);
+                          console.error(`❌ Coordinates:`, e.coords);
+                          console.error(`❌ Template URL: ${currentServer.url}`);
+                          // Try to construct the actual URL being requested
+                          if (e.coords) {
+                            const actualUrl = currentServer.url
+                              .replace('{z}', e.coords.z)
+                              .replace('{x}', e.coords.x)
+                              .replace('{y}', e.coords.y)
+                              .replace('{r}', '')
+                              .replace('{s}', currentServer.subdomains ? currentServer.subdomains[0] : '');
+                            console.error(`❌ Actual URL that failed: ${actualUrl}`);
+                          }
+                        }}
+                        onLoading={(e) => {
+                          console.log(`🔄 ${currentServer.name} tiles loading...`);
+                          console.log(`🔄 Loading coords:`, e.coords);
+                          if (e.coords) {
+                            const actualUrl = currentServer.url
+                              .replace('{z}', e.coords.z)
+                              .replace('{x}', e.coords.x)
+                              .replace('{y}', e.coords.y)
+                              .replace('{r}', '')
+                              .replace('{s}', currentServer.subdomains ? currentServer.subdomains[0] : '');
+                            console.log(`🔄 Requesting: ${actualUrl}`);
+                          }
+                        }}
+                        errorTileUrl=""
+                      />
+                    )}
                     
                     {/* Test Markers */}
                     {testMarkers.map((marker) => (

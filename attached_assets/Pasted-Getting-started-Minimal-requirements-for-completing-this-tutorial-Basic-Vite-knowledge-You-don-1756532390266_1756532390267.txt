@@ -1,0 +1,82 @@
+Getting started
+Minimal requirements for completing this tutorial.
+
+Basic Vite knowledge. You don’t need a lot of experience using Vite for this tutorial, but you should be familiar with basic concepts and workflow.
+
+MapTiler API key. Your MapTiler account access key is on your MapTiler Cloud account page or Get API key for FREE.
+
+Leaflet. JavaScript library for building web maps. In this tutorial, you will learn how to install it.
+
+Maptiler SDK layer. The L.maptiler.maptilerLayer() plugin is how you display vector tiles in Leaflet JS..
+
+Node.js and npm. Necessary to run your Vite app locally. Node.js
+
+Create an app
+In this step, we are going to learn how to create a Vite app.
+
+To create a new Vite project, run in your command-line:
+
+npm create vite@latest my-vite-map -- --template vanilla
+Bash
+Navigate to the newly created project folder my-vite-map
+
+cd my-vite-map
+Bash
+Inside the newly created project folder, run npm install to install the dependencies.
+
+To start your local environment, run npm run dev. You will find your app running on address http://localhost:5173/.
+
+Now you should see the app in your browser.
+
+Vite + vanilla JS app
+
+Installation and setting up
+To install Leaflet and Maptiler SDK layer, navigate to your project folder and run the command:
+
+npm i leaflet @maptiler/leaflet-maptilersdk
+Bash
+Navigate to the src folder and replace all the contents of the style.css file with the following lines:
+
+html,
+body {
+  margin: 0;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+}
+CSS
+Replace all the contents of the main.js file with the following lines:
+
+import L from "leaflet";
+import 'leaflet/dist/leaflet.css';
+import './style.css';
+import "@maptiler/leaflet-maptilersdk";
+
+function init() {
+  const container = document.getElementById('app');
+
+  if (!container) throw new Error('There is no div with the id: "app" ');
+
+  const map = L.map(container, {
+    center: L.latLng(41.387241,2.168963),
+    zoom: 15,
+  });
+
+  // Create a MapTiler Layer inside Leaflet
+  const mtLayer = new L.maptiler.maptilerLayer({
+    // Get your free API key at https://cloud.maptiler.com
+    apiKey: "YOUR_MAPTILER_API_KEY_HERE",
+  }).addTo(map);
+}
+
+init();
+JavaScript
+Here you will need to replace YOUR_MAPTILER_API_KEY_HERE with your actual MapTiler API key.
+
+With everything done up until now, you should be able see your beautiful map in your browser.
+
+Display Leaflet map using Vite
+
+Once the application is finished, you can export the project for production.
