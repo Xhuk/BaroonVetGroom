@@ -9046,19 +9046,40 @@ This password expires in 24 hours.
     }
   });
 
-  // Public endpoint for viewing shared shift calendars
+  // Public endpoint for viewing shared shift calendars - redirect to React app
   app.get('/calendar/shifts/:token', async (req, res) => {
     try {
       const { token } = req.params;
-      const shareData = await storage.getCalendarShareData(token);
       
+      // Verify token is valid before redirecting
+      const shareData = await storage.getCalendarShareData(token);
       if (!shareData) {
-        return res.status(404).json({ message: 'Invalid or expired calendar link' });
+        return res.status(404).send(`
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Enlace Inválido</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; text-align: center; background: #f5f5f5; }
+              .error { background: white; padding: 40px; border-radius: 8px; max-width: 400px; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+              h1 { color: #e74c3c; margin-bottom: 20px; }
+              p { color: #666; line-height: 1.6; }
+            </style>
+          </head>
+          <body>
+            <div class="error">
+              <h1>⚠️ Enlace Inválido</h1>
+              <p>Este enlace de calendario ha expirado o no es válido.</p>
+              <p>Por favor, solicita un nuevo enlace al administrador.</p>
+            </div>
+          </body>
+          </html>
+        `);
       }
 
-      // Render a simple HTML page with shift calendar
-      const shiftData = await storage.getStaffShifts(shareData.tenantId, shareData.staffId);
-      
+      // Serve our React app with the calendar component
       const html = `
         <!DOCTYPE html>
         <html lang="es">
@@ -9066,34 +9087,15 @@ This password expires in 24 hours.
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Calendario de Turnos - ${shareData.staffName}</title>
+          <link rel="stylesheet" href="/dist/index.css">
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-            .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-            .header { text-align: center; color: #333; margin-bottom: 30px; }
-            .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-            .day { padding: 10px; border: 1px solid #ddd; border-radius: 4px; text-align: center; min-height: 60px; }
-            .day.header { background: #007bff; color: white; font-weight: bold; }
-            .day.current { background: #e3f2fd; }
-            .shift { background: #4caf50; color: white; font-size: 12px; padding: 2px 4px; border-radius: 2px; margin-top: 4px; }
+            body { margin: 0; font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; }
+            #root { min-height: 100vh; }
           </style>
         </head>
         <body>
-          <div class="container">
-            <div class="header">
-              <h1>📅 Calendario de Turnos</h1>
-              <h2>${shareData.staffName}</h2>
-            </div>
-            <div class="calendar">
-              <div class="day header">Lun</div>
-              <div class="day header">Mar</div>
-              <div class="day header">Mié</div>
-              <div class="day header">Jue</div>
-              <div class="day header">Vie</div>
-              <div class="day header">Sáb</div>
-              <div class="day header">Dom</div>
-              ${generateCalendarDays(shiftData)}
-            </div>
-          </div>
+          <div id="root"></div>
+          <script type="module" src="/dist/index.js"></script>
         </body>
         </html>
       `;
@@ -9101,46 +9103,32 @@ This password expires in 24 hours.
       res.send(html);
     } catch (error) {
       console.error('Error serving shared calendar:', error);
-      res.status(500).json({ message: 'Error loading calendar' });
+      res.status(500).send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Error</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; text-align: center; background: #f5f5f5; }
+            .error { background: white; padding: 40px; border-radius: 8px; max-width: 400px; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            h1 { color: #e74c3c; margin-bottom: 20px; }
+            p { color: #666; line-height: 1.6; }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h1>⚠️ Error</h1>
+            <p>Ha ocurrido un error al cargar el calendario.</p>
+            <p>Por favor, inténtalo de nuevo más tarde.</p>
+          </div>
+        </body>
+        </html>
+      `);
     }
   });
 
-  // Helper function to generate calendar days
-  function generateCalendarDays(shiftData: any) {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Monday = 0
-    
-    let calendarHTML = '';
-    
-    // Empty cells for days before month starts
-    for (let i = 0; i < startDay; i++) {
-      calendarHTML += '<div class="day"></div>';
-    }
-    
-    // Days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const currentDate = new Date(year, month, day);
-      const dateStr = currentDate.toISOString().split('T')[0];
-      const isToday = dateStr === today.toISOString().split('T')[0];
-      
-      // Find shift for this day (simplified)
-      const shift = shiftData?.[dateStr] || '';
-      
-      calendarHTML += `
-        <div class="day ${isToday ? 'current' : ''}">
-          <div>${day}</div>
-          ${shift ? `<div class="shift">${shift}</div>` : ''}
-        </div>
-      `;
-    }
-    
-    return calendarHTML;
-  }
 
   // Medical Disclaimer Management API endpoints
   app.get('/api/disclaimers/:tenantId', isAuthenticated, async (req, res) => {
