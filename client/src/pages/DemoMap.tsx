@@ -41,16 +41,23 @@ export default function DemoMap() {
       // Use backend proxy to bypass browser restrictions
       console.log('🔄 Using backend tile proxy to bypass Replit browser restrictions');
       
-      // Build absolute URL to ensure proper routing
+      // Try manual tile URL construction to bypass Leaflet interpolation issues
       const baseUrl = window.location.origin;
-      const tileUrl = `${baseUrl}/api/tiles/osm/{z}/{x}/{y}.png`;
-      console.log('🔗 Tile URL template:', tileUrl);
+      console.log('🔗 Base URL:', baseUrl);
       
-      const tileLayer = window.L.tileLayer(tileUrl, {
+      // Create custom tile layer with manual URL construction
+      const CustomTileLayer = window.L.TileLayer.extend({
+        getTileUrl: function(coords: any) {
+          const url = `${baseUrl}/api/tiles/osm/${coords.z}/${coords.x}/${coords.y}.png`;
+          console.log(`🔗 Custom tile URL generated: ${url} for coords:`, coords);
+          return url;
+        }
+      });
+      
+      const tileLayer = new CustomTileLayer('', {
         maxZoom: 19,
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        timeout: 10000,
-        crossOrigin: true
+        timeout: 10000
       });
 
       let tilesLoaded = 0;

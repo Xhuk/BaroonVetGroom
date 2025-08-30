@@ -1,0 +1,270 @@
+ MapTiler API key loaded successfully
+ WebSocket connection to 'wss://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/?token=3SQfIGy6YbKu' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) 
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+ 🗺️ Using vanilla Leaflet (like your working HTML example)
+ 🗺️ Initializing vanilla Leaflet map
+ 🗺️ Map created: NewClass
+ 🗺️ Map center: LatLng
+ 🗺️ Map zoom: 13
+ 🔄 Using backend tile proxy to bypass Replit browser restrictions
+ 🔗 Tile URL template: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/{z}/{x}/{y}.png
+ 🔄 Frontend: Tile layer loading started
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Proxy tile layer added
+ 📍 Marker added: Clínica Veterinaria
+ 📍 Marker added: Las Flores
+ 📍 Marker added: El Bosque
+ 📍 Marker added: Villa Real
+ 🎉 Vanilla Leaflet map initialization complete
+ 🔍 [useAuth] Making network request to /api/auth/user
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Not authenticated, skipping
+ 🎯 [TenantContext] Final context value: Object
+ LanguageContext initialized: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Not authenticated, skipping
+ 🗺️ Map size invalidated
+ >=116
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Not authenticated, skipping
+ 🔍 [useAuth] Response: 200 OK
+ 🔍 [useAuth] User data received: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] Fetching user tenants...
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔄 Forced map size invalidation and redraw
+ ✅ Frontend: Tile layer finished loading (0 tiles, 24 errors)
+ ⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility
+overrideMethod @ installHook.js:1
+ 🔍 Map container size: 1278 x 700
+ 🔍 Tile layer opacity: 1
+ 🔍 Tile layer URL template: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/{z}/{x}/{y}.png
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 [TenantContext] User tenants response: 200
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 [TenantContext] User tenants received: 1 tenants: Array(1)
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ 🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3 skipped: Object
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3 skipped: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 [useAuth] Auth state: Object
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 OK
+ 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:94 🔄 Frontend: Tile layer loading started
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:60 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:98 ✅ Frontend: Tile layer finished loading (0 tiles, 45 errors)
+hook.js:608 ⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility
+overrideMethod @ hook.js:608
+DemoMap.tsx:102 🔍 Map container size: 1278 x 700
+DemoMap.tsx:103 🔍 Tile layer opacity: 1
+DemoMap.tsx:104 🔍 Tile layer URL template: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/{z}/{x}/{y}.png
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:82 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:86 🔍 Blob size: 44479 bytes, type: text/html
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
