@@ -1,0 +1,324 @@
+demo-map:71 MapTiler API key loaded successfully
+client:536 WebSocket connection to 'wss://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/?token=B-k-Mu7P6ct3' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=B-k-Mu7P6ct3' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+useScreenSize.ts:80 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+ 🗺️ Using vanilla Leaflet (like your working HTML example)
+ 🗺️ Initializing vanilla Leaflet map
+ 🗺️ Map created: NewClass {options: {…}, _handlers: Array(7), _layers: {…}, _zoomBoundLayers: {…}, _sizeChanged: false, …}
+ 🗺️ Map center: LatLng {lat: 24.8066, lng: -107.3938}
+ 🗺️ Map zoom: 13
+ 🔄 Using backend tile proxy to bypass Replit browser restrictions
+ 🔗 Base URL: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev
+ 🔄 Frontend: Tile layer loading started
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3512.png for coords: Point {x: 1651, y: 3512, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3512.png for coords: Point {x: 1652, y: 3512, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3513.png for coords: Point {x: 1651, y: 3513, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3513.png for coords: Point {x: 1652, y: 3513, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3511.png for coords: Point {x: 1651, y: 3511, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3511.png for coords: Point {x: 1652, y: 3511, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3512.png for coords: Point {x: 1650, y: 3512, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3512.png for coords: Point {x: 1653, y: 3512, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3513.png for coords: Point {x: 1650, y: 3513, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3513.png for coords: Point {x: 1653, y: 3513, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3514.png for coords: Point {x: 1651, y: 3514, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3514.png for coords: Point {x: 1652, y: 3514, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3511.png for coords: Point {x: 1650, y: 3511, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3511.png for coords: Point {x: 1653, y: 3511, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3514.png for coords: Point {x: 1650, y: 3514, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3514.png for coords: Point {x: 1653, y: 3514, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3512.png for coords: Point {x: 1649, y: 3512, z: 13}
+ 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:54 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3512.png for coords: Point {x: 1654, y: 3512, z: 13}
+DemoMap.tsx:95 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:54 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3513.png for coords: Point {x: 1649, y: 3513, z: 13}
+DemoMap.tsx:95 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:54 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3513.png for coords: Point {x: 1654, y: 3513, z: 13}
+DemoMap.tsx:95 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:54 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3511.png for coords: Point {x: 1649, y: 3511, z: 13}
+DemoMap.tsx:95 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:54 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3511.png for coords: Point {x: 1654, y: 3511, z: 13}
+DemoMap.tsx:95 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:54 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3514.png for coords: Point {x: 1649, y: 3514, z: 13}
+DemoMap.tsx:95 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:54 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3514.png for coords: Point {x: 1654, y: 3514, z: 13}
+DemoMap.tsx:95 🔄 Frontend requesting tile: UNDEFINED URL!
+DemoMap.tsx:144 🔗 Proxy tile layer added
+DemoMap.tsx:163 📍 Marker added: Clínica Veterinaria
+DemoMap.tsx:163 📍 Marker added: Las Flores
+DemoMap.tsx:163 📍 Marker added: El Bosque
+DemoMap.tsx:163 📍 Marker added: Villa Real
+DemoMap.tsx:185 🎉 Vanilla Leaflet map initialization complete
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: false}
+LanguageContext.tsx:28 LanguageContext initialized: {currentLanguage: 'en', savedLanguage: 'en', available: Array(2)}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+ 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+ 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+ 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+ 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: false, allTenantsLength: 0}
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: {userEmail: 'dongadgetoshop@gmail.com', isDemo: false, isAdmin: false, userTenantsAvailable: false, userTenants: Array(0)}
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3512.png
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3512.png
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3513.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3513.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3511.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3511.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3512.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3512.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3513.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3514.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3513.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3514.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3511.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3511.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3514.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3514.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3512.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3512.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3513.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3513.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3511.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3511.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3514.png
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3514.png
+DemoMap.tsx:133 ✅ Frontend: Tile layer finished loading (0 tiles, 24 errors)
+errorSuppression.ts:66 ⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility
+overrideMethod @ hook.js:608
+console.warn @ errorSuppression.ts:66
+(anonymous) @ DemoMap.tsx:136
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=2de63857:387
+_tileReady @ chunk-JQURRHX6.js?v=2de63857:7832
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=2de63857:8050
+tile.onload @ DemoMap.tsx:66
+DemoMap.tsx:137 🔍 Map container size: 1278 x 700
+DemoMap.tsx:138 🔍 Tile layer opacity: 1
+DemoMap.tsx:139 🔍 Tile layer URL template: 
+DemoMap.tsx:182 🗺️ Map size invalidated
+all.js:6 >=116
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:51 🔍 [TenantContext] Fetching user tenants...
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: true}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 0}
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: {userEmail: 'dongadgetoshop@gmail.com', isDemo: false, isAdmin: false, userTenantsAvailable: false, userTenants: Array(0)}
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: true}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:149 🔄 Forced map size invalidation and redraw
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+TenantContext.tsx:53 🔍 [TenantContext] User tenants response: 200
+TenantContext.tsx:58 🔍 [TenantContext] User tenants received: 1 tenants: [{…}]
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 1, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 0}
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: {userEmail: 'dongadgetoshop@gmail.com', isDemo: false, isAdmin: false, userTenantsAvailable: true, userTenants: Array(1)}
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: false}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+InstantNavigation.tsx:17 🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 1, currentTenant: 'vetgroom1', isLoadingTenants: false}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 0}
+TenantContext.tsx:192 🔍 [TenantContext] Priority 3 skipped: {hasEmail: true, hasCurrentTenant: true, debugMode: false}
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: 'vetgroom1', currentTenantName: 'vetgroom1', tenant: undefined, localCurrentTenant: 'vetgroom1', isLoading: true}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 1, currentTenant: 'vetgroom1', isLoadingTenants: false}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 6}
+TenantContext.tsx:192 🔍 [TenantContext] Priority 3 skipped: {hasEmail: true, hasCurrentTenant: true, debugMode: false}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: 'vetgroom1', currentTenantName: 'Vetgroom1', tenant: 'vetgroom1', localCurrentTenant: 'vetgroom1', isLoading: false}
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:117 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:121 🔍 Blob size: 44479 bytes, type: text/html
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false

@@ -63,6 +63,14 @@ export default function DemoMap() {
           
           tile.onload = () => {
             console.log(`✅ Tile loaded and positioned: ${url}`);
+            console.log(`🔍 Tile DOM info:`, {
+              width: tile.style.width,
+              height: tile.style.height,
+              position: tile.style.position,
+              opacity: tile.style.opacity,
+              parentElement: tile.parentElement?.tagName,
+              isConnected: tile.isConnected
+            });
             done(null, tile);
           };
           
@@ -91,16 +99,11 @@ export default function DemoMap() {
       let tilesLoaded = 0;
       let tilesErrored = 0;
       
-      tileLayer.on('tileloadstart', (e: any) => {
-        console.log(`🔄 Frontend requesting tile: ${e.url || 'UNDEFINED URL!'}`);
-        if (!e.url || e.url === 'undefined') {
-          console.error(`❌ CRITICAL: Tile URL is undefined!`, {
-            coords: e.coords,
-            tile: e.tile,
-            template: tileLayer._url
-          });
-        }
-      });
+      // Disable conflicting tile load events since we're using custom createTile()
+      tileLayer.off('tileloadstart');
+      tileLayer.off('tileerror');
+      
+      console.log('🔇 Disabled conflicting Leaflet tile events - using custom tile system only');
 
       tileLayer.on('tileload', (e: any) => {
         tilesLoaded++;
