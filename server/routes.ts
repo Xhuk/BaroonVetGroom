@@ -9716,8 +9716,14 @@ This password expires in 24 hours.
     }
   });
 
-  // Tile proxy endpoint to bypass browser restrictions in Replit
+  // Tile proxy endpoint to bypass browser restrictions in Replit (NO AUTH REQUIRED)
   app.get('/api/tiles/:provider/:z/:x/:y.:format', async (req, res) => {
+    // Skip all authentication and middleware for tile requests
+    res.set({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET',
+      'Access-Control-Allow-Headers': '*'
+    });
     const { provider, z, x, y, format } = req.params;
     
     const tileServers = {

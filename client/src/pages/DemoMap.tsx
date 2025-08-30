@@ -41,17 +41,30 @@ export default function DemoMap() {
       // Use backend proxy to bypass browser restrictions
       console.log('🔄 Using backend tile proxy to bypass Replit browser restrictions');
       
-      const tileLayer = window.L.tileLayer('/api/tiles/osm/{z}/{x}/{y}.png', {
+      // Build absolute URL to ensure proper routing
+      const baseUrl = window.location.origin;
+      const tileUrl = `${baseUrl}/api/tiles/osm/{z}/{x}/{y}.png`;
+      console.log('🔗 Tile URL template:', tileUrl);
+      
+      const tileLayer = window.L.tileLayer(tileUrl, {
         maxZoom: 19,
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        timeout: 10000
+        timeout: 10000,
+        crossOrigin: true
       });
 
       let tilesLoaded = 0;
       let tilesErrored = 0;
       
       tileLayer.on('tileloadstart', (e: any) => {
-        console.log(`🔄 Frontend requesting tile: ${e.url}`);
+        console.log(`🔄 Frontend requesting tile: ${e.url || 'UNDEFINED URL!'}`);
+        if (!e.url || e.url === 'undefined') {
+          console.error(`❌ CRITICAL: Tile URL is undefined!`, {
+            coords: e.coords,
+            tile: e.tile,
+            template: tileLayer._url
+          });
+        }
       });
 
       tileLayer.on('tileload', (e: any) => {

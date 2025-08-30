@@ -1,0 +1,573 @@
+ MapTiler API key loaded successfully
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+ 🗺️ Using vanilla Leaflet (like your working HTML example)
+ 🗺️ Initializing vanilla Leaflet map
+ 🗺️ Map created: k
+ 🗺️ Map center: mt
+ 🗺️ Map zoom: 13
+ 🔄 Using backend tile proxy to bypass Replit browser restrictions
+ 🔄 Frontend: Tile layer loading started
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔗 Proxy tile layer added
+ 📍 Marker added: Clínica Veterinaria
+ 📍 Marker added: Las Flores
+ 📍 Marker added: El Bosque
+ 📍 Marker added: Villa Real
+ 🎉 Vanilla Leaflet map initialization complete
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Not authenticated, skipping
+ 🎯 [TenantContext] Final context value: Object
+ LanguageContext initialized: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Not authenticated, skipping
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🔍 [useAuth] Auth state: Object
+ 🗺️ Map size invalidated
+ >=116
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] Fetching user tenants...
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔄 Forced map size invalidation and redraw
+ ✅ Frontend: Tile layer finished loading (0 tiles, 24 errors)
+ ⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility
+overrideMethod @ installHook.js:1
+ 🔍 Map container size: 1277 x 700
+ 🔍 Tile layer opacity: 1
+ 🔍 Tile layer URL template: /api/tiles/osm/{z}/{x}/{y}.png
+ 🔍 [TenantContext] User tenants response: 200
+ 🔍 Direct test of failed tile: 200 
+ 🔍 [TenantContext] User tenants received: 1 tenants: Array(1)
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ 🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3 skipped: Object
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3 skipped: Object
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 [useAuth] Auth state: Object
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 [useAuth] Auth state: Object
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔄 Frontend: Tile layer loading started
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ 🔄 Frontend requesting tile: undefined
+ ✅ Frontend: Tile layer finished loading (0 tiles, 83 errors)
+ ⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility
+overrideMethod @ installHook.js:1
+ 🔍 Map container size: 1277 x 700
+ 🔍 Tile layer opacity: 1
+ 🔍 Tile layer URL template: /api/tiles/osm/{z}/{x}/{y}.png
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+ 🔍 Blob size: 2292 bytes, type: text/html
+ 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔄 Frontend: Tile layer loading started
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 ✅ Frontend: Tile layer finished loading (0 tiles, 95 errors)
+hook.js:608 ⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility
+overrideMethod @ hook.js:608
+index-PcEfSBVy.js:1966 🔍 Map container size: 1277 x 700
+index-PcEfSBVy.js:1966 🔍 Tile layer opacity: 1
+index-PcEfSBVy.js:1966 🔍 Tile layer URL template: /api/tiles/osm/{z}/{x}/{y}.png
+index-PcEfSBVy.js:1966 🔄 Frontend: Tile layer loading started
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 ✅ Frontend: Tile layer finished loading (0 tiles, 101 errors)
+hook.js:608 ⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility
+overrideMethod @ hook.js:608
+index-PcEfSBVy.js:1966 🔍 Map container size: 1277 x 700
+index-PcEfSBVy.js:1966 🔍 Tile layer opacity: 1
+index-PcEfSBVy.js:1966 🔍 Tile layer URL template: /api/tiles/osm/{z}/{x}/{y}.png
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔄 Frontend: Tile layer loading started
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 ✅ Frontend: Tile layer finished loading (0 tiles, 109 errors)
+hook.js:608 ⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility
+overrideMethod @ hook.js:608
+index-PcEfSBVy.js:1966 🔍 Map container size: 1277 x 700
+index-PcEfSBVy.js:1966 🔍 Tile layer opacity: 1
+index-PcEfSBVy.js:1966 🔍 Tile layer URL template: /api/tiles/osm/{z}/{x}/{y}.png
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔄 Frontend: Tile layer loading started
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 ✅ Frontend: Tile layer finished loading (0 tiles, 125 errors)
+hook.js:608 ⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility
+overrideMethod @ hook.js:608
+index-PcEfSBVy.js:1966 🔍 Map container size: 1277 x 700
+index-PcEfSBVy.js:1966 🔍 Tile layer opacity: 1
+index-PcEfSBVy.js:1966 🔍 Tile layer URL template: /api/tiles/osm/{z}/{x}/{y}.png
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔄 Frontend: Tile layer loading started
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 🔄 Frontend requesting tile: undefined
+index-PcEfSBVy.js:1966 ✅ Frontend: Tile layer finished loading (0 tiles, 143 errors)
+hook.js:608 ⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility
+overrideMethod @ hook.js:608
+index-PcEfSBVy.js:1966 🔍 Map container size: 1277 x 700
+index-PcEfSBVy.js:1966 🔍 Tile layer opacity: 1
+index-PcEfSBVy.js:1966 🔍 Tile layer URL template: /api/tiles/osm/{z}/{x}/{y}.png
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:723 📱 Resize Event: desktop, landscape: true, useRibbon: false
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
+index-PcEfSBVy.js:1966 🔍 Direct test of failed tile: 200 
+index-PcEfSBVy.js:1966 🔍 Blob size: 2292 bytes, type: text/html
