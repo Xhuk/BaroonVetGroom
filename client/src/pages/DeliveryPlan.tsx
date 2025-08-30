@@ -37,8 +37,50 @@ import {
   Navigation,
   RefreshCw
 } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Staff, Appointment } from "@shared/schema";
+
+// Create priority-based icons for fraccionamientos
+const createPriorityIcon = (priority: 'Alta' | 'Media' | 'Baja', weight: number) => {
+  const color = priority === 'Alta' ? '#dc2626' : priority === 'Media' ? '#ea580c' : '#16a34a';
+  const bgColor = priority === 'Alta' ? '#fef2f2' : priority === 'Media' ? '#fff7ed' : '#f0fdf4';
+  
+  return L.divIcon({
+    html: `
+      <div style="
+        width: 32px; 
+        height: 32px; 
+        background-color: ${color}; 
+        border: 2px solid white; 
+        border-radius: 50%; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-weight: bold; 
+        font-size: 12px; 
+        color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      ">${weight.toFixed(1)}</div>
+    `,
+    className: 'custom-priority-marker',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
+  });
+};
+
+// Clinic location icon (blue)
+const clinicIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 export default function DeliveryPlan() {
   // ALL HOOKS MUST BE CALLED AT THE TOP LEVEL - NO EARLY RETURNS BEFORE THIS POINT
@@ -575,47 +617,132 @@ export default function DeliveryPlan() {
                 </CardContent>
               </Card>
 
-              {/* Neighborhood Optimization */}
-              <Card>
+              {/* Neighborhood Optimization with Map */}
+              <Card className="h-96">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Star className="w-5 h-5" />
                     Optimización por Fraccionamiento
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="max-h-96 overflow-y-auto">
-                  <div className="space-y-3">
-                    {fraccionamientosWithWeights.slice(0, 6).map((frac, index) => (
-                      <div 
-                        key={frac.id || index}
-                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                <CardContent className="h-full p-0">
+                  <div className="grid grid-cols-5 h-full">
+                    {/* Fraccionamientos List - 2/5 width */}
+                    <div className="col-span-2 p-4 overflow-y-auto border-r border-gray-200 dark:border-gray-600">
+                      <div className="space-y-2">
+                        {fraccionamientosWithWeights.slice(0, 6).map((frac, index) => (
+                          <div 
+                            key={frac.id || index}
+                            className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                <span className="text-xs font-bold text-blue-600">{index + 1}</span>
+                              </div>
+                              <p className="font-medium text-gray-800 dark:text-gray-200 text-sm">
+                                {frac.name}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-gray-600">{frac.appointments} entregas</span>
+                              <div className="flex items-center gap-1">
+                                <Weight className="w-3 h-3 text-orange-500" />
+                                <span className="font-medium text-orange-600">
+                                  {frac.weight}
+                                </span>
+                                <Badge 
+                                  className={`text-xs px-1 py-0 ${
+                                    frac.priority === 'Alta' ? 'bg-red-100 text-red-800' :
+                                    frac.priority === 'Media' ? 'bg-orange-100 text-orange-800' :
+                                    'bg-green-100 text-green-800'
+                                  }`}
+                                >
+                                  {frac.priority}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Map View - 3/5 width */}
+                    <div className="col-span-3 relative">
+                      <MapContainer
+                        center={[24.8066, -107.3938]} // Culiacán center
+                        zoom={12}
+                        style={{ height: '100%', width: '100%' }}
+                        className="rounded-r-lg"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                            <span className="text-sm font-bold text-blue-600">{index + 1}</span>
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        
+                        {/* Clinic Location */}
+                        <Marker 
+                          position={[24.8066, -107.3938]} 
+                          icon={clinicIcon}
+                        >
+                          <Popup>
+                            <div className="text-center">
+                              <div className="font-semibold text-blue-600">Clínica Veterinaria</div>
+                              <div className="text-sm">{currentTenant}</div>
+                              <div className="text-xs text-gray-500">Ubicación base</div>
+                            </div>
+                          </Popup>
+                        </Marker>
+                        
+                        {/* Fraccionamientos Markers */}
+                        {fraccionamientosWithWeights.slice(0, 6).map((frac, index) => {
+                          // Mock coordinates around Culiacán for demonstration
+                          const coordinates: [number, number] = [
+                            24.8066 + (Math.random() - 0.5) * 0.1, // Random offset within ~5km radius
+                            -107.3938 + (Math.random() - 0.5) * 0.1
+                          ];
+                          
+                          return (
+                            <Marker
+                              key={frac.id || index}
+                              position={coordinates}
+                              icon={createPriorityIcon(frac.priority as 'Alta' | 'Media' | 'Baja', frac.weight)}
+                            >
+                              <Popup>
+                                <div className="text-center">
+                                  <div className="font-semibold text-gray-800">{frac.name}</div>
+                                  <div className="text-sm text-gray-600">{frac.appointments} entregas pendientes</div>
+                                  <div className="text-xs text-orange-600 font-medium">
+                                    Peso: {frac.weight} | Prioridad: {frac.priority}
+                                  </div>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    Zona: {frac.zone || 'Centro'}
+                                  </div>
+                                </div>
+                              </Popup>
+                            </Marker>
+                          );
+                        })}
+                      </MapContainer>
+                      
+                      {/* Map Legend */}
+                      <div className="absolute bottom-2 left-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 z-[1000]">
+                        <div className="text-xs font-semibold mb-1">Leyenda</div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1 text-xs">
+                            <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                            <span>Alta prioridad (7-10)</span>
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-800 dark:text-gray-200">
-                              {frac.name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {frac.appointments} entregas pendientes
-                            </p>
+                          <div className="flex items-center gap-1 text-xs">
+                            <div className="w-3 h-3 bg-orange-600 rounded-full"></div>
+                            <span>Media prioridad (4-7)</span>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="flex items-center gap-1">
-                            <Weight className="w-4 h-4 text-orange-500" />
-                            <span className="text-sm font-medium text-orange-600">
-                              Peso {frac.weight}
-                            </span>
+                          <div className="flex items-center gap-1 text-xs">
+                            <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                            <span>Baja prioridad (1-4)</span>
                           </div>
-                          <p className="text-xs text-gray-500">
-                            Prioridad {frac.weight > 7 ? 'Alta' : frac.weight > 4 ? 'Media' : 'Baja'}
-                          </p>
                         </div>
                       </div>
-                    ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
