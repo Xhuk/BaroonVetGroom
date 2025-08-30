@@ -32,8 +32,10 @@ export default function PersonalCalendar() {
   const [selectedStaff, setSelectedStaff] = useState('all');
   const [nameFilter, setNameFilter] = useState('');
   
-  // Parse URL parameters
+  // Parse URL parameters or route params
   const urlParams = new URLSearchParams(window.location.search);
+  const isSharedCalendar = location.startsWith('/calendar/shifts/');
+  const shareToken = isSharedCalendar ? location.split('/').pop() : null;
   const tenantId = urlParams.get('tenant') || '';
   const nameParam = urlParams.get('name') || '';
 
@@ -46,13 +48,21 @@ export default function PersonalCalendar() {
 
   // Fetch personal calendar data
   const { data: calendarData, isLoading } = useQuery<PersonalCalendarData>({
-    queryKey: ['/api/calendar/personal', tenantId, nameFilter],
+    queryKey: isSharedCalendar 
+      ? ['/api/calendar/shared', shareToken] 
+      : ['/api/calendar/personal', tenantId, nameFilter],
     queryFn: async () => {
-      const response = await fetch(`/api/calendar/personal/${tenantId}?name=${encodeURIComponent(nameFilter)}`);
-      if (!response.ok) throw new Error('Failed to fetch calendar');
-      return response.json();
+      if (isSharedCalendar) {
+        const response = await fetch(`/api/calendar/shared/${shareToken}`);
+        if (!response.ok) throw new Error('Failed to fetch shared calendar');
+        return response.json();
+      } else {
+        const response = await fetch(`/api/calendar/personal/${tenantId}?name=${encodeURIComponent(nameFilter)}`);
+        if (!response.ok) throw new Error('Failed to fetch calendar');
+        return response.json();
+      }
     },
-    enabled: !!tenantId,
+    enabled: isSharedCalendar ? !!shareToken : !!tenantId,
   });
 
   const filteredStaff = calendarData?.staff?.filter(staff => {
@@ -97,7 +107,7 @@ export default function PersonalCalendar() {
               <Calendar className="w-8 h-8 text-blue-600" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Calendario Personal
+                  Calendario de Turnos
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {calendarData.tenant.name}

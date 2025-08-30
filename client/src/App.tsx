@@ -193,6 +193,7 @@ function Router() {
       <Route path="/driver-dashboard/:driverId" component={DriverMobile} />
       <Route path="/temp/:token" component={TempLinkHandler} />
       <Route path="/calendar/personal" component={PersonalCalendar} />
+      <Route path="/calendar/shifts/:token" component={PersonalCalendar} />
       <Route component={NotFound} />
       </Switch>
     </DeviceBlocker>

@@ -910,6 +910,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all staff for the tenant
       const staffMembers = await storage.getStaff(tenantId);
       
+      // Get shift patterns for the tenant
+      const shiftPatterns = await storage.getShiftPatterns(tenantId);
+      const shiftAssignments = await storage.getShiftAssignments(tenantId);
+      
       // Filter by name if provided
       let filteredStaff = staffMembers;
       if (name && name !== 'all') {
@@ -929,31 +933,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const weekStart = startDate || monday.toISOString().split('T')[0];
       const weekEnd = endDate || sunday.toISOString().split('T')[0];
       
-      // Create sample shift data for demonstration
+      // Create pattern lookup by name for easy access
+      const patternLookup = (shiftPatterns || []).reduce((acc: any, pattern: any) => {
+        acc[pattern.name] = pattern;
+        return acc;
+      }, {});
+      
+      // Generate realistic shift assignments for current week (same as Visual Shift Board)
+      const sampleShiftAssignments = [
+        ['morning_shift', 'morning_shift', 'afternoon_shift', 'flexible_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
+        ['morning_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
+        ['leave_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
+        ['morning_shift', 'flexible_shift', 'flexible_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
+        ['+', 'morning_shift', 'morning_shift', 'afternoon_shift', 'leave_shift', 'weekend_off', 'weekend_off'],
+        ['morning_shift', 'leave_shift', 'morning_shift', 'morning_shift', '+', 'weekend_off', 'weekend_off']
+      ];
+      
+      // Get tenant name
+      const tenant = await storage.getTenant(tenantId);
+      
       const personalCalendar = {
-        tenant: { id: tenantId, name: `Tenant ${tenantId}` },
+        tenant: { id: tenantId, name: tenant?.name || `Tenant ${tenantId}` },
         dateRange: { startDate: weekStart, endDate: weekEnd },
         staff: filteredStaff.map((staff, index) => {
-          // Generate sample shifts based on staff index
+          const assignments = sampleShiftAssignments[index % sampleShiftAssignments.length];
           const shifts = [];
+          
           for (let day = 0; day < 7; day++) {
             const date = new Date(monday);
             date.setDate(monday.getDate() + day);
+            const patternName = assignments[day];
             
             let shiftData = null;
-            if (day < 5) { // Monday to Friday
-              const patterns = [
-                { time: '08:00 - 16:00', hours: 8, type: 'Matutino' },
-                { time: '16:00 - 00:00', hours: 8, type: 'Vespertino' },
-                { time: '09:00 - 18:00', hours: 9, type: 'Flexible' },
-                { time: 'On leave', hours: 0, type: 'Permiso' }
-              ];
-              
-              // Rotate patterns based on staff index and day
-              const patternIndex = (index + day) % patterns.length;
-              shiftData = patterns[patternIndex];
-            } else { // Weekend
-              shiftData = { time: 'Week off', hours: 0, type: 'Descanso' };
+            
+            if (patternName === '+') {
+              shiftData = { time: 'Sin asignar', hours: 0, type: 'Sin turno' };
+            } else {
+              const pattern = patternLookup[patternName];
+              if (!pattern) {
+                shiftData = { time: 'Sin asignar', hours: 0, type: 'Sin turno' };
+              } else {
+                // Format display based on pattern type
+                if (pattern.name === 'weekend_off') {
+                  shiftData = { time: 'Week off', hours: 0, type: 'Descanso' };
+                } else if (pattern.name === 'leave_shift') {
+                  shiftData = { time: 'On leave', hours: 0, type: 'Permiso' };
+                } else if (pattern.name === 'flexible_shift') {
+                  shiftData = { time: 'Flexible', hours: 9, type: 'Flexible' };
+                } else {
+                  // Calculate hours difference
+                  const start = new Date(`2000-01-01T${pattern.startTime}`);
+                  const end = new Date(`2000-01-01T${pattern.endTime}`);
+                  let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                  if (hours < 0) hours += 24; // Handle overnight shifts
+                  
+                  const breakHours = pattern.breakDuration / 60;
+                  const workHours = Math.max(0, hours - breakHours);
+                  
+                  shiftData = { 
+                    time: `${pattern.startTime} - ${pattern.endTime}`, 
+                    hours: Math.round(workHours), 
+                    type: pattern.displayName || 'Regular'
+                  };
+                }
+              }
             }
             
             shifts.push({
@@ -976,6 +1019,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching personal calendar:", error);
       res.status(500).json({ message: "Failed to fetch personal calendar" });
+    }
+  });
+
+  // Shared calendar endpoint for token-based access
+  app.get('/api/calendar/shared/:token', async (req: any, res) => {
+    try {
+      const { token } = req.params;
+      
+      // Get share data from token
+      const shareData = await storage.getCalendarShareData(token);
+      if (!shareData) {
+        return res.status(404).json({ message: 'Invalid or expired calendar link' });
+      }
+      
+      const { tenantId, staffId, staffName } = shareData;
+      
+      // Get all staff for the tenant (to maintain same structure)
+      const staffMembers = await storage.getStaff(tenantId);
+      
+      // Get shift patterns for the tenant
+      const shiftPatterns = await storage.getShiftPatterns(tenantId);
+      
+      // Filter to only the specific staff member
+      const filteredStaff = staffMembers.filter(staff => staff.id === staffId);
+      
+      // Get current week's date range
+      const today = new Date();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - today.getDay() + 1);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      
+      const weekStart = monday.toISOString().split('T')[0];
+      const weekEnd = sunday.toISOString().split('T')[0];
+      
+      // Create pattern lookup by name for easy access
+      const patternLookup = (shiftPatterns || []).reduce((acc: any, pattern: any) => {
+        acc[pattern.name] = pattern;
+        return acc;
+      }, {});
+      
+      // Generate realistic shift assignments for current week (same as Visual Shift Board)
+      const sampleShiftAssignments = [
+        ['morning_shift', 'morning_shift', 'afternoon_shift', 'flexible_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
+        ['morning_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
+        ['leave_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
+        ['morning_shift', 'flexible_shift', 'flexible_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
+        ['+', 'morning_shift', 'morning_shift', 'afternoon_shift', 'leave_shift', 'weekend_off', 'weekend_off'],
+        ['morning_shift', 'leave_shift', 'morning_shift', 'morning_shift', '+', 'weekend_off', 'weekend_off']
+      ];
+      
+      // Get tenant name
+      const tenant = await storage.getTenant(tenantId);
+      
+      const personalCalendar = {
+        tenant: { id: tenantId, name: tenant?.name || `Tenant ${tenantId}` },
+        dateRange: { startDate: weekStart, endDate: weekEnd },
+        staff: filteredStaff.map((staff, index) => {
+          const assignments = sampleShiftAssignments[index % sampleShiftAssignments.length];
+          const shifts = [];
+          
+          for (let day = 0; day < 7; day++) {
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + day);
+            const patternName = assignments[day];
+            
+            let shiftData = null;
+            
+            if (patternName === '+') {
+              shiftData = { time: 'Sin asignar', hours: 0, type: 'Sin turno' };
+            } else {
+              const pattern = patternLookup[patternName];
+              if (!pattern) {
+                shiftData = { time: 'Sin asignar', hours: 0, type: 'Sin turno' };
+              } else {
+                // Format display based on pattern type
+                if (pattern.name === 'weekend_off') {
+                  shiftData = { time: 'Week off', hours: 0, type: 'Descanso' };
+                } else if (pattern.name === 'leave_shift') {
+                  shiftData = { time: 'On leave', hours: 0, type: 'Permiso' };
+                } else if (pattern.name === 'flexible_shift') {
+                  shiftData = { time: 'Flexible', hours: 9, type: 'Flexible' };
+                } else {
+                  // Calculate hours difference
+                  const start = new Date(`2000-01-01T${pattern.startTime}`);
+                  const end = new Date(`2000-01-01T${pattern.endTime}`);
+                  let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                  if (hours < 0) hours += 24; // Handle overnight shifts
+                  
+                  const breakHours = pattern.breakDuration / 60;
+                  const workHours = Math.max(0, hours - breakHours);
+                  
+                  shiftData = { 
+                    time: `${pattern.startTime} - ${pattern.endTime}`, 
+                    hours: Math.round(workHours), 
+                    type: pattern.displayName || 'Regular'
+                  };
+                }
+              }
+            }
+            
+            shifts.push({
+              date: date.toISOString().split('T')[0],
+              dayName: ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'][date.getDay()],
+              shift: shiftData
+            });
+          }
+          
+          return {
+            id: staff.id,
+            name: staff.name,
+            role: staff.role,
+            shifts: shifts
+          };
+        })
+      };
+      
+      res.json(personalCalendar);
+    } catch (error) {
+      console.error("Error fetching shared calendar:", error);
+      res.status(500).json({ message: "Failed to fetch shared calendar" });
     }
   });
 
