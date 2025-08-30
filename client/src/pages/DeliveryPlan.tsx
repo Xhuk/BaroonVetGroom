@@ -695,14 +695,8 @@ export default function DeliveryPlan() {
                               key={`route-${selectedRouteForMap.id}`}
                             >
                               <TileLayer
-                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                maxZoom={19}
-                                subdomains={['a', 'b', 'c']}
-                                crossOrigin=""
-                                updateWhenIdle={false}
-                                updateWhenZooming={true}
-                                keepBuffer={4}
                               />
                               
                               {/* Clinic Location */}
@@ -751,17 +745,10 @@ export default function DeliveryPlan() {
                             className="rounded-r-lg z-10"
                             key="fraccionamientos-map"
                           >
-                          <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            maxZoom={19}
-                            subdomains={['a', 'b', 'c']}
-                            crossOrigin=""
-                            detectRetina={true}
-                            updateWhenIdle={false}
-                            updateWhenZooming={true}
-                            keepBuffer={4}
-                          />
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
                           
                           {/* Clinic Location */}
                           <Marker 
