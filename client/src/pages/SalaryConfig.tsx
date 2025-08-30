@@ -146,7 +146,7 @@ export function SalaryConfig() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
       <div className="flex">
-        <Navigation />
+        {/* Navigation sidebar hidden for salary configuration */}
         <main className="flex-1 p-6">
           <div className="max-w-6xl mx-auto">
             <div className="mb-6 flex items-center gap-4">
