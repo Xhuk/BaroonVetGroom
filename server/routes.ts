@@ -8877,7 +8877,7 @@ This password expires in 24 hours.
   // Medical Disclaimer Management API endpoints
   app.get('/api/disclaimers', isAuthenticated, async (req, res) => {
     try {
-      const tenantId = req.user?.tenantId;
+      const tenantId = req.user?.tenant || req.session?.tenantId;
       if (!tenantId) {
         return res.status(400).json({ message: "Tenant ID requerido" });
       }
@@ -8890,9 +8890,62 @@ This password expires in 24 hours.
     }
   });
 
+  // Get single disclaimer (public access for signing)
+  app.get('/api/disclaimers/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const disclaimer = await storage.getDisclaimerById(id);
+      
+      if (!disclaimer) {
+        return res.status(404).json({ message: "Disclaimer no encontrado" });
+      }
+
+      res.json(disclaimer);
+    } catch (error) {
+      console.error('Error fetching disclaimer:', error);
+      res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  });
+
+  // Sign disclaimer (public access)
+  app.post('/api/disclaimers/:id/sign', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { appointmentId, clientName, clientEmail, signatureData, signedAt } = req.body;
+
+      if (!appointmentId || !clientName || !signatureData) {
+        return res.status(400).json({ 
+          message: "Appointment ID, client name, and signature are required" 
+        });
+      }
+
+      // Save signed disclaimer data - using existing activation system
+      const signedDisclaimerData = {
+        disclaimerId: id,
+        clientId: null, // We don't have clientId from the mobile form
+        petId: null,
+        appointmentId,
+        medicalRecordId: null,
+        followUpTaskId: null,
+        notes: `Signed digitally by ${clientName} on mobile device. Email: ${clientEmail || 'Not provided'}. Signature data included.`,
+        activatedAt: signedAt || new Date().toISOString(),
+      };
+
+      await storage.createDisclaimerActivation(signedDisclaimerData);
+
+      res.json({ 
+        message: "Disclaimer signed successfully",
+        signedAt: signedAt || new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error saving signed disclaimer:', error);
+      res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  });
+
   app.post('/api/disclaimers', isAuthenticated, async (req, res) => {
     try {
-      const tenantId = req.user?.tenantId;
+      const tenantId = req.user?.tenant || req.session?.tenantId;
       if (!tenantId) {
         return res.status(400).json({ message: "Tenant ID requerido" });
       }
@@ -8909,7 +8962,7 @@ This password expires in 24 hours.
         category,
         requiresSignature: requiresSignature ?? true,
         isPrintable: isPrintable ?? true,
-        createdBy: req.user?.claims?.sub
+        createdBy: req.user?.id || req.session?.userId
       });
 
       res.json(disclaimer);

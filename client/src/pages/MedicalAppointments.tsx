@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Calendar, CalendarIcon, Plus, Search, Stethoscope, FileText, Clock, 
   AlertCircle, CheckCircle, User, MapPin, Camera, Upload, Download, QrCode,
-  FolderOpen, Eye, Zap
+  FolderOpen, Eye, Zap, MessageCircle, Printer
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -79,6 +79,8 @@ export default function MedicalAppointments() {
   const [selectedAppointment, setSelectedAppointment] = useState<MedicalAppointment | null>(null);
   const [showDiagnosisForm, setShowDiagnosisForm] = useState(false);
   const [inventoryUsed, setInventoryUsed] = useState<InventoryUsageItem[]>([]);
+  const [selectedDisclaimer, setSelectedDisclaimer] = useState<string>("");
+  const [showDisclaimerOptions, setShowDisclaimerOptions] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -103,6 +105,12 @@ export default function MedicalAppointments() {
   const clients = fastData?.clients || [];
   const veterinarians = fastData?.veterinarians || [];
   const rooms = fastData?.rooms || [];
+
+  // Disclaimers data query
+  const { data: disclaimersData } = useQuery({
+    queryKey: ['/api/disclaimers', currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
 
   // Debug logging to check data structure
   useEffect(() => {
@@ -344,6 +352,109 @@ export default function MedicalAppointments() {
     } else {
       return { type: "past", label: "PASADA", color: "bg-gray-100 text-gray-700 border-gray-300" };
     }
+  };
+
+  // Generate disclaimer link for WhatsApp
+  const generateDisclaimerLink = (disclaimerId: string, appointmentId: string) => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/disclaimers/sign/${disclaimerId}/${appointmentId}`;
+  };
+
+  // Send disclaimer via WhatsApp
+  const sendDisclaimerViaWhatsApp = () => {
+    if (!selectedDisclaimer || !selectedAppointment) {
+      toast({
+        title: "Error",
+        description: "Selecciona un consentimiento primero",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const disclaimerLink = generateDisclaimerLink(selectedDisclaimer, selectedAppointment.id);
+    const client = clients.find(c => c.id === selectedAppointment.clientId);
+    const pet = pets.find(p => p.id === selectedAppointment.petId);
+    
+    const message = encodeURIComponent(
+      `Hola ${client?.name || ''}! 
+
+Por favor firma el consentimiento médico para ${pet?.name || 'su mascota'} haciendo clic en este enlace:
+
+${disclaimerLink}
+
+Este consentimiento es necesario para proceder con el procedimiento médico.
+
+Gracias!`
+    );
+
+    const phoneNumber = client?.phone?.replace(/\D/g, '') || '';
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+    
+    window.open(whatsappUrl, '_blank');
+    
+    toast({
+      title: "WhatsApp abierto",
+      description: "Se abrió WhatsApp con el enlace del consentimiento",
+    });
+  };
+
+  // Print disclaimer
+  const printDisclaimer = () => {
+    if (!selectedDisclaimer) {
+      toast({
+        title: "Error", 
+        description: "Selecciona un consentimiento primero",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const disclaimer = disclaimersData?.find((d: any) => d.id === selectedDisclaimer);
+    if (!disclaimer) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const client = clients.find(c => c.id === selectedAppointment?.clientId);
+    const pet = pets.find(p => p.id === selectedAppointment?.petId);
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Consentimiento Médico</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
+            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+            .content { margin-bottom: 40px; }
+            .signature-section { border-top: 1px solid #ccc; padding-top: 30px; }
+            .signature-line { border-bottom: 1px solid #333; width: 300px; height: 40px; display: inline-block; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>${disclaimer.title}</h1>
+            <p><strong>Cliente:</strong> ${client?.name || ''}</p>
+            <p><strong>Mascota:</strong> ${pet?.name || ''}</p>
+            <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-ES')}</p>
+          </div>
+          <div class="content">
+            ${disclaimer.content.replace(/\n/g, '<br>')}
+          </div>
+          ${disclaimer.requiresSignature ? `
+            <div class="signature-section">
+              <p><strong>Firma del cliente:</strong></p>
+              <div class="signature-line"></div>
+              <p>Nombre: _________________________________</p>
+              <p>Fecha: _________________________________</p>
+            </div>
+          ` : ''}
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.print();
   };
 
   if (!currentTenant) {
@@ -727,6 +838,60 @@ export default function MedicalAppointments() {
               </div>
             )}
           </DialogHeader>
+
+          {/* Disclaimer Selection Section */}
+          <div className="border rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Consentimiento Médico
+              </h3>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={printDisclaimer}
+                  disabled={!selectedDisclaimer}
+                  data-testid="button-print-disclaimer"
+                >
+                  <Printer className="w-4 h-4 mr-1" />
+                  Imprimir
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={sendDisclaimerViaWhatsApp}
+                  disabled={!selectedDisclaimer}
+                  className="text-green-600 border-green-300 hover:bg-green-50"
+                  data-testid="button-whatsapp-disclaimer"
+                >
+                  <MessageCircle className="w-4 h-4 mr-1" />
+                  WhatsApp
+                </Button>
+              </div>
+            </div>
+            
+            <Select value={selectedDisclaimer} onValueChange={setSelectedDisclaimer}>
+              <SelectTrigger className="bg-white dark:bg-gray-800" data-testid="select-disclaimer">
+                <SelectValue placeholder="Seleccionar consentimiento para este procedimiento" />
+              </SelectTrigger>
+              <SelectContent>
+                {disclaimersData?.map((disclaimer: any) => (
+                  <SelectItem key={disclaimer.id} value={disclaimer.id}>
+                    {disclaimer.title} {disclaimer.category && `(${disclaimer.category})`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {selectedDisclaimer && (
+              <div className="mt-2 text-xs text-blue-600 dark:text-blue-300">
+                ✓ Consentimiento seleccionado. Puedes imprimirlo o enviarlo por WhatsApp al cliente.
+              </div>
+            )}
+          </div>
           
           <Form {...diagnosisForm}>
             <form onSubmit={diagnosisForm.handleSubmit(onConfirmAppointment)} className="space-y-4">

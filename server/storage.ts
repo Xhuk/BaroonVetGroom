@@ -478,10 +478,12 @@ export interface IStorage {
   
   // Medical Disclaimer operations
   getDisclaimers(tenantId: string): Promise<any[]>;
+  getDisclaimerById(disclaimerId: string): Promise<any>;
   createDisclaimer(tenantId: string, disclaimer: any): Promise<any>;
   updateDisclaimer(disclaimerId: string, updates: any): Promise<any>;
   deleteDisclaimer(disclaimerId: string): Promise<void>;
   activateDisclaimer(disclaimerId: string, usageData: any): Promise<any>;
+  createDisclaimerActivation(activationData: any): Promise<any>;
   generateDisclaimerPDF(disclaimerId: string, clientData: any): Promise<string>;
 }
 
@@ -5158,6 +5160,25 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return usage;
+  }
+
+  async getDisclaimerById(disclaimerId: string): Promise<any> {
+    const [disclaimer] = await db
+      .select()
+      .from(medicalDisclaimers)
+      .where(eq(medicalDisclaimers.id, disclaimerId));
+    return disclaimer;
+  }
+
+  async createDisclaimerActivation(activationData: any): Promise<any> {
+    const [activation] = await db
+      .insert(disclaimerUsage)
+      .values({
+        ...activationData,
+        activatedAt: new Date(),
+      })
+      .returning();
+    return activation;
   }
 
   async generateDisclaimerPDF(disclaimerId: string, clientData: any): Promise<string> {

@@ -23,18 +23,22 @@ export function QRCodeGenerator({ appointmentId, appointmentType = "medical", si
   const generateQRCode = async () => {
     try {
       // Create the upload URL that will be used in the QR code
+      // Make sure it's an absolute URL for better mobile compatibility
       const baseUrl = window.location.origin;
       const url = `${baseUrl}/upload/${appointmentType}/${appointmentId}`;
       setUploadUrl(url);
 
-      // Generate QR code
+      // Generate QR code with mobile-optimized settings
       const qrCodeDataUrl = await QRCode.toDataURL(url, {
         width: size,
-        margin: 1,
+        margin: 2, // Increased margin for better mobile scanning
         color: {
           dark: '#000000',
           light: '#FFFFFF'
-        }
+        },
+        errorCorrectionLevel: 'M', // Medium error correction for better mobile compatibility
+        type: 'image/png',
+        quality: 0.92
       });
       
       setQrCodeUrl(qrCodeDataUrl);

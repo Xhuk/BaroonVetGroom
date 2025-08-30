@@ -41,6 +41,7 @@ import MedicalRecords from "@/pages/MedicalRecords";
 import MedicalAppointments from "@/pages/MedicalAppointments";
 import GroomingServices from "@/pages/GroomingServices";
 import MobileUpload from "@/pages/MobileUpload";
+import MobileDisclaimerSign from "@/pages/MobileDisclaimerSign";
 import FollowUpTasks from "@/pages/FollowUpTasks";
 import AdminPaymentGateways from "@/pages/AdminPaymentGateways";
 import AdminFollowUpConfig from "@/pages/AdminFollowUpConfig";
@@ -147,6 +148,7 @@ function Router() {
           )} />
           <Route path="/follow-up-tasks" component={() => <FollowUpTasks tenantId="vetgroom1" />} />
           <Route path="/upload/:type/:appointmentId" component={MobileUpload} />
+          <Route path="/disclaimers/sign/:disclaimerId/:appointmentId" component={MobileDisclaimerSign} />
           <Route path="/inventory" component={Inventory} />
           <Route path="/delivery-plan" component={DeliveryPlan} />
           <Route path="/route-map" component={RoutePlanMap} />
