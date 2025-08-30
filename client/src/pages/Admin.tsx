@@ -102,6 +102,7 @@ function Admin() {
   // Disclaimers data query
   const { data: disclaimersData, isLoading: disclaimersLoading, refetch: refetchDisclaimers } = useQuery({
     queryKey: ['/api/disclaimers', currentTenant?.id],
+    queryFn: () => fetch(`/api/disclaimers/${currentTenant?.id}`).then(res => res.json()),
     enabled: !!currentTenant?.id,
   });
 
@@ -477,7 +478,7 @@ function Admin() {
   // Create disclaimer mutation
   const createDisclaimerMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest('/api/disclaimers', 'POST', data);
+      return apiRequest(`/api/disclaimers/${currentTenant}`, 'POST', data);
     },
     onSuccess: () => {
       toast({
