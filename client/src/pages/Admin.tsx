@@ -159,7 +159,8 @@ function AdminContent() {
   // Calendar sharing mutation
   const generateCalendarShareMutation = useMutation({
     mutationFn: async (staffData: any) => {
-      return apiRequest('POST', `/api/calendar/generate-share-link/${currentTenant?.id}`, staffData);
+      const response = await apiRequest(`/api/calendar/generate-share-link/${currentTenant?.id}`, 'POST', staffData);
+      return response.json();
     },
     onSuccess: (data) => {
       // Copy WhatsApp link to clipboard
