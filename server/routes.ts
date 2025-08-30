@@ -9716,5 +9716,44 @@ This password expires in 24 hours.
     }
   });
 
+  // Tile proxy endpoint to bypass browser restrictions in Replit
+  app.get('/api/tiles/:provider/:z/:x/:y.:format', async (req, res) => {
+    const { provider, z, x, y, format } = req.params;
+    
+    const tileServers = {
+      'osm': `https://a.tile.openstreetmap.org/${z}/${x}/${y}.${format}`,
+      'carto': `https://a.basemaps.cartocdn.com/light_all/${z}/${x}/${y}.${format}`,
+      'esri': `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}`
+    };
+    
+    const tileUrl = tileServers[provider as keyof typeof tileServers];
+    if (!tileUrl) {
+      return res.status(404).json({ error: 'Unknown tile provider' });
+    }
+    
+    try {
+      console.log(`🔗 Fetching tile: ${tileUrl}`);
+      const response = await fetch(tileUrl);
+      if (!response.ok) {
+        console.warn(`⚠️ Tile fetch failed: ${response.status} ${response.statusText}`);
+        return res.status(response.status).json({ error: 'Tile not found' });
+      }
+      
+      const buffer = await response.arrayBuffer();
+      console.log(`✅ Tile fetched successfully: ${buffer.byteLength} bytes`);
+      
+      res.set({
+        'Content-Type': response.headers.get('content-type') || 'image/png',
+        'Cache-Control': 'public, max-age=86400', // 24 hours
+        'Access-Control-Allow-Origin': '*'
+      });
+      
+      res.send(Buffer.from(buffer));
+    } catch (error) {
+      console.error('❌ Tile proxy error:', error);
+      res.status(500).json({ error: 'Failed to fetch tile' });
+    }
+  });
+
   return httpServer;
 }

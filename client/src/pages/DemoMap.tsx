@@ -38,14 +38,27 @@ export default function DemoMap() {
       console.log('🗺️ Map center:', map.getCenter());
       console.log('🗺️ Map zoom:', map.getZoom());
 
-      // Add OpenStreetMap tiles (same as your working example)
-      const tileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      });
+      // Use backend proxy to bypass browser restrictions
+      console.log('🔄 Using backend tile proxy to bypass Replit browser restrictions');
       
+      const tileLayer = window.L.tileLayer('/api/tiles/osm/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        timeout: 10000
+      });
+
+      let tilesLoaded = 0;
+      tileLayer.on('tileload', (e: any) => {
+        tilesLoaded++;
+        console.log(`✅ Tile loaded via proxy (${tilesLoaded}): ${e.url}`);
+      });
+
+      tileLayer.on('tileerror', (e: any) => {
+        console.error(`❌ Proxy tile error: ${e.url}`, e.error);
+      });
+
       tileLayer.addTo(map);
-      console.log('🔗 Tile layer added');
+      console.log('🔗 Proxy tile layer added');
 
       // Add test markers
       const markers = [
