@@ -31,16 +31,19 @@ export default function MobileUpload() {
   // Get appointment details
   const { data: appointment, isLoading } = useQuery<MedicalAppointment>({
     queryKey: ["/api/medical-appointments", appointmentId],
+    queryFn: () => fetch(`/api/medical-appointments/${appointmentId}`).then(res => res.json()),
     enabled: !!appointmentId,
   });
 
   const { data: pet } = useQuery<Pet>({
     queryKey: ["/api/pets", appointment?.petId],
+    queryFn: () => fetch(`/api/pets/${appointment?.petId}`).then(res => res.json()),
     enabled: !!appointment?.petId,
   });
 
   const { data: client } = useQuery<Client>({
     queryKey: ["/api/clients", appointment?.clientId],
+    queryFn: () => fetch(`/api/clients/${appointment?.clientId}`).then(res => res.json()),
     enabled: !!appointment?.clientId,
   });
 

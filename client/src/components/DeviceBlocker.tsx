@@ -1,5 +1,6 @@
 import { useScreenSize } from "@/hooks/useScreenSize";
 import { useAccessControl } from "@/hooks/useAccessControl";
+import { useLocation } from "wouter";
 import { Shield, Tablet, Monitor } from "lucide-react";
 
 interface DeviceBlockerProps {
@@ -9,9 +10,20 @@ interface DeviceBlockerProps {
 export function DeviceBlocker({ children }: DeviceBlockerProps) {
   const { isMobilePhone, deviceType } = useScreenSize();
   const { canAccessSuperAdmin } = useAccessControl();
+  const [location] = useLocation();
 
-  // Block phones except for SuperAdmin users
-  if (isMobilePhone && !canAccessSuperAdmin) {
+  // Allow mobile access to specific mobile-friendly routes
+  const mobileAllowedRoutes = [
+    '/upload/', // Mobile file upload
+    '/disclaimers/sign/', // Mobile disclaimer signing
+  ];
+
+  const isMobileAllowedRoute = mobileAllowedRoutes.some(route => 
+    location.startsWith(route)
+  );
+
+  // Block phones except for SuperAdmin users or mobile-allowed routes
+  if (isMobilePhone && !canAccessSuperAdmin && !isMobileAllowedRoute) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-blue-800 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 max-w-md w-full text-center border border-white/20">
