@@ -405,6 +405,47 @@ export const betaFeatureUsage = pgTable("beta_feature_usage", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+// Medical disclaimers and consent forms
+export const medicalDisclaimers = pgTable("medical_disclaimers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
+  title: varchar("title").notNull(),
+  content: text("content").notNull(), // Rich text content
+  category: varchar("category").notNull(), // 'medical', 'surgical', 'grooming', 'general'
+  isActive: boolean("is_active").default(true),
+  requiresSignature: boolean("requires_signature").default(true),
+  isPrintable: boolean("is_printable").default(true),
+  templateVersion: varchar("template_version").default("1.0"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Disclaimer usage/activation tracking
+export const disclaimerUsage = pgTable("disclaimer_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  disclaimerId: varchar("disclaimer_id").notNull().references(() => medicalDisclaimers.id),
+  appointmentId: varchar("appointment_id").references(() => appointments.id),
+  medicalRecordId: varchar("medical_record_id").references(() => medicalRecords.id),
+  followUpTaskId: varchar("follow_up_task_id").references(() => followUpTasks.id),
+  clientId: varchar("client_id").notNull().references(() => clients.id),
+  petId: varchar("pet_id").references(() => pets.id),
+  staffId: varchar("staff_id").notNull().references(() => staff.id),
+  pdfPath: varchar("pdf_path"), // Path to generated PDF
+  signedBy: varchar("signed_by"), // Client name who signed
+  signedAt: timestamp("signed_at"),
+  wasPrinted: boolean("was_printed").default(false),
+  printedAt: timestamp("printed_at"),
+  status: varchar("status").notNull().default("pending"), // pending, signed, completed
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type MedicalDisclaimer = typeof medicalDisclaimers.$inferSelect;
+export type InsertMedicalDisclaimer = typeof medicalDisclaimers.$inferInsert;
+export type DisclaimerUsage = typeof disclaimerUsage.$inferSelect;
+export type InsertDisclaimerUsage = typeof disclaimerUsage.$inferInsert;
+
 // Service activation and usage tracking tables
 export const serviceActivations = pgTable("service_activations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

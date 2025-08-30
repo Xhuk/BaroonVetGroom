@@ -67,6 +67,8 @@ import {
   rotationTeams,
   rotationSchedules,
   calendarShares,
+  medicalDisclaimers,
+  disclaimerUsage,
   type User,
   type UpsertUser,
   type Company,
@@ -185,6 +187,10 @@ import {
   type InsertShiftAssignment,
   type ShiftRotation,
   type InsertShiftRotation,
+  type MedicalDisclaimer,
+  type InsertMedicalDisclaimer,
+  type DisclaimerUsage,
+  type InsertDisclaimerUsage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, lt, gte, desc, asc, lte, inArray, or, isNull, count } from "drizzle-orm";
@@ -469,6 +475,14 @@ export interface IStorage {
   generateCalendarShareToken(tenantId: string, staffId: string, staffName: string, expiresInDays: number): Promise<string>;
   getCalendarShareData(token: string): Promise<any>;
   getStaffShifts(tenantId: string, staffId: string): Promise<any>;
+  
+  // Medical Disclaimer operations
+  getDisclaimers(tenantId: string): Promise<any[]>;
+  createDisclaimer(tenantId: string, disclaimer: any): Promise<any>;
+  updateDisclaimer(disclaimerId: string, updates: any): Promise<any>;
+  deleteDisclaimer(disclaimerId: string): Promise<void>;
+  activateDisclaimer(disclaimerId: string, usageData: any): Promise<any>;
+  generateDisclaimerPDF(disclaimerId: string, clientData: any): Promise<string>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -5094,6 +5108,62 @@ export class DatabaseStorage implements IStorage {
     } else {
       return 'Fuera de horario';
     }
+  }
+
+  // Medical Disclaimer operations
+  async getDisclaimers(tenantId: string): Promise<any[]> {
+    return await db
+      .select()
+      .from(medicalDisclaimers)
+      .where(eq(medicalDisclaimers.tenantId, tenantId))
+      .orderBy(desc(medicalDisclaimers.createdAt));
+  }
+
+  async createDisclaimer(tenantId: string, disclaimer: any): Promise<any> {
+    const [created] = await db
+      .insert(medicalDisclaimers)
+      .values({
+        tenantId,
+        ...disclaimer,
+        updatedAt: new Date(),
+      })
+      .returning();
+    return created;
+  }
+
+  async updateDisclaimer(disclaimerId: string, updates: any): Promise<any> {
+    const [updated] = await db
+      .update(medicalDisclaimers)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(medicalDisclaimers.id, disclaimerId))
+      .returning();
+    return updated;
+  }
+
+  async deleteDisclaimer(disclaimerId: string): Promise<void> {
+    await db
+      .delete(medicalDisclaimers)
+      .where(eq(medicalDisclaimers.id, disclaimerId));
+  }
+
+  async activateDisclaimer(disclaimerId: string, usageData: any): Promise<any> {
+    const [usage] = await db
+      .insert(disclaimerUsage)
+      .values({
+        disclaimerId,
+        ...usageData,
+      })
+      .returning();
+    return usage;
+  }
+
+  async generateDisclaimerPDF(disclaimerId: string, clientData: any): Promise<string> {
+    // This will be implemented with PDF generation logic
+    // For now, return a placeholder path
+    return `/pdfs/disclaimer-${disclaimerId}-${Date.now()}.pdf`;
   }
 }
 

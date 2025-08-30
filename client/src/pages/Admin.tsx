@@ -99,6 +99,12 @@ function Admin() {
   const isVetGroomDeveloper = user?.email?.includes('vetgroom') || currentTenant?.companyId === 'vetgroom-company';
   const isDemoUser = user?.email?.includes('@fergon-demo.com') || user?.email?.includes('demo');
 
+  // Disclaimers data query
+  const { data: disclaimersData, isLoading: disclaimersLoading, refetch: refetchDisclaimers } = useQuery({
+    queryKey: ['/api/disclaimers', currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
+
   // Delivery tracking for VetGroom developers only
   const { data: activeDeliveries, refetch: refetchDeliveries } = useQuery({
     queryKey: ["/api/delivery-tracking", currentTenant?.id],
@@ -457,6 +463,59 @@ function Admin() {
     fonacotAmount: '0'
   });
   const [isSavingPayroll, setIsSavingPayroll] = useState(false);
+  
+  // Disclaimer management states
+  const [isDisclaimerDialogOpen, setIsDisclaimerDialogOpen] = useState(false);
+  const [disclaimerData, setDisclaimerData] = useState({
+    title: '',
+    content: '',
+    category: 'medical',
+    requiresSignature: true,
+    isPrintable: true
+  });
+
+  // Create disclaimer mutation
+  const createDisclaimerMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest('/api/disclaimers', 'POST', data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Consentimiento creado",
+        description: "El consentimiento se ha creado exitosamente.",
+      });
+      refetchDisclaimers();
+      setIsDisclaimerDialogOpen(false);
+      setDisclaimerData({
+        title: '',
+        content: '',
+        category: 'medical',
+        requiresSignature: true,
+        isPrintable: true
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo crear el consentimiento",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle disclaimer creation
+  const handleCreateDisclaimer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!disclaimerData.title || !disclaimerData.content) {
+      toast({
+        title: "Error",
+        description: "Título y contenido son requeridos",
+        variant: "destructive",
+      });
+      return;
+    }
+    createDisclaimerMutation.mutate(disclaimerData);
+  };
 
   // Calculate ISR tax based on monthly salary
   const calculateISR = (monthlySalary: number) => {
@@ -2066,6 +2125,17 @@ function Admin() {
               >
                 <BarChart3 className="w-4 h-4" />
                 Corte Diario
+              </button>
+              <button
+                onClick={() => setActiveSection('disclaimers')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'disclaimers'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                Consentimientos
               </button>
               {isVetGroomDeveloper && (
                 <button
@@ -6669,6 +6739,203 @@ function Admin() {
               )}
             </DialogContent>
           </Dialog>
+
+            {/* Disclaimer Management Section */}
+            {activeSection === 'disclaimers' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                      <FileText className="w-6 h-6" />
+                      Gestión de Consentimientos
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">Crea y gestiona consentimientos médicos para procedimientos</p>
+                  </div>
+                  <Button 
+                    onClick={() => setIsDisclaimerDialogOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nuevo Consentimiento
+                  </Button>
+                </div>
+
+                {/* Disclaimers List */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Catálogo de Consentimientos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {disclaimersLoading ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+                        <p className="text-gray-500 dark:text-gray-400">Cargando consentimientos...</p>
+                      </div>
+                    ) : disclaimersData && disclaimersData.length > 0 ? (
+                      <div className="space-y-4">
+                        {disclaimersData.map((disclaimer: any) => (
+                          <div key={disclaimer.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{disclaimer.title}</h3>
+                                <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                    disclaimer.category === 'medical' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                                    disclaimer.category === 'surgical' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                    disclaimer.category === 'grooming' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                  }`}>
+                                    {disclaimer.category === 'medical' ? 'Médico' :
+                                     disclaimer.category === 'surgical' ? 'Quirúrgico' :
+                                     disclaimer.category === 'grooming' ? 'Estético' : 'General'}
+                                  </span>
+                                  {disclaimer.requiresSignature && (
+                                    <span className="px-2 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 rounded text-xs font-medium">
+                                      Requiere Firma
+                                    </span>
+                                  )}
+                                  {disclaimer.isPrintable && (
+                                    <span className="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded text-xs font-medium">
+                                      Imprimible
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                  {disclaimer.content}
+                                </p>
+                              </div>
+                              <div className="flex gap-2 ml-4">
+                                <Button variant="outline" size="sm">
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button variant="outline" size="sm">
+                                  <FileText className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                        <p className="text-lg font-medium mb-2">No hay consentimientos creados</p>
+                        <p className="text-sm">Crea tu primer consentimiento usando el botón "Nuevo Consentimiento"</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Disclaimer Creation Dialog */}
+                <Dialog open={isDisclaimerDialogOpen} onOpenChange={setIsDisclaimerDialogOpen}>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Crear Nuevo Consentimiento</DialogTitle>
+                      <DialogDescription>
+                        Crea un consentimiento médico personalizado para procedimientos
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleCreateDisclaimer} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label>Título del Consentimiento *</Label>
+                          <Input 
+                            placeholder="Ej: Consentimiento para Cirugía"
+                            value={disclaimerData.title}
+                            onChange={(e) => setDisclaimerData(prev => ({ ...prev, title: e.target.value }))}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label>Categoría *</Label>
+                          <Select 
+                            value={disclaimerData.category}
+                            onValueChange={(value) => setDisclaimerData(prev => ({ ...prev, category: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar categoría" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="medical">Médico</SelectItem>
+                              <SelectItem value="surgical">Quirúrgico</SelectItem>
+                              <SelectItem value="grooming">Estético</SelectItem>
+                              <SelectItem value="general">General</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Contenido del Consentimiento *</Label>
+                        <Textarea 
+                          placeholder="Escriba el contenido del consentimiento aquí..."
+                          className="min-h-[200px]"
+                          value={disclaimerData.content}
+                          onChange={(e) => setDisclaimerData(prev => ({ ...prev, content: e.target.value }))}
+                          required
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Incluya todos los términos, riesgos y procedimientos que requieren consentimiento
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox" 
+                            id="requiresSignature" 
+                            className="rounded" 
+                            checked={disclaimerData.requiresSignature}
+                            onChange={(e) => setDisclaimerData(prev => ({ ...prev, requiresSignature: e.target.checked }))}
+                          />
+                          <Label htmlFor="requiresSignature">Requiere firma del cliente</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox" 
+                            id="isPrintable" 
+                            className="rounded" 
+                            checked={disclaimerData.isPrintable}
+                            onChange={(e) => setDisclaimerData(prev => ({ ...prev, isPrintable: e.target.checked }))}
+                          />
+                          <Label htmlFor="isPrintable">Permitir impresión</Label>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 justify-end">
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          onClick={() => setIsDisclaimerDialogOpen(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button 
+                          type="submit"
+                          className="bg-blue-600 hover:bg-blue-700"
+                          disabled={createDisclaimerMutation.isPending}
+                        >
+                          {createDisclaimerMutation.isPending ? (
+                            <>
+                              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                              Creando...
+                            </>
+                          ) : (
+                            <>
+                              <FileText className="w-4 h-4 mr-2" />
+                              Crear Consentimiento
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
 
         </div>
       </main>

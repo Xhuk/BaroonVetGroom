@@ -8874,5 +8874,121 @@ This password expires in 24 hours.
     return calendarHTML;
   }
 
+  // Medical Disclaimer Management API endpoints
+  app.get('/api/disclaimers', isAuthenticated, async (req, res) => {
+    try {
+      const tenantId = req.user?.tenantId;
+      if (!tenantId) {
+        return res.status(400).json({ message: "Tenant ID requerido" });
+      }
+
+      const disclaimers = await storage.getDisclaimers(tenantId);
+      res.json(disclaimers);
+    } catch (error) {
+      console.error("Error fetching disclaimers:", error);
+      res.status(500).json({ message: "Error al obtener disclaimers" });
+    }
+  });
+
+  app.post('/api/disclaimers', isAuthenticated, async (req, res) => {
+    try {
+      const tenantId = req.user?.tenantId;
+      if (!tenantId) {
+        return res.status(400).json({ message: "Tenant ID requerido" });
+      }
+
+      const { title, content, category, requiresSignature, isPrintable } = req.body;
+      
+      if (!title || !content || !category) {
+        return res.status(400).json({ message: "Título, contenido y categoría son requeridos" });
+      }
+
+      const disclaimer = await storage.createDisclaimer(tenantId, {
+        title,
+        content,
+        category,
+        requiresSignature: requiresSignature ?? true,
+        isPrintable: isPrintable ?? true,
+        createdBy: req.user?.claims?.sub
+      });
+
+      res.json(disclaimer);
+    } catch (error) {
+      console.error("Error creating disclaimer:", error);
+      res.status(500).json({ message: "Error al crear disclaimer" });
+    }
+  });
+
+  app.put('/api/disclaimers/:id', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { title, content, category, requiresSignature, isPrintable, isActive } = req.body;
+
+      const disclaimer = await storage.updateDisclaimer(id, {
+        title,
+        content,
+        category,
+        requiresSignature,
+        isPrintable,
+        isActive
+      });
+
+      res.json(disclaimer);
+    } catch (error) {
+      console.error("Error updating disclaimer:", error);
+      res.status(500).json({ message: "Error al actualizar disclaimer" });
+    }
+  });
+
+  app.delete('/api/disclaimers/:id', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteDisclaimer(id);
+      res.json({ message: "Disclaimer eliminado exitosamente" });
+    } catch (error) {
+      console.error("Error deleting disclaimer:", error);
+      res.status(500).json({ message: "Error al eliminar disclaimer" });
+    }
+  });
+
+  app.post('/api/disclaimers/:id/activate', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { clientId, petId, appointmentId, medicalRecordId, followUpTaskId, notes } = req.body;
+
+      if (!clientId) {
+        return res.status(400).json({ message: "Client ID es requerido" });
+      }
+
+      const usage = await storage.activateDisclaimer(id, {
+        clientId,
+        petId,
+        appointmentId,
+        medicalRecordId,
+        followUpTaskId,
+        staffId: req.user?.claims?.sub,
+        notes
+      });
+
+      res.json(usage);
+    } catch (error) {
+      console.error("Error activating disclaimer:", error);
+      res.status(500).json({ message: "Error al activar disclaimer" });
+    }
+  });
+
+  app.post('/api/disclaimers/:id/generate-pdf', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { clientData } = req.body;
+
+      const pdfPath = await storage.generateDisclaimerPDF(id, clientData);
+      res.json({ pdfPath });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      res.status(500).json({ message: "Error al generar PDF" });
+    }
+  });
+
   return httpServer;
 }
