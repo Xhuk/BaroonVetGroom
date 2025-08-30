@@ -132,6 +132,59 @@ const checkSubscriptionValidity = async (req: any, res: any, next: any) => {
   }
 };
 
+// Admin access control middleware
+export const isAdminAuthorized = async (req: any, res: any, next: any) => {
+  try {
+    const userId = req.user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ message: "User ID not found" });
+    }
+
+    // Extract tenant ID from request (can be in params, query, or body)
+    const tenantId = req.params.tenantId || req.query.tenantId || req.body.tenantId;
+    if (!tenantId) {
+      return res.status(400).json({ message: "Tenant ID required for admin access" });
+    }
+
+    // Check if user is a ClientAdmin (supertenant in userCompanies)
+    const userCompanies = await storage.getUserCompanies(userId);
+    const clientAdminCompanies = userCompanies.filter(uc => uc.isSupertenant);
+
+    if (clientAdminCompanies.length > 0) {
+      // ClientAdmin: verify tenant belongs to their company
+      for (const company of clientAdminCompanies) {
+        const companyTenants = await storage.getCompanyTenants(company.companyId);
+        if (companyTenants.some(t => t.id === tenantId)) {
+          req.adminType = 'client_admin';
+          req.adminAccess = true;
+          return next();
+        }
+      }
+    } else {
+      // Regular Admin: check specific tenant assignments with admin roles
+      const userTenants = await storage.getUserTenants(userId);
+      for (const ut of userTenants) {
+        if (ut.tenantId === tenantId) {
+          const role = await storage.getRole(ut.roleId);
+          if (role?.department === 'admin') {
+            req.adminType = 'tenant_admin';
+            req.adminAccess = true;
+            return next();
+          }
+        }
+      }
+    }
+
+    return res.status(403).json({ 
+      message: "Admin access denied for this tenant",
+      tenantId: tenantId 
+    });
+  } catch (error) {
+    console.error("Error checking admin authorization:", error);
+    return res.status(500).json({ message: "Authorization check failed" });
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -1662,7 +1715,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes - Rooms
-  app.get('/api/admin/rooms/:tenantId', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/rooms/:tenantId', isAuthenticated, isAdminAuthorized, async (req, res) => {
     try {
       const { tenantId } = req.params;
       const rooms = await storage.getRooms(tenantId);
@@ -1673,7 +1726,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/rooms/:tenantId', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/rooms/:tenantId', isAuthenticated, isAdminAuthorized, async (req, res) => {
     try {
       const { tenantId } = req.params;
       const roomData = { ...req.body, tenantId };
@@ -1686,6 +1739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.put('/api/admin/rooms/:roomId', isAuthenticated, async (req, res) => {
+    // Note: roomId endpoints need tenant validation via room lookup
     try {
       const { roomId } = req.params;
       const room = await storage.updateRoom(roomId, req.body);
@@ -1697,6 +1751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.delete('/api/admin/rooms/:roomId', isAuthenticated, async (req, res) => {
+    // Note: roomId endpoints need tenant validation via room lookup
     try {
       const { roomId } = req.params;
       await storage.deleteRoom(roomId);
@@ -1728,7 +1783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes - Services
-  app.get('/api/admin/services/:tenantId', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/services/:tenantId', isAuthenticated, isAdminAuthorized, async (req, res) => {
     try {
       const { tenantId } = req.params;
       const services = await storage.getServices(tenantId);
@@ -1855,7 +1910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Business hours endpoints for admin configuration
-  app.get('/api/admin/business-hours/:tenantId', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/business-hours/:tenantId', isAuthenticated, isAdminAuthorized, async (req, res) => {
     try {
       const { tenantId } = req.params;
       const businessHours = await storage.getTenantBusinessHours(tenantId);
@@ -2204,7 +2259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/business-hours/:tenantId', isAuthenticated, async (req, res) => {
+  app.put('/api/admin/business-hours/:tenantId', isAuthenticated, isAdminAuthorized, async (req, res) => {
     try {
       const { tenantId } = req.params;
       const { openTime, closeTime, timeSlotDuration, reservationTimeout } = req.body;
@@ -9089,6 +9144,119 @@ This password expires in 24 hours.
     } catch (error) {
       console.error("Error generating PDF:", error);
       res.status(500).json({ message: "Error al generar PDF" });
+    }
+  });
+
+  // Admin Tenant Access Management
+
+  // Get tenants that a user can administer
+  app.get('/api/admin/accessible-tenants', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User ID not found" });
+      }
+
+      // Check if user is a ClientAdmin (supertenant in userCompanies)
+      const userCompanies = await storage.getUserCompanies(userId);
+      const clientAdminCompanies = userCompanies.filter(uc => uc.isSupertenant);
+
+      let accessibleTenants = [];
+
+      if (clientAdminCompanies.length > 0) {
+        // ClientAdmin: can access ALL tenants under their companies
+        for (const company of clientAdminCompanies) {
+          const companyTenants = await storage.getCompanyTenants(company.companyId);
+          accessibleTenants.push(...companyTenants.map(t => ({
+            ...t,
+            accessType: 'client_admin',
+            companyName: company.name
+          })));
+        }
+      } else {
+        // Regular Admin: only tenants they're specifically assigned to with admin roles
+        const userTenants = await storage.getUserTenants(userId);
+        const adminTenantAssignments = await Promise.all(
+          userTenants.map(async (ut) => {
+            const role = await storage.getRole(ut.roleId);
+            const tenant = await storage.getTenant(ut.tenantId);
+            return {
+              ...tenant,
+              accessType: 'tenant_admin',
+              roleName: role?.displayName || 'Admin',
+              isAdminRole: role?.department === 'admin'
+            };
+          })
+        );
+        accessibleTenants = adminTenantAssignments.filter(at => at.isAdminRole);
+      }
+
+      res.json({
+        accessibleTenants,
+        adminType: clientAdminCompanies.length > 0 ? 'client_admin' : 'tenant_admin'
+      });
+    } catch (error) {
+      console.error("Error fetching accessible tenants:", error);
+      res.status(500).json({ message: "Failed to fetch accessible tenants" });
+    }
+  });
+
+  // Assign tenant access to a regular admin (ClientAdmin only)
+  app.post('/api/admin/assign-tenant-access', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User ID not found" });
+      }
+
+      // Verify user is ClientAdmin
+      const userCompanies = await storage.getUserCompanies(userId);
+      const isClientAdmin = userCompanies.some(uc => uc.isSupertenant);
+      
+      if (!isClientAdmin) {
+        return res.status(403).json({ message: "Only ClientAdmins can assign tenant access" });
+      }
+
+      const { targetUserId, tenantId, roleId } = req.body;
+
+      // Create user-tenant assignment
+      const assignment = await storage.createUserTenant({
+        userId: targetUserId,
+        tenantId: tenantId,
+        roleId: roleId,
+        isActive: true
+      });
+
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error assigning tenant access:", error);
+      res.status(500).json({ message: "Failed to assign tenant access" });
+    }
+  });
+
+  // Remove tenant access from a regular admin (ClientAdmin only)
+  app.delete('/api/admin/tenant-access/:assignmentId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User ID not found" });
+      }
+
+      // Verify user is ClientAdmin
+      const userCompanies = await storage.getUserCompanies(userId);
+      const isClientAdmin = userCompanies.some(uc => uc.isSupertenant);
+      
+      if (!isClientAdmin) {
+        return res.status(403).json({ message: "Only ClientAdmins can remove tenant access" });
+      }
+
+      const { assignmentId } = req.params;
+      await storage.deleteUserTenant(assignmentId);
+
+      res.json({ message: "Tenant access removed successfully" });
+    } catch (error) {
+      console.error("Error removing tenant access:", error);
+      res.status(500).json({ message: "Failed to remove tenant access" });
     }
   });
 

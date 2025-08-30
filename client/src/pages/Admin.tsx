@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
+import { AdminTenantProvider, useAdminTenant } from "@/contexts/AdminTenantContext";
+import { TenantSelector } from "@/components/TenantSelector";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from 'jspdf';
 import { Header } from "@/components/Header";
@@ -72,10 +74,18 @@ function getRoomTypeIcon(type: string) {
 }
 
 
-function Admin() {
+function AdminContent() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
-  const { currentTenant, isLoading: tenantLoading } = useTenant();
+  const { selectedTenant: adminSelectedTenant, selectedTenantData, isLoading: adminTenantLoading } = useAdminTenant();
+  
+  // For compatibility with existing code, create a currentTenant object
+  const currentTenant = selectedTenantData ? {
+    id: selectedTenantData.id,
+    name: selectedTenantData.name,
+    companyId: selectedTenantData.companyId
+  } : null;
+  const tenantLoading = adminTenantLoading;
   
   // Removed duplicate state declarations - defined below with proper initialization
   
@@ -1915,6 +1925,15 @@ function Admin() {
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <BackButton className="mb-4" />
+            
+            {/* Admin Tenant Selector */}
+            <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+              <TenantSelector 
+                className="w-full"
+                placeholder="Seleccionar clínica para administrar..."
+              />
+            </div>
+
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Panel de Administración</h1>
@@ -6941,6 +6960,15 @@ function Admin() {
         </div>
       </main>
     </div>
+  );
+}
+
+// Main Admin component wrapper with tenant context
+function Admin() {
+  return (
+    <AdminTenantProvider>
+      <AdminContent />
+    </AdminTenantProvider>
   );
 }
 

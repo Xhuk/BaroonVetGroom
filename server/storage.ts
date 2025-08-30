@@ -1121,6 +1121,40 @@ export class DatabaseStorage implements IStorage {
     await db.delete(roles).where(eq(roles.id, roleId));
   }
 
+  async getRole(roleId: string): Promise<Role | undefined> {
+    const [role] = await db.select().from(roles).where(eq(roles.id, roleId));
+    return role;
+  }
+
+  // User-Company operations for admin hierarchy
+  async getUserCompanies(userId: string): Promise<any[]> {
+    const result = await db
+      .select({
+        id: userCompanies.id,
+        userId: userCompanies.userId,
+        companyId: userCompanies.companyId,
+        roleId: userCompanies.roleId,
+        isSupertenant: userCompanies.isSupertenant,
+        isActive: userCompanies.isActive,
+        name: companies.name
+      })
+      .from(userCompanies)
+      .leftJoin(companies, eq(userCompanies.companyId, companies.id))
+      .where(and(eq(userCompanies.userId, userId), eq(userCompanies.isActive, true)));
+    
+    return result;
+  }
+
+  // User-Tenant operations for admin management
+  async createUserTenant(userTenantData: InsertUserTenant): Promise<UserTenant> {
+    const [newUserTenant] = await db.insert(userTenants).values(userTenantData).returning();
+    return newUserTenant;
+  }
+
+  async deleteUserTenant(assignmentId: string): Promise<void> {
+    await db.delete(userTenants).where(eq(userTenants.id, assignmentId));
+  }
+
 
 
   async releaseSlot(reservationId: string): Promise<void> {

@@ -128,6 +128,8 @@ export const roles = pgTable("roles", {
   allowedPages: varchar("allowed_pages").array().default(sql`ARRAY[]::varchar[]`), // specific pages when pageAccess is 'some' or 'one'
   permissions: varchar("permissions").array().notNull().default(sql`ARRAY[]::varchar[]`), // array of permissions like ['view_appointments', 'manage_clients']
   department: varchar("department").notNull(), // reception, grooming, medical, admin, delivery
+  isAdminRole: boolean("is_admin_role").default(false), // true for admin roles that can access admin console
+  adminLevel: varchar("admin_level"), // "client_admin", "tenant_admin" for admin role hierarchy
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
