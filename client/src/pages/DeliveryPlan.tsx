@@ -88,6 +88,7 @@ export default function DeliveryPlan() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showRouteForm, setShowRouteForm] = useState(false);
+  const [selectedRouteForMap, setSelectedRouteForMap] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState("2025-08-25"); // Date with pickup appointments
   const [selectedMascots, setSelectedMascots] = useState<string[]>([]);
   const [searchMascots, setSearchMascots] = useState("");
@@ -604,11 +605,11 @@ export default function DeliveryPlan() {
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => setLocation('/route-map')}
+                            onClick={() => setSelectedRouteForMap(route)}
                             className="flex-1"
                           >
                             <Map className="w-4 h-4 mr-1" />
-                            Mapa
+                            Vista Previa
                           </Button>
                         </div>
                       </div>
@@ -668,61 +669,144 @@ export default function DeliveryPlan() {
                     
                     {/* Map View - 3/5 width */}
                     <div className="col-span-3 relative">
-                      <MapContainer
-                        center={[24.8066, -107.3938]} // Culiacán center
-                        zoom={12}
-                        style={{ height: '100%', width: '100%' }}
-                        className="rounded-r-lg"
-                      >
-                        <TileLayer
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-                        
-                        {/* Clinic Location */}
-                        <Marker 
-                          position={[24.8066, -107.3938]} 
-                          icon={clinicIcon}
-                        >
-                          <Popup>
-                            <div className="text-center">
-                              <div className="font-semibold text-blue-600">Clínica Veterinaria</div>
-                              <div className="text-sm">{currentTenant}</div>
-                              <div className="text-xs text-gray-500">Ubicación base</div>
+                      {selectedRouteForMap ? (
+                        /* Route Preview Map */
+                        <div className="h-full bg-white dark:bg-gray-900 rounded-r-lg border border-gray-200 dark:border-gray-600">
+                          <div className="p-3 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Route className="w-4 h-4 text-blue-600" />
+                              <span className="font-medium text-sm">Vista Previa: {selectedRouteForMap.name}</span>
                             </div>
-                          </Popup>
-                        </Marker>
-                        
-                        {/* Fraccionamientos Markers */}
-                        {fraccionamientosWithWeights.slice(0, 6).map((frac, index) => {
-                          // Mock coordinates around Culiacán for demonstration
-                          const coordinates: [number, number] = [
-                            24.8066 + (Math.random() - 0.5) * 0.1, // Random offset within ~5km radius
-                            -107.3938 + (Math.random() - 0.5) * 0.1
-                          ];
-                          
-                          return (
-                            <Marker
-                              key={frac.id || index}
-                              position={coordinates}
-                              icon={createPriorityIcon(frac.priority as 'Alta' | 'Media' | 'Baja', frac.weight)}
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => setSelectedRouteForMap(null)}
+                              className="h-6 w-6 p-0"
                             >
-                              <Popup>
-                                <div className="text-center">
-                                  <div className="font-semibold text-gray-800">{frac.name}</div>
-                                  <div className="text-sm text-gray-600">{frac.appointments} entregas pendientes</div>
-                                  <div className="text-xs text-orange-600 font-medium">
-                                    Peso: {frac.weight} | Prioridad: {frac.priority}
+                              <XCircle className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="h-[calc(100%-60px)] relative">
+                            <MapContainer
+                              center={[24.8066, -107.3938]}
+                              zoom={13}
+                              style={{ height: '100%', width: '100%' }}
+                              className="rounded-br-lg"
+                              key={`route-${selectedRouteForMap.id}`}
+                            >
+                              <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                                url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                maxZoom={19}
+                                crossOrigin=""
+                              />
+                              
+                              {/* Clinic Location */}
+                              <Marker position={[24.8066, -107.3938]} icon={clinicIcon}>
+                                <Popup>
+                                  <div className="text-center">
+                                    <div className="font-semibold text-blue-600">Clínica Base</div>
+                                    <div className="text-sm">{currentTenant}</div>
                                   </div>
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    Zona: {frac.zone || 'Centro'}
+                                </Popup>
+                              </Marker>
+                              
+                              {/* Route Appointments Markers */}
+                              {selectedRouteForMap.appointments?.map((apt: any, idx: number) => {
+                                const coordinates: [number, number] = [
+                                  24.8066 + (Math.random() - 0.5) * 0.08,
+                                  -107.3938 + (Math.random() - 0.5) * 0.08
+                                ];
+                                
+                                return (
+                                  <Marker
+                                    key={apt.id || idx}
+                                    position={coordinates}
+                                    icon={createPriorityIcon('Media', idx + 1)}
+                                  >
+                                    <Popup>
+                                      <div className="text-center">
+                                        <div className="font-semibold">Parada #{idx + 1}</div>
+                                        <div className="text-sm">{apt.clientName || 'Cliente'}</div>
+                                        <div className="text-xs text-gray-500">{apt.petName || 'Mascota'}</div>
+                                      </div>
+                                    </Popup>
+                                  </Marker>
+                                );
+                              })}
+                            </MapContainer>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Fraccionamientos Map */
+                        <MapContainer
+                          center={[24.8066, -107.3938]} // Culiacán center
+                          zoom={12}
+                          style={{ height: '100%', width: '100%' }}
+                          className="rounded-r-lg"
+                          key="fraccionamientos-map"
+                        >
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            maxZoom={19}
+                            crossOrigin=""
+                            detectRetina={true}
+                            updateWhenIdle={false}
+                            updateWhenZooming={true}
+                            keepBuffer={4}
+                          />
+                          
+                          {/* Clinic Location */}
+                          <Marker 
+                            position={[24.8066, -107.3938]} 
+                            icon={clinicIcon}
+                          >
+                            <Popup>
+                              <div className="text-center">
+                                <div className="font-semibold text-blue-600">Clínica Veterinaria</div>
+                                <div className="text-sm">{currentTenant}</div>
+                                <div className="text-xs text-gray-500">Ubicación base</div>
+                              </div>
+                            </Popup>
+                          </Marker>
+                          
+                          {/* Fraccionamientos Markers */}
+                          {fraccionamientosWithWeights.slice(0, 6).map((frac, index) => {
+                            // Fixed coordinates for consistent display
+                            const baseCoords = [
+                              [24.8166, -107.4038], // Las Flores
+                              [24.7966, -107.3838], // El Bosque
+                              [24.8266, -107.3738], // Villa Real
+                              [24.7866, -107.4138], // Los Pinos
+                              [24.8366, -107.3638], // San Miguel
+                              [24.7766, -107.3938]  // Centro
+                            ];
+                            const coordinates: [number, number] = baseCoords[index] || [24.8066, -107.3938];
+                            
+                            return (
+                              <Marker
+                                key={frac.id || index}
+                                position={coordinates}
+                                icon={createPriorityIcon(frac.priority as 'Alta' | 'Media' | 'Baja', frac.weight)}
+                              >
+                                <Popup>
+                                  <div className="text-center">
+                                    <div className="font-semibold text-gray-800">{frac.name}</div>
+                                    <div className="text-sm text-gray-600">{frac.appointments} entregas pendientes</div>
+                                    <div className="text-xs text-orange-600 font-medium">
+                                      Peso: {frac.weight} | Prioridad: {frac.priority}
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      Zona: {frac.zone || 'Centro'}
+                                    </div>
                                   </div>
-                                </div>
-                              </Popup>
-                            </Marker>
-                          );
-                        })}
-                      </MapContainer>
+                                </Popup>
+                              </Marker>
+                            );
+                          })}
+                        </MapContainer>
+                      )}
                       
                       {/* Map Legend */}
                       <div className="absolute bottom-2 left-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 z-[1000]">
