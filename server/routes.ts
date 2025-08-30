@@ -3382,7 +3382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Get fraccionamiento weights
-      const fraccionamientos = await storage.getFraccionamientos();
+      const fraccionamientos = await storage.getFraccionamientos(tenantId);
       const fraccionamientoWeights = fraccionamientos.reduce((acc, frac) => {
         acc[frac.name] = frac.weight || 5.0;
         return acc;
@@ -4137,6 +4137,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Fraccionamientos Management Routes (Admin)
+  // Fraccionamientos endpoint for delivery planning
+  app.get('/api/fraccionamientos/:tenantId', isAuthenticated, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      const fraccionamientosList = await storage.getFraccionamientos(tenantId);
+      res.json(fraccionamientosList);
+    } catch (error) {
+      console.error("Error fetching fraccionamientos:", error);
+      res.status(500).json({ message: "Failed to fetch fraccionamientos" });
+    }
+  });
+
   app.get('/api/admin/fraccionamientos/:tenantId', isAuthenticated, async (req, res) => {
     try {
       const { tenantId } = req.params;
