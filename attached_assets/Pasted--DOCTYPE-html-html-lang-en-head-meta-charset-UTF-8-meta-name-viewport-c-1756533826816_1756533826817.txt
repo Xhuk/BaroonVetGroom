@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + Leaflet + OpenStreetMap</title>
+
+    <!-- 1. Leaflet CSS from a CDN -->
+    <!-- This provides the visual styling for the map tiles, markers, and controls. -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="" />
+
+    <!-- 2. Leaflet JavaScript from a CDN -->
+    <!-- This is the core library that provides all the mapping functionality. -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+    <style>
+        /* Basic CSS to make the map fill the entire page */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* Prevents scrollbars */
+        }
+
+        /* The map container must have a defined height */
+        #map {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <!-- 3. The HTML container for the map -->
+    <!-- Leaflet will render the interactive map inside this div. -->
+    <div id="map"></div>
+
+    <script type="module">
+        // This is where all our mapping logic will go.
+        // The 'type="module"' attribute is standard for Vite projects.
+
+        // 4. Initialize the map
+        // L.map() creates a map instance and targets the 'map' div from our HTML.
+        // .setView() sets the initial geographic center and zoom level.
+        // Coordinates are [latitude, longitude]. We'll center on Mexico City.
+        const map = L.map('map').setView([19.4326, -99.1332], 13);
+
+        // 5. Add the tile layer (the map imagery)
+        // This uses OpenStreetMap, a free and open-source map provider.
+        // The URL template points to the map tile server.
+        // The attribution is required by OpenStreetMap's license.
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // 6. Add a marker to the map
+        // L.marker() creates a pin at the specified coordinates.
+        // .addTo(map) adds it to our map instance.
+        const zocaloMarker = L.marker([19.4326, -99.1332]).addTo(map);
+
+        // 7. Add a popup to the marker
+        // .bindPopup() attaches a message bubble that appears on click.
+        zocaloMarker.bindPopup("<b>Zócalo</b><br>Plaza de la Constitución, CDMX.").openPopup();
+
+        // 8. Add another marker with a custom message
+        const bellasArtesMarker = L.marker([19.4352, -99.1412]).addTo(map);
+        bellasArtesMarker.bindPopup("<b>Palacio de Bellas Artes</b><br>A stunning cultural center.");
+
+        // 9. Add a circle to visualize an area
+        // L.circle() draws a circle with a specified center and radius (in meters).
+        L.circle([19.4270, -99.1678], {
+            color: 'blue',
+            fillColor: '#3498db',
+            fillOpacity: 0.4,
+            radius: 500 // 500 meter radius
+        }).addTo(map).bindPopup("Ángel de la Independencia area.");
+
+        console.log("Map initialized successfully!");
+
+    </script>
+</body>
+</html>

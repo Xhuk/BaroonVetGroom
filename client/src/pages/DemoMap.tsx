@@ -1,18 +1,10 @@
 import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import "@maptiler/leaflet-maptilersdk";
+// Using CDN CSS instead of npm imports (matching working example)
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
-// Debug MapTiler SDK loading
-console.log(`🔍 MapTiler SDK Status:`, {
-  maptilerExists: typeof (L as any).maptiler,
-  maptilerLayerExists: typeof (L as any).maptiler?.maptilerLayer,
-  leafletVersion: L.version
-});
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -25,6 +17,16 @@ L.Icon.Default.mergeOptions({
 export default function DemoMap() {
   const [currentTileServer, setCurrentTileServer] = useState(0);
   const [mapKey, setMapKey] = useState(0);
+
+  // Ensure Leaflet CSS is properly loaded (matching working example approach)
+  useEffect(() => {
+    console.log('🔗 Leaflet CSS should be loaded from HTML head');
+    console.log('📊 Leaflet status:', {
+      version: L.version,
+      mapLoaded: typeof L.map,
+      tileLayerLoaded: typeof L.tileLayer
+    });
+  }, []);
 
   const tileServers = [
     {
