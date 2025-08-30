@@ -47,8 +47,17 @@ export default function DemoMap() {
   ];
 
   const switchTileServer = () => {
-    setCurrentTileServer((prev) => (prev + 1) % tileServers.length);
+    const newIndex = (currentTileServer + 1) % tileServers.length;
+    const newServer = tileServers[newIndex];
+    
+    console.log(`🔄 SWITCHING FROM: ${tileServers[currentTileServer].name}`);
+    console.log(`🔄 SWITCHING TO: ${newServer.name}`);
+    console.log(`🔄 NEW URL: ${newServer.url}`);
+    
+    setCurrentTileServer(newIndex);
     setMapKey(prev => prev + 1); // Force map re-render
+    
+    console.log(`🔄 Map key updated to: ${mapKey + 1}`);
   };
 
   const currentServer = tileServers[currentTileServer];
@@ -88,6 +97,9 @@ export default function DemoMap() {
                 <div className="text-xs text-gray-600 dark:text-gray-400">
                   Max Zoom: {currentServer.maxZoom}
                 </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">
+                  Map Key: {mapKey}
+                </div>
               </CardContent>
             </Card>
 
@@ -121,10 +133,12 @@ export default function DemoMap() {
                     style={{ height: '100%', width: '100%' }}
                     className="rounded-b-lg"
                     whenCreated={(mapInstance) => {
-                      console.log('Map created with', currentServer.name);
+                      console.log(`🗺️ Map created with: ${currentServer.name}`);
+                      console.log(`🗺️ Map key: ${mapKey}`);
+                      console.log(`🗺️ Using URL: ${currentServer.url}`);
                       setTimeout(() => {
                         mapInstance.invalidateSize();
-                        console.log('Map size invalidated');
+                        console.log('🗺️ Map size invalidated');
                       }, 100);
                     }}
                   >
