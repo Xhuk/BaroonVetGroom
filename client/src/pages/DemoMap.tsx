@@ -48,17 +48,58 @@ export default function DemoMap() {
       });
 
       let tilesLoaded = 0;
+      let tilesErrored = 0;
+      
+      tileLayer.on('tileloadstart', (e: any) => {
+        console.log(`🔄 Frontend requesting tile: ${e.url}`);
+      });
+
       tileLayer.on('tileload', (e: any) => {
         tilesLoaded++;
-        console.log(`✅ Tile loaded via proxy (${tilesLoaded}): ${e.url}`);
+        console.log(`✅ Frontend tile loaded (${tilesLoaded}): ${e.url}`);
       });
 
       tileLayer.on('tileerror', (e: any) => {
-        console.error(`❌ Proxy tile error: ${e.url}`, e.error);
+        tilesErrored++;
+        console.error(`❌ Frontend tile error (${tilesErrored}): ${e.url}`, e.error);
+        
+        // Test the failing URL directly
+        fetch(e.url)
+          .then(response => {
+            console.log(`🔍 Direct test of failed tile: ${response.status} ${response.statusText}`);
+            return response.blob();
+          })
+          .then(blob => {
+            console.log(`🔍 Blob size: ${blob.size} bytes, type: ${blob.type}`);
+          })
+          .catch(error => {
+            console.error(`🔍 Direct fetch failed:`, error);
+          });
+      });
+
+      tileLayer.on('loading', () => {
+        console.log(`🔄 Frontend: Tile layer loading started`);
+      });
+
+      tileLayer.on('load', () => {
+        console.log(`✅ Frontend: Tile layer finished loading (${tilesLoaded} tiles, ${tilesErrored} errors)`);
+        
+        if (tilesLoaded === 0) {
+          console.warn(`⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility`);
+          console.log(`🔍 Map container size:`, mapRef.current?.offsetWidth, 'x', mapRef.current?.offsetHeight);
+          console.log(`🔍 Tile layer opacity:`, tileLayer.options.opacity);
+          console.log(`🔍 Tile layer URL template:`, tileLayer._url);
+        }
       });
 
       tileLayer.addTo(map);
       console.log('🔗 Proxy tile layer added');
+      
+      // Force a map refresh after a short delay
+      setTimeout(() => {
+        map.invalidateSize(true);
+        console.log('🔄 Forced map size invalidation and redraw');
+      }, 500);
 
       // Add test markers
       const markers = [
