@@ -641,14 +641,14 @@ export default function DeliveryPlan() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="h-[calc(100%-70px)] p-0">
-                  <div className="grid grid-cols-3 h-full">
-                    {/* Fraccionamientos List - 1/3 width */}
-                    <div className="col-span-1 p-4 overflow-y-auto border-r border-gray-200 dark:border-gray-600">
+                  <div className="grid grid-cols-5 h-full">
+                    {/* Fraccionamientos List - 1/5 width */}
+                    <div className="col-span-1 p-2 overflow-y-auto border-r border-gray-200 dark:border-gray-600">
                       <div className="space-y-2">
                         {fraccionamientosWithWeights.slice(0, 6).map((frac, index) => (
                           <div 
                             key={frac.id || index}
-                            className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                            className="p-1 bg-gray-50 dark:bg-gray-800 rounded text-xs"
                           >
                             <div className="flex items-center gap-2 mb-1">
                               <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
@@ -681,8 +681,8 @@ export default function DeliveryPlan() {
                       </div>
                     </div>
                     
-                    {/* Map View - 2/3 width */}
-                    <div className="col-span-2 relative">
+                    {/* Map View - 4/5 width */}
+                    <div className="col-span-4 relative">
                       {selectedRouteForMap ? (
                         /* Route Preview Map */
                         <div className="h-full bg-white dark:bg-gray-900 rounded-r-lg border border-gray-200 dark:border-gray-600">
