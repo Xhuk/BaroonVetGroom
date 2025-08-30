@@ -462,6 +462,8 @@ export interface IStorage {
   getAttendanceStatus(tenantId: string, date: string): Promise<any[]>;
   clockInOut(tenantId: string, staffId: string, action: 'in' | 'out', location?: any, method?: string): Promise<any>;
   getAttendanceHistory(tenantId: string, staffId: string, startDate?: string, endDate?: string): Promise<any[]>;
+  getAttendanceConfig(tenantId: string): Promise<any>;
+  saveAttendanceConfig(tenantId: string, config: any): Promise<any>;
   
   // Calendar Sharing operations
   generateCalendarShareToken(tenantId: string, staffId: string, staffName: string, expiresInDays: number): Promise<string>;
@@ -4930,6 +4932,56 @@ export class DatabaseStorage implements IStorage {
       return history;
     } catch (error) {
       console.error('Error fetching attendance history:', error);
+      throw error;
+    }
+  }
+
+  async getAttendanceConfig(tenantId: string): Promise<any> {
+    try {
+      // For now, we'll store the configuration in the tenant's metadata
+      // In a real implementation, you might want a separate attendance_config table
+      const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId));
+      if (!tenant) {
+        throw new Error('Tenant not found');
+      }
+      
+      // Return default config if no config is stored
+      const metadata = tenant.metadata as any;
+      return metadata?.attendanceConfig || {
+        locationRequired: true,
+        radiusMeters: 20,
+        allowManualEntries: false,
+        requirePhoto: false,
+        workingHoursOnly: true
+      };
+    } catch (error) {
+      console.error('Error fetching attendance config:', error);
+      throw error;
+    }
+  }
+
+  async saveAttendanceConfig(tenantId: string, config: any): Promise<any> {
+    try {
+      // Get current metadata
+      const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId));
+      if (!tenant) {
+        throw new Error('Tenant not found');
+      }
+      
+      const currentMetadata = (tenant.metadata as any) || {};
+      const updatedMetadata = {
+        ...currentMetadata,
+        attendanceConfig: config
+      };
+      
+      // Update tenant with new config
+      await db.update(tenants)
+        .set({ metadata: updatedMetadata })
+        .where(eq(tenants.id, tenantId));
+      
+      return { success: true, config };
+    } catch (error) {
+      console.error('Error saving attendance config:', error);
       throw error;
     }
   }

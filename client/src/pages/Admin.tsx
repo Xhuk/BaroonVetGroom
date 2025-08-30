@@ -259,6 +259,29 @@ function Admin() {
   const [activeSection, setActiveSection] = useState('rooms');
   const [shiftTabActive, setShiftTabActive] = useState('board');
   
+  // Attendance configuration state
+  const [attendanceConfig, setAttendanceConfig] = useState({
+    locationRequired: true,
+    radiusMeters: 20,
+    allowManualEntries: false,
+    requirePhoto: false,
+    workingHoursOnly: true
+  });
+  const [isAttendanceConfigOpen, setIsAttendanceConfigOpen] = useState(false);
+
+  // Fetch attendance configuration
+  const { data: attendanceConfigData } = useQuery({
+    queryKey: [`/api/attendance/config/${currentTenant?.id}`],
+    enabled: !!currentTenant?.id,
+  });
+
+  // Load attendance config when data is available
+  useEffect(() => {
+    if (attendanceConfigData) {
+      setAttendanceConfig(attendanceConfigData);
+    }
+  }, [attendanceConfigData]);
+  
   // Shift management state
   const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
   const [selectedShift, setSelectedShift] = useState<{staffId: string, dayIndex: number, current: string} | null>(null);
@@ -1965,6 +1988,17 @@ function Admin() {
               >
                 <MapPin className="w-4 h-4" />
                 Fraccionamientos
+              </button>
+              <button
+                onClick={() => setActiveSection('attendance')}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeSection === 'attendance'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                Asistencia
               </button>
               
               <button
@@ -4203,6 +4237,247 @@ function Admin() {
             </div>
             )}
 
+            {/* Attendance Management Tab */}
+            {activeSection === 'attendance' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                      <Clock className="w-6 h-6" />
+                      Control de Asistencia
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">Gestiona la asistencia del personal con validación de ubicación</p>
+                  </div>
+                  <Button 
+                    variant="outline"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    onClick={() => setIsAttendanceConfigOpen(true)}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Configurar
+                  </Button>
+                </div>
+
+                {/* Current Attendance Status */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <UserCheck className="w-5 h-5" />
+                        Estado Actual de Asistencia
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {attendanceData?.length > 0 ? (
+                        <div className="space-y-3">
+                          {attendanceData.map((attendance: any) => (
+                            <div key={attendance.staffId} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-3 h-3 rounded-full ${attendance.status === 'present' ? 'bg-green-500' : 'bg-red-500'}`} />
+                                <div>
+                                  <p className="font-medium">{attendance.staffName}</p>
+                                  <p className="text-sm text-gray-500">
+                                    {attendance.lastEntry ? 
+                                      `Última entrada: ${new Date(attendance.lastEntry).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` :
+                                      'Sin registros hoy'
+                                    }
+                                  </p>
+                                </div>
+                              </div>
+                              <Badge variant={attendance.status === 'present' ? 'default' : 'destructive'}>
+                                {attendance.status === 'present' ? 'Presente' : 'Ausente'}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          No hay registros de asistencia para hoy
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Location Configuration Info */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin className="w-5 h-5" />
+                        Configuración de Ubicación
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Validación de ubicación</span>
+                          <Badge variant={attendanceConfig.locationRequired ? 'default' : 'secondary'}>
+                            {attendanceConfig.locationRequired ? 'Activada' : 'Desactivada'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Radio de validación</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {attendanceConfig.radiusMeters} metros
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Ubicación de la clínica</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {currentTenant?.latitude && currentTenant?.longitude ? 
+                              `${parseFloat(currentTenant.latitude).toFixed(4)}, ${parseFloat(currentTenant.longitude).toFixed(4)}` :
+                              'No configurada'
+                            }
+                          </span>
+                        </div>
+
+                        {(!currentTenant?.latitude || !currentTenant?.longitude) && (
+                          <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                            <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+                              <MapPin className="w-4 h-4" />
+                              <span className="text-sm font-medium">Ubicación requerida</span>
+                            </div>
+                            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                              Configura la ubicación de tu clínica para habilitar la validación de asistencia
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Weekly Attendance Overview */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      Resumen Semanal de Asistencia
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8 text-gray-500">
+                      Resumen semanal de asistencia en desarrollo
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Attendance Configuration Dialog */}
+                <Dialog open={isAttendanceConfigOpen} onOpenChange={setIsAttendanceConfigOpen}>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Configuración de Asistencia</DialogTitle>
+                      <DialogDescription>
+                        Configura los parámetros para el control de asistencia
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="location-required">Validar ubicación</Label>
+                        <input
+                          id="location-required"
+                          type="checkbox"
+                          checked={attendanceConfig.locationRequired}
+                          onChange={(e) => setAttendanceConfig(prev => ({
+                            ...prev,
+                            locationRequired: e.target.checked
+                          }))}
+                          className="rounded"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="radius">Radio de validación (metros)</Label>
+                        <Input
+                          id="radius"
+                          type="number"
+                          min="5"
+                          max="100"
+                          value={attendanceConfig.radiusMeters}
+                          onChange={(e) => setAttendanceConfig(prev => ({
+                            ...prev,
+                            radiusMeters: parseInt(e.target.value) || 20
+                          }))}
+                          className="mt-1"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Distancia permitida desde la ubicación de la clínica (5-100 metros)
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="manual-entries">Permitir entradas manuales</Label>
+                        <input
+                          id="manual-entries"
+                          type="checkbox"
+                          checked={attendanceConfig.allowManualEntries}
+                          onChange={(e) => setAttendanceConfig(prev => ({
+                            ...prev,
+                            allowManualEntries: e.target.checked
+                          }))}
+                          className="rounded"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="require-photo">Requerir foto</Label>
+                        <input
+                          id="require-photo"
+                          type="checkbox"
+                          checked={attendanceConfig.requirePhoto}
+                          onChange={(e) => setAttendanceConfig(prev => ({
+                            ...prev,
+                            requirePhoto: e.target.checked
+                          }))}
+                          className="rounded"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="working-hours">Solo horarios laborales</Label>
+                        <input
+                          id="working-hours"
+                          type="checkbox"
+                          checked={attendanceConfig.workingHoursOnly}
+                          onChange={(e) => setAttendanceConfig(prev => ({
+                            ...prev,
+                            workingHoursOnly: e.target.checked
+                          }))}
+                          className="rounded"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                      <Button variant="outline" onClick={() => setIsAttendanceConfigOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button onClick={async () => {
+                        try {
+                          await apiRequest(`/api/attendance/config/${currentTenant?.id}`, {
+                            method: 'POST',
+                            body: attendanceConfig
+                          });
+                          setIsAttendanceConfigOpen(false);
+                          toast({
+                            title: "Configuración guardada",
+                            description: "La configuración de asistencia se ha actualizado correctamente",
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: "No se pudo guardar la configuración",
+                            variant: "destructive",
+                          });
+                        }
+                      }}>
+                        Guardar
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
 
             {/* Personnel Management Tab */}
             {activeSection === 'personnel' && (

@@ -8636,14 +8636,67 @@ This password expires in 24 hours.
     }
   });
 
-  // Clock in/out for staff
+  // Helper function to calculate distance between two points using Haversine formula
+  function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371000; // Earth's radius in meters
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distance in meters
+  }
+
+  // Clock in/out for staff with location validation
   app.post('/api/attendance/clock/:tenantId', isAuthenticated, checkSubscriptionValidity, async (req, res) => {
     try {
       const { tenantId } = req.params;
-      const { staffId, action, location, method = 'manual' } = req.body;
+      const { staffId, action, location, method = 'manual', attendanceConfig } = req.body;
       
       if (!staffId || !action || !['in', 'out'].includes(action)) {
         return res.status(400).json({ message: 'Staff ID and valid action (in/out) required' });
+      }
+
+      // Get tenant information for location validation
+      const tenant = await storage.getTenantById(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ message: 'Tenant not found' });
+      }
+
+      // Location validation if required
+      const config = attendanceConfig || {
+        locationRequired: true,
+        radiusMeters: 20,
+        allowManualEntries: false
+      };
+
+      if (config.locationRequired && location && tenant.latitude && tenant.longitude) {
+        const userLat = parseFloat(location.lat);
+        const userLon = parseFloat(location.lng);
+        const clinicLat = parseFloat(tenant.latitude);
+        const clinicLon = parseFloat(tenant.longitude);
+
+        const distance = calculateDistance(userLat, userLon, clinicLat, clinicLon);
+        
+        if (distance > config.radiusMeters) {
+          return res.status(400).json({ 
+            message: `Fuera del área permitida. Distancia: ${Math.round(distance)}m (máximo: ${config.radiusMeters}m)`,
+            error: 'LOCATION_OUT_OF_RANGE',
+            distance: Math.round(distance),
+            maxDistance: config.radiusMeters
+          });
+        }
+
+        // Add distance info to location data
+        location.distance = Math.round(distance);
+        location.validated = true;
+      } else if (config.locationRequired && !config.allowManualEntries) {
+        return res.status(400).json({ 
+          message: 'Ubicación requerida para registrar asistencia',
+          error: 'LOCATION_REQUIRED'
+        });
       }
 
       const result = await storage.clockInOut(tenantId, staffId, action, location, method);
@@ -8665,6 +8718,39 @@ This password expires in 24 hours.
     } catch (error) {
       console.error('Error fetching attendance history:', error);
       res.status(500).json({ message: 'Failed to fetch attendance history' });
+    }
+  });
+
+  // Get attendance configuration
+  app.get('/api/attendance/config/:tenantId', isAuthenticated, checkSubscriptionValidity, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      
+      const config = await storage.getAttendanceConfig(tenantId);
+      res.json(config || {
+        locationRequired: true,
+        radiusMeters: 20,
+        allowManualEntries: false,
+        requirePhoto: false,
+        workingHoursOnly: true
+      });
+    } catch (error) {
+      console.error('Error fetching attendance config:', error);
+      res.status(500).json({ message: 'Failed to fetch attendance config' });
+    }
+  });
+
+  // Save attendance configuration
+  app.post('/api/attendance/config/:tenantId', isAuthenticated, checkSubscriptionValidity, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const config = req.body;
+      
+      const result = await storage.saveAttendanceConfig(tenantId, config);
+      res.json(result);
+    } catch (error) {
+      console.error('Error saving attendance config:', error);
+      res.status(500).json({ message: 'Failed to save attendance config' });
     }
   });
 
