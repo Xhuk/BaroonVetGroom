@@ -1,0 +1,77 @@
+📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+🔍 [TenantContext] useEffect triggered: 
+Object {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+🔍 [TenantContext] Not authenticated, skipping
+🎯 [TenantContext] Final context value: 
+Object {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: false}
+LanguageContext initialized: 
+Object {currentLanguage: "en", savedLanguage: "en", available: Array(2)}
+🔍 [useAuth] Auth state: 
+Object {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+🔍 [TenantContext] useEffect triggered: 
+Object {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+🔍 [TenantContext] Not authenticated, skipping
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+useQuery is not defined
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+useQuery is not defined
+The above error occurred in the <MedicalAppointments> component:
+
+    at MedicalAppointments (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/pages/MedicalAppointments.tsx:85:29)
+    at SubscriptionBlocker (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/SubscriptionBlocker.tsx:34:39)
+    at component
+    at Route (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=2b123774:191:16)
+    at Switch (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=2b123774:247:17)
+    at DeviceBlocker (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/DeviceBlocker.tsx:21:33)
+    at Router (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/App.tsx?v=nNhihCooPx_TFyS9dRL3u:87:55)
+    at RoleImpersonationProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/hooks/useRoleImpersonation.ts:104:45)
+    at TenantProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TenantContext.tsx:27:34)
+    at TimezoneProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TimezoneContext.tsx:21:36)
+    at ThemeProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/ThemeContext.tsx:20:33)
+    at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=2b123774:38:15)
+    at TooltipProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=2b123774:63:5)
+    at LanguageProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/LanguageContext.tsx:25:36)
+    at QueryClientProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=2b123774:2805:3)
+    at ErrorBoundary (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ErrorBoundary.tsx:7:5)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+
+at MedicalAppointments (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/pages/MedicalAppointments.tsx:85:29)
+at SubscriptionBlocker (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/SubscriptionBlocker.tsx:34:39)
+at component
+at Route (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=2b123774:191:16)
+at Switch (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=2b123774:247:17)
+at DeviceBlocker (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/DeviceBlocker.tsx:21:33)
+at Router (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/App.tsx?v=nNhihCooPx_TFyS9dRL3u:87:55)
+at RoleImpersonationProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/hooks/useRoleImpersonation.ts:104:45)
+at TenantProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TenantContext.tsx:27:34)
+at TimezoneProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TimezoneContext.tsx:21:36)
+at ThemeProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/ThemeContext.tsx:20:33)
+at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=2b123774:38:15)
+at TooltipProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=2b123774:63:5)
+at LanguageProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/LanguageContext.tsx:25:36)
+at QueryClientProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=2b123774:2805:3)
+at ErrorBoundary (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ErrorBoundary.tsx:7:5)
+at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+at new window.Error (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/lib/errorSuppression.ts?v=nNhihCooPx_TFyS9dRL3u:77:12)
+at t.value (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error caught by boundary: 
+ReferenceError {}
+ 
+Object {componentStack: "↵    at MedicalAppointments…"}
