@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -89,6 +89,20 @@ export default function DeliveryPlan() {
   const [, setLocation] = useLocation();
   const [showRouteForm, setShowRouteForm] = useState(false);
   const [selectedRouteForMap, setSelectedRouteForMap] = useState<any>(null);
+  const [mapApiKeyReady, setMapApiKeyReady] = useState(false);
+
+  // Wait for MapTiler API key to be available
+  useEffect(() => {
+    const checkApiKey = () => {
+      if (window.MAPTILER_API_KEY && window.MAPTILER_API_KEY.length > 0) {
+        console.log('MapTiler API key ready:', window.MAPTILER_API_KEY.substring(0, 8) + '...');
+        setMapApiKeyReady(true);
+      } else {
+        setTimeout(checkApiKey, 100);
+      }
+    };
+    checkApiKey();
+  }, []);
   const [selectedDate, setSelectedDate] = useState("2025-08-25"); // Date with pickup appointments
   const [selectedMascots, setSelectedMascots] = useState<string[]>([]);
   const [searchMascots, setSearchMascots] = useState("");
@@ -700,8 +714,8 @@ export default function DeliveryPlan() {
                               }}
                             >
                               <TileLayer
-                                attribution='&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>'
-                                url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY || ''}`}
+                                attribution={mapApiKeyReady ? '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>' : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}
+                                url={mapApiKeyReady ? `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY}` : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
                                 tileSize={512}
                                 zoomOffset={-1}
                               />
@@ -759,10 +773,10 @@ export default function DeliveryPlan() {
                             }}
                           >
                             <TileLayer
-                              attribution='&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>'
-                              url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY || ''}`}
-                              tileSize={512}
-                              zoomOffset={-1}
+                              attribution={mapApiKeyReady ? '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>' : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}
+                              url={mapApiKeyReady ? `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY}` : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
+                              tileSize={mapApiKeyReady ? 512 : 256}
+                              zoomOffset={mapApiKeyReady ? -1 : 0}
                             />
                           
                           {/* Clinic Location */}

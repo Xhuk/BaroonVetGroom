@@ -28,9 +28,13 @@
       fetch('/api/config/maptiler')
         .then(res => res.json())
         .then(data => {
-          window.MAPTILER_API_KEY = data.apiKey || '';
+          window.MAPTILER_API_KEY = (data.apiKey || '').trim();
+          console.log('MapTiler API key loaded successfully');
         })
-        .catch(err => console.warn('MapTiler API key not available:', err));
+        .catch(err => {
+          console.error('MapTiler API key fetch failed:', err);
+          window.MAPTILER_API_KEY = '';
+        });
     </script>
   </head>
   <body>

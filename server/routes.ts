@@ -190,8 +190,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to provide MapTiler API key for frontend
   app.get("/api/config/maptiler", (req, res) => {
     try {
+      const apiKey = (process.env.MAPTILER_API_KEY || '').trim();
       res.json({ 
-        apiKey: process.env.MAPTILER_API_KEY || '' 
+        apiKey: apiKey 
       });
     } catch (error) {
       console.error('Error providing MapTiler config:', error);
