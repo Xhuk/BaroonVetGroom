@@ -19,6 +19,19 @@ export default function DemoMap() {
 
   const tileServers = [
     {
+      name: "OSM Standard (Same as openstreetmap.org)",
+      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    },
+    {
+      name: "OSM with subdomains",
+      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", 
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+      subdomains: ['a', 'b', 'c']
+    },
+    {
       name: "OpenTopoMap",
       url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
       attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
@@ -26,38 +39,10 @@ export default function DemoMap() {
       subdomains: ['a', 'b', 'c']
     },
     {
-      name: "Wikimedia Maps",
-      url: "https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia maps</a>',
-      maxZoom: 18
-    },
-    {
-      name: "OSM France",
-      url: "https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
-      attribution: '&copy; OpenStreetMap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 20,
-      subdomains: ['a', 'b', 'c']
-    },
-    {
-      name: "OSM DE",
-      url: "https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png",
+      name: "Simple Fallback (HTTP)",
+      url: "http://tile.openstreetmap.org/{z}/{x}/{y}.png",
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 18,
-      subdomains: ['a', 'b', 'c']
-    },
-    {
-      name: "Humanitarian OSM",
-      url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles courtesy of <a href="https://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>',
-      maxZoom: 19,
-      subdomains: ['a', 'b', 'c']
-    },
-    {
-      name: "CyclOSM",
-      url: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
-      attribution: '<a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases" title="CyclOSM - Open Bicycle render">CyclOSM</a> | Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 20,
-      subdomains: ['a', 'b', 'c']
+      maxZoom: 19
     }
   ];
 
@@ -148,9 +133,16 @@ export default function DemoMap() {
                       url={currentServer.url}
                       maxZoom={currentServer.maxZoom}
                       subdomains={currentServer.subdomains}
-                      onLoad={() => console.log(`${currentServer.name} tile loaded successfully`)}
-                      onError={(e) => console.error(`${currentServer.name} tile loading error:`, e)}
-                      onLoading={() => console.log(`${currentServer.name} tiles loading...`)}
+                      onLoad={() => {
+                        console.log(`✅ ${currentServer.name} tile loaded successfully`);
+                        console.log(`URL: ${currentServer.url}`);
+                      }}
+                      onError={(e) => {
+                        console.error(`❌ ${currentServer.name} tile loading error:`, e);
+                        console.log(`Failed URL: ${currentServer.url}`);
+                      }}
+                      onLoading={() => console.log(`🔄 ${currentServer.name} tiles loading...`)}
+                      errorTileUrl=""
                     />
                     
                     {/* Test Markers */}
