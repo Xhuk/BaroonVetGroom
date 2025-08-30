@@ -98,10 +98,8 @@ export function SalaryConfig() {
         fonacotAmount: salaryData.fonacotAmount.toString(),
       };
 
-      return apiRequest(`/api/staff/${selectedEmployee.id}`, {
-        method: 'PUT', // Use PUT method as expected by backend
-        body: JSON.stringify(salaryConfigUpdate),
-      });
+      const response = await apiRequest(`/api/staff/${selectedEmployee.id}`, 'PUT', salaryConfigUpdate);
+      return response.json();
     },
     onSuccess: (updatedStaff) => {
       // Update local state with saved data
