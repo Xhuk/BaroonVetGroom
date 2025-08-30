@@ -53,8 +53,16 @@ export default function DemoMap() {
           
           console.log(`🔗 Direct tile creation: ${url} for coords:`, coords);
           
+          // Ensure proper tile styling
+          tile.style.width = '256px';
+          tile.style.height = '256px';
+          tile.style.display = 'block';
+          tile.style.position = 'absolute';
+          tile.style.opacity = '1';
+          tile.style.zIndex = '1';
+          
           tile.onload = () => {
-            console.log(`✅ Tile loaded successfully: ${url}`);
+            console.log(`✅ Tile loaded and positioned: ${url}`);
             done(null, tile);
           };
           
@@ -71,7 +79,6 @@ export default function DemoMap() {
         
         getTileUrl: function(coords: any) {
           const url = `${baseUrl}/api/tiles/osm/${coords.z}/${coords.x}/${coords.y}.png`;
-          console.log(`🔗 getTileUrl called: ${url}`);
           return url;
         }
       });
