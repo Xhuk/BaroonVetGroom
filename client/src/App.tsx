@@ -32,6 +32,7 @@ import BookingWizard from "@/pages/BookingWizard";
 import Clients from "@/pages/Clients";
 import Inventory from "@/pages/Inventory";
 import DeliveryPlan from "@/pages/DeliveryPlan";
+import DemoMap from "@/pages/DemoMap";
 import RoutePlanMap from "@/pages/RoutePlanMap";
 import DeliveryTracking from "@/pages/DeliveryTracking";
 import AdminVanConfig from "@/pages/AdminVanConfig";
@@ -152,6 +153,7 @@ function Router() {
           <Route path="/follow-up-tasks" component={() => <FollowUpTasks tenantId="vetgroom1" />} />
           <Route path="/inventory" component={Inventory} />
           <Route path="/delivery-plan" component={DeliveryPlan} />
+          <Route path="/demo-map" component={DemoMap} />
           <Route path="/route-map" component={RoutePlanMap} />
           <Route path="/sales-delivery" component={SalesDelivery} />
           <Route path="/billing" component={Billing} />
