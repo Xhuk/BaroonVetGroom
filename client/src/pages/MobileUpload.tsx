@@ -17,11 +17,13 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTenant } from "@/contexts/TenantContext";
 import type { MedicalAppointment, Pet, Client } from "@shared/schema";
 
 export default function MobileUpload() {
   const params = useParams();
   const { toast } = useToast();
+  const { currentTenant } = useTenant();
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   
@@ -37,24 +39,27 @@ export default function MobileUpload() {
 
   const { data: pet } = useQuery<Pet>({
     queryKey: ["/api/pets", appointment?.petId],
-    queryFn: () => fetch(`/api/pets/${appointment?.petId}`).then(res => res.json()),
-    enabled: !!appointment?.petId,
+    queryFn: () => fetch(`/api/pets/${currentTenant}/${appointment?.petId}`).then(res => res.json()),
+    enabled: !!appointment?.petId && !!currentTenant,
   });
 
   const { data: client } = useQuery<Client>({
     queryKey: ["/api/clients", appointment?.clientId],
-    queryFn: () => fetch(`/api/clients/${appointment?.clientId}`).then(res => res.json()),
-    enabled: !!appointment?.clientId,
+    queryFn: () => fetch(`/api/clients/${currentTenant}/${appointment?.clientId}`).then(res => res.json()),
+    enabled: !!appointment?.clientId && !!currentTenant,
   });
 
   const handleGetUploadParameters = async () => {
     try {
-      const response = await apiRequest("/api/objects/upload", {
-        method: "POST",
+      const response = await apiRequest("/api/objects/upload", "POST", {
+        tenantId: currentTenant,
+        companyId: `${currentTenant}-corp`,
+        templateType: 'medical'
       });
+      const data = await response.json();
       return {
         method: "PUT" as const,
-        url: response.uploadURL,
+        url: data.uploadURL,
       };
     } catch (error) {
       console.error("Error getting upload parameters:", error);
@@ -63,47 +68,38 @@ export default function MobileUpload() {
   };
 
   const handleUploadComplete = async (result: any) => {
-    try {
-      // Process each successful upload
-      for (const file of result.successful) {
-        const fileName = file.name;
-        const fileUrl = file.uploadURL;
+    console.log("Files uploaded:", result);
+    
+    // Save file references to appointment
+    if (result.successful && result.successful.length > 0 && appointmentId) {
+      try {
+        for (const file of result.successful) {
+          const uploadUrl = file.uploadURL;
+          
+          // Create document record for the uploaded file
+          await apiRequest(`/api/appointments/${currentTenant}/${appointmentId}/documents`, "POST", {
+            documentType: 'medical_image',
+            fileName: file.meta?.name || 'Uploaded file',
+            fileUrl: uploadUrl,
+            uploadDate: new Date().toISOString(),
+            description: 'Imagen médica subida desde móvil'
+          });
+        }
         
-        // Update progress
-        setUploadProgress(prev => ({ ...prev, [fileName]: 100 }));
-        
-        // Save file reference to appointment
-        await apiRequest(`/api/medical-appointments/${appointmentId}/documents`, {
-          method: "POST",
-          body: JSON.stringify({
-            fileName,
-            fileUrl,
-            fileType: file.type,
-            fileSize: file.size,
-            documentType: getDocumentType(file.type, fileName),
-          }),
+        toast({
+          title: "Archivos subidos",
+          description: `${result.successful.length} archivo(s) subido(s) exitosamente`,
         });
-
-        setUploadedFiles(prev => [...prev, {
-          name: fileName,
-          url: fileUrl,
-          type: file.type,
-          size: file.size,
-          uploadedAt: new Date(),
-        }]);
+        
+        setUploadedFiles([...uploadedFiles, ...result.successful]);
+      } catch (error) {
+        console.error("Error saving file references:", error);
+        toast({
+          title: "Error",
+          description: "Los archivos se subieron pero no se pudieron vincular a la cita",
+          variant: "destructive",
+        });
       }
-
-      toast({
-        title: "Archivos subidos",
-        description: `Se subieron ${result.successful.length} archivo(s) correctamente`,
-      });
-    } catch (error) {
-      console.error("Error saving file references:", error);
-      toast({
-        title: "Error",
-        description: "Error al guardar la referencia del archivo",
-        variant: "destructive",
-      });
     }
   };
 
@@ -127,7 +123,7 @@ export default function MobileUpload() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  if (isLoading) {
+  if (isLoading || !currentTenant) {
     return (
       <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
         <div className="text-center">
