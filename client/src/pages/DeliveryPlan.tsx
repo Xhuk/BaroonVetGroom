@@ -619,17 +619,17 @@ export default function DeliveryPlan() {
               </Card>
 
               {/* Neighborhood Optimization with Map */}
-              <Card className="h-96">
-                <CardHeader>
+              <Card className="h-[600px]">
+                <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2">
                     <Star className="w-5 h-5" />
                     Optimización por Fraccionamiento
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="h-full p-0">
-                  <div className="grid grid-cols-5 h-full">
-                    {/* Fraccionamientos List - 2/5 width */}
-                    <div className="col-span-2 p-4 overflow-y-auto border-r border-gray-200 dark:border-gray-600">
+                <CardContent className="h-[calc(100%-70px)] p-0">
+                  <div className="grid grid-cols-3 h-full">
+                    {/* Fraccionamientos List - 1/3 width */}
+                    <div className="col-span-1 p-4 overflow-y-auto border-r border-gray-200 dark:border-gray-600">
                       <div className="space-y-2">
                         {fraccionamientosWithWeights.slice(0, 6).map((frac, index) => (
                           <div 
@@ -667,8 +667,8 @@ export default function DeliveryPlan() {
                       </div>
                     </div>
                     
-                    {/* Map View - 3/5 width */}
-                    <div className="col-span-3 relative">
+                    {/* Map View - 2/3 width */}
+                    <div className="col-span-2 relative">
                       {selectedRouteForMap ? (
                         /* Route Preview Map */
                         <div className="h-full bg-white dark:bg-gray-900 rounded-r-lg border border-gray-200 dark:border-gray-600">
@@ -690,15 +690,19 @@ export default function DeliveryPlan() {
                             <MapContainer
                               center={[24.8066, -107.3938]}
                               zoom={13}
-                              style={{ height: '100%', width: '100%' }}
+                              style={{ height: '100%', width: '100%', minHeight: '520px' }}
                               className="rounded-br-lg"
                               key={`route-${selectedRouteForMap.id}`}
                             >
                               <TileLayer
                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                                url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                 maxZoom={19}
+                                subdomains={['a', 'b', 'c']}
                                 crossOrigin=""
+                                updateWhenIdle={false}
+                                updateWhenZooming={true}
+                                keepBuffer={4}
                               />
                               
                               {/* Clinic Location */}
@@ -739,17 +743,19 @@ export default function DeliveryPlan() {
                         </div>
                       ) : (
                         /* Fraccionamientos Map */
-                        <MapContainer
-                          center={[24.8066, -107.3938]} // Culiacán center
-                          zoom={12}
-                          style={{ height: '100%', width: '100%' }}
-                          className="rounded-r-lg"
-                          key="fraccionamientos-map"
-                        >
+                        <div className="h-full w-full relative bg-gray-100 dark:bg-gray-800 rounded-r-lg">
+                          <MapContainer
+                            center={[24.8066, -107.3938]} // Culiacán center
+                            zoom={12}
+                            style={{ height: '100%', width: '100%', minHeight: '520px' }}
+                            className="rounded-r-lg z-10"
+                            key="fraccionamientos-map"
+                          >
                           <TileLayer
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             maxZoom={19}
+                            subdomains={['a', 'b', 'c']}
                             crossOrigin=""
                             detectRetina={true}
                             updateWhenIdle={false}
@@ -805,7 +811,18 @@ export default function DeliveryPlan() {
                               </Marker>
                             );
                           })}
-                        </MapContainer>
+                          </MapContainer>
+                          
+                          {/* Loading overlay for better UX */}
+                          <div className="absolute inset-0 bg-gray-50 bg-opacity-75 flex items-center justify-center z-5 rounded-r-lg" 
+                               style={{ display: 'none' }} 
+                               id="map-loading">
+                            <div className="text-center">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                              <p className="text-sm text-gray-700">Cargando mapa...</p>
+                            </div>
+                          </div>
+                        </div>
                       )}
                       
                       {/* Map Legend */}
