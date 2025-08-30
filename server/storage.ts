@@ -424,8 +424,8 @@ export interface IStorage {
   
   // Missing methods used in routes
   getAppointmentsByDate(tenantId: string, date: string): Promise<Appointment[]>;
-  getFraccionamientos(): Promise<any[]>;
-  getDeliveryRoutes(tenantId: string): Promise<any[]>;
+  getFraccionamientos(tenantId?: string): Promise<any[]>;
+  getDeliveryRoutes(tenantId: string, date?: string): Promise<any[]>;
   createUser(userData: any): Promise<User>;
   createUserCompany(userId: string, companyId: string): Promise<any>;
   getCompany(companyId: string): Promise<Company | undefined>;
@@ -3081,14 +3081,36 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(appointments.scheduledTime));
   }
 
-  async getFraccionamientos(): Promise<any[]> {
-    // Return empty array for now - this seems to be a specific business logic feature
-    return [];
+  async getFraccionamientos(tenantId?: string): Promise<any[]> {
+    try {
+      let query = db.select().from(fraccionamientos);
+      
+      if (tenantId) {
+        query = query.where(eq(fraccionamientos.tenantId, tenantId));
+      }
+      
+      const results = await query.where(eq(fraccionamientos.isActive, true));
+      return results;
+    } catch (error) {
+      console.error("Error fetching fraccionamientos:", error);
+      return [];
+    }
   }
 
-  async getDeliveryRoutes(tenantId: string): Promise<any[]> {
-    // Return empty array for now - delivery routes functionality
-    return [];
+  async getDeliveryRoutes(tenantId: string, date?: string): Promise<any[]> {
+    try {
+      let query = db.select().from(deliveryRoutes).where(eq(deliveryRoutes.tenantId, tenantId));
+      
+      if (date) {
+        query = query.where(eq(deliveryRoutes.scheduledDate, date));
+      }
+      
+      const routes = await query;
+      return routes;
+    } catch (error) {
+      console.error("Error fetching delivery routes:", error);
+      return [];
+    }
   }
 
   async createUser(userData: any): Promise<User> {
