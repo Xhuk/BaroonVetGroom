@@ -45,19 +45,40 @@ export default function DemoMap() {
       const baseUrl = window.location.origin;
       console.log('🔗 Base URL:', baseUrl);
       
-      // Create custom tile layer with manual URL construction
+      // Override the entire tile creation process to bypass all Leaflet URL issues
       const CustomTileLayer = window.L.TileLayer.extend({
+        createTile: function(coords: any, done: any) {
+          const tile = document.createElement('img');
+          const url = `${baseUrl}/api/tiles/osm/${coords.z}/${coords.x}/${coords.y}.png`;
+          
+          console.log(`🔗 Direct tile creation: ${url} for coords:`, coords);
+          
+          tile.onload = () => {
+            console.log(`✅ Tile loaded successfully: ${url}`);
+            done(null, tile);
+          };
+          
+          tile.onerror = (error) => {
+            console.error(`❌ Tile failed to load: ${url}`, error);
+            done(error, tile);
+          };
+          
+          tile.src = url;
+          tile.alt = '';
+          
+          return tile;
+        },
+        
         getTileUrl: function(coords: any) {
           const url = `${baseUrl}/api/tiles/osm/${coords.z}/${coords.x}/${coords.y}.png`;
-          console.log(`🔗 Custom tile URL generated: ${url} for coords:`, coords);
+          console.log(`🔗 getTileUrl called: ${url}`);
           return url;
         }
       });
       
       const tileLayer = new CustomTileLayer('', {
         maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        timeout: 10000
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       });
 
       let tilesLoaded = 0;
