@@ -331,30 +331,35 @@ function AdminContent() {
     overtimeRate: '1.50'
   });
   
-  // Initialize shift data from database when staff and patterns load
-  useEffect(() => {
-    if (staff && staff.length > 0 && shiftPatternsData && Object.keys(shiftData).length === 0) {
-      const initialShifts: Record<string, string[]> = {};
-      
-      // Create pattern lookup by name for easy access
-      const patternLookup = (shiftPatternsData || []).reduce((acc: any, pattern: any) => {
-        acc[pattern.name] = pattern;
-        return acc;
-      }, {});
-      
-      // Generate database-driven shift assignments for current week
-      const sampleShiftAssignments = [
-        ['morning_shift', 'morning_shift', 'afternoon_shift', 'flexible_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
-        ['morning_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
-        ['leave_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
-        ['morning_shift', 'flexible_shift', 'flexible_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
-        ['+', 'morning_shift', 'morning_shift', 'afternoon_shift', 'leave_shift', 'weekend_off', 'weekend_off'],
-        ['morning_shift', 'leave_shift', 'morning_shift', 'morning_shift', '+', 'weekend_off', 'weekend_off']
-      ];
-      
-      staff.forEach((staffMember, index) => {
+  // Function to ensure all staff members have shift data
+  const ensureAllStaffHaveShiftData = React.useCallback(() => {
+    if (!staff || staff.length === 0 || !shiftPatternsData) return;
+    
+    const updatedShiftData = { ...shiftData };
+    let hasChanges = false;
+    
+    // Create pattern lookup by name for easy access
+    const patternLookup = (shiftPatternsData || []).reduce((acc: any, pattern: any) => {
+      acc[pattern.name] = pattern;
+      return acc;
+    }, {});
+    
+    // Generate database-driven shift assignments for current week
+    const sampleShiftAssignments = [
+      ['morning_shift', 'morning_shift', 'afternoon_shift', 'flexible_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
+      ['morning_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
+      ['leave_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
+      ['morning_shift', 'flexible_shift', 'flexible_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
+      ['+', 'morning_shift', 'morning_shift', 'afternoon_shift', 'leave_shift', 'weekend_off', 'weekend_off'],
+      ['morning_shift', 'leave_shift', 'morning_shift', 'morning_shift', '+', 'weekend_off', 'weekend_off']
+    ];
+    
+    staff.forEach((staffMember, index) => {
+      // Check if this staff member already has shift data
+      if (!updatedShiftData[staffMember.id]) {
+        hasChanges = true;
         const assignments = sampleShiftAssignments[index % sampleShiftAssignments.length];
-        initialShifts[staffMember.id] = assignments.map(patternName => {
+        updatedShiftData[staffMember.id] = assignments.map(patternName => {
           if (patternName === '+') return '+';
           
           const pattern = patternLookup[patternName];
@@ -376,11 +381,18 @@ function AdminContent() {
           
           return `${pattern.startTime} - ${pattern.endTime}\n${workHours.toFixed(0).padStart(2, '0')} hrs`;
         });
-      });
-      
-      setShiftData(initialShifts);
+      }
+    });
+    
+    if (hasChanges) {
+      setShiftData(updatedShiftData);
     }
   }, [staff, shiftPatternsData, shiftData]);
+
+  // Initialize shift data from database when staff and patterns load
+  useEffect(() => {
+    ensureAllStaffHaveShiftData();
+  }, [ensureAllStaffHaveShiftData]);
   
   // Function to update shift data
   const updateShift = (staffId: string, dayIndex: number, newShift: string) => {
@@ -5032,6 +5044,21 @@ function AdminContent() {
                           </Button>
                           <Button size="sm" variant="outline">
                             Semana Siguiente →
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            onClick={() => {
+                              ensureAllStaffHaveShiftData();
+                              toast({
+                                title: "Empleados Actualizados",
+                                description: "Todos los empleados del Personal ahora aparecen en el tablero de turnos",
+                              });
+                            }}
+                          >
+                            <Users className="w-4 h-4 mr-1" />
+                            Agregar Empleados Faltantes
                           </Button>
                         </div>
                       </CardHeader>
