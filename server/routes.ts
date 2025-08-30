@@ -9079,7 +9079,9 @@ This password expires in 24 hours.
         `);
       }
 
-      // Serve our React app with the calendar component
+      // Serve a standalone calendar page with shift data
+      const calendarData = await fetchSharedCalendarData(shareData.tenantId, shareData.staffId, shareData.staffName);
+      
       const html = `
         <!DOCTYPE html>
         <html lang="es">
@@ -9087,15 +9089,103 @@ This password expires in 24 hours.
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Calendario de Turnos - ${shareData.staffName}</title>
-          <link rel="stylesheet" href="/dist/index.css">
           <style>
-            body { margin: 0; font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; }
-            #root { min-height: 100vh; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; }
+            .container { min-height: 100vh; padding: 20px; }
+            .header { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+            .header h1 { color: #1e40af; font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+            .header .subtitle { color: #64748b; font-size: 1rem; }
+            .calendar-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+            .calendar-header { background: #1e40af; color: white; padding: 16px 24px; }
+            .calendar-header h2 { font-size: 1.25rem; font-weight: 600; }
+            .calendar-table { width: 100%; }
+            .calendar-table th { background: #f1f5f9; padding: 12px 8px; text-align: center; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; }
+            .calendar-table td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #f1f5f9; }
+            .employee-info { text-align: left; padding-left: 16px; }
+            .employee-name { font-weight: 600; color: #1e293b; margin-bottom: 4px; }
+            .employee-role { font-size: 0.875rem; color: #64748b; }
+            .shift-cell { min-width: 120px; }
+            .shift-badge { display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 0.875rem; font-weight: 500; line-height: 1.2; }
+            .shift-regular { background: #dcfce7; color: #166534; }
+            .shift-flexible { background: #dbeafe; color: #1d4ed8; }
+            .shift-leave { background: #fef3c7; color: #92400e; }
+            .shift-off { background: #f1f5f9; color: #64748b; }
+            .shift-unassigned { background: #fee2e2; color: #dc2626; }
+            .shift-time { font-weight: 600; }
+            .shift-hours { font-size: 0.75rem; opacity: 0.8; margin-top: 2px; }
+            .instructions { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin-top: 24px; }
+            .instructions h3 { color: #1e40af; font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+            .instructions ul { list-style: none; color: #3730a3; font-size: 0.875rem; }
+            .instructions li { margin-bottom: 4px; }
+            .instructions li:before { content: "• "; color: #3b82f6; font-weight: bold; }
+            @media (max-width: 768px) {
+              .container { padding: 12px; }
+              .calendar-table th, .calendar-table td { padding: 8px 4px; font-size: 0.875rem; }
+              .shift-badge { padding: 4px 8px; font-size: 0.75rem; }
+              .employee-info { padding-left: 8px; }
+            }
           </style>
         </head>
         <body>
-          <div id="root"></div>
-          <script type="module" src="/dist/index.js"></script>
+          <div class="container">
+            <div class="header">
+              <h1>📅 Calendario de Turnos</h1>
+              <p class="subtitle">${calendarData.tenant.name}</p>
+            </div>
+            
+            <div class="calendar-card">
+              <div class="calendar-header">
+                <h2>Horarios de la Semana</h2>
+              </div>
+              
+              <table class="calendar-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left; min-width: 200px;">Empleado</th>
+                    ${calendarData.staff[0]?.shifts.map(shift => `
+                      <th class="shift-cell">
+                        <div style="font-size: 1.125rem; font-weight: 700;">${new Date(shift.date).getDate()}</div>
+                        <div style="font-size: 0.75rem; opacity: 0.8;">${shift.dayName}</div>
+                      </th>
+                    `).join('') || ''}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${calendarData.staff.map(staff => `
+                    <tr>
+                      <td class="employee-info">
+                        <div class="employee-name">${staff.name}</div>
+                        <div class="employee-role">${staff.role}</div>
+                      </td>
+                      ${staff.shifts.map(shift => {
+                        const shiftClass = getShiftClass(shift.shift.type);
+                        return `
+                        <td class="shift-cell">
+                          <div class="shift-badge ${shiftClass}">
+                            <div class="shift-time">${shift.shift.time}</div>
+                            ${shift.shift.hours > 0 ? `<div class="shift-hours">${shift.shift.hours} hrs</div>` : ''}
+                          </div>
+                        </td>
+                      `}).join('')}
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="instructions">
+              <h3>💡 Cómo usar este calendario:</h3>
+              <ul>
+                <li>Verde: Turnos regulares con horarios fijos</li>
+                <li>Azul: Horarios flexibles</li>
+                <li>Amarillo: Permisos o ausencias</li>
+                <li>Gris: Días de descanso</li>
+                <li>Rojo: Turnos sin asignar</li>
+              </ul>
+            </div>
+          </div>
+          
         </body>
         </html>
       `;
@@ -9129,6 +9219,120 @@ This password expires in 24 hours.
     }
   });
 
+  // Helper function to get shift CSS class
+  function getShiftClass(type: string): string {
+    switch(type) {
+      case 'Flexible': return 'shift-flexible';
+      case 'Permiso': return 'shift-leave';
+      case 'Descanso': return 'shift-off';
+      case 'Sin turno': return 'shift-unassigned';
+      default: return 'shift-regular';
+    }
+  }
+
+  // Helper function to fetch shared calendar data
+  async function fetchSharedCalendarData(tenantId: string, staffId: string, staffName: string) {
+    // Get all staff for the tenant
+    const staffMembers = await storage.getStaff(tenantId);
+    
+    // Get shift patterns for the tenant
+    const shiftPatterns = await storage.getShiftPatterns(tenantId);
+    
+    // Filter to only the specific staff member
+    const filteredStaff = staffMembers.filter(staff => staff.id === staffId);
+    
+    // Get current week's date range
+    const today = new Date();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - today.getDay() + 1);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    
+    const weekStart = monday.toISOString().split('T')[0];
+    const weekEnd = sunday.toISOString().split('T')[0];
+    
+    // Create pattern lookup by name for easy access
+    const patternLookup = (shiftPatterns || []).reduce((acc: any, pattern: any) => {
+      acc[pattern.name] = pattern;
+      return acc;
+    }, {});
+    
+    // Generate realistic shift assignments for current week (same as Visual Shift Board)
+    const sampleShiftAssignments = [
+      ['morning_shift', 'morning_shift', 'afternoon_shift', 'flexible_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
+      ['morning_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
+      ['leave_shift', 'morning_shift', 'afternoon_shift', 'afternoon_shift', 'morning_shift', 'weekend_off', 'weekend_off'],
+      ['morning_shift', 'flexible_shift', 'flexible_shift', 'afternoon_shift', 'flexible_shift', 'weekend_off', 'weekend_off'],
+      ['+', 'morning_shift', 'morning_shift', 'afternoon_shift', 'leave_shift', 'weekend_off', 'weekend_off'],
+      ['morning_shift', 'leave_shift', 'morning_shift', 'morning_shift', '+', 'weekend_off', 'weekend_off']
+    ];
+    
+    // Get tenant name
+    const tenant = await storage.getTenant(tenantId);
+    
+    return {
+      tenant: { id: tenantId, name: tenant?.name || `Tenant ${tenantId}` },
+      dateRange: { startDate: weekStart, endDate: weekEnd },
+      staff: filteredStaff.map((staff, index) => {
+        const assignments = sampleShiftAssignments[index % sampleShiftAssignments.length];
+        const shifts = [];
+        
+        for (let day = 0; day < 7; day++) {
+          const date = new Date(monday);
+          date.setDate(monday.getDate() + day);
+          const patternName = assignments[day];
+          
+          let shiftData = null;
+          
+          if (patternName === '+') {
+            shiftData = { time: 'Sin asignar', hours: 0, type: 'Sin turno' };
+          } else {
+            const pattern = patternLookup[patternName];
+            if (!pattern) {
+              shiftData = { time: 'Sin asignar', hours: 0, type: 'Sin turno' };
+            } else {
+              // Format display based on pattern type
+              if (pattern.name === 'weekend_off') {
+                shiftData = { time: 'Descanso', hours: 0, type: 'Descanso' };
+              } else if (pattern.name === 'leave_shift') {
+                shiftData = { time: 'Permiso', hours: 0, type: 'Permiso' };
+              } else if (pattern.name === 'flexible_shift') {
+                shiftData = { time: 'Flexible', hours: 9, type: 'Flexible' };
+              } else {
+                // Calculate hours difference
+                const start = new Date(`2000-01-01T${pattern.startTime}`);
+                const end = new Date(`2000-01-01T${pattern.endTime}`);
+                let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                if (hours < 0) hours += 24; // Handle overnight shifts
+                
+                const breakHours = pattern.breakDuration / 60;
+                const workHours = Math.max(0, hours - breakHours);
+                
+                shiftData = { 
+                  time: `${pattern.startTime} - ${pattern.endTime}`, 
+                  hours: Math.round(workHours), 
+                  type: pattern.displayName || 'Regular'
+                };
+              }
+            }
+          }
+          
+          shifts.push({
+            date: date.toISOString().split('T')[0],
+            dayName: ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'][date.getDay()],
+            shift: shiftData
+          });
+        }
+        
+        return {
+          id: staff.id,
+          name: staff.name,
+          role: staff.role,
+          shifts: shifts
+        };
+      })
+    };
+  }
 
   // Medical Disclaimer Management API endpoints
   app.get('/api/disclaimers/:tenantId', isAuthenticated, async (req, res) => {
