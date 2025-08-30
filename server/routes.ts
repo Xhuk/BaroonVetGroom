@@ -59,6 +59,7 @@ const isSuperAdmin = async (req: any, res: any, next: any) => {
   }
 };
 
+
 // Middleware to check subscription validity for tenant access
 const checkSubscriptionValidity = async (req: any, res: any, next: any) => {
   try {
@@ -186,6 +187,18 @@ export const isAdminAuthorized = async (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // API endpoint to provide MapTiler API key for frontend
+  app.get("/api/config/maptiler", (req, res) => {
+    try {
+      res.json({ 
+        apiKey: process.env.MAPTILER_API_KEY || '' 
+      });
+    } catch (error) {
+      console.error('Error providing MapTiler config:', error);
+      res.json({ apiKey: '' });
+    }
+  });
+
   // Auth middleware
   await setupAuth(app);
 

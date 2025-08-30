@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
+import "@maptiler/leaflet-maptilersdk";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Staff, Appointment } from "@shared/schema";
 
@@ -699,8 +700,10 @@ export default function DeliveryPlan() {
                               }}
                             >
                               <TileLayer
-                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                attribution='&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>'
+                                url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY || ''}`}
+                                tileSize={512}
+                                zoomOffset={-1}
                               />
                               
                               {/* Clinic Location */}
@@ -756,8 +759,10 @@ export default function DeliveryPlan() {
                             }}
                           >
                             <TileLayer
-                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                              attribution='&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>'
+                              url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY || ''}`}
+                              tileSize={512}
+                              zoomOffset={-1}
                             />
                           
                           {/* Clinic Location */}

@@ -21,6 +21,17 @@
     <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+    
+    <script>
+      // Make MAPTILER_API_KEY available globally from server environment
+      window.MAPTILER_API_KEY = '';
+      fetch('/api/config/maptiler')
+        .then(res => res.json())
+        .then(data => {
+          window.MAPTILER_API_KEY = data.apiKey || '';
+        })
+        .catch(err => console.warn('MapTiler API key not available:', err));
+    </script>
   </head>
   <body>
     <div id="root"></div>
