@@ -39,7 +39,6 @@ import {
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Staff, Appointment } from "@shared/schema";
 
@@ -690,9 +689,14 @@ export default function DeliveryPlan() {
                             <MapContainer
                               center={[24.8066, -107.3938]}
                               zoom={13}
-                              style={{ height: '100%', width: '100%', minHeight: '520px' }}
-                              className="rounded-br-lg"
+                              style={{ height: '460px', width: '100%' }}
+                              className="rounded-br-lg leaflet-container"
                               key={`route-${selectedRouteForMap.id}`}
+                              whenCreated={(mapInstance) => {
+                                setTimeout(() => {
+                                  mapInstance.invalidateSize();
+                                }, 100);
+                              }}
                             >
                               <TileLayer
                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -741,9 +745,15 @@ export default function DeliveryPlan() {
                           <MapContainer
                             center={[24.8066, -107.3938]} // Culiacán center
                             zoom={12}
-                            style={{ height: '100%', width: '100%', minHeight: '520px' }}
-                            className="rounded-r-lg z-10"
+                            style={{ height: '520px', width: '100%' }}
+                            className="rounded-r-lg leaflet-container"
                             key="fraccionamientos-map"
+                            whenCreated={(mapInstance) => {
+                              // Force map to invalidate size after container is ready
+                              setTimeout(() => {
+                                mapInstance.invalidateSize();
+                              }, 100);
+                            }}
                           >
                             <TileLayer
                               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
