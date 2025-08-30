@@ -704,13 +704,13 @@ export default function DeliveryPlan() {
                             <MapContainer
                               center={[24.8066, -107.3938]}
                               zoom={13}
-                              style={{ height: '460px', width: '100%' }}
-                              className="rounded-br-lg leaflet-container"
+                              style={{ height: '100%', width: '100%', minHeight: '460px' }}
+                              className="rounded-br-lg"
                               key={`route-${selectedRouteForMap.id}`}
                               whenCreated={(mapInstance) => {
                                 setTimeout(() => {
                                   mapInstance.invalidateSize();
-                                }, 100);
+                                }, 200);
                               }}
                             >
                               <TileLayer
@@ -757,18 +757,18 @@ export default function DeliveryPlan() {
                         </div>
                       ) : (
                         /* Fraccionamientos Map */
-                        <div className="h-full w-full relative bg-gray-100 dark:bg-gray-800 rounded-r-lg">
+                        <div className="relative bg-gray-100 dark:bg-gray-800 rounded-r-lg" style={{ height: '600px', width: '100%' }}>
                           <MapContainer
                             center={[24.8066, -107.3938]} // Culiacán center
                             zoom={12}
-                            style={{ height: '520px', width: '100%' }}
-                            className="rounded-r-lg leaflet-container"
+                            style={{ height: '100%', width: '100%', minHeight: '600px' }}
+                            className="rounded-r-lg"
                             key="fraccionamientos-map"
                             whenCreated={(mapInstance) => {
                               // Force map to invalidate size after container is ready
                               setTimeout(() => {
                                 mapInstance.invalidateSize();
-                              }, 100);
+                              }, 200);
                             }}
                           >
                             <TileLayer

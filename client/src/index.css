@@ -6,6 +6,8 @@
   height: 100% !important;
   width: 100% !important;
   z-index: 1;
+  position: relative !important;
+  display: block !important;
 }
 
 .leaflet-tile-pane {
@@ -14,6 +16,25 @@
 
 .leaflet-tile-loaded {
   opacity: 1 !important;
+}
+
+/* Fix for map container parents */
+.leaflet-container div {
+  min-height: inherit !important;
+}
+
+/* Force proper map rendering */
+.leaflet-map-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  position: absolute !important;
+}
+
+/* Ensure map tiles load properly */
+.leaflet-tile-container {
+  opacity: 1 !important;
+  transform: none !important;
 }
 
 @tailwind base;
