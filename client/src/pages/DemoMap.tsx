@@ -307,3 +307,15 @@ export default function DemoMap() {
           <div style={{
             position: "absolute", bottom: 10, left: 10, maxWidth: "60%",
             background: "rgba(17,24,39,0.85)", color: "#e5e7eb",
+            padding: "8px 12px", borderRadius: 8, fontSize: 11
+          }}>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Errors:</div>
+            {lastErrors.map((err, i) => (
+              <div key={i} style={{ opacity: 0.8 }}>{err}</div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
