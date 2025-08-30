@@ -1,0 +1,196 @@
+ MapTiler API key loaded successfully
+ WebSocket connection to 'wss://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/?token=aIGmV_AV-CO0' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) 
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+ 🗺️ Using vanilla Leaflet (like your working HTML example)
+ 🗺️ Initializing vanilla Leaflet map
+ 🗺️ Map created: NewClass
+ 🗺️ Map center: LatLng
+ 🗺️ Map zoom: 13
+ 🔄 Using backend tile proxy to bypass Replit browser restrictions
+ 🔗 Base URL: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev
+ 🔇 Disabled conflicting Leaflet tile events - using custom tile system only
+ 🔄 Frontend: Tile layer loading started
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3512.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3512.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3513.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3513.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3511.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3511.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3512.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3512.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3513.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3513.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3514.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3514.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3511.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3511.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3514.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3514.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3512.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3512.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3513.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3513.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3511.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3511.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3514.png for coords: Point
+ 🔗 Direct tile creation: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3514.png for coords: Point
+ 🔗 Proxy tile layer added
+ 📍 Marker added: Clínica Veterinaria
+ 📍 Marker added: Las Flores
+ 📍 Marker added: El Bosque
+ 📍 Marker added: Villa Real
+ 🎉 Vanilla Leaflet map initialization complete
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Not authenticated, skipping
+ 🎯 [TenantContext] Final context value: Object
+ LanguageContext initialized: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Not authenticated, skipping
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🔍 [useAuth] Auth state: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3512.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3512.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3513.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3513.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3511.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3511.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3512.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3512.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3513.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3513.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1651/3514.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1652/3514.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3511.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3511.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1650/3514.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1653/3514.png
+ 🔍 Tile DOM info: Object
+ ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3512.png
+ 🔍 Tile DOM info: Object
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3512.png
+DemoMap.tsx:66 🔍 Tile DOM info: Object
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3513.png
+DemoMap.tsx:66 🔍 Tile DOM info: Object
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3513.png
+DemoMap.tsx:66 🔍 Tile DOM info: Object
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3511.png
+DemoMap.tsx:66 🔍 Tile DOM info: Object
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3511.png
+DemoMap.tsx:66 🔍 Tile DOM info: Object
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1649/3514.png
+DemoMap.tsx:66 🔍 Tile DOM info: Object
+DemoMap.tsx:65 ✅ Tile loaded and positioned: https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/tiles/osm/13/1654/3514.png
+DemoMap.tsx:66 🔍 Tile DOM info: Object
+DemoMap.tsx:136 ✅ Frontend: Tile layer finished loading (0 tiles, 24 errors)
+hook.js:608 ⚠️ No tiles loaded on frontend despite backend success - checking tile layer visibility
+overrideMethod @ hook.js:608
+DemoMap.tsx:140 🔍 Map container size: 1278 x 700
+DemoMap.tsx:141 🔍 Tile layer opacity: 1
+DemoMap.tsx:142 🔍 Tile layer URL template: 
+DemoMap.tsx:185 🗺️ Map size invalidated
+all.js:6 >=116
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:51 🔍 [TenantContext] Fetching user tenants...
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:152 🔄 Forced map size invalidation and redraw
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+TenantContext.tsx:53 🔍 [TenantContext] User tenants response: 200
+TenantContext.tsx:58 🔍 [TenantContext] User tenants received: 1 tenants: Array(1)
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+InstantNavigation.tsx:17 🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:192 🔍 [TenantContext] Priority 3 skipped: Object
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:192 🔍 [TenantContext] Priority 3 skipped: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: Object
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+DemoMap.tsx:120 🔍 Direct test of failed tile: 200 OK
+DemoMap.tsx:124 🔍 Blob size: 44479 bytes, type: text/html
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
