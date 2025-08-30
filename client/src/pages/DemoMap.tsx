@@ -60,6 +60,13 @@ export default function DemoMap() {
       type: "tile"
     },
     {
+      name: "MapTiler Streets v2 (Direct)",
+      url: `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${import.meta.env.VITE_MAPTILER_API_KEY || 'VnIIfVkMlKSgr3pNklzl'}`,
+      attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+      maxZoom: 19,
+      type: "tile"
+    },
+    {
       name: "MapTiler SDK Layer (Official)",
       apiKey: import.meta.env.VITE_MAPTILER_API_KEY || 'VnIIfVkMlKSgr3pNklzl',
       attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
