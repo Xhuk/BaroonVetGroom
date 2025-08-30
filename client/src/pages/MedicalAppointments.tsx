@@ -109,6 +109,7 @@ export default function MedicalAppointments() {
   // Disclaimers data query
   const { data: disclaimersData } = useQuery({
     queryKey: ['/api/disclaimers', currentTenant?.id],
+    queryFn: () => fetch(`/api/disclaimers/${currentTenant?.id}`).then(res => res.json()),
     enabled: !!currentTenant?.id,
   });
 

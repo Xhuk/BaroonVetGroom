@@ -8875,9 +8875,9 @@ This password expires in 24 hours.
   }
 
   // Medical Disclaimer Management API endpoints
-  app.get('/api/disclaimers', isAuthenticated, async (req, res) => {
+  app.get('/api/disclaimers/:tenantId', isAuthenticated, async (req, res) => {
     try {
-      const tenantId = req.user?.tenant || req.session?.tenantId;
+      const { tenantId } = req.params;
       if (!tenantId) {
         return res.status(400).json({ message: "Tenant ID requerido" });
       }
@@ -8891,7 +8891,7 @@ This password expires in 24 hours.
   });
 
   // Get single disclaimer (public access for signing)
-  app.get('/api/disclaimers/:id', async (req, res) => {
+  app.get('/api/disclaimer/:id', async (req, res) => {
     try {
       const { id } = req.params;
       const disclaimer = await storage.getDisclaimerById(id);
@@ -8908,7 +8908,7 @@ This password expires in 24 hours.
   });
 
   // Sign disclaimer (public access)
-  app.post('/api/disclaimers/:id/sign', async (req, res) => {
+  app.post('/api/disclaimer/:id/sign', async (req, res) => {
     try {
       const { id } = req.params;
       const { appointmentId, clientName, clientEmail, signatureData, signedAt } = req.body;
@@ -8943,9 +8943,9 @@ This password expires in 24 hours.
     }
   });
 
-  app.post('/api/disclaimers', isAuthenticated, async (req, res) => {
+  app.post('/api/disclaimers/:tenantId', isAuthenticated, async (req, res) => {
     try {
-      const tenantId = req.user?.tenant || req.session?.tenantId;
+      const { tenantId } = req.params;
       if (!tenantId) {
         return res.status(400).json({ message: "Tenant ID requerido" });
       }

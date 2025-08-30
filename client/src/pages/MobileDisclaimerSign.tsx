@@ -33,7 +33,8 @@ export default function MobileDisclaimerSign() {
 
   // Get disclaimer details
   const { data: disclaimer, isLoading: disclaimerLoading } = useQuery<any>({
-    queryKey: ["/api/disclaimers", disclaimerId],
+    queryKey: ["/api/disclaimer", disclaimerId],
+    queryFn: () => fetch(`/api/disclaimer/${disclaimerId}`).then(res => res.json()),
     enabled: !!disclaimerId,
   });
 
@@ -154,7 +155,7 @@ export default function MobileDisclaimerSign() {
 
       const signatureDataUrl = canvas.toDataURL('image/png');
       
-      return await apiRequest("POST", `/api/disclaimers/${disclaimerId}/sign`, {
+      return await apiRequest("POST", `/api/disclaimer/${disclaimerId}/sign`, {
         appointmentId,
         clientName,
         clientEmail,
