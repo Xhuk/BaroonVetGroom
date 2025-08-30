@@ -122,6 +122,9 @@ function Router() {
       <Route path="/temp/:token" component={TempLinkHandler} />
       <Route path="/driver-route/:routeId" component={DriverRoute} />
       <Route path="/appointments" component={Appointments} />
+      {/* Public routes - accessible without authentication */}
+      <Route path="/upload/:type/:appointmentId" component={MobileUpload} />
+      <Route path="/disclaimers/sign/:disclaimerId/:appointmentId" component={MobileDisclaimerSign} />
       {isAuthenticated && (
         <>
           <Route path="/booking" component={BookingWizard} />
@@ -147,8 +150,6 @@ function Router() {
             </SubscriptionBlocker>
           )} />
           <Route path="/follow-up-tasks" component={() => <FollowUpTasks tenantId="vetgroom1" />} />
-          <Route path="/upload/:type/:appointmentId" component={MobileUpload} />
-          <Route path="/disclaimers/sign/:disclaimerId/:appointmentId" component={MobileDisclaimerSign} />
           <Route path="/inventory" component={Inventory} />
           <Route path="/delivery-plan" component={DeliveryPlan} />
           <Route path="/route-map" component={RoutePlanMap} />

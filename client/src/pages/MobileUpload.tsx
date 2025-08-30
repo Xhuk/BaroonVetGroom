@@ -30,30 +30,33 @@ export default function MobileUpload() {
   const appointmentType = params.type as string;
   const appointmentId = params.appointmentId as string;
 
-  // Get appointment details
+  // Get appointment details first to extract tenant
   const { data: appointment, isLoading } = useQuery<MedicalAppointment>({
     queryKey: ["/api/medical-appointments", appointmentId],
     queryFn: () => fetch(`/api/medical-appointments/${appointmentId}`).then(res => res.json()),
     enabled: !!appointmentId,
   });
 
+  // Extract tenant from appointment data
+  const appointmentTenant = appointment?.tenantId || currentTenant;
+
   const { data: pet } = useQuery<Pet>({
     queryKey: ["/api/pets", appointment?.petId],
-    queryFn: () => fetch(`/api/pets/${currentTenant}/${appointment?.petId}`).then(res => res.json()),
-    enabled: !!appointment?.petId && !!currentTenant,
+    queryFn: () => fetch(`/api/pets/${appointmentTenant}/${appointment?.petId}`).then(res => res.json()),
+    enabled: !!appointment?.petId && !!appointmentTenant,
   });
 
   const { data: client } = useQuery<Client>({
     queryKey: ["/api/clients", appointment?.clientId],
-    queryFn: () => fetch(`/api/clients/${currentTenant}/${appointment?.clientId}`).then(res => res.json()),
-    enabled: !!appointment?.clientId && !!currentTenant,
+    queryFn: () => fetch(`/api/clients/${appointmentTenant}/${appointment?.clientId}`).then(res => res.json()),
+    enabled: !!appointment?.clientId && !!appointmentTenant,
   });
 
   const handleGetUploadParameters = async () => {
     try {
       const response = await apiRequest("/api/objects/upload", "POST", {
-        tenantId: currentTenant,
-        companyId: `${currentTenant}-corp`,
+        tenantId: appointmentTenant,
+        companyId: `${appointmentTenant}-corp`,
         templateType: 'medical'
       });
       const data = await response.json();
@@ -77,7 +80,7 @@ export default function MobileUpload() {
           const uploadUrl = file.uploadURL;
           
           // Create document record for the uploaded file
-          await apiRequest(`/api/appointments/${currentTenant}/${appointmentId}/documents`, "POST", {
+          await apiRequest(`/api/appointments/${appointmentTenant}/${appointmentId}/documents`, "POST", {
             documentType: 'medical_image',
             fileName: file.meta?.name || 'Uploaded file',
             fileUrl: uploadUrl,
@@ -123,7 +126,7 @@ export default function MobileUpload() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  if (isLoading || !currentTenant) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
         <div className="text-center">
