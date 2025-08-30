@@ -13,11 +13,8 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function DemoMap() {
-  // Direct method - use only the working MapTiler Streets v2 URL
-  const mapTilerApiKey = 'VnIIfVkMlKSgr3pNklzl';
-  
   useEffect(() => {
-    console.log('🗺️ Using direct MapTiler Streets v2 method');
+    console.log('🗺️ Using OpenStreetMap (like working example)');
     console.log('📊 Leaflet version:', L.version);
   }, []);
 
@@ -34,7 +31,7 @@ export default function DemoMap() {
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-            Culiacán Map - MapTiler Streets
+            Culiacán Map - OpenStreetMap
           </h1>
         </div>
 
@@ -48,8 +45,8 @@ export default function DemoMap() {
                 className="rounded-lg"
               >
                 <TileLayer
-                  attribution='<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
-                  url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${mapTilerApiKey}`}
+                  attribution='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   maxZoom={19}
                 />
                 
