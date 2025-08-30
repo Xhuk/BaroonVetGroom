@@ -82,40 +82,55 @@ export function SalaryConfig() {
     });
   };
 
-  const handleSaveSalaryConfig = async () => {
+  // Create mutation for saving salary configuration
+  const saveSalaryMutation = useMutation({
+    mutationFn: async (salaryData: any) => {
+      const salaryConfigUpdate = {
+        ...selectedEmployee, // Keep existing employee data
+        basicSalary: salaryData.basicSalary.toString(),
+        isrEnabled: salaryData.isrEnabled,
+        imssEnabled: salaryData.imssEnabled,
+        imssEmployeePercentage: salaryData.imssEmployeePercentage.toString(),
+        imssEmployerPercentage: salaryData.imssEmployerPercentage.toString(),
+        infonavitEnabled: salaryData.infonavitEnabled,
+        infonavitPercentage: salaryData.infonavitPercentage.toString(),
+        fonacotEnabled: salaryData.fonacotEnabled,
+        fonacotAmount: salaryData.fonacotAmount.toString(),
+      };
+
+      return apiRequest(`/api/staff/${selectedEmployee.id}`, {
+        method: 'PUT', // Use PUT method as expected by backend
+        body: JSON.stringify(salaryConfigUpdate),
+      });
+    },
+    onSuccess: (updatedStaff) => {
+      // Update local state with saved data
+      setStaff(prevStaff => 
+        prevStaff.map(emp => emp.id === selectedEmployee.id ? updatedStaff : emp)
+      );
+      setSelectedEmployee(updatedStaff);
+      
+      // Invalidate and refetch staff data
+      queryClient.invalidateQueries({ queryKey: ['/api', 'staff', currentTenant?.id] });
+      
+      toast({
+        title: "Configuración Guardada",
+        description: `Configuración de retenciones para ${selectedEmployee.name} actualizada exitosamente`,
+      });
+    },
+    onError: (error: any) => {
+      console.error('Error saving salary configuration:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la configuración salarial. Intenta de nuevo.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSaveSalaryConfig = () => {
     if (selectedEmployee && currentTenant) {
-      try {
-        const salaryConfigUpdate = {
-          basicSalary: salaryConfigData.basicSalary.toString(),
-          isrEnabled: salaryConfigData.isrEnabled,
-          imssEnabled: salaryConfigData.imssEnabled,
-          imssEmployeePercentage: salaryConfigData.imssEmployeePercentage.toString(),
-          imssEmployerPercentage: salaryConfigData.imssEmployerPercentage.toString(),
-          infonavitEnabled: salaryConfigData.infonavitEnabled,
-          infonavitPercentage: salaryConfigData.infonavitPercentage.toString(),
-          fonacotEnabled: salaryConfigData.fonacotEnabled,
-          fonacotAmount: salaryConfigData.fonacotAmount.toString(),
-        };
-
-        await apiRequest(`/api/staff/${selectedEmployee.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify(salaryConfigUpdate),
-        });
-
-        queryClient.invalidateQueries({ queryKey: ['/api', 'staff', currentTenant.id] });
-        
-        toast({
-          title: "Configuración Guardada",
-          description: `Configuración de retenciones para ${selectedEmployee.name} actualizada exitosamente`,
-        });
-      } catch (error) {
-        console.error('Error saving salary configuration:', error);
-        toast({
-          title: "Error",
-          description: "No se pudo guardar la configuración salarial. Intenta de nuevo.",
-          variant: "destructive",
-        });
-      }
+      saveSalaryMutation.mutate(salaryConfigData);
     }
   };
 
@@ -386,8 +401,12 @@ export function SalaryConfig() {
 
                       {/* Save Button */}
                       <div className="flex justify-end">
-                        <Button onClick={handleSaveSalaryConfig} className="bg-blue-600 hover:bg-blue-700">
-                          Guardar Configuración
+                        <Button 
+                          onClick={handleSaveSalaryConfig} 
+                          disabled={saveSalaryMutation.isPending}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          {saveSalaryMutation.isPending ? "Guardando..." : "Guardar Configuración"}
                         </Button>
                       </div>
                     </>
