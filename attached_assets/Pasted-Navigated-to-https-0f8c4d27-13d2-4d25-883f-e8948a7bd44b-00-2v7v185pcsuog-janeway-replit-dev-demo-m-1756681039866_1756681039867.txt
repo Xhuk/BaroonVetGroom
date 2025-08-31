@@ -1,0 +1,939 @@
+Navigated to https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/demo-map
+demo-map:71 MapTiler API key loaded successfully
+client:536 WebSocket connection to 'wss://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/?token=OHIRdKMwMrE7' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=OHIRdKMwMrE7' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+useScreenSize.ts:80 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: false}
+LanguageContext.tsx:28 LanguageContext initialized: {currentLanguage: 'en', savedLanguage: 'en', available: Array(2)}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: false, allTenantsLength: 0}
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: {userEmail: 'dongadgetoshop@gmail.com', isDemo: false, isAdmin: false, userTenantsAvailable: false, userTenants: Array(0)}
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+all.js:6 >=116
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:51 🔍 [TenantContext] Fetching user tenants...
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: true}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 0}
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: {userEmail: 'dongadgetoshop@gmail.com', isDemo: false, isAdmin: false, userTenantsAvailable: false, userTenants: Array(0)}
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: true}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+errorSuppression.ts:66 Image " " could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.
+overrideMethod @ hook.js:608
+console.warn @ errorSuppression.ts:66
+q2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:300
+_getImagesForIds @ chunk-WSCI5M4G.js?v=d5cb5ec5:10510
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10503
+getImages @ chunk-WSCI5M4G.js?v=d5cb5ec5:10500
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:16194
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:59
+e @ chunk-WSCI5M4G.js?v=d5cb5ec5:38
+getImages @ chunk-WSCI5M4G.js?v=d5cb5ec5:16193
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:15546
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:8711
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:59
+e @ chunk-WSCI5M4G.js?v=d5cb5ec5:38
+processTask @ chunk-WSCI5M4G.js?v=d5cb5ec5:8701
+receive @ chunk-WSCI5M4G.js?v=d5cb5ec5:8692
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:8662
+TenantContext.tsx:53 🔍 [TenantContext] User tenants response: 200
+TenantContext.tsx:58 🔍 [TenantContext] User tenants received: 1 tenants: [{…}]
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 1, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 0}
+TenantContext.tsx:138 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: {userEmail: 'dongadgetoshop@gmail.com', isDemo: false, isAdmin: false, userTenantsAvailable: true, userTenants: Array(1)}
+TenantContext.tsx:189 🔍 [TenantContext] Not a demo/vanilla user
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: false}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+InstantNavigation.tsx:17 🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 1, currentTenant: 'vetgroom1', isLoadingTenants: false}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 0}
+TenantContext.tsx:192 🔍 [TenantContext] Priority 3 skipped: {hasEmail: true, hasCurrentTenant: true, debugMode: false}
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: 'vetgroom1', currentTenantName: 'vetgroom1', tenant: undefined, localCurrentTenant: 'vetgroom1', isLoading: true}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+chunk-WSCI5M4G.js?v=d5cb5ec5:12366 Uncaught TypeError: n2 is not a function
+    at Ce2._queryCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12366:109)
+    at Function.call (errorSuppression.ts:80:27)
+    at Ce2._forEachCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12405:88)
+    at Ce2._query (chunk-WSCI5M4G.js?v=d5cb5ec5:12344:25)
+    at Ce2.hitTest (chunk-WSCI5M4G.js?v=d5cb5ec5:12351:25)
+    at He2.placeCollisionBox (chunk-WSCI5M4G.js?v=d5cb5ec5:12617:168)
+    at o3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12834:52)
+    at R3.i4 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:28)
+    at a3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12830:31)
+    at R3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:19)
+_queryCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12366
+Function.call @ errorSuppression.ts:80
+_forEachCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12405
+_query @ chunk-WSCI5M4G.js?v=d5cb5ec5:12344
+hitTest @ chunk-WSCI5M4G.js?v=d5cb5ec5:12351
+placeCollisionBox @ chunk-WSCI5M4G.js?v=d5cb5ec5:12617
+o3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12834
+R3.i4 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+a3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12830
+R3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+placeLayerBucketPart @ chunk-WSCI5M4G.js?v=d5cb5ec5:12891
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13039
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13055
+_updatePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:16183
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+_tileLoaded @ chunk-WSCI5M4G.js?v=d5cb5ec5:12004
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:11950
+a2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:41
+Promise.then
+l2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:57
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:59
+e @ chunk-WSCI5M4G.js?v=d5cb5ec5:38
+_loadTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:11948
+_addTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:12198
+_updateRetainedTiles @ chunk-WSCI5M4G.js?v=d5cb5ec5:12139
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:12122
+_updateSources @ chunk-WSCI5M4G.js?v=d5cb5ec5:16165
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:15744
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20476
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19964
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+setTerrain @ chunk-WSCI5M4G.js?v=d5cb5ec5:20257
+_load @ chunk-WSCI5M4G.js?v=d5cb5ec5:15611
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:15591
+Promise.then
+loadURL @ chunk-WSCI5M4G.js?v=d5cb5ec5:15590
+_updateStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20207
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20193
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:34668
+no @ chunk-WSCI5M4G.js?v=d5cb5ec5:34234
+(anonymous) @ DemoMap.tsx:16
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=d5cb5ec5:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=d5cb5ec5:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=d5cb5ec5:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=d5cb5ec5:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d5cb5ec5:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19432
+commitRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=d5cb5ec5:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18718
+workLoop @ chunk-RPCDYKBN.js?v=d5cb5ec5:197
+flushWork @ chunk-RPCDYKBN.js?v=d5cb5ec5:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=d5cb5ec5:384
+chunk-WSCI5M4G.js?v=d5cb5ec5:12366 Uncaught TypeError: n2 is not a function
+    at Ce2._queryCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12366:109)
+    at Function.call (errorSuppression.ts:80:27)
+    at Ce2._forEachCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12405:88)
+    at Ce2._query (chunk-WSCI5M4G.js?v=d5cb5ec5:12344:25)
+    at Ce2.hitTest (chunk-WSCI5M4G.js?v=d5cb5ec5:12351:25)
+    at He2.placeCollisionBox (chunk-WSCI5M4G.js?v=d5cb5ec5:12617:168)
+    at o3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12834:52)
+    at R3.i4 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:28)
+    at a3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12830:31)
+    at R3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:19)
+_queryCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12366
+Function.call @ errorSuppression.ts:80
+_forEachCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12405
+_query @ chunk-WSCI5M4G.js?v=d5cb5ec5:12344
+hitTest @ chunk-WSCI5M4G.js?v=d5cb5ec5:12351
+placeCollisionBox @ chunk-WSCI5M4G.js?v=d5cb5ec5:12617
+o3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12834
+R3.i4 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+a3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12830
+R3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+placeLayerBucketPart @ chunk-WSCI5M4G.js?v=d5cb5ec5:12891
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13039
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13055
+_updatePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:16183
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+_tileLoaded @ chunk-WSCI5M4G.js?v=d5cb5ec5:12004
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:11950
+a2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:41
+Promise.then
+l2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:57
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:59
+e @ chunk-WSCI5M4G.js?v=d5cb5ec5:38
+_loadTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:11948
+_addTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:12198
+_updateRetainedTiles @ chunk-WSCI5M4G.js?v=d5cb5ec5:12139
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:12122
+_updateSources @ chunk-WSCI5M4G.js?v=d5cb5ec5:16165
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:15744
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20476
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19964
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+setTerrain @ chunk-WSCI5M4G.js?v=d5cb5ec5:20257
+_load @ chunk-WSCI5M4G.js?v=d5cb5ec5:15611
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:15591
+Promise.then
+loadURL @ chunk-WSCI5M4G.js?v=d5cb5ec5:15590
+_updateStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20207
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20193
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:34668
+no @ chunk-WSCI5M4G.js?v=d5cb5ec5:34234
+(anonymous) @ DemoMap.tsx:16
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=d5cb5ec5:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=d5cb5ec5:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=d5cb5ec5:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=d5cb5ec5:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d5cb5ec5:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19432
+commitRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=d5cb5ec5:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18718
+workLoop @ chunk-RPCDYKBN.js?v=d5cb5ec5:197
+flushWork @ chunk-RPCDYKBN.js?v=d5cb5ec5:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=d5cb5ec5:384
+chunk-WSCI5M4G.js?v=d5cb5ec5:12366 Uncaught TypeError: n2 is not a function
+    at Ce2._queryCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12366:109)
+    at Function.call (errorSuppression.ts:80:27)
+    at Ce2._forEachCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12405:88)
+    at Ce2._query (chunk-WSCI5M4G.js?v=d5cb5ec5:12344:25)
+    at Ce2.hitTest (chunk-WSCI5M4G.js?v=d5cb5ec5:12351:25)
+    at He2.placeCollisionBox (chunk-WSCI5M4G.js?v=d5cb5ec5:12617:168)
+    at o3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12834:52)
+    at R3.i4 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:28)
+    at a3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12830:31)
+    at R3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:19)
+_queryCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12366
+Function.call @ errorSuppression.ts:80
+_forEachCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12405
+_query @ chunk-WSCI5M4G.js?v=d5cb5ec5:12344
+hitTest @ chunk-WSCI5M4G.js?v=d5cb5ec5:12351
+placeCollisionBox @ chunk-WSCI5M4G.js?v=d5cb5ec5:12617
+o3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12834
+R3.i4 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+a3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12830
+R3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+placeLayerBucketPart @ chunk-WSCI5M4G.js?v=d5cb5ec5:12891
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13039
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13055
+_updatePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:16183
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+_tileLoaded @ chunk-WSCI5M4G.js?v=d5cb5ec5:12004
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:11950
+a2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:41
+Promise.then
+l2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:57
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:59
+e @ chunk-WSCI5M4G.js?v=d5cb5ec5:38
+_loadTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:11948
+_addTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:12198
+_updateRetainedTiles @ chunk-WSCI5M4G.js?v=d5cb5ec5:12139
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:12122
+_updateSources @ chunk-WSCI5M4G.js?v=d5cb5ec5:16165
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:15744
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20476
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19964
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+setTerrain @ chunk-WSCI5M4G.js?v=d5cb5ec5:20257
+_load @ chunk-WSCI5M4G.js?v=d5cb5ec5:15611
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:15591
+Promise.then
+loadURL @ chunk-WSCI5M4G.js?v=d5cb5ec5:15590
+_updateStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20207
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20193
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:34668
+no @ chunk-WSCI5M4G.js?v=d5cb5ec5:34234
+(anonymous) @ DemoMap.tsx:16
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=d5cb5ec5:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=d5cb5ec5:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=d5cb5ec5:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=d5cb5ec5:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d5cb5ec5:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19432
+commitRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=d5cb5ec5:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18718
+workLoop @ chunk-RPCDYKBN.js?v=d5cb5ec5:197
+flushWork @ chunk-RPCDYKBN.js?v=d5cb5ec5:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=d5cb5ec5:384
+chunk-WSCI5M4G.js?v=d5cb5ec5:12366 Uncaught TypeError: n2 is not a function
+    at Ce2._queryCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12366:109)
+    at Function.call (errorSuppression.ts:80:27)
+    at Ce2._forEachCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12405:88)
+    at Ce2._query (chunk-WSCI5M4G.js?v=d5cb5ec5:12344:25)
+    at Ce2.hitTest (chunk-WSCI5M4G.js?v=d5cb5ec5:12351:25)
+    at He2.placeCollisionBox (chunk-WSCI5M4G.js?v=d5cb5ec5:12617:168)
+    at o3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12834:52)
+    at R3.i4 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:28)
+    at a3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12830:31)
+    at R3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:19)
+_queryCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12366
+Function.call @ errorSuppression.ts:80
+_forEachCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12405
+_query @ chunk-WSCI5M4G.js?v=d5cb5ec5:12344
+hitTest @ chunk-WSCI5M4G.js?v=d5cb5ec5:12351
+placeCollisionBox @ chunk-WSCI5M4G.js?v=d5cb5ec5:12617
+o3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12834
+R3.i4 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+a3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12830
+R3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+placeLayerBucketPart @ chunk-WSCI5M4G.js?v=d5cb5ec5:12891
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13039
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13055
+_updatePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:16183
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+_tileLoaded @ chunk-WSCI5M4G.js?v=d5cb5ec5:12004
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:11950
+a2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:41
+Promise.then
+l2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:57
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:59
+e @ chunk-WSCI5M4G.js?v=d5cb5ec5:38
+_loadTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:11948
+_addTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:12198
+_updateRetainedTiles @ chunk-WSCI5M4G.js?v=d5cb5ec5:12139
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:12122
+_updateSources @ chunk-WSCI5M4G.js?v=d5cb5ec5:16165
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:15744
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20476
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19964
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+setTerrain @ chunk-WSCI5M4G.js?v=d5cb5ec5:20257
+_load @ chunk-WSCI5M4G.js?v=d5cb5ec5:15611
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:15591
+Promise.then
+loadURL @ chunk-WSCI5M4G.js?v=d5cb5ec5:15590
+_updateStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20207
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20193
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:34668
+no @ chunk-WSCI5M4G.js?v=d5cb5ec5:34234
+(anonymous) @ DemoMap.tsx:16
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=d5cb5ec5:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=d5cb5ec5:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=d5cb5ec5:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=d5cb5ec5:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d5cb5ec5:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19432
+commitRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=d5cb5ec5:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18718
+workLoop @ chunk-RPCDYKBN.js?v=d5cb5ec5:197
+flushWork @ chunk-RPCDYKBN.js?v=d5cb5ec5:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=d5cb5ec5:384
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: true, userEmail: 'dongadgetoshop@gmail.com', userTenantsLength: 1, currentTenant: 'vetgroom1', isLoadingTenants: false}
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 6}
+TenantContext.tsx:192 🔍 [TenantContext] Priority 3 skipped: {hasEmail: true, hasCurrentTenant: true, debugMode: false}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+chunk-WSCI5M4G.js?v=d5cb5ec5:12366 Uncaught TypeError: n2 is not a function
+    at Ce2._queryCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12366:109)
+    at Function.call (errorSuppression.ts:80:27)
+    at Ce2._forEachCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12405:88)
+    at Ce2._query (chunk-WSCI5M4G.js?v=d5cb5ec5:12344:25)
+    at Ce2.hitTest (chunk-WSCI5M4G.js?v=d5cb5ec5:12351:25)
+    at He2.placeCollisionBox (chunk-WSCI5M4G.js?v=d5cb5ec5:12617:168)
+    at o3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12834:52)
+    at R3.i4 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:28)
+    at a3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12830:31)
+    at R3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:19)
+_queryCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12366
+Function.call @ errorSuppression.ts:80
+_forEachCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12405
+_query @ chunk-WSCI5M4G.js?v=d5cb5ec5:12344
+hitTest @ chunk-WSCI5M4G.js?v=d5cb5ec5:12351
+placeCollisionBox @ chunk-WSCI5M4G.js?v=d5cb5ec5:12617
+o3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12834
+R3.i4 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+a3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12830
+R3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+placeLayerBucketPart @ chunk-WSCI5M4G.js?v=d5cb5ec5:12891
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13039
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13055
+_updatePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:16183
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+_tileLoaded @ chunk-WSCI5M4G.js?v=d5cb5ec5:12004
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:11950
+a2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:41
+Promise.then
+l2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:57
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:59
+e @ chunk-WSCI5M4G.js?v=d5cb5ec5:38
+_loadTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:11948
+_addTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:12198
+_updateRetainedTiles @ chunk-WSCI5M4G.js?v=d5cb5ec5:12139
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:12122
+_updateSources @ chunk-WSCI5M4G.js?v=d5cb5ec5:16165
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:15744
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20476
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19964
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+setTerrain @ chunk-WSCI5M4G.js?v=d5cb5ec5:20257
+_load @ chunk-WSCI5M4G.js?v=d5cb5ec5:15611
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:15591
+Promise.then
+loadURL @ chunk-WSCI5M4G.js?v=d5cb5ec5:15590
+_updateStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20207
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20193
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:34668
+no @ chunk-WSCI5M4G.js?v=d5cb5ec5:34234
+(anonymous) @ DemoMap.tsx:16
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=d5cb5ec5:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=d5cb5ec5:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=d5cb5ec5:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=d5cb5ec5:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d5cb5ec5:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19432
+commitRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=d5cb5ec5:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18718
+workLoop @ chunk-RPCDYKBN.js?v=d5cb5ec5:197
+flushWork @ chunk-RPCDYKBN.js?v=d5cb5ec5:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=d5cb5ec5:384
+chunk-WSCI5M4G.js?v=d5cb5ec5:12366 Uncaught TypeError: n2 is not a function
+    at Ce2._queryCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12366:109)
+    at Function.call (errorSuppression.ts:80:27)
+    at Ce2._forEachCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12405:88)
+    at Ce2._query (chunk-WSCI5M4G.js?v=d5cb5ec5:12344:25)
+    at Ce2.hitTest (chunk-WSCI5M4G.js?v=d5cb5ec5:12351:25)
+    at He2.placeCollisionBox (chunk-WSCI5M4G.js?v=d5cb5ec5:12617:168)
+    at o3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12834:52)
+    at R3.i4 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:28)
+    at a3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12830:31)
+    at R3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:19)
+_queryCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12366
+Function.call @ errorSuppression.ts:80
+_forEachCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12405
+_query @ chunk-WSCI5M4G.js?v=d5cb5ec5:12344
+hitTest @ chunk-WSCI5M4G.js?v=d5cb5ec5:12351
+placeCollisionBox @ chunk-WSCI5M4G.js?v=d5cb5ec5:12617
+o3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12834
+R3.i4 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+a3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12830
+R3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+placeLayerBucketPart @ chunk-WSCI5M4G.js?v=d5cb5ec5:12891
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13039
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13055
+_updatePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:16183
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+_tileLoaded @ chunk-WSCI5M4G.js?v=d5cb5ec5:12004
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:11950
+a2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:41
+Promise.then
+l2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:57
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:59
+e @ chunk-WSCI5M4G.js?v=d5cb5ec5:38
+_loadTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:11948
+_addTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:12198
+_updateRetainedTiles @ chunk-WSCI5M4G.js?v=d5cb5ec5:12139
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:12122
+_updateSources @ chunk-WSCI5M4G.js?v=d5cb5ec5:16165
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:15744
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20476
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19964
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+setTerrain @ chunk-WSCI5M4G.js?v=d5cb5ec5:20257
+_load @ chunk-WSCI5M4G.js?v=d5cb5ec5:15611
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:15591
+Promise.then
+loadURL @ chunk-WSCI5M4G.js?v=d5cb5ec5:15590
+_updateStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20207
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20193
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:34668
+no @ chunk-WSCI5M4G.js?v=d5cb5ec5:34234
+(anonymous) @ DemoMap.tsx:16
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=d5cb5ec5:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=d5cb5ec5:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=d5cb5ec5:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=d5cb5ec5:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d5cb5ec5:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19432
+commitRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=d5cb5ec5:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18718
+workLoop @ chunk-RPCDYKBN.js?v=d5cb5ec5:197
+flushWork @ chunk-RPCDYKBN.js?v=d5cb5ec5:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=d5cb5ec5:384
+chunk-WSCI5M4G.js?v=d5cb5ec5:12366 Uncaught TypeError: n2 is not a function
+    at Ce2._queryCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12366:109)
+    at Function.call (errorSuppression.ts:80:27)
+    at Ce2._forEachCell (chunk-WSCI5M4G.js?v=d5cb5ec5:12405:88)
+    at Ce2._query (chunk-WSCI5M4G.js?v=d5cb5ec5:12344:25)
+    at Ce2.hitTest (chunk-WSCI5M4G.js?v=d5cb5ec5:12351:25)
+    at He2.placeCollisionBox (chunk-WSCI5M4G.js?v=d5cb5ec5:12617:168)
+    at o3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12834:52)
+    at R3.i4 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:28)
+    at a3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12830:31)
+    at R3 (chunk-WSCI5M4G.js?v=d5cb5ec5:12837:19)
+_queryCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12366
+Function.call @ errorSuppression.ts:80
+_forEachCell @ chunk-WSCI5M4G.js?v=d5cb5ec5:12405
+_query @ chunk-WSCI5M4G.js?v=d5cb5ec5:12344
+hitTest @ chunk-WSCI5M4G.js?v=d5cb5ec5:12351
+placeCollisionBox @ chunk-WSCI5M4G.js?v=d5cb5ec5:12617
+o3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12834
+R3.i4 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+a3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12830
+R3 @ chunk-WSCI5M4G.js?v=d5cb5ec5:12837
+placeLayerBucketPart @ chunk-WSCI5M4G.js?v=d5cb5ec5:12891
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13039
+continuePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:13055
+_updatePlacement @ chunk-WSCI5M4G.js?v=d5cb5ec5:16183
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+_tileLoaded @ chunk-WSCI5M4G.js?v=d5cb5ec5:12004
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:11950
+a2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:41
+Promise.then
+l2 @ chunk-WSCI5M4G.js?v=d5cb5ec5:57
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:59
+e @ chunk-WSCI5M4G.js?v=d5cb5ec5:38
+_loadTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:11948
+_addTile @ chunk-WSCI5M4G.js?v=d5cb5ec5:12198
+_updateRetainedTiles @ chunk-WSCI5M4G.js?v=d5cb5ec5:12139
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:12122
+_updateSources @ chunk-WSCI5M4G.js?v=d5cb5ec5:16165
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20479
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20481
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19985
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:463
+update @ chunk-WSCI5M4G.js?v=d5cb5ec5:15744
+_render @ chunk-WSCI5M4G.js?v=d5cb5ec5:20476
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:20498
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:10244
+requestAnimationFrame
+frame @ chunk-WSCI5M4G.js?v=d5cb5ec5:10243
+triggerRepaint @ chunk-WSCI5M4G.js?v=d5cb5ec5:20495
+_update @ chunk-WSCI5M4G.js?v=d5cb5ec5:20458
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:19964
+Function.call @ errorSuppression.ts:80
+fire @ chunk-WSCI5M4G.js?v=d5cb5ec5:459
+setTerrain @ chunk-WSCI5M4G.js?v=d5cb5ec5:20257
+_load @ chunk-WSCI5M4G.js?v=d5cb5ec5:15611
+(anonymous) @ chunk-WSCI5M4G.js?v=d5cb5ec5:15591
+Promise.then
+loadURL @ chunk-WSCI5M4G.js?v=d5cb5ec5:15590
+_updateStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20207
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:20193
+setStyle @ chunk-WSCI5M4G.js?v=d5cb5ec5:34668
+no @ chunk-WSCI5M4G.js?v=d5cb5ec5:34234
+(anonymous) @ DemoMap.tsx:16
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=d5cb5ec5:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=d5cb5ec5:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=d5cb5ec5:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=d5cb5ec5:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d5cb5ec5:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d5cb5ec5:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=d5cb5ec5:19432
+commitRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=d5cb5ec5:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=d5cb5ec5:18718
+workLoop @ chunk-RPCDYKBN.js?v=d5cb5ec5:197
+flushWork @ chunk-RPCDYKBN.js?v=d5cb5ec5:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=d5cb5ec5:384
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+TenantContext.tsx:291 🎯 [TenantContext] Final context value: {currentTenant: 'vetgroom1', currentTenantName: 'Vetgroom1', tenant: 'vetgroom1', localCurrentTenant: 'vetgroom1', isLoading: false}

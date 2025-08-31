@@ -11,6 +11,8 @@ import { getTodayCST1, addDaysCST1, formatCST1Date, getTodayInUserTimezone, addD
 import { CalendarTimeIndicator } from "@/components/CalendarTimeIndicator";
 import { useWebSocketAppointments } from "@/hooks/useWebSocketAppointments";
 import { ScalabilityDemo } from "@/components/ScalabilityDemo";
+import { useTenant } from "@/contexts/TenantContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AppointmentData {
   appointments: Appointment[];
@@ -28,6 +30,9 @@ interface AppointmentData {
 const INSTANT_SKELETON = <InstantAppointmentsSkeleton />;
 
 const Appointments = memo(function Appointments() {
+  const { currentTenant } = useTenant();
+  const { user } = useAuth();
+  
   // CRITICAL: Always initialize with today's date in user's configured timezone
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = getTodayInUserTimezone();
@@ -45,27 +50,30 @@ const Appointments = memo(function Appointments() {
     setSelectedDate(today);
   }, []); // Only run on mount
 
-  // Use WebSocket for real-time appointment updates
+  // Use WebSocket for real-time appointment updates with proper tenant and user
+  const tenantId = currentTenant?.id || 'vetgroom1'; // fallback for demo
+  const userId = user?.id || 'user123'; // fallback for demo
+  
   const { 
     appointments: wsAppointments, 
     isLoading: wsLoading, 
     error: wsError, 
     isConnected,
     refresh 
-  } = useWebSocketAppointments('vetgroom1', 'user123', selectedDate);
+  } = useWebSocketAppointments(tenantId, userId, selectedDate);
 
   // Stable fallback - always fetch initial data, then WebSocket takes over
   const { data: fallbackData, isLoading: restLoading } = useQuery({
-    queryKey: ['appointments-fast', selectedDate],
+    queryKey: ['appointments-fast', tenantId, selectedDate],
     queryFn: async () => {
-      const url = `/api/appointments-fast/vetgroom1?date=${selectedDate}`;
+      const url = `/api/appointments-fast/${tenantId}?date=${selectedDate}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`${response.status}: ${response.statusText}`);
       }
       return response.json();
     },
-    enabled: !!selectedDate,
+    enabled: !!selectedDate && !!tenantId,
     staleTime: 60000, // Keep data fresh for 1 minute
     retry: 1
   });

@@ -55,7 +55,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         throw new Error(`Failed to fetch user tenants: ${response.status}`);
       }
       const tenants = await response.json();
-      console.log('🔍 [TenantContext] User tenants received:', tenants.length, 'tenants:', tenants.map(t => ({ id: t.id, tenantId: t.tenantId })));
+      console.log('🔍 [TenantContext] User tenants received:', tenants.length, 'tenants:', tenants.map((t: any) => ({ id: t.id, tenantId: t.tenantId })));
       return tenants;
     }
   });
@@ -158,22 +158,17 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
             name: `Demo Tenant ${userTenant.tenantId}`,
             subdomain: userTenant.tenantId,
             address: null,
-            city: null,
-            state: null,
-            country: null,
-            contactPhone: null,
-            contactEmail: null,
-            logoUrl: null,
-            timezone: 'America/Mexico_City',
-            currency: 'MXN',
+            phone: null,
+            email: null,
+            latitude: null,
+            longitude: null,
+            postalCode: null,
+            openTime: null,
+            closeTime: null,
+            timeSlotDuration: null,
             settings: null,
             companyId: '',
-            deliveryRadiusKm: 10,
-            deliverySchedulingEnabled: false,
-            subscriptionStatus: 'active',
-            subscriptionEndDate: null,
-            vetSiteLimit: 1,
-            currentVetSiteCount: 1,
+            deliveryTrackingEnabled: false,
             reservationTimeout: null,
             createdAt: new Date(),
             updatedAt: new Date()

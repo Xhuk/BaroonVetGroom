@@ -83,12 +83,8 @@ function Router() {
 
   // Get company ID for subscription blocking
   const getCompanyId = () => {
-    // Try to get from user data or default to 'unknown'
-    if (user?.companyId) {
-      return user.companyId;
-    }
-    // Fallback to extract from current context or use default
-    return user?.tenant?.companyId || 'unknown';
+    // Default to 'unknown' since user doesn't have direct company access
+    return 'unknown';
   };
 
   // NEVER show loading spinner on route changes - always render instantly
