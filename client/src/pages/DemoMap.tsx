@@ -27,9 +27,18 @@ export default function DemoMap() {
         maptilersdk.config.apiKey = config.apiKey;
         console.log("🗺️ MapTiler configured with API key:", config.apiKey.substring(0, 8) + "...");
 
-        // Wait for container to be ready
+        // Wait for container to be ready with timeout
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds max wait
+        
+        while (!mapContainer.current && attempts < maxAttempts) {
+          console.log(`⏳ Waiting for map container... attempt ${attempts + 1}/${maxAttempts}`);
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+        
         if (!mapContainer.current) {
-          console.error("❌ Map container not available in DOM");
+          console.error("❌ Map container not available in DOM after", maxAttempts * 100, "ms");
           setError('Map container not available');
           setIsLoading(false);
           return;
