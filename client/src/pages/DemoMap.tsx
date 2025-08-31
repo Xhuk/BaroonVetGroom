@@ -25,16 +25,24 @@ export default function DemoMap() {
 
         // Configure MapTiler
         maptilersdk.config.apiKey = config.apiKey;
-        console.log("🗺️ MapTiler configured with API key");
+        console.log("🗺️ MapTiler configured with API key:", config.apiKey.substring(0, 8) + "...");
 
         // Wait for container to be ready
         if (!mapContainer.current) {
+          console.error("❌ Map container not available in DOM");
           setError('Map container not available');
           setIsLoading(false);
           return;
         }
 
-        console.log("🗺️ Initializing MapTiler map...");
+        console.log("🗺️ Map container found, dimensions:", {
+          width: mapContainer.current.offsetWidth,
+          height: mapContainer.current.offsetHeight,
+          clientWidth: mapContainer.current.clientWidth,
+          clientHeight: mapContainer.current.clientHeight
+        });
+
+        console.log("🗺️ Initializing MapTiler map with style:", maptilersdk.MapStyle.STREETS);
         
         // Initialize MapTiler map
         const mapInstance = new maptilersdk.Map({
@@ -42,6 +50,20 @@ export default function DemoMap() {
           style: maptilersdk.MapStyle.STREETS,
           center: [-107.3938, 24.8066], // Culiacán coordinates (lng, lat)
           zoom: 12,
+        });
+
+        // Add map event listeners for debugging
+        mapInstance.on('load', () => {
+          console.log("🎯 MapTiler map load event fired - map is ready");
+        });
+
+        mapInstance.on('error', (e) => {
+          console.error("❌ MapTiler map error event:", e);
+          setError(`Map load error: ${e.error?.message || 'Unknown error'}`);
+        });
+
+        mapInstance.on('styleload', () => {
+          console.log("🎨 MapTiler style loaded successfully");
         });
 
         // Add delivery destination markers for Culiacán
@@ -54,9 +76,13 @@ export default function DemoMap() {
           { name: "Clínica Sur", coords: [-107.4138, 24.7866] },
         ];
 
+        console.log("📍 Adding", destinations.length, "destination markers to map...");
+
         destinations.forEach((destination, index) => {
+          console.log(`📌 Adding marker ${index + 1}:`, destination.name, "at", destination.coords);
+          
           // Create custom marker for each destination
-          new maptilersdk.Marker({
+          const marker = new maptilersdk.Marker({
             color: index === 0 ? "#FF0000" : "#0066CC", // Main clinic in red, others in blue
           })
             .setLngLat(destination.coords as [number, number])
@@ -72,11 +98,13 @@ export default function DemoMap() {
               `)
             )
             .addTo(mapInstance);
+            
+          console.log(`✅ Marker ${index + 1} added successfully`);
         });
 
         map.current = mapInstance;
         setIsLoading(false);
-        console.log("✅ MapTiler demo map initialized successfully");
+        console.log("✅ MapTiler demo map initialized successfully with", destinations.length, "markers");
 
       } catch (err) {
         console.error("❌ Error initializing MapTiler demo map:", err);
