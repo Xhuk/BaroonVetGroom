@@ -1,87 +1,146 @@
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Navigation } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import * as maptilersdk from "@maptiler/sdk";
+import "@maptiler/sdk/dist/maptiler-sdk.css";
 
 export default function DemoMap() {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<maptilersdk.Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate map loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      console.log("✅ Demo map component loaded successfully");
-    }, 500);
+    if (map.current) return; // stops map from initializing more than once
 
-    return () => clearTimeout(timer);
+    const initializeMap = async () => {
+      try {
+        // Fetch API key from server
+        const response = await fetch('/api/config/maptiler');
+        const config = await response.json();
+        
+        if (!config.apiKey) {
+          setError('MapTiler API key not configured');
+          setIsLoading(false);
+          return;
+        }
+
+        // Configure MapTiler
+        maptilersdk.config.apiKey = config.apiKey;
+        console.log("🗺️ MapTiler configured with API key");
+
+        // Wait for container to be ready
+        if (!mapContainer.current) {
+          setError('Map container not available');
+          setIsLoading(false);
+          return;
+        }
+
+        console.log("🗺️ Initializing MapTiler map...");
+        
+        // Initialize MapTiler map
+        const mapInstance = new maptilersdk.Map({
+          container: mapContainer.current,
+          style: maptilersdk.MapStyle.STREETS,
+          center: [-107.3938, 24.8066], // Culiacán coordinates (lng, lat)
+          zoom: 12,
+        });
+
+        // Add delivery destination markers for Culiacán
+        const destinations = [
+          { name: "Clínica Veterinaria Principal", coords: [-107.3938, 24.8066] },
+          { name: "Sucursal Las Flores", coords: [-107.4038, 24.8166] },
+          { name: "Sucursal El Bosque", coords: [-107.3838, 24.7966] },
+          { name: "Sucursal Villa Real", coords: [-107.3738, 24.8266] },
+          { name: "Centro Veterinario Norte", coords: [-107.3638, 24.8366] },
+          { name: "Clínica Sur", coords: [-107.4138, 24.7866] },
+        ];
+
+        destinations.forEach((destination, index) => {
+          // Create custom marker for each destination
+          new maptilersdk.Marker({
+            color: index === 0 ? "#FF0000" : "#0066CC", // Main clinic in red, others in blue
+          })
+            .setLngLat(destination.coords as [number, number])
+            .setPopup(
+              new maptilersdk.Popup().setHTML(`
+                <div style="padding: 8px;">
+                  <h3 style="margin: 0 0 4px 0; font-weight: bold;">${destination.name}</h3>
+                  <p style="margin: 0; color: #666; font-size: 12px;">Destino de entregas veterinarias</p>
+                  <p style="margin: 4px 0 0 0; color: #999; font-size: 11px;">
+                    Coordenadas: ${destination.coords[1].toFixed(4)}, ${destination.coords[0].toFixed(4)}
+                  </p>
+                </div>
+              `)
+            )
+            .addTo(mapInstance);
+        });
+
+        map.current = mapInstance;
+        setIsLoading(false);
+        console.log("✅ MapTiler demo map initialized successfully");
+
+      } catch (err) {
+        console.error("❌ Error initializing MapTiler demo map:", err);
+        setError(err instanceof Error ? err.message : 'Error desconocido al cargar el mapa');
+        setIsLoading(false);
+      }
+    };
+
+    initializeMap();
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
   }, []);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Cargando mapa demo...</div>
+      <div style={{
+        height: "100vh",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#0b1220",
+        color: "#e5e7eb",
+        fontSize: "18px"
+      }}>
+        Cargando mapa de destinos...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{
+        height: "100vh",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#0b1220",
+        color: "#ef4444",
+        fontSize: "18px",
+        flexDirection: "column",
+        gap: "10px"
+      }}>
+        <div>❌ Error del mapa: {error}</div>
+        <div style={{ fontSize: "14px", color: "#9ca3af" }}>
+          Verifique la configuración de la clave API de MapTiler
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="w-6 h-6 text-blue-500" />
-              Mapa Demo - Sistema Veterinario
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 mb-4">
-              Demostración del sistema de gestión veterinaria con ubicaciones en Culiacán, Sinaloa.
-            </p>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {[
-            { name: "Clínica Veterinaria Principal", address: "Centro de Culiacán", coords: "24.8066, -107.3938" },
-            { name: "Sucursal Las Flores", address: "Fraccionamiento Las Flores", coords: "24.8166, -107.4038" },
-            { name: "Sucursal El Bosque", address: "Colonia El Bosque", coords: "24.7966, -107.3838" },
-            { name: "Sucursal Villa Real", address: "Villa Real", coords: "24.8266, -107.3738" },
-          ].map((location, index) => (
-            <Card key={index} className="hover:bg-gray-50 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <Navigation className="w-5 h-5 text-green-500 mt-1" />
-                  <div>
-                    <h3 className="font-semibold text-sm">{location.name}</h3>
-                    <p className="text-gray-600 text-xs mt-1">{location.address}</p>
-                    <p className="text-gray-500 text-xs mt-1">{location.coords}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <Card>
-          <CardContent className="p-0">
-            <div 
-              className="w-full h-96 bg-gray-100 rounded-lg flex items-center justify-center"
-              style={{
-                backgroundImage: 'url("data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23e5e7eb" fill-opacity="0.4"%3E%3Cpath d="M20 20c0-11.046-8.954-20-20-20v20h20zM0 20v20h20c0-11.046-8.954-20-20-20z"/%3E%3C/g%3E%3C/svg%3E")'
-              }}
-            >
-              <div className="text-center">
-                <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">Demo Mapa Interactivo</h3>
-                <p className="text-gray-500 text-sm max-w-md">
-                  Aquí se mostraría un mapa interactivo con las ubicaciones de las clínicas veterinarias.
-                  Funcionalidades incluyen: rutas de entrega, tracking en tiempo real, y gestión de zonas.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <div
+      ref={mapContainer}
+      style={{
+        height: "100vh",
+        width: "100%",
+      }}
+    />
   );
 }
