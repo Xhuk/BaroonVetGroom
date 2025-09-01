@@ -198,9 +198,12 @@ export default function DemoMap() {
     );
   }
 
-  // Fix MapTiler URL format for Leaflet
-  const mapTilerUrl = `https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${apiKey}`;
-
+  // Use OpenStreetMap as reliable fallback - always works
+  const osmUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  
+  // MapTiler alternative URLs to try
+  const mapTilerUrl = `https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${apiKey}`;
+  
   return (
     <div style={{ height: "100vh", width: "100%", position: "relative" }}>
       {/* Header Info */}
@@ -240,6 +243,22 @@ export default function DemoMap() {
         </div>
       </div>
 
+      {/* Map Provider Info */}
+      <div style={{
+        position: "absolute",
+        top: "20px",
+        right: "20px",
+        zIndex: 1000,
+        background: "rgba(0,0,0,0.8)",
+        color: "white",
+        padding: "8px 12px",
+        borderRadius: "6px",
+        fontSize: "12px",
+        fontFamily: "'Inter', sans-serif"
+      }}>
+        🗺️ OpenStreetMap
+      </div>
+
       {/* Statistics Panel */}
       <div style={{
         position: "absolute",
@@ -275,11 +294,11 @@ export default function DemoMap() {
         style={{ height: "100%", width: "100%" }}
         scrollWheelZoom={true}
       >
+        {/* OpenStreetMap - Guaranteed to work */}
         <TileLayer
-          attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url={mapTilerUrl}
-          tileSize={256}
-          zoomOffset={0}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url={osmUrl}
+          maxZoom={19}
         />
         
         {destinations.map((destination) => (
