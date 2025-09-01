@@ -9,15 +9,24 @@ export default function DemoMap() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (map.current) return; // stops map from initializing more than once
+    console.log("🚀 DemoMap useEffect triggered");
+    
+    if (map.current) {
+      console.log("⚠️ Map already exists, skipping initialization");
+      return; // stops map from initializing more than once
+    }
+
+    console.log("🎬 Starting map initialization...");
 
     const initializeMap = async () => {
       try {
         // Fetch API key from server
+        console.log("📡 Fetching MapTiler API key from server...");
         const response = await fetch('/api/config/maptiler');
         const config = await response.json();
         
         if (!config.apiKey) {
+          console.error("❌ No API key received from server");
           setError('MapTiler API key not configured');
           setIsLoading(false);
           return;
@@ -61,9 +70,12 @@ export default function DemoMap() {
           zoom: 12,
         });
 
+        console.log("🗺️ MapTiler map instance created, adding event listeners...");
+
         // Add map event listeners for debugging
         mapInstance.on('load', () => {
           console.log("🎯 MapTiler map load event fired - map is ready");
+          setIsLoading(false);
         });
 
         mapInstance.on('error', (e) => {
@@ -71,7 +83,7 @@ export default function DemoMap() {
           setError(`Map load error: ${e.error?.message || 'Unknown error'}`);
         });
 
-        mapInstance.on('styleload', () => {
+        mapInstance.on('style.load', () => {
           console.log("🎨 MapTiler style loaded successfully");
         });
 
