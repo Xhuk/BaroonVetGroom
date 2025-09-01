@@ -3,12 +3,20 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix Leaflet default markers
+// Ensure Leaflet CSS loads properly in Replit
+const leafletCssLink = document.createElement('link');
+leafletCssLink.rel = 'stylesheet';
+leafletCssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+if (!document.querySelector('link[href*="leaflet.css"]')) {
+  document.head.appendChild(leafletCssLink);
+}
+
+// Fix Leaflet default markers with reliable CDN
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
 // Custom icons for different clinic types
@@ -198,11 +206,30 @@ export default function DemoMap() {
     );
   }
 
-  // Use OpenStreetMap as reliable fallback - always works
-  const osmUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  // Multiple tile server options for Replit environment
+  const tileServers = [
+    {
+      name: "CartoDB Positron",
+      url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 20
+    },
+    {
+      name: "OpenStreetMap",
+      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    },
+    {
+      name: "OpenStreetMap HOT",
+      url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a>',
+      maxZoom: 19
+    }
+  ];
   
-  // MapTiler alternative URLs to try
-  const mapTilerUrl = `https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${apiKey}`;
+  const [currentTileServer, setCurrentTileServer] = useState(0);
+  const currentTiles = tileServers[currentTileServer];
   
   return (
     <div style={{ height: "100vh", width: "100%", position: "relative" }}>
@@ -243,7 +270,7 @@ export default function DemoMap() {
         </div>
       </div>
 
-      {/* Map Provider Info */}
+      {/* Map Provider Info with Switcher */}
       <div style={{
         position: "absolute",
         top: "20px",
@@ -254,9 +281,31 @@ export default function DemoMap() {
         padding: "8px 12px",
         borderRadius: "6px",
         fontSize: "12px",
-        fontFamily: "'Inter', sans-serif"
+        fontFamily: "'Inter', sans-serif",
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px"
       }}>
-        🗺️ OpenStreetMap
+        <div>🗺️ {currentTiles.name}</div>
+        <div style={{ display: "flex", gap: "4px" }}>
+          {tileServers.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentTileServer(index)}
+              style={{
+                width: "20px",
+                height: "20px",
+                borderRadius: "50%",
+                border: "2px solid white",
+                background: index === currentTileServer ? "white" : "transparent",
+                cursor: "pointer",
+                fontSize: "8px"
+              }}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Statistics Panel */}
@@ -294,11 +343,13 @@ export default function DemoMap() {
         style={{ height: "100%", width: "100%" }}
         scrollWheelZoom={true}
       >
-        {/* OpenStreetMap - Guaranteed to work */}
+        {/* Dynamic Tile Layer with Multiple Options */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url={osmUrl}
-          maxZoom={19}
+          key={currentTileServer} // Force re-render on change
+          attribution={currentTiles.attribution}
+          url={currentTiles.url}
+          maxZoom={currentTiles.maxZoom}
+          crossOrigin={true}
         />
         
         {destinations.map((destination) => (
