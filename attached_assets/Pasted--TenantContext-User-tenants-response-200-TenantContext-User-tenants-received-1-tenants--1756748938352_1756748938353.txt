@@ -1,0 +1,55 @@
+🔍 [TenantContext] User tenants response: 200
+🔍 [TenantContext] User tenants received: 1 tenants: 
+Array [{…}]
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+🔍 [TenantContext] useEffect triggered: 
+Object {isAuthenticated: true, userEmail: "dongadgetoshop@gmail.com", userTenantsLength: 1, currentTenant: undefined, isLoadingTenants: false}
+🔍 [TenantContext] Debug mode check: 
+Object {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 0}
+🔍 [TenantContext] Priority 3: Checking demo/vanilla users: 
+Object {userEmail: "dongadgetoshop@gmail.com", isDemo: false, isAdmin: false, userTenantsAvailable: true, userTenants: Array(1)}
+🔍 [TenantContext] Not a demo/vanilla user
+🎯 [TenantContext] Final context value: 
+Object {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: false}
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+🔍 [TenantContext] useEffect triggered: 
+Object {isAuthenticated: true, userEmail: "dongadgetoshop@gmail.com", userTenantsLength: 1, currentTenant: "vetgroom1", isLoadingTenants: false}
+🔍 [TenantContext] Debug mode check: 
+Object {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 0}
+🔍 [TenantContext] Priority 3 skipped: 
+Object {hasEmail: true, hasCurrentTenant: true, debugMode: false}
+🎯 [TenantContext] Final context value: 
+Object {currentTenant: "vetgroom1", currentTenantName: "vetgroom1", tenant: undefined, localCurrentTenant: "vetgroom1", isLoading: true}
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+Image " " could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+🔍 [TenantContext] useEffect triggered: 
+Object {isAuthenticated: true, userEmail: "dongadgetoshop@gmail.com", userTenantsLength: 1, currentTenant: "vetgroom1", isLoadingTenants: false}
+🔍 [TenantContext] Debug mode check: 
+Object {debugMode: false, storedTenantId: null, isDebugUser: true, allTenantsLength: 6}
+🔍 [TenantContext] Priority 3 skipped: 
+Object {hasEmail: true, hasCurrentTenant: true, debugMode: false}
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+n2 is not a function
+at Ce2._queryCell (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WSCI5M4G.js?v=46ceb16f:12366:109)
+at Function.call (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/lib/errorSuppression.ts?v=8jjERIn6DPNeHJ5stw0Zk:61:27)
+at Ce2._forEachCell (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WSCI5M4G.js?v=46ceb16f:12405:88)
+at Ce2._query (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WSCI5M4G.js?v=46ceb16f:12344:25)
+at Ce2.hitTest (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WSCI5M4G.js?v=46ceb16f:12351:25)
+at He2.placeCollisionBox (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WSCI5M4G.js?v=46ceb16f:12617:168)
+at o3 (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WSCI5M4G.js?v=46ceb16f:12834:52)
+at R3.i4 (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WSCI5M4G.js?v=46ceb16f:12837:28)
+at a3 (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WSCI5M4G.js?v=46ceb16f:12830:31)
+at R3 (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WSCI5M4G.js?v=46ceb16f:12837:19)
+n2 is not a function
+n2 is not a function
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+🎯 [TenantContext] Final context value: 
+Object {currentTenant: "vetgroom1", currentTenantName: "Vetgroom1", tenant: "vetgroom1", localCurrentTenant: "vetgroom1", isLoading: false}
