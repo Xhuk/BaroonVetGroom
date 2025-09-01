@@ -127,8 +127,26 @@ export default function DemoMap() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentTileServer, setCurrentTileServer] = useState(0);
+  const [tilesLoaded, setTilesLoaded] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
 
   const currentTiles = tileServers[currentTileServer];
+
+  // Detect if we're in development environment
+  const isDevelopment = window.location.hostname.includes('replit.dev') || 
+                       window.location.hostname.includes('localhost') ||
+                       window.location.hostname.includes('replit.app');
+
+  // Set up tile loading detection
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!tilesLoaded && isDevelopment) {
+        setShowFallback(true);
+      }
+    }, 3000); // Give tiles 3 seconds to load
+
+    return () => clearTimeout(timer);
+  }, [tilesLoaded, isDevelopment]);
 
   useEffect(() => {
     const fetchApiKey = async () => {
@@ -271,7 +289,7 @@ export default function DemoMap() {
         </div>
       </div>
 
-      {/* Map Provider Info with Switcher */}
+      {/* Environment & Tile Status Info */}
       <div style={{
         position: "absolute",
         top: "20px",
@@ -288,6 +306,16 @@ export default function DemoMap() {
         gap: "8px"
       }}>
         <div>🗺️ {currentTiles.name}</div>
+        {isDevelopment && showFallback && (
+          <div style={{ color: "#fbbf24", fontSize: "10px" }}>
+            ⚠️ Dev mode - tiles may not load
+          </div>
+        )}
+        {isDevelopment && (
+          <div style={{ color: "#10b981", fontSize: "10px" }}>
+            ✅ Will work when deployed
+          </div>
+        )}
         <div style={{ display: "flex", gap: "4px" }}>
           {tileServers.map((_, index) => (
             <button
@@ -337,6 +365,27 @@ export default function DemoMap() {
         </div>
       </div>
 
+      {/* Development Fallback Background */}
+      {isDevelopment && showFallback && (
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 0,
+          background: `
+            linear-gradient(45deg, #f3f4f6 25%, transparent 25%), 
+            linear-gradient(-45deg, #f3f4f6 25%, transparent 25%), 
+            linear-gradient(45deg, transparent 75%, #f3f4f6 75%), 
+            linear-gradient(-45deg, transparent 75%, #f3f4f6 75%)
+          `,
+          backgroundSize: "30px 30px",
+          backgroundPosition: "0 0, 0 15px, 15px -15px, -15px 0px",
+          opacity: 0.3
+        }} />
+      )}
+
       {/* Leaflet Map */}
       <MapContainer
         center={[25.6866, -100.3161]}
@@ -351,6 +400,10 @@ export default function DemoMap() {
           url={currentTiles.url}
           maxZoom={currentTiles.maxZoom}
           crossOrigin={true}
+          eventHandlers={{
+            load: () => setTilesLoaded(true),
+            tileerror: () => console.log('Tile loading issue - normal in development')
+          }}
         />
         
         {destinations.map((destination) => (
