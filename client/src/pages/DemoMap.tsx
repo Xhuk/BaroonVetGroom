@@ -283,74 +283,144 @@ export default function DemoMap() {
           transform: "translate(-50%, -50%)",
           width: "80%",
           height: "70%",
-          background: "rgba(255,255,255,0.95)",
+          background: `
+            radial-gradient(circle at 30% 40%, #e5f3ff 0%, #bde3ff 25%, #a5d4ff 50%),
+            linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)
+          `,
           borderRadius: "16px",
           boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-          overflow: "hidden",
-          position: "relative"
+          overflow: "hidden"
         }}>
-          {/* Coordinate Grid Background */}
+          {/* Geographic Features */}
+          {/* Mountains (Cerro de la Silla) */}
           <div style={{
             position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: `
-              linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
-            `,
-            backgroundSize: "50px 50px"
+            top: "20%",
+            right: "15%",
+            width: "120px",
+            height: "60px",
+            background: "linear-gradient(145deg, #6b7280 0%, #4b5563 50%, #374151 100%)",
+            clipPath: "polygon(0% 100%, 30% 20%, 50% 40%, 70% 10%, 100% 100%)",
+            opacity: 0.6
           }} />
+          
+          {/* Santa Catarina River */}
+          <div style={{
+            position: "absolute",
+            top: "60%",
+            left: "10%",
+            width: "80%",
+            height: "4px",
+            background: "linear-gradient(90deg, transparent 0%, #3b82f6 20%, #2563eb 50%, #1d4ed8 80%, transparent 100%)",
+            borderRadius: "2px",
+            transform: "rotate(-2deg)"
+          }} />
+          
+          {/* Urban Areas */}
+          <div style={{
+            position: "absolute",
+            top: "40%",
+            left: "35%",
+            width: "80px",
+            height: "60px",
+            background: "rgba(156, 163, 175, 0.3)",
+            borderRadius: "8px"
+          }} />
+          
+          {/* Parks and Green Areas */}
+          <div style={{
+            position: "absolute",
+            top: "25%",
+            left: "20%",
+            width: "40px",
+            height: "40px",
+            background: "rgba(34, 197, 94, 0.4)",
+            borderRadius: "50%"
+          }} />
+          
+          <div style={{
+            position: "absolute",
+            top: "70%",
+            right: "25%",
+            width: "60px",
+            height: "30px",
+            background: "rgba(34, 197, 94, 0.3)",
+            borderRadius: "15px"
+          }} />
+          
+          {/* Major Roads */}
+          <div style={{
+            position: "absolute",
+            top: "50%",
+            left: "0%",
+            width: "100%",
+            height: "2px",
+            background: "rgba(75, 85, 99, 0.4)",
+            transform: "rotate(5deg)"
+          }} />
+          
+          <div style={{
+            position: "absolute",
+            top: "30%",
+            left: "0%",
+            width: "100%",
+            height: "2px",
+            background: "rgba(75, 85, 99, 0.4)",
+            transform: "rotate(-8deg)"
+          }} />
+          
+          {/* Map Legend */}
+          <div style={{
+            position: "absolute",
+            top: "10px",
+            left: "10px",
+            background: "rgba(255,255,255,0.95)",
+            padding: "12px",
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            fontSize: "11px",
+            color: "#374151"
+          }}>
+            <div style={{ fontWeight: "600", marginBottom: "8px", color: "#1f2937" }}>
+              🗺️ Monterrey Metropolitano
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+              <div style={{ width: "12px", height: "8px", background: "linear-gradient(145deg, #6b7280, #374151)", clipPath: "polygon(0% 100%, 50% 20%, 100% 100%)" }}></div>
+              Cerro de la Silla
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+              <div style={{ width: "12px", height: "3px", background: "#2563eb", borderRadius: "1px" }}></div>
+              Río Santa Catarina
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+              <div style={{ width: "12px", height: "8px", background: "rgba(156, 163, 175, 0.3)", borderRadius: "2px" }}></div>
+              Zona urbana
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+              <div style={{ width: "8px", height: "8px", background: "rgba(34, 197, 94, 0.4)", borderRadius: "50%" }}></div>
+              Parques
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <div style={{ width: "12px", height: "2px", background: "rgba(75, 85, 99, 0.4)" }}></div>
+              Carreteras
+            </div>
+          </div>
           
           {/* Coordinate Labels */}
           <div style={{
             position: "absolute",
-            top: "10px",
-            left: "10px",
-            fontSize: "12px",
-            color: "#64748b",
-            background: "rgba(255,255,255,0.9)",
-            padding: "4px 8px",
-            borderRadius: "4px"
-          }}>
-            25.8144°N (García)
-          </div>
-          <div style={{
-            position: "absolute",
-            bottom: "10px",
-            left: "10px",
-            fontSize: "12px",
-            color: "#64748b",
-            background: "rgba(255,255,255,0.9)",
-            padding: "4px 8px",
-            borderRadius: "4px"
-          }}>
-            25.6553°N (San Pedro)
-          </div>
-          <div style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            fontSize: "12px",
-            color: "#64748b",
-            background: "rgba(255,255,255,0.9)",
-            padding: "4px 8px",
-            borderRadius: "4px"
-          }}>
-            100.1878°W (Apodaca)
-          </div>
-          <div style={{
-            position: "absolute",
             bottom: "10px",
             right: "10px",
-            fontSize: "12px",
-            color: "#64748b",
             background: "rgba(255,255,255,0.9)",
-            padding: "4px 8px",
-            borderRadius: "4px"
+            padding: "8px",
+            borderRadius: "6px",
+            fontSize: "10px",
+            color: "#6b7280",
+            textAlign: "center"
           }}>
-            100.5467°W (García)
+            <div>📍 Área de cobertura</div>
+            <div>25.65°N - 25.81°N</div>
+            <div>100.19°W - 100.55°W</div>
           </div>
 
           {/* Destination Markers */}
