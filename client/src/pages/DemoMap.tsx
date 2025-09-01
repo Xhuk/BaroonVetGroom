@@ -1,223 +1,352 @@
-import { useEffect, useRef, useState } from "react";
-import * as maptilersdk from "@maptiler/sdk";
-import "@maptiler/sdk/dist/maptiler-sdk.css";
+import { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix Leaflet default markers
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+// Custom icons for different clinic types
+const mainClinicIcon = new L.Icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const branchIcon = new L.Icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+interface Destination {
+  id: string;
+  name: string;
+  coordinates: [number, number];
+  address: string;
+  type: "main" | "branch";
+  services: string[];
+}
 
 export default function DemoMap() {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maptilersdk.Map | null>(null);
+  const [apiKey, setApiKey] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    console.log("🚀 DemoMap useEffect triggered");
-    
-    if (map.current) {
-      console.log("⚠️ Map already exists, skipping initialization");
-      return; // stops map from initializing more than once
+  // Veterinary clinic destinations in Culiacán
+  const destinations: Destination[] = [
+    {
+      id: "main",
+      name: "Clínica Veterinaria Principal",
+      coordinates: [24.8066, -107.3938],
+      address: "Centro de Culiacán, Sinaloa",
+      type: "main",
+      services: ["Consultas", "Cirugías", "Emergencias 24h", "Hospitalización"]
+    },
+    {
+      id: "flores",
+      name: "Sucursal Las Flores",
+      coordinates: [24.8166, -107.4038],
+      address: "Fraccionamiento Las Flores",
+      type: "branch",
+      services: ["Consultas", "Vacunación", "Grooming"]
+    },
+    {
+      id: "bosque",
+      name: "Sucursal El Bosque",
+      coordinates: [24.7966, -107.3838],
+      address: "Colonia El Bosque",
+      type: "branch",
+      services: ["Consultas", "Vacunación", "Farmacia"]
+    },
+    {
+      id: "villa",
+      name: "Sucursal Villa Real",
+      coordinates: [24.8266, -107.3738],
+      address: "Villa Real, Culiacán",
+      type: "branch",
+      services: ["Consultas", "Grooming", "Guardería"]
+    },
+    {
+      id: "norte",
+      name: "Centro Veterinario Norte",
+      coordinates: [24.8366, -107.3638],
+      address: "Zona Norte de Culiacán",
+      type: "branch",
+      services: ["Consultas", "Vacunación", "Rayos X"]
+    },
+    {
+      id: "sur",
+      name: "Clínica Sur",
+      coordinates: [24.7866, -107.4138],
+      address: "Zona Sur de Culiacán",
+      type: "branch",
+      services: ["Consultas", "Emergencias", "Laboratorio"]
     }
+  ];
 
-    console.log("🎬 Starting map initialization...");
-
-    const initializeMap = async () => {
-      // Give React time to render the DOM elements
-      console.log("⏱️ Waiting 200ms for DOM to settle...");
-      await new Promise(resolve => setTimeout(resolve, 200));
+  useEffect(() => {
+    const fetchApiKey = async () => {
       try {
-        // Fetch API key from server
-        console.log("📡 Fetching MapTiler API key from server...");
+        console.log("🔑 Fetching MapTiler API key...");
         const response = await fetch('/api/config/maptiler');
         const config = await response.json();
         
         if (!config.apiKey) {
-          console.error("❌ No API key received from server");
-          setError('MapTiler API key not configured');
-          setIsLoading(false);
-          return;
+          throw new Error('MapTiler API key not configured');
         }
 
-        // Configure MapTiler
-        maptilersdk.config.apiKey = config.apiKey;
-        console.log("🗺️ MapTiler configured with API key:", config.apiKey.substring(0, 8) + "...");
-
-        // Check if container exists immediately
-        console.log("🔍 Checking for map container...", {
-          containerExists: !!mapContainer.current,
-          containerElement: mapContainer.current,
-          containerTagName: mapContainer.current?.tagName,
-          containerId: mapContainer.current?.id,
-          containerClass: mapContainer.current?.className
-        });
-        
-        if (!mapContainer.current) {
-          console.error("❌ Map container still not available after initial wait");
-          setError('Map container not available');
-          setIsLoading(false);
-          return;
-        }
-
-        console.log("🗺️ Map container found, dimensions:", {
-          width: mapContainer.current.offsetWidth,
-          height: mapContainer.current.offsetHeight,
-          clientWidth: mapContainer.current.clientWidth,
-          clientHeight: mapContainer.current.clientHeight
-        });
-
-        console.log("🗺️ Initializing MapTiler map with style:", maptilersdk.MapStyle.STREETS);
-        
-        // Initialize MapTiler map
-        const mapInstance = new maptilersdk.Map({
-          container: mapContainer.current,
-          style: maptilersdk.MapStyle.STREETS,
-          center: [-107.3938, 24.8066], // Culiacán coordinates (lng, lat)
-          zoom: 12,
-        });
-
-        console.log("🗺️ MapTiler map instance created, adding event listeners...");
-
-        // Add map event listeners for debugging
-        mapInstance.on('load', () => {
-          console.log("🎯 MapTiler map load event fired - map is ready");
-          setIsLoading(false);
-        });
-
-        mapInstance.on('error', (e) => {
-          console.error("❌ MapTiler map error event:", e);
-          setError(`Map load error: ${e.error?.message || 'Unknown error'}`);
-        });
-
-        mapInstance.on('style.load', () => {
-          console.log("🎨 MapTiler style loaded successfully");
-        });
-
-        // Add delivery destination markers for Culiacán
-        const destinations = [
-          { name: "Clínica Veterinaria Principal", coords: [-107.3938, 24.8066] },
-          { name: "Sucursal Las Flores", coords: [-107.4038, 24.8166] },
-          { name: "Sucursal El Bosque", coords: [-107.3838, 24.7966] },
-          { name: "Sucursal Villa Real", coords: [-107.3738, 24.8266] },
-          { name: "Centro Veterinario Norte", coords: [-107.3638, 24.8366] },
-          { name: "Clínica Sur", coords: [-107.4138, 24.7866] },
-        ];
-
-        console.log("📍 Adding", destinations.length, "destination markers to map...");
-
-        destinations.forEach((destination, index) => {
-          console.log(`📌 Adding marker ${index + 1}:`, destination.name, "at", destination.coords);
-          
-          // Create custom marker for each destination
-          const marker = new maptilersdk.Marker({
-            color: index === 0 ? "#FF0000" : "#0066CC", // Main clinic in red, others in blue
-          })
-            .setLngLat(destination.coords as [number, number])
-            .setPopup(
-              new maptilersdk.Popup().setHTML(`
-                <div style="padding: 8px;">
-                  <h3 style="margin: 0 0 4px 0; font-weight: bold;">${destination.name}</h3>
-                  <p style="margin: 0; color: #666; font-size: 12px;">Destino de entregas veterinarias</p>
-                  <p style="margin: 4px 0 0 0; color: #999; font-size: 11px;">
-                    Coordenadas: ${destination.coords[1].toFixed(4)}, ${destination.coords[0].toFixed(4)}
-                  </p>
-                </div>
-              `)
-            )
-            .addTo(mapInstance);
-            
-          console.log(`✅ Marker ${index + 1} added successfully`);
-        });
-
-        map.current = mapInstance;
+        setApiKey(config.apiKey);
+        console.log("✅ MapTiler API key loaded for Leaflet");
         setIsLoading(false);
-        console.log("✅ MapTiler demo map initialized successfully with", destinations.length, "markers");
-
       } catch (err) {
-        console.error("❌ Error initializing MapTiler demo map:", err);
-        setError(err instanceof Error ? err.message : 'Error desconocido al cargar el mapa');
+        console.error("❌ Error loading MapTiler API key:", err);
+        setError(err instanceof Error ? err.message : 'Error loading API key');
         setIsLoading(false);
       }
     };
 
-    initializeMap();
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
+    fetchApiKey();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div style={{
+        height: "100vh",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        color: "white",
+        fontFamily: "'Inter', sans-serif"
+      }}>
+        <div style={{
+          fontSize: "24px",
+          fontWeight: "600",
+          marginBottom: "16px"
+        }}>
+          🗺️ Cargando Mapa Demo
+        </div>
+        <div style={{
+          fontSize: "16px",
+          opacity: 0.9
+        }}>
+          Sistema de Gestión Veterinaria - Culiacán
+        </div>
+        <div style={{
+          marginTop: "20px",
+          padding: "8px 16px",
+          background: "rgba(255,255,255,0.2)",
+          borderRadius: "20px",
+          fontSize: "14px"
+        }}>
+          Inicializando MapTiler con Leaflet...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{
+        height: "100vh",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)",
+        color: "white",
+        fontFamily: "'Inter', sans-serif"
+      }}>
+        <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚠️</div>
+        <div style={{ fontSize: "24px", fontWeight: "600", marginBottom: "8px" }}>
+          Error del Mapa
+        </div>
+        <div style={{ fontSize: "16px", opacity: 0.9, marginBottom: "20px" }}>
+          {error}
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            padding: "12px 24px",
+            background: "rgba(255,255,255,0.2)",
+            border: "2px solid rgba(255,255,255,0.3)",
+            borderRadius: "8px",
+            color: "white",
+            cursor: "pointer",
+            fontSize: "16px",
+            fontWeight: "500"
+          }}
+        >
+          🔄 Recargar Página
+        </button>
+      </div>
+    );
+  }
+
+  const mapTilerUrl = `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${apiKey}`;
 
   return (
     <div style={{ height: "100vh", width: "100%", position: "relative" }}>
-      {/* Map container - always render */}
-      <div
-        ref={mapContainer}
-        style={{
-          height: "100vh",
-          width: "100%",
-          position: "absolute",
-          top: 0,
-          left: 0,
-        }}
-      />
-      
-      {/* Loading overlay */}
-      {isLoading && (
+      {/* Header Info */}
+      <div style={{
+        position: "absolute",
+        top: "20px",
+        left: "20px",
+        zIndex: 1000,
+        background: "rgba(255,255,255,0.95)",
+        padding: "16px 20px",
+        borderRadius: "12px",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+        maxWidth: "320px",
+        fontFamily: "'Inter', sans-serif"
+      }}>
         <div style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          height: "100vh",
-          width: "100%",
+          fontSize: "18px",
+          fontWeight: "700",
+          color: "#2563eb",
+          marginBottom: "8px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-          background: "#0b1220",
-          color: "#e5e7eb",
-          fontSize: "18px",
-          zIndex: 1000
+          gap: "8px"
         }}>
-          Cargando mapa de destinos...
+          🏥 Sistema Veterinario Demo
         </div>
-      )}
-      
-      {/* Error overlay */}
-      {error && (
         <div style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          height: "100vh",
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#0b1220",
-          color: "#ef4444",
-          fontSize: "18px",
-          flexDirection: "column",
-          gap: "10px",
-          zIndex: 1000
+          fontSize: "14px",
+          color: "#64748b",
+          lineHeight: "1.5"
         }}>
-          <div>❌ Error del mapa: {error}</div>
-          <div style={{ fontSize: "14px", color: "#9ca3af" }}>
-            Verifique la configuración de la clave API de MapTiler
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              padding: "8px 16px",
-              background: "#1f2937",
-              border: "1px solid #374151",
-              borderRadius: "4px",
-              color: "#e5e7eb",
-              cursor: "pointer",
-              fontSize: "14px"
-            }}
+          Clínicas veterinarias en <strong>Culiacán, Sinaloa</strong>
+          <br />
+          <span style={{ color: "#dc2626" }}>●</span> Clínica Principal
+          <br />
+          <span style={{ color: "#2563eb" }}>●</span> Sucursales (5 ubicaciones)
+        </div>
+      </div>
+
+      {/* Statistics Panel */}
+      <div style={{
+        position: "absolute",
+        bottom: "20px",
+        right: "20px",
+        zIndex: 1000,
+        background: "rgba(255,255,255,0.95)",
+        padding: "16px",
+        borderRadius: "12px",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+        fontFamily: "'Inter', sans-serif"
+      }}>
+        <div style={{
+          fontSize: "16px",
+          fontWeight: "600",
+          color: "#1f2937",
+          marginBottom: "12px"
+        }}>
+          📊 Estadísticas de Red
+        </div>
+        <div style={{ fontSize: "14px", color: "#64748b", lineHeight: "1.6" }}>
+          <div>📍 <strong>6</strong> ubicaciones activas</div>
+          <div>🏥 <strong>1</strong> clínica principal</div>
+          <div>🏢 <strong>5</strong> sucursales</div>
+          <div>📋 <strong>24/7</strong> servicio principal</div>
+        </div>
+      </div>
+
+      {/* Leaflet Map */}
+      <MapContainer
+        center={[24.8066, -107.3938]}
+        zoom={12}
+        style={{ height: "100%", width: "100%" }}
+        scrollWheelZoom={true}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url={mapTilerUrl}
+        />
+        
+        {destinations.map((destination) => (
+          <Marker
+            key={destination.id}
+            position={destination.coordinates}
+            icon={destination.type === "main" ? mainClinicIcon : branchIcon}
           >
-            Recargar página
-          </button>
-        </div>
-      )}
+            <Popup>
+              <div style={{
+                fontFamily: "'Inter', sans-serif",
+                minWidth: "200px"
+              }}>
+                <div style={{
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  color: destination.type === "main" ? "#dc2626" : "#2563eb",
+                  marginBottom: "8px"
+                }}>
+                  {destination.name}
+                </div>
+                <div style={{
+                  fontSize: "13px",
+                  color: "#64748b",
+                  marginBottom: "10px"
+                }}>
+                  📍 {destination.address}
+                </div>
+                <div style={{
+                  fontSize: "13px",
+                  color: "#374151",
+                  marginBottom: "8px",
+                  fontWeight: "600"
+                }}>
+                  Servicios disponibles:
+                </div>
+                <div style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "4px"
+                }}>
+                  {destination.services.map((service, index) => (
+                    <span
+                      key={index}
+                      style={{
+                        fontSize: "11px",
+                        background: destination.type === "main" ? "#fef2f2" : "#eff6ff",
+                        color: destination.type === "main" ? "#dc2626" : "#2563eb",
+                        padding: "2px 6px",
+                        borderRadius: "4px",
+                        border: `1px solid ${destination.type === "main" ? "#fecaca" : "#bfdbfe"}`
+                      }}
+                    >
+                      {service}
+                    </span>
+                  ))}
+                </div>
+                <div style={{
+                  fontSize: "11px",
+                  color: "#9ca3af",
+                  marginTop: "10px",
+                  textAlign: "center"
+                }}>
+                  {destination.coordinates[0].toFixed(4)}°N, {Math.abs(destination.coordinates[1]).toFixed(4)}°W
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
     </div>
   );
 }
