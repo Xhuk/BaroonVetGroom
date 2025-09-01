@@ -22,7 +22,7 @@ L.Icon.Default.mergeOptions({
 // Custom icons for different clinic types
 const mainClinicIcon = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -31,7 +31,7 @@ const mainClinicIcon = new L.Icon({
 
 const branchIcon = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -47,62 +47,88 @@ interface Destination {
   services: string[];
 }
 
+// Veterinary clinic destinations in Monterrey
+const destinations: Destination[] = [
+  {
+    id: "main",
+    name: "Clínica Veterinaria Principal",
+    coordinates: [25.6866, -100.3161],
+    address: "Centro de Monterrey, Nuevo León",
+    type: "main",
+    services: ["Consultas", "Cirugías", "Emergencias 24h", "Hospitalización"]
+  },
+  {
+    id: "sanpedro",
+    name: "Sucursal San Pedro",
+    coordinates: [25.6553, -100.4089],
+    address: "San Pedro Garza García",
+    type: "branch",
+    services: ["Consultas", "Vacunación", "Grooming"]
+  },
+  {
+    id: "santa",
+    name: "Sucursal Santa Catarina",
+    coordinates: [25.6738, -100.4458],
+    address: "Santa Catarina",
+    type: "branch",
+    services: ["Consultas", "Vacunación", "Farmacia"]
+  },
+  {
+    id: "apodaca",
+    name: "Sucursal Apodaca",
+    coordinates: [25.7839, -100.1878],
+    address: "Apodaca, Nuevo León",
+    type: "branch",
+    services: ["Consultas", "Grooming", "Guardería"]
+  },
+  {
+    id: "garcia",
+    name: "Centro Veterinario García",
+    coordinates: [25.8144, -100.5467],
+    address: "García, Nuevo León",
+    type: "branch",
+    services: ["Consultas", "Vacunación", "Rayos X"]
+  },
+  {
+    id: "guadalupe",
+    name: "Clínica Guadalupe",
+    coordinates: [25.6767, -100.2556],
+    address: "Guadalupe, Nuevo León",
+    type: "branch",
+    services: ["Consultas", "Emergencias", "Laboratorio"]
+  }
+];
+
+// Multiple tile server options for Replit environment
+const tileServers = [
+  {
+    name: "CartoDB Positron",
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    maxZoom: 20
+  },
+  {
+    name: "OpenStreetMap",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  },
+  {
+    name: "OpenStreetMap HOT",
+    url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a>',
+    maxZoom: 19
+  }
+];
+
 export default function DemoMap() {
+  // All hooks must be called at the top level and in the same order every time
   const [apiKey, setApiKey] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentTileServer, setCurrentTileServer] = useState(0);
 
-  // Veterinary clinic destinations in Monterrey
-  const destinations: Destination[] = [
-    {
-      id: "main",
-      name: "Clínica Veterinaria Principal",
-      coordinates: [25.6866, -100.3161],
-      address: "Centro de Monterrey, Nuevo León",
-      type: "main",
-      services: ["Consultas", "Cirugías", "Emergencias 24h", "Hospitalización"]
-    },
-    {
-      id: "sanpedro",
-      name: "Sucursal San Pedro",
-      coordinates: [25.6553, -100.4089],
-      address: "San Pedro Garza García",
-      type: "branch",
-      services: ["Consultas", "Vacunación", "Grooming"]
-    },
-    {
-      id: "santa",
-      name: "Sucursal Santa Catarina",
-      coordinates: [25.6738, -100.4458],
-      address: "Santa Catarina",
-      type: "branch",
-      services: ["Consultas", "Vacunación", "Farmacia"]
-    },
-    {
-      id: "apodaca",
-      name: "Sucursal Apodaca",
-      coordinates: [25.7839, -100.1878],
-      address: "Apodaca, Nuevo León",
-      type: "branch",
-      services: ["Consultas", "Grooming", "Guardería"]
-    },
-    {
-      id: "garcia",
-      name: "Centro Veterinario García",
-      coordinates: [25.8144, -100.5467],
-      address: "García, Nuevo León",
-      type: "branch",
-      services: ["Consultas", "Vacunación", "Rayos X"]
-    },
-    {
-      id: "guadalupe",
-      name: "Clínica Guadalupe",
-      coordinates: [25.6767, -100.2556],
-      address: "Guadalupe, Nuevo León",
-      type: "branch",
-      services: ["Consultas", "Emergencias", "Laboratorio"]
-    }
-  ];
+  const currentTiles = tileServers[currentTileServer];
 
   useEffect(() => {
     const fetchApiKey = async () => {
@@ -161,7 +187,7 @@ export default function DemoMap() {
           borderRadius: "20px",
           fontSize: "14px"
         }}>
-          Inicializando MapTiler con Leaflet...
+          Inicializando Leaflet con múltiples proveedores...
         </div>
       </div>
     );
@@ -206,31 +232,6 @@ export default function DemoMap() {
     );
   }
 
-  // Multiple tile server options for Replit environment
-  const tileServers = [
-    {
-      name: "CartoDB Positron",
-      url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 20
-    },
-    {
-      name: "OpenStreetMap",
-      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19
-    },
-    {
-      name: "OpenStreetMap HOT",
-      url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a>',
-      maxZoom: 19
-    }
-  ];
-  
-  const [currentTileServer, setCurrentTileServer] = useState(0);
-  const currentTiles = tileServers[currentTileServer];
-  
   return (
     <div style={{ height: "100vh", width: "100%", position: "relative" }}>
       {/* Header Info */}

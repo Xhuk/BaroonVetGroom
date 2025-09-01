@@ -1,0 +1,67 @@
+🔍 [useAuth] Auth state: 
+Object {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+🔍 [TenantContext] useEffect triggered: 
+Object {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+🔍 [TenantContext] Not authenticated, skipping
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+🔍 [TenantContext] useEffect triggered: 
+Object {isAuthenticated: true, userEmail: "dongadgetoshop@gmail.com", userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+🔍 [TenantContext] Debug mode check: 
+Object {debugMode: false, storedTenantId: null, isDebugUser: false, allTenantsLength: 0}
+🔍 [TenantContext] Priority 3: Checking demo/vanilla users: 
+Object {userEmail: "dongadgetoshop@gmail.com", isDemo: false, isAdmin: false, userTenantsAvailable: false, userTenants: Array(0)}
+🔍 [TenantContext] Not a demo/vanilla user
+🔍 [useAuth] Auth state: 
+Object {user: {…}, isLoading: false, error: undefined, isAuthenticated: true}
+✅ MapTiler API key loaded for Leaflet
+Rendered more hooks than during the previous render.
+Rendered more hooks than during the previous render.
+The above error occurred in the <DemoMap> component:
+
+    at DemoMap (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/pages/DemoMap.tsx:52:31)
+    at Route (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=46ceb16f:191:16)
+    at Switch (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=46ceb16f:247:17)
+    at DeviceBlocker (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/DeviceBlocker.tsx:22:33)
+    at Router (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/App.tsx?v=PEBUX5ZbGltOzx6j6HX8a:88:55)
+    at RoleImpersonationProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/hooks/useRoleImpersonation.ts:104:45)
+    at TenantProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TenantContext.tsx:27:34)
+    at TimezoneProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TimezoneContext.tsx:21:36)
+    at ThemeProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/ThemeContext.tsx:20:33)
+    at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=46ceb16f:38:15)
+    at TooltipProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=46ceb16f:63:5)
+    at LanguageProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/LanguageContext.tsx:25:36)
+    at QueryClientProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=46ceb16f:2805:3)
+    at ErrorBoundary (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ErrorBoundary.tsx:7:5)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+
+at DemoMap (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/pages/DemoMap.tsx:52:31)
+at Route (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=46ceb16f:191:16)
+at Switch (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=46ceb16f:247:17)
+at DeviceBlocker (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/DeviceBlocker.tsx:22:33)
+at Router (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/App.tsx?v=PEBUX5ZbGltOzx6j6HX8a:88:55)
+at RoleImpersonationProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/hooks/useRoleImpersonation.ts:104:45)
+at TenantProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TenantContext.tsx:27:34)
+at TimezoneProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/TimezoneContext.tsx:21:36)
+at ThemeProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/ThemeContext.tsx:20:33)
+at Provider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=46ceb16f:38:15)
+at TooltipProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=46ceb16f:63:5)
+at LanguageProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/contexts/LanguageContext.tsx:25:36)
+at QueryClientProvider (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=46ceb16f:2805:3)
+at ErrorBoundary (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/components/ErrorBoundary.tsx:7:5)
+at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+at new window.Error (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/src/lib/errorSuppression.ts?v=PEBUX5ZbGltOzx6j6HX8a:77:12)
+at t.value (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error caught by boundary: 
+Error {}
+ 
+Object {componentStack: "↵    at DemoMap…"}
