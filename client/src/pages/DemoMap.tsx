@@ -19,6 +19,9 @@ export default function DemoMap() {
     console.log("🎬 Starting map initialization...");
 
     const initializeMap = async () => {
+      // Give React time to render the DOM elements
+      console.log("⏱️ Waiting 200ms for DOM to settle...");
+      await new Promise(resolve => setTimeout(resolve, 200));
       try {
         // Fetch API key from server
         console.log("📡 Fetching MapTiler API key from server...");
@@ -36,18 +39,17 @@ export default function DemoMap() {
         maptilersdk.config.apiKey = config.apiKey;
         console.log("🗺️ MapTiler configured with API key:", config.apiKey.substring(0, 8) + "...");
 
-        // Wait for container to be ready with timeout
-        let attempts = 0;
-        const maxAttempts = 50; // 5 seconds max wait
-        
-        while (!mapContainer.current && attempts < maxAttempts) {
-          console.log(`⏳ Waiting for map container... attempt ${attempts + 1}/${maxAttempts}`);
-          await new Promise(resolve => setTimeout(resolve, 100));
-          attempts++;
-        }
+        // Check if container exists immediately
+        console.log("🔍 Checking for map container...", {
+          containerExists: !!mapContainer.current,
+          containerElement: mapContainer.current,
+          containerTagName: mapContainer.current?.tagName,
+          containerId: mapContainer.current?.id,
+          containerClass: mapContainer.current?.className
+        });
         
         if (!mapContainer.current) {
-          console.error("❌ Map container not available in DOM after", maxAttempts * 100, "ms");
+          console.error("❌ Map container still not available after initial wait");
           setError('Map container not available');
           setIsLoading(false);
           return;
