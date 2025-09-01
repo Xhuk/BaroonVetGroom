@@ -1,0 +1,156 @@
+demo-map:37 MapTiler API key loaded successfully
+index-CMbo572S.js:678 🔍 [useAuth] Auth state: Object
+index-CMbo572S.js:678 🔍 [useAuth] Auth state: Object
+index-CMbo572S.js:723 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+index-CMbo572S.js:1966 🔑 Fetching MapTiler API key...
+index-CMbo572S.js:678 🔍 [useAuth] Making network request to /api/auth/user
+index-CMbo572S.js:722 🔍 [TenantContext] useEffect triggered: Object
+index-CMbo572S.js:722 🔍 [TenantContext] Not authenticated, skipping
+index-CMbo572S.js:722 🎯 [TenantContext] Final context value: Object
+index-CMbo572S.js:722 LanguageContext initialized: Object
+index-CMbo572S.js:678 🔍 [useAuth] Auth state: Object
+index-CMbo572S.js:722 🔍 [TenantContext] useEffect triggered: Object
+index-CMbo572S.js:722 🔍 [TenantContext] Not authenticated, skipping
+all.js:6 >=116
+index-CMbo572S.js:1966 ✅ MapTiler API key loaded for Leaflet
+api/auth/access-info:1  Failed to load resource: the server responded with a status of 401 ()
+api/auth/user:1  Failed to load resource: the server responded with a status of 401 ()
+index-CMbo572S.js:678 🔍 [useAuth] Response: 401 
+index-CMbo572S.js:678 🔍 [useAuth] Auth request failed: 401 
+index-CMbo572S.js:678 🔍 [useAuth] Auth state: Object
+index-CMbo572S.js:678 🔍 [useAuth] Auth state: Object
+index-CMbo572S.js:722 🔍 [TenantContext] useEffect triggered: Object
+index-CMbo572S.js:722 🔍 [TenantContext] Not authenticated, skipping
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:723 📱 Resize Event: desktop, landscape: true, useRibbon: false
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development
+index-CMbo572S.js:1971 Tile loading issue - normal in development

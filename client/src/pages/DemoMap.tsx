@@ -1,42 +1,4 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-
-// Ensure Leaflet CSS loads properly in Replit
-const leafletCssLink = document.createElement('link');
-leafletCssLink.rel = 'stylesheet';
-leafletCssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-if (!document.querySelector('link[href*="leaflet.css"]')) {
-  document.head.appendChild(leafletCssLink);
-}
-
-// Fix Leaflet default markers with reliable CDN
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
-
-// Custom icons for different clinic types
-const mainClinicIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
-const branchIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
+import { useState } from "react";
 
 interface Destination {
   id: string;
@@ -45,6 +7,7 @@ interface Destination {
   address: string;
   type: "main" | "branch";
   services: string[];
+  neighborhood: string;
 }
 
 // Veterinary clinic destinations in Monterrey
@@ -54,6 +17,7 @@ const destinations: Destination[] = [
     name: "Clínica Veterinaria Principal",
     coordinates: [25.6866, -100.3161],
     address: "Centro de Monterrey, Nuevo León",
+    neighborhood: "Centro",
     type: "main",
     services: ["Consultas", "Cirugías", "Emergencias 24h", "Hospitalización"]
   },
@@ -62,6 +26,7 @@ const destinations: Destination[] = [
     name: "Sucursal San Pedro",
     coordinates: [25.6553, -100.4089],
     address: "San Pedro Garza García",
+    neighborhood: "San Pedro",
     type: "branch",
     services: ["Consultas", "Vacunación", "Grooming"]
   },
@@ -70,6 +35,7 @@ const destinations: Destination[] = [
     name: "Sucursal Santa Catarina",
     coordinates: [25.6738, -100.4458],
     address: "Santa Catarina",
+    neighborhood: "Santa Catarina",
     type: "branch",
     services: ["Consultas", "Vacunación", "Farmacia"]
   },
@@ -78,6 +44,7 @@ const destinations: Destination[] = [
     name: "Sucursal Apodaca",
     coordinates: [25.7839, -100.1878],
     address: "Apodaca, Nuevo León",
+    neighborhood: "Apodaca",
     type: "branch",
     services: ["Consultas", "Grooming", "Guardería"]
   },
@@ -86,6 +53,7 @@ const destinations: Destination[] = [
     name: "Centro Veterinario García",
     coordinates: [25.8144, -100.5467],
     address: "García, Nuevo León",
+    neighborhood: "García",
     type: "branch",
     services: ["Consultas", "Vacunación", "Rayos X"]
   },
@@ -94,248 +62,406 @@ const destinations: Destination[] = [
     name: "Clínica Guadalupe",
     coordinates: [25.6767, -100.2556],
     address: "Guadalupe, Nuevo León",
+    neighborhood: "Guadalupe",
     type: "branch",
     services: ["Consultas", "Emergencias", "Laboratorio"]
   }
 ];
 
-// Multiple tile server options for Replit environment
-const tileServers = [
-  {
-    name: "CartoDB Positron",
-    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    maxZoom: 20
-  },
-  {
-    name: "OpenStreetMap",
-    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19
-  },
-  {
-    name: "OpenStreetMap HOT",
-    url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a>',
-    maxZoom: 19
-  }
-];
-
 export default function DemoMap() {
-  // All hooks must be called at the top level and in the same order every time
-  const [apiKey, setApiKey] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentTileServer, setCurrentTileServer] = useState(0);
-  const [tilesLoaded, setTilesLoaded] = useState(false);
-  const [showFallback, setShowFallback] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "coordinates">("grid");
 
-  const currentTiles = tileServers[currentTileServer];
+  // Calculate coordinate bounds for visual positioning
+  const lats = destinations.map(d => d.coordinates[0]);
+  const lngs = destinations.map(d => d.coordinates[1]);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
 
-  // Detect if we're in development environment
-  const isDevelopment = window.location.hostname.includes('replit.dev') || 
-                       window.location.hostname.includes('localhost') ||
-                       window.location.hostname.includes('replit.app');
-
-  // Set up tile loading detection
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!tilesLoaded && isDevelopment) {
-        setShowFallback(true);
-      }
-    }, 3000); // Give tiles 3 seconds to load
-
-    return () => clearTimeout(timer);
-  }, [tilesLoaded, isDevelopment]);
-
-  useEffect(() => {
-    const fetchApiKey = async () => {
-      try {
-        console.log("🔑 Fetching MapTiler API key...");
-        const response = await fetch('/api/config/maptiler');
-        const config = await response.json();
-        
-        if (!config.apiKey) {
-          throw new Error('MapTiler API key not configured');
-        }
-
-        setApiKey(config.apiKey);
-        console.log("✅ MapTiler API key loaded for Leaflet");
-        setIsLoading(false);
-      } catch (err) {
-        console.error("❌ Error loading MapTiler API key:", err);
-        setError(err instanceof Error ? err.message : 'Error loading API key');
-        setIsLoading(false);
-      }
-    };
-
-    fetchApiKey();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div style={{
-        height: "100vh",
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        color: "white",
-        fontFamily: "'Inter', sans-serif"
-      }}>
-        <div style={{
-          fontSize: "24px",
-          fontWeight: "600",
-          marginBottom: "16px"
-        }}>
-          🗺️ Cargando Mapa Demo
-        </div>
-        <div style={{
-          fontSize: "16px",
-          opacity: 0.9
-        }}>
-          Sistema de Gestión Veterinaria - Monterrey
-        </div>
-        <div style={{
-          marginTop: "20px",
-          padding: "8px 16px",
-          background: "rgba(255,255,255,0.2)",
-          borderRadius: "20px",
-          fontSize: "14px"
-        }}>
-          Inicializando Leaflet con múltiples proveedores...
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{
-        height: "100vh",
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)",
-        color: "white",
-        fontFamily: "'Inter', sans-serif"
-      }}>
-        <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚠️</div>
-        <div style={{ fontSize: "24px", fontWeight: "600", marginBottom: "8px" }}>
-          Error del Mapa
-        </div>
-        <div style={{ fontSize: "16px", opacity: 0.9, marginBottom: "20px" }}>
-          {error}
-        </div>
-        <button
-          onClick={() => window.location.reload()}
-          style={{
-            padding: "12px 24px",
-            background: "rgba(255,255,255,0.2)",
-            border: "2px solid rgba(255,255,255,0.3)",
-            borderRadius: "8px",
-            color: "white",
-            cursor: "pointer",
-            fontSize: "16px",
-            fontWeight: "500"
-          }}
-        >
-          🔄 Recargar Página
-        </button>
-      </div>
-    );
-  }
+  // Convert coordinates to screen positions (0-100%)
+  const getPosition = (coords: [number, number]) => {
+    const [lat, lng] = coords;
+    const x = ((lng - minLng) / (maxLng - minLng)) * 80 + 10; // 10-90% range
+    const y = 90 - ((lat - minLat) / (maxLat - minLat)) * 80; // 10-90% range (inverted for screen)
+    return { x, y };
+  };
 
   return (
-    <div style={{ height: "100vh", width: "100%", position: "relative" }}>
-      {/* Header Info */}
+    <div style={{ 
+      height: "100vh", 
+      width: "100%", 
+      background: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%)",
+      fontFamily: "'Inter', sans-serif",
+      position: "relative",
+      overflow: "hidden"
+    }}>
+      {/* Header */}
       <div style={{
         position: "absolute",
         top: "20px",
         left: "20px",
         zIndex: 1000,
         background: "rgba(255,255,255,0.95)",
-        padding: "16px 20px",
+        padding: "20px",
         borderRadius: "12px",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-        maxWidth: "320px",
-        fontFamily: "'Inter', sans-serif"
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+        maxWidth: "350px"
       }}>
         <div style={{
-          fontSize: "18px",
+          fontSize: "20px",
           fontWeight: "700",
-          color: "#2563eb",
+          color: "#1e40af",
           marginBottom: "8px",
           display: "flex",
           alignItems: "center",
-          gap: "8px"
+          gap: "10px"
         }}>
-          🏥 Sistema Veterinario Demo
+          🏥 Red Veterinaria Monterrey
         </div>
         <div style={{
           fontSize: "14px",
           color: "#64748b",
-          lineHeight: "1.5"
+          lineHeight: "1.6"
         }}>
-          Clínicas veterinarias en <strong>Monterrey, Nuevo León</strong>
-          <br />
-          <span style={{ color: "#dc2626" }}>●</span> Clínica Principal
-          <br />
-          <span style={{ color: "#2563eb" }}>●</span> Sucursales (5 ubicaciones)
+          Sistema de gestión para <strong>6 ubicaciones</strong> en el área metropolitana de Monterrey
+        </div>
+        <div style={{
+          marginTop: "16px",
+          display: "flex",
+          gap: "8px"
+        }}>
+          <button
+            onClick={() => setViewMode("grid")}
+            style={{
+              padding: "6px 12px",
+              fontSize: "12px",
+              border: "1px solid #d1d5db",
+              borderRadius: "6px",
+              background: viewMode === "grid" ? "#1e40af" : "white",
+              color: viewMode === "grid" ? "white" : "#374151",
+              cursor: "pointer"
+            }}
+          >
+            📋 Lista
+          </button>
+          <button
+            onClick={() => setViewMode("coordinates")}
+            style={{
+              padding: "6px 12px",
+              fontSize: "12px",
+              border: "1px solid #d1d5db",
+              borderRadius: "6px",
+              background: viewMode === "coordinates" ? "#1e40af" : "white",
+              color: viewMode === "coordinates" ? "white" : "#374151",
+              cursor: "pointer"
+            }}
+          >
+            🗺️ Mapa
+          </button>
         </div>
       </div>
 
-      {/* Environment & Tile Status Info */}
-      <div style={{
-        position: "absolute",
-        top: "20px",
-        right: "20px",
-        zIndex: 1000,
-        background: "rgba(0,0,0,0.8)",
-        color: "white",
-        padding: "8px 12px",
-        borderRadius: "6px",
-        fontSize: "12px",
-        fontFamily: "'Inter', sans-serif",
-        display: "flex",
-        flexDirection: "column",
-        gap: "8px"
-      }}>
-        <div>🗺️ {currentTiles.name}</div>
-        {isDevelopment && showFallback && (
-          <div style={{ color: "#fbbf24", fontSize: "10px" }}>
-            ⚠️ Dev mode - tiles may not load
-          </div>
-        )}
-        {isDevelopment && (
-          <div style={{ color: "#10b981", fontSize: "10px" }}>
-            ✅ Will work when deployed
-          </div>
-        )}
-        <div style={{ display: "flex", gap: "4px" }}>
-          {tileServers.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentTileServer(index)}
+      {/* View Modes */}
+      {viewMode === "grid" ? (
+        /* Grid View */
+        <div style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "90%",
+          maxWidth: "1000px",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gap: "20px",
+          zIndex: 100
+        }}>
+          {destinations.map((dest) => (
+            <div
+              key={dest.id}
               style={{
-                width: "20px",
-                height: "20px",
-                borderRadius: "50%",
-                border: "2px solid white",
-                background: index === currentTileServer ? "white" : "transparent",
+                background: "rgba(255,255,255,0.95)",
+                padding: "20px",
+                borderRadius: "12px",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
                 cursor: "pointer",
-                fontSize: "8px"
+                transition: "all 0.3s ease",
+                border: dest.type === "main" ? "3px solid #dc2626" : "3px solid #2563eb"
               }}
+              onClick={() => setSelectedDestination(selectedDestination === dest.id ? null : dest.id)}
             >
-              {index + 1}
-            </button>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "12px"
+              }}>
+                <div style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  background: dest.type === "main" ? "#dc2626" : "#2563eb",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: "18px"
+                }}>
+                  {dest.type === "main" ? "🏥" : "🏢"}
+                </div>
+                <div>
+                  <div style={{
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    color: dest.type === "main" ? "#dc2626" : "#2563eb"
+                  }}>
+                    {dest.name}
+                  </div>
+                  <div style={{
+                    fontSize: "13px",
+                    color: "#64748b"
+                  }}>
+                    📍 {dest.neighborhood}
+                  </div>
+                </div>
+              </div>
+              
+              <div style={{
+                fontSize: "12px",
+                color: "#374151",
+                marginBottom: "12px"
+              }}>
+                {dest.address}
+              </div>
+              
+              <div style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "4px",
+                marginBottom: "12px"
+              }}>
+                {dest.services.map((service, index) => (
+                  <span
+                    key={index}
+                    style={{
+                      fontSize: "11px",
+                      background: dest.type === "main" ? "#fef2f2" : "#eff6ff",
+                      color: dest.type === "main" ? "#dc2626" : "#2563eb",
+                      padding: "4px 8px",
+                      borderRadius: "12px",
+                      border: `1px solid ${dest.type === "main" ? "#fecaca" : "#bfdbfe"}`
+                    }}
+                  >
+                    {service}
+                  </span>
+                ))}
+              </div>
+              
+              {selectedDestination === dest.id && (
+                <div style={{
+                  fontSize: "12px",
+                  color: "#6b7280",
+                  padding: "8px",
+                  background: "#f9fafb",
+                  borderRadius: "6px",
+                  fontFamily: "monospace"
+                }}>
+                  📍 {dest.coordinates[0].toFixed(4)}°N, {Math.abs(dest.coordinates[1]).toFixed(4)}°W
+                </div>
+              )}
+            </div>
           ))}
         </div>
-      </div>
+      ) : (
+        /* Coordinate Map View */
+        <div style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "80%",
+          height: "70%",
+          background: "rgba(255,255,255,0.95)",
+          borderRadius: "16px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+          overflow: "hidden",
+          position: "relative"
+        }}>
+          {/* Coordinate Grid Background */}
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: `
+              linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: "50px 50px"
+          }} />
+          
+          {/* Coordinate Labels */}
+          <div style={{
+            position: "absolute",
+            top: "10px",
+            left: "10px",
+            fontSize: "12px",
+            color: "#64748b",
+            background: "rgba(255,255,255,0.9)",
+            padding: "4px 8px",
+            borderRadius: "4px"
+          }}>
+            25.8144°N (García)
+          </div>
+          <div style={{
+            position: "absolute",
+            bottom: "10px",
+            left: "10px",
+            fontSize: "12px",
+            color: "#64748b",
+            background: "rgba(255,255,255,0.9)",
+            padding: "4px 8px",
+            borderRadius: "4px"
+          }}>
+            25.6553°N (San Pedro)
+          </div>
+          <div style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            fontSize: "12px",
+            color: "#64748b",
+            background: "rgba(255,255,255,0.9)",
+            padding: "4px 8px",
+            borderRadius: "4px"
+          }}>
+            100.1878°W (Apodaca)
+          </div>
+          <div style={{
+            position: "absolute",
+            bottom: "10px",
+            right: "10px",
+            fontSize: "12px",
+            color: "#64748b",
+            background: "rgba(255,255,255,0.9)",
+            padding: "4px 8px",
+            borderRadius: "4px"
+          }}>
+            100.5467°W (García)
+          </div>
+
+          {/* Destination Markers */}
+          {destinations.map((dest) => {
+            const pos = getPosition(dest.coordinates);
+            return (
+              <div
+                key={dest.id}
+                style={{
+                  position: "absolute",
+                  left: `${pos.x}%`,
+                  top: `${pos.y}%`,
+                  transform: "translate(-50%, -50%)",
+                  cursor: "pointer",
+                  zIndex: selectedDestination === dest.id ? 1000 : 100
+                }}
+                onClick={() => setSelectedDestination(selectedDestination === dest.id ? null : dest.id)}
+              >
+                {/* Marker */}
+                <div style={{
+                  width: dest.type === "main" ? "40px" : "30px",
+                  height: dest.type === "main" ? "40px" : "30px",
+                  borderRadius: "50%",
+                  background: dest.type === "main" ? "#dc2626" : "#2563eb",
+                  border: "3px solid white",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: dest.type === "main" ? "18px" : "14px",
+                  animation: selectedDestination === dest.id ? "pulse 1s infinite" : "none"
+                }}>
+                  {dest.type === "main" ? "🏥" : "🏢"}
+                </div>
+                
+                {/* Popup */}
+                {selectedDestination === dest.id && (
+                  <div style={{
+                    position: "absolute",
+                    top: dest.type === "main" ? "-200px" : "-180px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    background: "white",
+                    padding: "16px",
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+                    minWidth: "250px",
+                    border: `2px solid ${dest.type === "main" ? "#dc2626" : "#2563eb"}`,
+                    animation: "fadeIn 0.3s ease-out"
+                  }}>
+                    <div style={{
+                      fontSize: "16px",
+                      fontWeight: "700",
+                      color: dest.type === "main" ? "#dc2626" : "#2563eb",
+                      marginBottom: "8px"
+                    }}>
+                      {dest.name}
+                    </div>
+                    <div style={{
+                      fontSize: "13px",
+                      color: "#64748b",
+                      marginBottom: "12px"
+                    }}>
+                      📍 {dest.address}
+                    </div>
+                    <div style={{
+                      fontSize: "12px",
+                      color: "#374151",
+                      marginBottom: "8px",
+                      fontWeight: "600"
+                    }}>
+                      Servicios disponibles:
+                    </div>
+                    <div style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "4px",
+                      marginBottom: "12px"
+                    }}>
+                      {dest.services.map((service, index) => (
+                        <span
+                          key={index}
+                          style={{
+                            fontSize: "11px",
+                            background: dest.type === "main" ? "#fef2f2" : "#eff6ff",
+                            color: dest.type === "main" ? "#dc2626" : "#2563eb",
+                            padding: "3px 8px",
+                            borderRadius: "12px",
+                            border: `1px solid ${dest.type === "main" ? "#fecaca" : "#bfdbfe"}`
+                          }}
+                        >
+                          {service}
+                        </span>
+                      ))}
+                    </div>
+                    <div style={{
+                      fontSize: "11px",
+                      color: "#9ca3af",
+                      textAlign: "center",
+                      fontFamily: "monospace"
+                    }}>
+                      {dest.coordinates[0].toFixed(4)}°N, {Math.abs(dest.coordinates[1]).toFixed(4)}°W
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Statistics Panel */}
       <div style={{
@@ -344,10 +470,9 @@ export default function DemoMap() {
         right: "20px",
         zIndex: 1000,
         background: "rgba(255,255,255,0.95)",
-        padding: "16px",
+        padding: "20px",
         borderRadius: "12px",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-        fontFamily: "'Inter', sans-serif"
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)"
       }}>
         <div style={{
           fontSize: "16px",
@@ -355,125 +480,74 @@ export default function DemoMap() {
           color: "#1f2937",
           marginBottom: "12px"
         }}>
-          📊 Estadísticas de Red
+          📊 Red de Clínicas
         </div>
-        <div style={{ fontSize: "14px", color: "#64748b", lineHeight: "1.6" }}>
+        <div style={{ fontSize: "14px", color: "#64748b", lineHeight: "1.8" }}>
           <div>📍 <strong>6</strong> ubicaciones activas</div>
           <div>🏥 <strong>1</strong> clínica principal</div>
           <div>🏢 <strong>5</strong> sucursales</div>
-          <div>📋 <strong>24/7</strong> servicio principal</div>
+          <div>📋 <strong>24/7</strong> emergencias</div>
+          <div>🌐 <strong>100%</strong> funcional</div>
         </div>
       </div>
 
-      {/* Development Fallback Background */}
-      {isDevelopment && showFallback && (
+      {/* Coverage Areas */}
+      <div style={{
+        position: "absolute",
+        bottom: "20px",
+        left: "20px",
+        zIndex: 1000,
+        background: "rgba(255,255,255,0.95)",
+        padding: "16px",
+        borderRadius: "12px",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+        maxWidth: "300px"
+      }}>
         <div style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 0,
-          background: `
-            linear-gradient(45deg, #f3f4f6 25%, transparent 25%), 
-            linear-gradient(-45deg, #f3f4f6 25%, transparent 25%), 
-            linear-gradient(45deg, transparent 75%, #f3f4f6 75%), 
-            linear-gradient(-45deg, transparent 75%, #f3f4f6 75%)
-          `,
-          backgroundSize: "30px 30px",
-          backgroundPosition: "0 0, 0 15px, 15px -15px, -15px 0px",
-          opacity: 0.3
-        }} />
-      )}
+          fontSize: "14px",
+          fontWeight: "600",
+          color: "#1f2937",
+          marginBottom: "8px"
+        }}>
+          🌟 Áreas de Cobertura
+        </div>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "8px",
+          fontSize: "12px"
+        }}>
+          {destinations.map((dest) => (
+            <div
+              key={dest.id}
+              style={{
+                padding: "6px 8px",
+                background: dest.type === "main" ? "#fef2f2" : "#eff6ff",
+                color: dest.type === "main" ? "#dc2626" : "#2563eb",
+                borderRadius: "6px",
+                border: `1px solid ${dest.type === "main" ? "#fecaca" : "#bfdbfe"}`,
+                textAlign: "center",
+                cursor: "pointer"
+              }}
+              onClick={() => setSelectedDestination(selectedDestination === dest.id ? null : dest.id)}
+            >
+              {dest.neighborhood}
+            </div>
+          ))}
+        </div>
+      </div>
 
-      {/* Leaflet Map */}
-      <MapContainer
-        center={[25.6866, -100.3161]}
-        zoom={11}
-        style={{ height: "100%", width: "100%" }}
-        scrollWheelZoom={true}
-      >
-        {/* Dynamic Tile Layer with Multiple Options */}
-        <TileLayer
-          key={currentTileServer} // Force re-render on change
-          attribution={currentTiles.attribution}
-          url={currentTiles.url}
-          maxZoom={currentTiles.maxZoom}
-          crossOrigin={true}
-          eventHandlers={{
-            load: () => setTilesLoaded(true),
-            tileerror: () => console.log('Tile loading issue - normal in development')
-          }}
-        />
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); }
+          50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
         
-        {destinations.map((destination) => (
-          <Marker
-            key={destination.id}
-            position={destination.coordinates}
-            icon={destination.type === "main" ? mainClinicIcon : branchIcon}
-          >
-            <Popup>
-              <div style={{
-                fontFamily: "'Inter', sans-serif",
-                minWidth: "200px"
-              }}>
-                <div style={{
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  color: destination.type === "main" ? "#dc2626" : "#2563eb",
-                  marginBottom: "8px"
-                }}>
-                  {destination.name}
-                </div>
-                <div style={{
-                  fontSize: "13px",
-                  color: "#64748b",
-                  marginBottom: "10px"
-                }}>
-                  📍 {destination.address}
-                </div>
-                <div style={{
-                  fontSize: "13px",
-                  color: "#374151",
-                  marginBottom: "8px",
-                  fontWeight: "600"
-                }}>
-                  Servicios disponibles:
-                </div>
-                <div style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "4px"
-                }}>
-                  {destination.services.map((service, index) => (
-                    <span
-                      key={index}
-                      style={{
-                        fontSize: "11px",
-                        background: destination.type === "main" ? "#fef2f2" : "#eff6ff",
-                        color: destination.type === "main" ? "#dc2626" : "#2563eb",
-                        padding: "2px 6px",
-                        borderRadius: "4px",
-                        border: `1px solid ${destination.type === "main" ? "#fecaca" : "#bfdbfe"}`
-                      }}
-                    >
-                      {service}
-                    </span>
-                  ))}
-                </div>
-                <div style={{
-                  fontSize: "11px",
-                  color: "#9ca3af",
-                  marginTop: "10px",
-                  textAlign: "center"
-                }}>
-                  {destination.coordinates[0].toFixed(4)}°N, {Math.abs(destination.coordinates[1]).toFixed(4)}°W
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
