@@ -44,53 +44,53 @@ export default function DemoMap() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Veterinary clinic destinations in Culiacán
+  // Veterinary clinic destinations in Monterrey
   const destinations: Destination[] = [
     {
       id: "main",
       name: "Clínica Veterinaria Principal",
-      coordinates: [24.8066, -107.3938],
-      address: "Centro de Culiacán, Sinaloa",
+      coordinates: [25.6866, -100.3161],
+      address: "Centro de Monterrey, Nuevo León",
       type: "main",
       services: ["Consultas", "Cirugías", "Emergencias 24h", "Hospitalización"]
     },
     {
-      id: "flores",
-      name: "Sucursal Las Flores",
-      coordinates: [24.8166, -107.4038],
-      address: "Fraccionamiento Las Flores",
+      id: "sanpedro",
+      name: "Sucursal San Pedro",
+      coordinates: [25.6553, -100.4089],
+      address: "San Pedro Garza García",
       type: "branch",
       services: ["Consultas", "Vacunación", "Grooming"]
     },
     {
-      id: "bosque",
-      name: "Sucursal El Bosque",
-      coordinates: [24.7966, -107.3838],
-      address: "Colonia El Bosque",
+      id: "santa",
+      name: "Sucursal Santa Catarina",
+      coordinates: [25.6738, -100.4458],
+      address: "Santa Catarina",
       type: "branch",
       services: ["Consultas", "Vacunación", "Farmacia"]
     },
     {
-      id: "villa",
-      name: "Sucursal Villa Real",
-      coordinates: [24.8266, -107.3738],
-      address: "Villa Real, Culiacán",
+      id: "apodaca",
+      name: "Sucursal Apodaca",
+      coordinates: [25.7839, -100.1878],
+      address: "Apodaca, Nuevo León",
       type: "branch",
       services: ["Consultas", "Grooming", "Guardería"]
     },
     {
-      id: "norte",
-      name: "Centro Veterinario Norte",
-      coordinates: [24.8366, -107.3638],
-      address: "Zona Norte de Culiacán",
+      id: "garcia",
+      name: "Centro Veterinario García",
+      coordinates: [25.8144, -100.5467],
+      address: "García, Nuevo León",
       type: "branch",
       services: ["Consultas", "Vacunación", "Rayos X"]
     },
     {
-      id: "sur",
-      name: "Clínica Sur",
-      coordinates: [24.7866, -107.4138],
-      address: "Zona Sur de Culiacán",
+      id: "guadalupe",
+      name: "Clínica Guadalupe",
+      coordinates: [25.6767, -100.2556],
+      address: "Guadalupe, Nuevo León",
       type: "branch",
       services: ["Consultas", "Emergencias", "Laboratorio"]
     }
@@ -144,7 +144,7 @@ export default function DemoMap() {
           fontSize: "16px",
           opacity: 0.9
         }}>
-          Sistema de Gestión Veterinaria - Culiacán
+          Sistema de Gestión Veterinaria - Monterrey
         </div>
         <div style={{
           marginTop: "20px",
@@ -198,7 +198,8 @@ export default function DemoMap() {
     );
   }
 
-  const mapTilerUrl = `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${apiKey}`;
+  // Fix MapTiler URL format for Leaflet
+  const mapTilerUrl = `https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${apiKey}`;
 
   return (
     <div style={{ height: "100vh", width: "100%", position: "relative" }}>
@@ -231,7 +232,7 @@ export default function DemoMap() {
           color: "#64748b",
           lineHeight: "1.5"
         }}>
-          Clínicas veterinarias en <strong>Culiacán, Sinaloa</strong>
+          Clínicas veterinarias en <strong>Monterrey, Nuevo León</strong>
           <br />
           <span style={{ color: "#dc2626" }}>●</span> Clínica Principal
           <br />
@@ -269,14 +270,16 @@ export default function DemoMap() {
 
       {/* Leaflet Map */}
       <MapContainer
-        center={[24.8066, -107.3938]}
-        zoom={12}
+        center={[25.6866, -100.3161]}
+        zoom={11}
         style={{ height: "100%", width: "100%" }}
         scrollWheelZoom={true}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url={mapTilerUrl}
+          tileSize={256}
+          zoomOffset={0}
         />
         
         {destinations.map((destination) => (
