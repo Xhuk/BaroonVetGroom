@@ -146,52 +146,78 @@ export default function DemoMap() {
     };
   }, []);
 
-  if (isLoading) {
-    return (
-      <div style={{
-        height: "100vh",
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#0b1220",
-        color: "#e5e7eb",
-        fontSize: "18px"
-      }}>
-        Cargando mapa de destinos...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{
-        height: "100vh",
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#0b1220",
-        color: "#ef4444",
-        fontSize: "18px",
-        flexDirection: "column",
-        gap: "10px"
-      }}>
-        <div>❌ Error del mapa: {error}</div>
-        <div style={{ fontSize: "14px", color: "#9ca3af" }}>
-          Verifique la configuración de la clave API de MapTiler
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div
-      ref={mapContainer}
-      style={{
-        height: "100vh",
-        width: "100%",
-      }}
-    />
+    <div style={{ height: "100vh", width: "100%", position: "relative" }}>
+      {/* Map container - always render */}
+      <div
+        ref={mapContainer}
+        style={{
+          height: "100vh",
+          width: "100%",
+          position: "absolute",
+          top: 0,
+          left: 0,
+        }}
+      />
+      
+      {/* Loading overlay */}
+      {isLoading && (
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          height: "100vh",
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#0b1220",
+          color: "#e5e7eb",
+          fontSize: "18px",
+          zIndex: 1000
+        }}>
+          Cargando mapa de destinos...
+        </div>
+      )}
+      
+      {/* Error overlay */}
+      {error && (
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          height: "100vh",
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#0b1220",
+          color: "#ef4444",
+          fontSize: "18px",
+          flexDirection: "column",
+          gap: "10px",
+          zIndex: 1000
+        }}>
+          <div>❌ Error del mapa: {error}</div>
+          <div style={{ fontSize: "14px", color: "#9ca3af" }}>
+            Verifique la configuración de la clave API de MapTiler
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "8px 16px",
+              background: "#1f2937",
+              border: "1px solid #374151",
+              borderRadius: "4px",
+              color: "#e5e7eb",
+              cursor: "pointer",
+              fontSize: "14px"
+            }}
+          >
+            Recargar página
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
