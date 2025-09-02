@@ -54,34 +54,31 @@ const DemoMap = () => {
     return () => clearTimeout(timer);
   }, [currentProvider]);
   
-  // Auto-switch to next provider if too many errors
+  // Reset error count when provider changes
   useEffect(() => {
-    if (errorCount > 10 && currentProvider < tileProviders.length - 1) {
-      console.log('⚠️ Too many errors, switching to next provider:', tileProviders[currentProvider + 1]?.name);
-      setCurrentProvider(prev => prev + 1);
-    }
-  }, [errorCount, currentProvider]);
+    setErrorCount(0);
+    console.log('🎯 Switched to provider:', tileProviders[currentProvider]?.name);
+  }, [currentProvider]);
 
-  // Array of verified working tile providers with network-friendly configurations
+  // Array of tile providers optimized for web applications and Replit environment
   const tileProviders = [
     {
-      name: "ESRI World Street",
-      url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
-      maxZoom: 19,
+      name: "CartoDB Positron",
+      url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 20,
     },
     {
-      name: "ESRI World Imagery",
-      url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-      maxZoom: 19,
+      name: "CartoDB Dark Matter",
+      url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 20,
     },
     {
-      name: "OpenTopoMap",
-      url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
-      maxZoom: 17,
+      name: "Simple Map",
+      url: "https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> France',
+      maxZoom: 20,
     },
   ];
 
@@ -227,13 +224,24 @@ const DemoMap = () => {
                 setErrorCount(0); // Reset on successful load
               },
               tileerror: (e) => {
-                setErrorCount(prev => prev + 1);
-                console.error('❌ Detailed tile error #' + (errorCount + 1) + ':', {
-                  provider: tileProviders[currentProvider].name,
-                  coords: e.coords,
-                  error: e.error,
-                  url: e.tile?.src,
-                  timestamp: new Date().toISOString()
+                setErrorCount(prev => {
+                  const newCount = prev + 1;
+                  console.error(`❌ Tile error #${newCount} on ${tileProviders[currentProvider].name}:`, {
+                    coords: e.coords,
+                    url: e.tile?.src,
+                    timestamp: new Date().toISOString()
+                  });
+                  
+                  // Auto-switch after 5 errors
+                  if (newCount >= 5 && currentProvider < tileProviders.length - 1) {
+                    console.log('🔄 Auto-switching to:', tileProviders[currentProvider + 1]?.name);
+                    setTimeout(() => {
+                      setCurrentProvider(prev => prev + 1);
+                      setErrorCount(0);
+                    }, 1000);
+                  }
+                  
+                  return newCount;
                 });
               },
             }}
