@@ -34,9 +34,21 @@ const DemoMap = () => {
   // State to manage the map's zoom level
   const [mapZoom, setMapZoom] = useState(11);
 
-  // Debug tile loading
+  // Debug tile loading and fix Replit iframe issues
   useEffect(() => {
     console.log('🗺️ DemoMap mounted, current provider:', tileProviders[currentProvider]?.name);
+    
+    // Force tile refresh after a short delay to bypass Replit hook errors
+    const timer = setTimeout(() => {
+      const mapElement = document.querySelector('.leaflet-container');
+      if (mapElement) {
+        const event = new Event('resize');
+        window.dispatchEvent(event);
+        console.log('🔄 Forced map refresh to bypass hook errors');
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, [currentProvider]);
 
   // Array of available tile providers with their details
@@ -173,6 +185,12 @@ const DemoMap = () => {
           zoom={mapZoom}
           scrollWheelZoom={true}
           style={{ height: "100%", width: "100%" }}
+          whenReady={() => {
+            console.log('🗺️ Map is ready, forcing tile refresh');
+            setTimeout(() => {
+              window.dispatchEvent(new Event('resize'));
+            }, 500);
+          }}
         >
           {/* Component to update map's view when state changes */}
           <ChangeView center={mapCenter} zoom={mapZoom} />

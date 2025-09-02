@@ -1,0 +1,202 @@
+ MapTiler API key loaded successfully
+ WebSocket connection to 'wss://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/?token=3YI9D1KO61BQ' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) 
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+ 🗺️ DemoMap mounted, current provider: OpenStreetMap
+ 🔍 [useAuth] Making network request to /api/auth/user
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Not authenticated, skipping
+ 🎯 [TenantContext] Final context value: Object
+ LanguageContext initialized: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔄 Tiles loading for OpenStreetMap
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Not authenticated, skipping
+ >=116
+ 🔍 [useAuth] Response: 200 OK
+ 🔍 [useAuth] User data received: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] Fetching user tenants...
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ 🔍 [TenantContext] User tenants response: 200
+ 🔍 [TenantContext] User tenants received: 1 tenants: Array(1)
+ 🔍 [useAuth] Auth state: Object
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3: Checking demo/vanilla users: Object
+ 🔍 [TenantContext] Not a demo/vanilla user
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ 🎯 [InstantNavigation] Preloading data for tenant: vetgroom1
+ 🔍 [TenantContext] useEffect triggered: Object
+ 🔍 [TenantContext] Debug mode check: Object
+ 🔍 [TenantContext] Priority 3 skipped: Object
+ 🎯 [TenantContext] Final context value: Object
+ 🔍 [useAuth] Auth state: Object
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+ ❌ Tile error: Object
+overrideMethod @ installHook.js:1
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+DemoMap.tsx:186 ✅ Tiles loaded for OpenStreetMap
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:102 🔍 [TenantContext] Debug mode check: Object
+TenantContext.tsx:187 🔍 [TenantContext] Priority 3 skipped: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:286 🎯 [TenantContext] Final context value: Object
+DemoMap.tsx:185 🔄 Tiles loading for CartoDB Dark
+DemoMap.tsx:39 🗺️ DemoMap mounted, current provider: CartoDB Dark
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+hook.js:608 ❌ Tile error: Object
+overrideMethod @ hook.js:608
+DemoMap.tsx:186 ✅ Tiles loaded for CartoDB Dark
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
