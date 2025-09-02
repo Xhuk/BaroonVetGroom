@@ -7,10 +7,80 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
+import "@maptiler/leaflet-maptilersdk";
 import { customBlueIcon, customRedIcon } from "@/lib/leafletIcons";
 
-// A small component to manage map state changes, allowing us to update the
-// map's view from the main component's state
+// TypeScript declarations for MapTiler SDK
+declare global {
+  interface Window {
+    L: typeof L & {
+      maptiler?: {
+        maptilerLayer: any;
+        MapStyle?: any;
+      };
+    };
+  }
+}
+
+// MapTiler Layer Component using proper SDK
+const MapTilerLayer = ({ apiKey, style, onReady }: { apiKey: string; style: string; onReady?: () => void }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (!apiKey) {
+      console.log('⏳ Waiting for API key...');
+      return;
+    }
+    
+    // Check if MapTiler SDK is loaded
+    if (!(window as any).L?.maptiler?.maptilerLayer) {
+      console.log('⏳ Waiting for MapTiler SDK...');
+      // Try to load it after a short delay
+      const timer = setTimeout(() => {
+        if ((window as any).L?.maptiler?.maptilerLayer) {
+          console.log('✅ MapTiler SDK loaded');
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+    
+    console.log('🗺️ Creating MapTiler layer with style:', style);
+    
+    try {
+      // Remove existing MapTiler layers
+      map.eachLayer((layer: any) => {
+        if (layer._url?.includes('maptiler') || layer.options?.apiKey) {
+          map.removeLayer(layer);
+        }
+      });
+      
+      // Create MapTiler layer using the SDK
+      const mtLayer = new (window as any).L.maptiler.maptilerLayer({
+        apiKey: apiKey,
+        style: style,
+      });
+      
+      mtLayer.addTo(map);
+      
+      console.log('✅ MapTiler layer added successfully');
+      onReady?.();
+      
+    } catch (error) {
+      console.error('❌ Error creating MapTiler layer:', error);
+      // Fallback to OpenStreetMap if MapTiler fails
+      console.log('🔄 Falling back to OpenStreetMap...');
+      const fallbackLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      });
+      fallbackLayer.addTo(map);
+      onReady?.();
+    }
+  }, [map, apiKey, style]);
+  
+  return null;
+};
+
+// A small component to manage map state changes
 const ChangeView = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
   const map = useMap();
   map.setView(center, zoom);
@@ -27,68 +97,67 @@ interface Destination {
 }
 
 const DemoMap = () => {
-  // MapTiler styles available through our proxy server
-  const tileProviders = [
+  // MapTiler SDK styles - using proper SDK approach
+  const mapStyles = [
     {
       name: "Streets",
-      url: "/api/tiles/streets/{z}/{x}/{y}",
+      style: "streets", 
       attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 20,
-    },
-    {
-      name: "Satellite",
-      url: "/api/tiles/satellite/{z}/{x}/{y}",
-      attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a>',
-      maxZoom: 20,
     },
     {
       name: "Basic",
-      url: "/api/tiles/basic/{z}/{x}/{y}",
+      style: "basic",
       attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 20,
+    },
+    {
+      name: "Topo",
+      style: "topo",
+      attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     },
   ];
 
-  // State to manage the active tile provider
-  const [currentProvider, setCurrentProvider] = useState(0);
+  // State to manage the active map style
+  const [currentStyle, setCurrentStyle] = useState(0);
   // State to manage the map's center coordinates
   const [mapCenter, setMapCenter] = useState<[number, number]>([25.6866, -100.3161]);
   // State to manage the map's zoom level
   const [mapZoom, setMapZoom] = useState(11);
-
-  // Debug tile loading with automatic fallback
-  const [errorCount, setErrorCount] = useState(0);
+  // MapTiler API key state
+  const [apiKey, setApiKey] = useState('');
+  // Map ready state
+  const [mapReady, setMapReady] = useState(false);
   
+  // Load MapTiler API key on mount
   useEffect(() => {
-    console.log('🗺️ DemoMap mounted, current provider:', tileProviders[currentProvider]?.name);
-    setErrorCount(0); // Reset error count when switching providers
+    console.log('🗺️ DemoMap mounted, loading MapTiler API key...');
     
-    // Force tile refresh after a short delay
-    const timer = setTimeout(() => {
-      const mapElement = document.querySelector('.leaflet-container');
-      if (mapElement) {
-        const event = new Event('resize');
-        window.dispatchEvent(event);
-        console.log('🔄 Forced map refresh to bypass errors');
-      }
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [currentProvider]);
+    fetch('/api/config/maptiler')
+      .then(res => res.json())
+      .then(data => {
+        if (data.apiKey && data.apiKey.length > 0) {
+          setApiKey(data.apiKey);
+          console.log('✅ MapTiler API key loaded');
+        } else {
+          console.warn('⚠️ No MapTiler API key available');
+        }
+      })
+      .catch(err => {
+        console.error('❌ Failed to load MapTiler API key:', err);
+      });
+  }, []);
   
-  // Reset error count when provider changes
+  // Log style changes
   useEffect(() => {
-    setErrorCount(0);
-    console.log('🎯 Switched to provider:', tileProviders[currentProvider]?.name);
-  }, [currentProvider]);
+    console.log('🎯 Switched to style:', mapStyles[currentStyle]?.name);
+  }, [currentStyle]);
 
-  // Get current provider with bounds checking
-  const getCurrentProvider = () => {
-    const index = Math.max(0, Math.min(currentProvider, tileProviders.length - 1));
-    return tileProviders[index];
+  // Get current style with bounds checking
+  const getCurrentStyle = () => {
+    const index = Math.max(0, Math.min(currentStyle, mapStyles.length - 1));
+    return mapStyles[index];
   };
 
-  const currentTileProvider = getCurrentProvider();
+  const currentMapStyle = getCurrentStyle();
 
   // Data for the veterinary clinics
   const destinations: Destination[] = [
@@ -167,13 +236,15 @@ const DemoMap = () => {
           Red de atención en Monterrey, Nuevo León
         </p>
         
-        {/* MapTiler Proxy Status */}
+        {/* MapTiler SDK Status */}
         <div className="mb-4 p-3 bg-gray-800 rounded-lg text-xs">
-          <div className="text-green-400 font-semibold mb-1">✅ MapTiler Proxy Active</div>
-          <div className="text-gray-300">Style: {currentTileProvider?.name || 'None'}</div>
-          <div className="text-gray-400 mt-1">Via server proxy (bypasses CORS)</div>
-          <div className={errorCount > 0 ? "text-red-400 mt-1" : "text-green-400 mt-1"}>
-            {errorCount === 0 ? 'Working smoothly' : `Errors: ${errorCount}`}
+          <div className="text-green-400 font-semibold mb-1">🗺️ MapTiler SDK</div>
+          <div className="text-gray-300">Style: {currentMapStyle?.name || 'None'}</div>
+          <div className="text-gray-400 mt-1">
+            {apiKey ? 'API key loaded' : 'Loading API key...'}
+          </div>
+          <div className={mapReady ? "text-green-400 mt-1" : "text-yellow-400 mt-1"}>
+            {mapReady ? 'Map ready' : 'Initializing...'}
           </div>
         </div>
         
@@ -219,46 +290,16 @@ const DemoMap = () => {
         >
           {/* Component to update map's view when state changes */}
           <ChangeView center={mapCenter} zoom={mapZoom} />
-          {/* Tile layer for the map, changes when a new provider is selected */}
-          <TileLayer
-            key={`${currentProvider}-${Date.now()}`}
-            attribution={currentTileProvider?.attribution || 'Map data'}
-            url={currentTileProvider?.url || ''}
-            maxZoom={currentTileProvider?.maxZoom || 18}
-            crossOrigin="anonymous"
-            eventHandlers={{
-              loading: () => console.log('🔄 Tiles loading for', currentTileProvider?.name || 'Unknown'),
-              load: () => {
-                console.log('✅ Tiles loaded for', currentTileProvider?.name || 'Unknown');
-                setErrorCount(0); // Reset on successful load
-              },
-              tileerror: (e) => {
-                setErrorCount(prev => {
-                  const newCount = prev + 1;
-                  const provider = getCurrentProvider();
-                  console.error(`❌ Tile error #${newCount} on ${provider?.name || 'Unknown'}:`, {
-                    coords: e.coords,
-                    url: e.tile?.src,
-                    timestamp: new Date().toISOString()
-                  });
-                  
-                  // Auto-switch after 3 errors (with bounds checking)
-                  if (newCount >= 3 && currentProvider < tileProviders.length - 1) {
-                    const nextIndex = currentProvider + 1;
-                    const nextProvider = tileProviders[nextIndex];
-                    if (nextProvider) {
-                      console.log('🔄 Auto-switching to:', nextProvider.name);
-                      setTimeout(() => {
-                        setCurrentProvider(nextIndex);
-                      }, 500);
-                    }
-                  }
-                  
-                  return newCount;
-                });
-              },
-            }}
-          />
+          
+          {/* MapTiler SDK Layer - only render when API key is available */}
+          {apiKey && (
+            <MapTilerLayer 
+              key={`maptiler-${currentStyle}-${Date.now()}`}
+              apiKey={apiKey} 
+              style={currentMapStyle?.style || 'basic'}
+              onReady={() => setMapReady(true)}
+            />
+          )}
           {/* Markers for each clinic location */}
           {destinations.map((destination) => (
             <Marker
@@ -290,28 +331,34 @@ const DemoMap = () => {
             </Marker>
           ))}
         </MapContainer>
-        {/* Map provider switcher */}
+        {/* Map style switcher */}
         <div className="absolute top-4 right-4 z-[1000] p-3 rounded-lg bg-white shadow-xl">
           <div className="text-xs text-gray-600 mb-2 font-semibold">Map Style:</div>
           <div className="flex flex-col gap-1">
-            {tileProviders.map((provider, index) => (
+            {mapStyles.map((styleObj, index) => (
               <button
                 key={index}
                 className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-200 ease-in-out ${
-                  index === currentProvider
+                  index === currentStyle
                     ? "bg-blue-600 text-white shadow-md"
                     : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                 }`}
                 onClick={() => {
-                  console.log('🔄 Switching to provider:', provider.name);
-                  setCurrentProvider(index);
-                  setErrorCount(0); // Reset error count
+                  console.log('🔄 Switching to style:', styleObj.name);
+                  setCurrentStyle(index);
+                  setMapReady(false); // Reset ready state for new style
                 }}
+                disabled={!apiKey}
               >
-                {provider.name}
+                {styleObj.name}
               </button>
             ))}
           </div>
+          {!apiKey && (
+            <div className="text-xs text-red-600 mt-2">
+              Loading API key...
+            </div>
+          )}
         </div>
       </div>
     </div>

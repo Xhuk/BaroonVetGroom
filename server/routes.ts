@@ -204,25 +204,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tiles/:style/:z/:x/:y", async (req, res) => {
     try {
       const { style, z, x, y } = req.params;
-      const apiKey = (process.env.MAPTILER_API_KEY || '').trim();
       
-      if (!apiKey) {
-        return res.status(500).json({ error: 'MapTiler API key not configured' });
-      }
+      // Use OpenStreetMap tiles which are free and reliable
+      const styleMap: Record<string, string> = {
+        'streets': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'basic': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', 
+        'satellite': 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        'topo': 'https://tile.opentopomap.org/{z}/{x}/{y}.png'
+      };
 
-      // MapTiler tile URL format
-      const tileUrl = `https://api.maptiler.com/maps/${style}/tiles/${z}/${x}/${y}.png?key=${apiKey}`;
+      const baseUrl = styleMap[style] || styleMap['basic'];
+      const tileUrl = baseUrl.replace('{z}', z).replace('{x}', x).replace('{y}', y);
       
-      // Fetch tile from MapTiler
-      const response = await fetch(tileUrl);
+      console.log(`Proxying tile: ${style} -> ${tileUrl}`);
+      
+      // Fetch tile with proper headers
+      const response = await fetch(tileUrl, {
+        headers: {
+          'User-Agent': 'VeterinaryClinicApp/1.0'
+        }
+      });
       
       if (!response.ok) {
-        return res.status(response.status).json({ error: 'Tile fetch failed' });
+        console.error(`Tile fetch error: ${response.status} for ${tileUrl}`);
+        return res.status(response.status).json({ error: `Tile fetch error: ${response.status}` });
       }
 
       // Forward the tile data with proper headers
       res.set({
-        'Content-Type': 'image/png',
+        'Content-Type': response.headers.get('content-type') || 'image/png',
         'Cache-Control': 'public, max-age=86400', // 24 hours cache
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET',
