@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -7,33 +7,7 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-
-// Configure the default marker icon globally to prevent broken image links
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-});
-
-// Custom icon for the main clinic, using an inline SVG for simplicity and consistency
-const mainClinicIcon = new L.Icon({
-  iconUrl:
-    "data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23dc2626' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-hospital'%3e%3cpath d='M12 6v4h4'/%3e%3cpath d='M22 12h-4V6H2v14h20Z'/%3e%3cpath d='M7 15h0'/%3e%3cpath d='M9 15h0'/%3e%3cpath d='M16 15h0'/%3e%3cpath d='M14 15h0'/%3e%3c/svg%3e",
-  iconSize: [36, 36],
-  iconAnchor: [18, 36],
-  popupAnchor: [0, -30],
-});
-
-// Custom icon for the branch clinics, also an inline SVG
-const branchIcon = new L.Icon({
-  iconUrl:
-    "data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563eb' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-hospital'%3e%3cpath d='M12 6v4h4'/%3e%3cpath d='M22 12h-4V6H2v14h20Z'/%3e%3cpath d='M7 15h0'/%3e%3cpath d='M9 15h0'/%3e%3cpath d='M16 15h0'/%3e%3cpath d='M14 15h0'/%3e%3c/svg%3e",
-  iconSize: [30, 30],
-  iconAnchor: [15, 30],
-  popupAnchor: [0, -25],
-});
+import { customBlueIcon, customRedIcon } from "@/lib/leafletIcons";
 
 // A small component to manage map state changes, allowing us to update the
 // map's view from the main component's state
@@ -59,6 +33,11 @@ const DemoMap = () => {
   const [mapCenter, setMapCenter] = useState<[number, number]>([25.6866, -100.3161]);
   // State to manage the map's zoom level
   const [mapZoom, setMapZoom] = useState(11);
+
+  // Debug tile loading
+  useEffect(() => {
+    console.log('🗺️ DemoMap mounted, current provider:', tileProviders[currentProvider]?.name);
+  }, [currentProvider]);
 
   // Array of available tile providers with their details
   const tileProviders = [
@@ -202,13 +181,18 @@ const DemoMap = () => {
             key={currentProvider}
             attribution={tileProviders[currentProvider].attribution}
             url={tileProviders[currentProvider].url}
+            eventHandlers={{
+              loading: () => console.log('🔄 Tiles loading for', tileProviders[currentProvider].name),
+              load: () => console.log('✅ Tiles loaded for', tileProviders[currentProvider].name),
+              tileerror: (e) => console.error('❌ Tile error:', e),
+            }}
           />
           {/* Markers for each clinic location */}
           {destinations.map((destination) => (
             <Marker
               key={destination.id}
               position={destination.coordinates}
-              icon={destination.type === "main" ? mainClinicIcon : branchIcon}
+              icon={destination.type === "main" ? customRedIcon : customBlueIcon}
             >
               {/* Popup that appears when a marker is clicked */}
               <Popup>
