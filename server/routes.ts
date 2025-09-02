@@ -200,6 +200,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Tile proxy endpoint to bypass CORS restrictions
+  app.get("/api/tiles/:style/:z/:x/:y", async (req, res) => {
+    try {
+      const { style, z, x, y } = req.params;
+      const apiKey = (process.env.MAPTILER_API_KEY || '').trim();
+      
+      if (!apiKey) {
+        return res.status(500).json({ error: 'MapTiler API key not configured' });
+      }
+
+      // MapTiler tile URL format
+      const tileUrl = `https://api.maptiler.com/maps/${style}/tiles/${z}/${x}/${y}.png?key=${apiKey}`;
+      
+      // Fetch tile from MapTiler
+      const response = await fetch(tileUrl);
+      
+      if (!response.ok) {
+        return res.status(response.status).json({ error: 'Tile fetch failed' });
+      }
+
+      // Forward the tile data with proper headers
+      res.set({
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=86400', // 24 hours cache
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+      });
+
+      // Stream the tile data
+      const buffer = await response.arrayBuffer();
+      res.send(Buffer.from(buffer));
+      
+    } catch (error) {
+      console.error('Tile proxy error:', error);
+      res.status(500).json({ error: 'Tile proxy failed' });
+    }
+  });
+
   // Auth middleware
   await setupAuth(app);
 

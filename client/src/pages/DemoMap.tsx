@@ -27,19 +27,25 @@ interface Destination {
 }
 
 const DemoMap = () => {
-  // Simplified tile providers that work reliably in web environments
+  // MapTiler styles available through our proxy server
   const tileProviders = [
     {
-      name: "OpenStreetMap",
-      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
+      name: "Streets",
+      url: "/api/tiles/streets/{z}/{x}/{y}",
+      attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 20,
     },
     {
-      name: "Humanitarian",
-      url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by Humanitarian OpenStreetMap Team',
-      maxZoom: 17,
+      name: "Satellite",
+      url: "/api/tiles/satellite/{z}/{x}/{y}",
+      attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a>',
+      maxZoom: 20,
+    },
+    {
+      name: "Basic",
+      url: "/api/tiles/basic/{z}/{x}/{y}",
+      attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 20,
     },
   ];
 
@@ -161,14 +167,14 @@ const DemoMap = () => {
           Red de atención en Monterrey, Nuevo León
         </p>
         
-        {/* Tile Provider Debug Info */}
+        {/* MapTiler Proxy Status */}
         <div className="mb-4 p-3 bg-gray-800 rounded-lg text-xs">
-          <div className="text-yellow-400 font-semibold mb-1">Current Provider:</div>
-          <div className="text-gray-300">{currentTileProvider?.name || 'None'}</div>
-          <div className="text-gray-400 mt-1 break-all">
-            {currentTileProvider?.url?.replace('{s}', 'a').replace('{z}', '11').replace('{x}', '1000').replace('{y}', '1000') || 'No URL'}
+          <div className="text-green-400 font-semibold mb-1">✅ MapTiler Proxy Active</div>
+          <div className="text-gray-300">Style: {currentTileProvider?.name || 'None'}</div>
+          <div className="text-gray-400 mt-1">Via server proxy (bypasses CORS)</div>
+          <div className={errorCount > 0 ? "text-red-400 mt-1" : "text-green-400 mt-1"}>
+            {errorCount === 0 ? 'Working smoothly' : `Errors: ${errorCount}`}
           </div>
-          <div className="text-red-400 mt-1">Errors: {errorCount}</div>
         </div>
         
         <div className="space-y-4">
@@ -299,6 +305,7 @@ const DemoMap = () => {
                 onClick={() => {
                   console.log('🔄 Switching to provider:', provider.name);
                   setCurrentProvider(index);
+                  setErrorCount(0); // Reset error count
                 }}
               >
                 {provider.name}
