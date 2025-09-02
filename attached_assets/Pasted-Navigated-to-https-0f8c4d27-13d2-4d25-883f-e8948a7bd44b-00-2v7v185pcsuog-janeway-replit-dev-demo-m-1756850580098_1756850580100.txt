@@ -1,0 +1,1246 @@
+Navigated to https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/demo-map
+demo-map:71 MapTiler API key loaded successfully
+client:536 WebSocket connection to 'wss://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/?token=4Que2h0Fdzyf' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=4Que2h0Fdzyf' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-RPCDYKBN.js?v=46ceb16f:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+useScreenSize.ts:80 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+DemoMap.tsx:210 🗺️ Map is ready, forcing tile refresh
+DemoMap.tsx:41 🗺️ DemoMap mounted, current provider: OpenStreetMap
+useAuth.ts:32 🔍 [useAuth] Making network request to /api/auth/user
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+TenantContext.tsx:286 🎯 [TenantContext] Final context value: {currentTenant: undefined, currentTenantName: undefined, tenant: undefined, localCurrentTenant: undefined, isLoading: false}
+LanguageContext.tsx:28 LanguageContext initialized: {currentLanguage: 'en', savedLanguage: 'en', available: Array(2)}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: true, error: undefined, isAuthenticated: false}
+DemoMap.tsx:224 🔄 Tiles loading for OpenStreetMap
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/453/872.png', timestamp: '2025-09-02T22:02:42.571Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/454/871.png', timestamp: '2025-09-02T22:02:42.572Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/452/873.png', timestamp: '2025-09-02T22:02:42.572Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/454/873.png', timestamp: '2025-09-02T22:02:42.572Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/451/872.png', timestamp: '2025-09-02T22:02:42.572Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/451/871.png', timestamp: '2025-09-02T22:02:42.573Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/455/871.png', timestamp: '2025-09-02T22:02:42.573Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/451/873.png', timestamp: '2025-09-02T22:02:42.573Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/455/873.png', timestamp: '2025-09-02T22:02:42.573Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/450/872.png', timestamp: '2025-09-02T22:02:42.573Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/456/872.png', timestamp: '2025-09-02T22:02:42.574Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/450/871.png', timestamp: '2025-09-02T22:02:42.574Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/456/871.png', timestamp: '2025-09-02T22:02:42.574Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/456/873.png', timestamp: '2025-09-02T22:02:42.575Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+DemoMap.tsx:60 ⚠️ Too many errors, switching to next provider: OpenTopoMap
+useAuth.ts:33  GET https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/auth/user 401 (Unauthorized)
+queryFn @ useAuth.ts:33
+fetchFn @ @tanstack_react-query.js?v=46ceb16f:840
+run @ @tanstack_react-query.js?v=46ceb16f:494
+start @ @tanstack_react-query.js?v=46ceb16f:536
+fetch @ @tanstack_react-query.js?v=46ceb16f:926
+executeFetch_fn @ @tanstack_react-query.js?v=46ceb16f:2211
+Function.call @ errorSuppression.ts:80
+onSubscribe @ @tanstack_react-query.js?v=46ceb16f:1898
+subscribe @ @tanstack_react-query.js?v=46ceb16f:24
+(anonymous) @ @tanstack_react-query.js?v=46ceb16f:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=46ceb16f:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=46ceb16f:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=46ceb16f:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=46ceb16f:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=46ceb16f:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=46ceb16f:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=46ceb16f:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=46ceb16f:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=46ceb16f:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=46ceb16f:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=46ceb16f:19432
+commitRoot @ chunk-RPCDYKBN.js?v=46ceb16f:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=46ceb16f:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=46ceb16f:18718
+workLoop @ chunk-RPCDYKBN.js?v=46ceb16f:197
+flushWork @ chunk-RPCDYKBN.js?v=46ceb16f:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=46ceb16f:384
+useAuth.ts:34 🔍 [useAuth] Response: 401 Unauthorized
+useAuth.ts:44 🔍 [useAuth] Auth request failed: 401 Unauthorized
+queryClient.ts:54  GET https://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/api/auth/access-info 401 (Unauthorized)
+(anonymous) @ queryClient.ts:54
+fetchFn @ @tanstack_react-query.js?v=46ceb16f:840
+run @ @tanstack_react-query.js?v=46ceb16f:494
+start @ @tanstack_react-query.js?v=46ceb16f:536
+fetch @ @tanstack_react-query.js?v=46ceb16f:926
+executeFetch_fn @ @tanstack_react-query.js?v=46ceb16f:2211
+Function.call @ errorSuppression.ts:80
+onSubscribe @ @tanstack_react-query.js?v=46ceb16f:1898
+subscribe @ @tanstack_react-query.js?v=46ceb16f:24
+(anonymous) @ @tanstack_react-query.js?v=46ceb16f:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=46ceb16f:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=46ceb16f:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=46ceb16f:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=46ceb16f:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=46ceb16f:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=46ceb16f:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=46ceb16f:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=46ceb16f:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=46ceb16f:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=46ceb16f:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=46ceb16f:19432
+commitRoot @ chunk-RPCDYKBN.js?v=46ceb16f:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=46ceb16f:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=46ceb16f:18718
+workLoop @ chunk-RPCDYKBN.js?v=46ceb16f:197
+flushWork @ chunk-RPCDYKBN.js?v=46ceb16f:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=46ceb16f:384
+main.tsx:59 ❌ Detailed tile error #15: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/453/871.png', timestamp: '2025-09-02T22:02:42.586Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #15: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/454/872.png', timestamp: '2025-09-02T22:02:42.586Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #15: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/453/873.png', timestamp: '2025-09-02T22:02:42.587Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #15: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/455/872.png', timestamp: '2025-09-02T22:02:42.587Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #15: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/452/871.png', timestamp: '2025-09-02T22:02:42.587Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #15: {provider: 'OpenStreetMap', coords: Point, error: {…}, url: 'https://tile.openstreetmap.org/11/450/873.png', timestamp: '2025-09-02T22:02:42.588Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+DemoMap.tsx:224 🔄 Tiles loading for OpenTopoMap
+DemoMap.tsx:41 🗺️ DemoMap mounted, current provider: OpenTopoMap
+DemoMap.tsx:60 ⚠️ Too many errors, switching to next provider: CartoDB Voyager
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: false, error: '401: Unauthorized', isAuthenticated: false}
+useAuth.ts:55 🔍 [useAuth] Auth state: {user: null, isLoading: false, error: '401: Unauthorized', isAuthenticated: false}
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: {isAuthenticated: false, userEmail: undefined, userTenantsLength: 0, currentTenant: undefined, isLoadingTenants: false}
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+DemoMap.tsx:224 🔄 Tiles loading for CartoDB Voyager
+DemoMap.tsx:41 🗺️ DemoMap mounted, current provider: CartoDB Voyager
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/453/872.png', timestamp: '2025-09-02T22:02:42.661Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/453/871.png', timestamp: '2025-09-02T22:02:42.662Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/452/872.png', timestamp: '2025-09-02T22:02:42.662Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/454/872.png', timestamp: '2025-09-02T22:02:42.662Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/453/873.png', timestamp: '2025-09-02T22:02:42.662Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/452/871.png', timestamp: '2025-09-02T22:02:42.663Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/454/871.png', timestamp: '2025-09-02T22:02:42.663Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/452/873.png', timestamp: '2025-09-02T22:02:42.663Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/454/873.png', timestamp: '2025-09-02T22:02:42.663Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/451/872.png', timestamp: '2025-09-02T22:02:42.664Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/455/872.png', timestamp: '2025-09-02T22:02:42.664Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/451/871.png', timestamp: '2025-09-02T22:02:42.664Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/455/871.png', timestamp: '2025-09-02T22:02:42.664Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/451/873.png', timestamp: '2025-09-02T22:02:42.664Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/455/873.png', timestamp: '2025-09-02T22:02:42.665Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/450/872.png', timestamp: '2025-09-02T22:02:42.665Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/456/872.png', timestamp: '2025-09-02T22:02:42.665Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/450/871.png', timestamp: '2025-09-02T22:02:42.665Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/456/871.png', timestamp: '2025-09-02T22:02:42.665Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/450/873.png', timestamp: '2025-09-02T22:02:42.666Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/456/873.png', timestamp: '2025-09-02T22:02:42.666Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+DemoMap.tsx:225 ✅ Tiles loaded for CartoDB Voyager
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+DemoMap.tsx:50 🔄 Forced map refresh to bypass errors
+DemoMap.tsx:282 🔄 Switching to provider: OpenTopoMap
+DemoMap.tsx:224 🔄 Tiles loading for OpenTopoMap
+DemoMap.tsx:41 🗺️ DemoMap mounted, current provider: OpenTopoMap
+DemoMap.tsx:60 ⚠️ Too many errors, switching to next provider: CartoDB Voyager
+DemoMap.tsx:224 🔄 Tiles loading for CartoDB Voyager
+DemoMap.tsx:41 🗺️ DemoMap mounted, current provider: CartoDB Voyager
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/453/872.png', timestamp: '2025-09-02T22:02:46.389Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/453/871.png', timestamp: '2025-09-02T22:02:46.390Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/452/872.png', timestamp: '2025-09-02T22:02:46.390Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/454/872.png', timestamp: '2025-09-02T22:02:46.390Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/453/873.png', timestamp: '2025-09-02T22:02:46.390Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/452/871.png', timestamp: '2025-09-02T22:02:46.390Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/454/871.png', timestamp: '2025-09-02T22:02:46.391Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/451/873.png', timestamp: '2025-09-02T22:02:46.391Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/455/873.png', timestamp: '2025-09-02T22:02:46.391Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/450/872.png', timestamp: '2025-09-02T22:02:46.391Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/456/872.png', timestamp: '2025-09-02T22:02:46.391Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/452/873.png', timestamp: '2025-09-02T22:02:46.392Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/450/871.png', timestamp: '2025-09-02T22:02:46.392Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/456/871.png', timestamp: '2025-09-02T22:02:46.392Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/454/873.png', timestamp: '2025-09-02T22:02:46.392Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/450/873.png', timestamp: '2025-09-02T22:02:46.392Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/451/872.png', timestamp: '2025-09-02T22:02:46.392Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/456/873.png', timestamp: '2025-09-02T22:02:46.393Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/455/872.png', timestamp: '2025-09-02T22:02:46.393Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/451/871.png', timestamp: '2025-09-02T22:02:46.393Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/455/871.png', timestamp: '2025-09-02T22:02:46.393Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+DemoMap.tsx:225 ✅ Tiles loaded for CartoDB Voyager
+DemoMap.tsx:282 🔄 Switching to provider: OpenStreetMap
+DemoMap.tsx:224 🔄 Tiles loading for OpenStreetMap
+DemoMap.tsx:41 🗺️ DemoMap mounted, current provider: OpenStreetMap
+DemoMap.tsx:60 ⚠️ Too many errors, switching to next provider: OpenTopoMap
+DemoMap.tsx:224 🔄 Tiles loading for OpenTopoMap
+DemoMap.tsx:41 🗺️ DemoMap mounted, current provider: OpenTopoMap
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'OpenTopoMap', coords: Point, error: {…}, url: 'https://a.tile.opentopomap.org/11/454/872.png', timestamp: '2025-09-02T22:02:47.615Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #2: {provider: 'OpenTopoMap', coords: Point, error: {…}, url: 'https://b.tile.opentopomap.org/11/453/871.png', timestamp: '2025-09-02T22:02:47.627Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #3: {provider: 'OpenTopoMap', coords: Point, error: {…}, url: 'https://c.tile.opentopomap.org/11/454/871.png', timestamp: '2025-09-02T22:02:47.646Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #4: {provider: 'OpenTopoMap', coords: Point, error: {…}, url: 'https://a.tile.opentopomap.org/11/455/871.png', timestamp: '2025-09-02T22:02:47.658Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #5: {provider: 'OpenTopoMap', coords: Point, error: {…}, url: 'https://c.tile.opentopomap.org/11/455/873.png', timestamp: '2025-09-02T22:02:47.662Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #6: {provider: 'OpenTopoMap', coords: Point, error: {…}, url: 'https://b.tile.opentopomap.org/11/450/871.png', timestamp: '2025-09-02T22:02:47.666Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #7: {provider: 'OpenTopoMap', coords: Point, error: {…}, url: 'https://c.tile.opentopomap.org/11/451/871.png', timestamp: '2025-09-02T22:02:47.674Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #8: {provider: 'OpenTopoMap', coords: Point, error: {…}, url: 'https://c.tile.opentopomap.org/11/453/872.png', timestamp: '2025-09-02T22:02:47.809Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #9: {provider: 'OpenTopoMap', coords: Point, error: {…}, url: 'https://b.tile.opentopomap.org/11/452/872.png', timestamp: '2025-09-02T22:02:47.821Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #10: {provider: 'OpenTopoMap', coords: Point, error: {…}, url: 'https://a.tile.opentopomap.org/11/450/873.png', timestamp: '2025-09-02T22:02:47.832Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'OpenTopoMap', coords: Point, error: {…}, url: 'https://a.tile.opentopomap.org/11/452/871.png', timestamp: '2025-09-02T22:02:47.839Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+DemoMap.tsx:60 ⚠️ Too many errors, switching to next provider: CartoDB Voyager
+DemoMap.tsx:224 🔄 Tiles loading for CartoDB Voyager
+DemoMap.tsx:41 🗺️ DemoMap mounted, current provider: CartoDB Voyager
+main.tsx:59 ❌ Detailed tile error #1: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/453/872.png', timestamp: '2025-09-02T22:02:47.913Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #2: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/453/871.png', timestamp: '2025-09-02T22:02:47.917Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #2: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/452/872.png', timestamp: '2025-09-02T22:02:47.918Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #2: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/454/872.png', timestamp: '2025-09-02T22:02:47.918Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #2: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/453/873.png', timestamp: '2025-09-02T22:02:47.918Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #2: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/452/871.png', timestamp: '2025-09-02T22:02:47.920Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #2: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/454/871.png', timestamp: '2025-09-02T22:02:47.921Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #2: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/452/873.png', timestamp: '2025-09-02T22:02:47.921Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #2: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/454/873.png', timestamp: '2025-09-02T22:02:47.921Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #2: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/451/872.png', timestamp: '2025-09-02T22:02:47.921Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/455/872.png', timestamp: '2025-09-02T22:02:47.923Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/451/871.png', timestamp: '2025-09-02T22:02:47.923Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/455/871.png', timestamp: '2025-09-02T22:02:47.923Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/451/873.png', timestamp: '2025-09-02T22:02:47.923Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/455/873.png', timestamp: '2025-09-02T22:02:47.924Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/450/872.png', timestamp: '2025-09-02T22:02:47.924Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://c.basemaps.cartocdn.com/rastertiles/voyager/11/456/872.png', timestamp: '2025-09-02T22:02:47.924Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/450/871.png', timestamp: '2025-09-02T22:02:47.924Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://b.basemaps.cartocdn.com/rastertiles/voyager/11/456/871.png', timestamp: '2025-09-02T22:02:47.924Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/450/873.png', timestamp: '2025-09-02T22:02:47.924Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Detailed tile error #11: {provider: 'CartoDB Voyager', coords: Point, error: {…}, url: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/11/456/873.png', timestamp: '2025-09-02T22:02:47.925Z'}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:228
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+DemoMap.tsx:225 ✅ Tiles loaded for CartoDB Voyager
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+DemoMap.tsx:50 🔄 Forced map refresh to bypass errors

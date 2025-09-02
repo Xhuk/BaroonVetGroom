@@ -62,13 +62,18 @@ const DemoMap = () => {
     }
   }, [errorCount, currentProvider]);
 
-  // Array of verified working tile providers
+  // Array of verified working tile providers with network-friendly configurations
   const tileProviders = [
     {
-      name: "OpenStreetMap",
-      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution:
-        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      name: "ESRI World Street",
+      url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
+      maxZoom: 19,
+    },
+    {
+      name: "ESRI World Imagery",
+      url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
       maxZoom: 19,
     },
     {
@@ -77,13 +82,6 @@ const DemoMap = () => {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
       maxZoom: 17,
-    },
-    {
-      name: "CartoDB Voyager",
-      url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 20,
     },
   ];
 
@@ -217,12 +215,17 @@ const DemoMap = () => {
           <ChangeView center={mapCenter} zoom={mapZoom} />
           {/* Tile layer for the map, changes when a new provider is selected */}
           <TileLayer
-            key={currentProvider}
+            key={`${currentProvider}-${Date.now()}`}
             attribution={tileProviders[currentProvider].attribution}
             url={tileProviders[currentProvider].url}
+            maxZoom={tileProviders[currentProvider].maxZoom}
+            crossOrigin="anonymous"
             eventHandlers={{
               loading: () => console.log('🔄 Tiles loading for', tileProviders[currentProvider].name),
-              load: () => console.log('✅ Tiles loaded for', tileProviders[currentProvider].name),
+              load: () => {
+                console.log('✅ Tiles loaded for', tileProviders[currentProvider].name);
+                setErrorCount(0); // Reset on successful load
+              },
               tileerror: (e) => {
                 setErrorCount(prev => prev + 1);
                 console.error('❌ Detailed tile error #' + (errorCount + 1) + ':', {
