@@ -5,11 +5,9 @@ import {
   Marker,
   Popup,
   useMap,
-} from "https://cdn.jsdelivr.net/npm/react-leaflet@3.2.1/es/react-leaflet.js";
-import L from "https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet-src.js";
-
-// Load Leaflet's base CSS from a CDN for a standalone solution
-import "https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css";
+} from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 // Configure the default marker icon globally to prevent broken image links
 L.Icon.Default.mergeOptions({
@@ -39,17 +37,26 @@ const branchIcon = new L.Icon({
 
 // A small component to manage map state changes, allowing us to update the
 // map's view from the main component's state
-const ChangeView = ({ center, zoom }) => {
+const ChangeView = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
   const map = useMap();
   map.setView(center, zoom);
   return null;
 };
 
-const App = () => {
+interface Destination {
+  id: number;
+  name: string;
+  address: string;
+  coordinates: [number, number];
+  type: 'main' | 'branch';
+  services: string[];
+}
+
+const DemoMap = () => {
   // State to manage the active tile provider
   const [currentProvider, setCurrentProvider] = useState(0);
   // State to manage the map's center coordinates
-  const [mapCenter, setMapCenter] = useState([25.6866, -100.3161]);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([25.6866, -100.3161]);
   // State to manage the map's zoom level
   const [mapZoom, setMapZoom] = useState(11);
 
@@ -79,7 +86,7 @@ const App = () => {
   ];
 
   // Data for the veterinary clinics
-  const destinations = [
+  const destinations: Destination[] = [
     {
       id: 1,
       name: "Clínica Veterinaria Principal",
@@ -139,7 +146,7 @@ const App = () => {
   ];
 
   // Function to handle clicks on the clinic list items
-  const handleClinicClick = (coordinates) => {
+  const handleClinicClick = (coordinates: [number, number]) => {
     setMapCenter(coordinates);
     setMapZoom(15);
   };
@@ -247,3 +254,5 @@ const App = () => {
     </div>
   );
 };
+
+export default DemoMap;
