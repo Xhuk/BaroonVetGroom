@@ -27,6 +27,22 @@ interface Destination {
 }
 
 const DemoMap = () => {
+  // Simplified tile providers that work reliably in web environments
+  const tileProviders = [
+    {
+      name: "OpenStreetMap",
+      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    },
+    {
+      name: "Humanitarian",
+      url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by Humanitarian OpenStreetMap Team',
+      maxZoom: 17,
+    },
+  ];
+
   // State to manage the active tile provider
   const [currentProvider, setCurrentProvider] = useState(0);
   // State to manage the map's center coordinates
@@ -60,27 +76,13 @@ const DemoMap = () => {
     console.log('🎯 Switched to provider:', tileProviders[currentProvider]?.name);
   }, [currentProvider]);
 
-  // Array of tile providers optimized for web applications and Replit environment
-  const tileProviders = [
-    {
-      name: "CartoDB Positron",
-      url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 20,
-    },
-    {
-      name: "CartoDB Dark Matter",
-      url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 20,
-    },
-    {
-      name: "Simple Map",
-      url: "https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> France',
-      maxZoom: 20,
-    },
-  ];
+  // Get current provider with bounds checking
+  const getCurrentProvider = () => {
+    const index = Math.max(0, Math.min(currentProvider, tileProviders.length - 1));
+    return tileProviders[index];
+  };
+
+  const currentTileProvider = getCurrentProvider();
 
   // Data for the veterinary clinics
   const destinations: Destination[] = [
@@ -162,10 +164,11 @@ const DemoMap = () => {
         {/* Tile Provider Debug Info */}
         <div className="mb-4 p-3 bg-gray-800 rounded-lg text-xs">
           <div className="text-yellow-400 font-semibold mb-1">Current Provider:</div>
-          <div className="text-gray-300">{tileProviders[currentProvider]?.name}</div>
+          <div className="text-gray-300">{currentTileProvider?.name || 'None'}</div>
           <div className="text-gray-400 mt-1 break-all">
-            {tileProviders[currentProvider]?.url.replace('{s}', 'a').replace('{z}', '11').replace('{x}', '1000').replace('{y}', '1000')}
+            {currentTileProvider?.url?.replace('{s}', 'a').replace('{z}', '11').replace('{x}', '1000').replace('{y}', '1000') || 'No URL'}
           </div>
+          <div className="text-red-400 mt-1">Errors: {errorCount}</div>
         </div>
         
         <div className="space-y-4">
@@ -213,32 +216,36 @@ const DemoMap = () => {
           {/* Tile layer for the map, changes when a new provider is selected */}
           <TileLayer
             key={`${currentProvider}-${Date.now()}`}
-            attribution={tileProviders[currentProvider].attribution}
-            url={tileProviders[currentProvider].url}
-            maxZoom={tileProviders[currentProvider].maxZoom}
+            attribution={currentTileProvider?.attribution || 'Map data'}
+            url={currentTileProvider?.url || ''}
+            maxZoom={currentTileProvider?.maxZoom || 18}
             crossOrigin="anonymous"
             eventHandlers={{
-              loading: () => console.log('🔄 Tiles loading for', tileProviders[currentProvider].name),
+              loading: () => console.log('🔄 Tiles loading for', currentTileProvider?.name || 'Unknown'),
               load: () => {
-                console.log('✅ Tiles loaded for', tileProviders[currentProvider].name);
+                console.log('✅ Tiles loaded for', currentTileProvider?.name || 'Unknown');
                 setErrorCount(0); // Reset on successful load
               },
               tileerror: (e) => {
                 setErrorCount(prev => {
                   const newCount = prev + 1;
-                  console.error(`❌ Tile error #${newCount} on ${tileProviders[currentProvider].name}:`, {
+                  const provider = getCurrentProvider();
+                  console.error(`❌ Tile error #${newCount} on ${provider?.name || 'Unknown'}:`, {
                     coords: e.coords,
                     url: e.tile?.src,
                     timestamp: new Date().toISOString()
                   });
                   
-                  // Auto-switch after 5 errors
-                  if (newCount >= 5 && currentProvider < tileProviders.length - 1) {
-                    console.log('🔄 Auto-switching to:', tileProviders[currentProvider + 1]?.name);
-                    setTimeout(() => {
-                      setCurrentProvider(prev => prev + 1);
-                      setErrorCount(0);
-                    }, 1000);
+                  // Auto-switch after 3 errors (with bounds checking)
+                  if (newCount >= 3 && currentProvider < tileProviders.length - 1) {
+                    const nextIndex = currentProvider + 1;
+                    const nextProvider = tileProviders[nextIndex];
+                    if (nextProvider) {
+                      console.log('🔄 Auto-switching to:', nextProvider.name);
+                      setTimeout(() => {
+                        setCurrentProvider(nextIndex);
+                      }, 500);
+                    }
                   }
                   
                   return newCount;
