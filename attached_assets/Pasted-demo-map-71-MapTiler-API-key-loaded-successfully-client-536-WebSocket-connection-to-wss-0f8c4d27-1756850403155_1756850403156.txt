@@ -1,0 +1,617 @@
+demo-map:71 MapTiler API key loaded successfully
+client:536 WebSocket connection to 'wss://0f8c4d27-13d2-4d25-883f-e8948a7bd44b-00-2v7v185pcsuog.janeway.replit.dev/?token=4Que2h0Fdzyf' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=4Que2h0Fdzyf' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+chunk-RPCDYKBN.js?v=46ceb16f:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+useScreenSize.ts:80 📱 Device Detection: desktop, landscape: true, useRibbon: false, hideSidebar: false
+DemoMap.tsx:189 🗺️ Map is ready, forcing tile refresh
+DemoMap.tsx:39 🗺️ DemoMap mounted, current provider: OpenStreetMap
+useAuth.ts:32 🔍 [useAuth] Making network request to /api/auth/user
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+TenantContext.tsx:286 🎯 [TenantContext] Final context value: Object
+LanguageContext.tsx:28 LanguageContext initialized: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+DemoMap.tsx:203 🔄 Tiles loading for OpenStreetMap
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+api/auth/access-info:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+api/auth/user:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+useAuth.ts:34 🔍 [useAuth] Response: 401 Unauthorized
+useAuth.ts:44 🔍 [useAuth] Auth request failed: 401 Unauthorized
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+useAuth.ts:55 🔍 [useAuth] Auth state: Object
+TenantContext.tsx:86 🔍 [TenantContext] useEffect triggered: Object
+TenantContext.tsx:95 🔍 [TenantContext] Not authenticated, skipping
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+main.tsx:59 ❌ Tile error: Object
+console.error @ main.tsx:59
+DemoMap.tsx:204 ✅ Tiles loaded for OpenStreetMap
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+DemoMap.tsx:47 🔄 Forced map refresh to bypass hook errors
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+DemoMap.tsx:203 🔄 Tiles loading for CartoDB Dark
+DemoMap.tsx:39 🗺️ DemoMap mounted, current provider: CartoDB Dark
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+DemoMap.tsx:204 ✅ Tiles loaded for CartoDB Dark
+DemoMap.tsx:203 🔄 Tiles loading for CartoDB Positron
+DemoMap.tsx:39 🗺️ DemoMap mounted, current provider: CartoDB Positron
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+main.tsx:59 ❌ Tile error: {error: {…}, tile: img.leaflet-tile, coords: Point, type: 'tileerror', target: NewClass, …}
+console.error @ main.tsx:59
+console.error @ errorSuppression.ts:54
+tileerror @ DemoMap.tsx:205
+Function.call @ errorSuppression.ts:80
+fire @ chunk-JQURRHX6.js?v=46ceb16f:387
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:7803
+Function.call @ errorSuppression.ts:80
+_tileReady @ chunk-JQURRHX6.js?v=46ceb16f:8050
+_tileOnLoad @ chunk-JQURRHX6.js?v=46ceb16f:7993
+Function.call @ errorSuppression.ts:80
+handler @ chunk-JQURRHX6.js?v=46ceb16f:1733
+DemoMap.tsx:204 ✅ Tiles loaded for CartoDB Positron
+useScreenSize.ts:137 📱 Resize Event: desktop, landscape: true, useRibbon: false
+DemoMap.tsx:47 🔄 Forced map refresh to bypass hook errors

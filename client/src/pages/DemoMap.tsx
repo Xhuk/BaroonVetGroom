@@ -34,42 +34,53 @@ const DemoMap = () => {
   // State to manage the map's zoom level
   const [mapZoom, setMapZoom] = useState(11);
 
-  // Debug tile loading and fix Replit iframe issues
+  // Debug tile loading with automatic fallback
+  const [errorCount, setErrorCount] = useState(0);
+  
   useEffect(() => {
     console.log('🗺️ DemoMap mounted, current provider:', tileProviders[currentProvider]?.name);
+    setErrorCount(0); // Reset error count when switching providers
     
-    // Force tile refresh after a short delay to bypass Replit hook errors
+    // Force tile refresh after a short delay
     const timer = setTimeout(() => {
       const mapElement = document.querySelector('.leaflet-container');
       if (mapElement) {
         const event = new Event('resize');
         window.dispatchEvent(event);
-        console.log('🔄 Forced map refresh to bypass hook errors');
+        console.log('🔄 Forced map refresh to bypass errors');
       }
     }, 1000);
     
     return () => clearTimeout(timer);
   }, [currentProvider]);
+  
+  // Auto-switch to next provider if too many errors
+  useEffect(() => {
+    if (errorCount > 10 && currentProvider < tileProviders.length - 1) {
+      console.log('⚠️ Too many errors, switching to next provider:', tileProviders[currentProvider + 1]?.name);
+      setCurrentProvider(prev => prev + 1);
+    }
+  }, [errorCount, currentProvider]);
 
-  // Array of available tile providers with their details
+  // Array of verified working tile providers
   const tileProviders = [
     {
       name: "OpenStreetMap",
-      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       attribution:
         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
     },
     {
-      name: "CartoDB Dark",
-      url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      name: "OpenTopoMap",
+      url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
       attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 20,
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
+      maxZoom: 17,
     },
     {
-      name: "CartoDB Positron",
-      url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      name: "CartoDB Voyager",
+      url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       maxZoom: 20,
@@ -152,6 +163,16 @@ const DemoMap = () => {
         <p className="text-sm text-gray-400 mb-6 text-center">
           Red de atención en Monterrey, Nuevo León
         </p>
+        
+        {/* Tile Provider Debug Info */}
+        <div className="mb-4 p-3 bg-gray-800 rounded-lg text-xs">
+          <div className="text-yellow-400 font-semibold mb-1">Current Provider:</div>
+          <div className="text-gray-300">{tileProviders[currentProvider]?.name}</div>
+          <div className="text-gray-400 mt-1 break-all">
+            {tileProviders[currentProvider]?.url.replace('{s}', 'a').replace('{z}', '11').replace('{x}', '1000').replace('{y}', '1000')}
+          </div>
+        </div>
+        
         <div className="space-y-4">
           {destinations.map((clinic) => (
             <div
@@ -202,7 +223,16 @@ const DemoMap = () => {
             eventHandlers={{
               loading: () => console.log('🔄 Tiles loading for', tileProviders[currentProvider].name),
               load: () => console.log('✅ Tiles loaded for', tileProviders[currentProvider].name),
-              tileerror: (e) => console.error('❌ Tile error:', e),
+              tileerror: (e) => {
+                setErrorCount(prev => prev + 1);
+                console.error('❌ Detailed tile error #' + (errorCount + 1) + ':', {
+                  provider: tileProviders[currentProvider].name,
+                  coords: e.coords,
+                  error: e.error,
+                  url: e.tile?.src,
+                  timestamp: new Date().toISOString()
+                });
+              },
             }}
           />
           {/* Markers for each clinic location */}
@@ -237,20 +267,26 @@ const DemoMap = () => {
           ))}
         </MapContainer>
         {/* Map provider switcher */}
-        <div className="absolute top-4 right-4 z-[1000] p-3 rounded-lg bg-white shadow-xl flex gap-2">
-          {tileProviders.map((provider, index) => (
-            <button
-              key={index}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-200 ease-in-out ${
-                index === currentProvider
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-              }`}
-              onClick={() => setCurrentProvider(index)}
-            >
-              {provider.name}
-            </button>
-          ))}
+        <div className="absolute top-4 right-4 z-[1000] p-3 rounded-lg bg-white shadow-xl">
+          <div className="text-xs text-gray-600 mb-2 font-semibold">Map Style:</div>
+          <div className="flex flex-col gap-1">
+            {tileProviders.map((provider, index) => (
+              <button
+                key={index}
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-200 ease-in-out ${
+                  index === currentProvider
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                }`}
+                onClick={() => {
+                  console.log('🔄 Switching to provider:', provider.name);
+                  setCurrentProvider(index);
+                }}
+              >
+                {provider.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
