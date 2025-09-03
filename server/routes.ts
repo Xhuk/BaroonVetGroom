@@ -278,47 +278,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Public test route for MapTiler - completely bypasses authentication
   app.get("/test-map", (req, res) => {
+    const showKey = req.query.show === 'true';
+    const apiKey = process.env.MAPTILER_API_KEY || "8QiHL60QHEh6e3pjSlhR";
+    const currentDomain = req.hostname;
+    const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+    
     const html = `
     <!DOCTYPE html>
     <html>
     <head>
-      <title>MapTiler Test - Replit Integration</title>
+      <title>MapTiler Test - Domain & Key Debug</title>
       <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
       <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     </head>
     <body style="margin:0; padding:20px; font-family:system-ui; background:#1a1a1a; color:white;">
-      <h1>🗺️ MapTiler Integration Test</h1>
-      <p>Testing MapTiler with your configured API key on Replit...</p>
-      <div id="map" style="height: 500px; width: 100%; border: 2px solid #333; margin: 20px 0;"></div>
-      <div id="status" style="padding: 10px; background: #333; border-radius: 5px;">
+      <h1>🗺️ MapTiler Integration Debug</h1>
+      
+      <div style="background:#2a2a2a; padding:20px; border-radius:8px; margin:20px 0;">
+        <h3>🔍 Domain & Configuration Info</h3>
+        <p><strong>Current Domain:</strong> <code style="background:#333; padding:4px; border-radius:3px;">${currentDomain}</code></p>
+        <p><strong>Full URL:</strong> <code style="background:#333; padding:4px; border-radius:3px;">${fullUrl}</code></p>
+        <p><strong>REPLIT_DOMAINS:</strong> <code style="background:#333; padding:4px; border-radius:3px;">${process.env.REPLIT_DOMAINS || 'Not set'}</code></p>
+        <p><strong>API Key:</strong> ${showKey 
+          ? `<code style="background:#333; padding:4px; border-radius:3px;">${apiKey}</code>` 
+          : `<code style="background:#333; padding:4px; border-radius:3px;">*****...${apiKey.slice(-4)} 🔐</code> <a href="?show=true" style="color:#66ccff;">Show Full Key</a>`}
+        </p>
+        ${showKey ? '<p style="color:#ff6666;">⚠️ API key is visible - remove ?show=true from URL for security</p>' : ''}
+      </div>
+      
+      <div id="map" style="height: 400px; width: 100%; border: 2px solid #333; margin: 20px 0;"></div>
+      
+      <div id="status" style="padding: 15px; background: #333; border-radius: 5px; margin: 20px 0;">
         Status: Initializing...
       </div>
+      
+      <div style="background:#2a2a2a; padding:15px; border-radius:8px;">
+        <h3>🧪 Test Results</h3>
+        <div id="diagnostics" style="font-family: monospace; background:#333; padding:10px; border-radius:3px;">
+          Running diagnostics...
+        </div>
+      </div>
+      
       <script>
         const statusDiv = document.getElementById('status');
-        const updateStatus = (msg) => statusDiv.textContent = 'Status: ' + msg;
+        const diagnosticsDiv = document.getElementById('diagnostics');
         
-        const apiKey = "8QiHL60QHEh6e3pjSlhR";
+        const updateStatus = (msg) => statusDiv.innerHTML = 'Status: ' + msg;
+        const addDiagnostic = (msg) => diagnosticsDiv.innerHTML += msg + '<br>';
+        
+        const apiKey = "${apiKey}";
+        const domain = "${currentDomain}";
+        
+        addDiagnostic('🌐 Domain: ' + domain);
+        addDiagnostic('🔑 API Key: ${showKey ? apiKey : apiKey.slice(0, 8) + '...'}');
+        addDiagnostic('🔗 Testing MapTiler API access...');
+        
         updateStatus('Creating map...');
         
         const map = L.map('map').setView([25.6866, -100.3161], 13);
         const tileUrl = \`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=\${apiKey}\`;
         
+        addDiagnostic('🗺️ Tile URL: ' + tileUrl.substring(0, 80) + '...');
         updateStatus('Loading MapTiler tiles...');
+        
         const tileLayer = L.tileLayer(tileUrl, {
           attribution: '&copy; MapTiler &copy; OpenStreetMap',
           maxZoom: 18
         });
         
-        tileLayer.on('load', () => updateStatus('✅ SUCCESS! MapTiler tiles loaded'));
-        tileLayer.on('tileerror', () => updateStatus('❌ ERROR: Tiles blocked by Replit'));
+        tileLayer.on('load', () => {
+          updateStatus('✅ SUCCESS! MapTiler tiles loaded');
+          addDiagnostic('✅ Tiles loaded successfully');
+        });
+        
+        tileLayer.on('tileerror', (e) => {
+          updateStatus('❌ ERROR: Tiles blocked by Replit or domain issue');
+          addDiagnostic('❌ Tile error: ' + JSON.stringify(e));
+        });
         
         tileLayer.addTo(map);
         
         // Add marker
         L.marker([25.6866, -100.3161])
           .addTo(map)
-          .bindPopup('Monterrey, Mexico - MapTiler Test')
+          .bindPopup(\`<b>Monterrey, Mexico</b><br>Domain: \${domain}\`)
           .openPopup();
+          
+        addDiagnostic('🎯 Map initialization complete');
       </script>
     </body>
     </html>
