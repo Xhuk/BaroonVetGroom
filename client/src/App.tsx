@@ -122,7 +122,7 @@ function Router() {
       {/* Public routes - accessible without authentication */}
       <Route path="/upload/:type/:appointmentId" component={MobileUpload} />
       <Route path="/disclaimers/sign/:disclaimerId/:appointmentId" component={MobileDisclaimerSign} />
-      {/* Demo map - accessible without authentication for testing */}
+      {/* Demo map - publicly accessible for testing MapTiler integration */}
       <Route path="/demo-map" component={DemoMap} />
       {isAuthenticated && (
         <>

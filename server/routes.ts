@@ -200,6 +200,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public test route for MapTiler - completely bypasses authentication
+  app.get("/test-map", (req, res) => {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>MapTiler Test - Replit Integration</title>
+      <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+      <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    </head>
+    <body style="margin:0; padding:20px; font-family:system-ui; background:#1a1a1a; color:white;">
+      <h1>🗺️ MapTiler Integration Test</h1>
+      <p>Testing MapTiler with your configured API key on Replit...</p>
+      <div id="map" style="height: 500px; width: 100%; border: 2px solid #333; margin: 20px 0;"></div>
+      <div id="status" style="padding: 10px; background: #333; border-radius: 5px;">
+        Status: Initializing...
+      </div>
+      <script>
+        const statusDiv = document.getElementById('status');
+        const updateStatus = (msg) => statusDiv.textContent = 'Status: ' + msg;
+        
+        const apiKey = "8QiHL60QHEh6e3pjSlhR";
+        updateStatus('Creating map...');
+        
+        const map = L.map('map').setView([25.6866, -100.3161], 13);
+        const tileUrl = \`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=\${apiKey}\`;
+        
+        updateStatus('Loading MapTiler tiles...');
+        const tileLayer = L.tileLayer(tileUrl, {
+          attribution: '&copy; MapTiler &copy; OpenStreetMap',
+          maxZoom: 18
+        });
+        
+        tileLayer.on('load', () => updateStatus('✅ SUCCESS! MapTiler tiles loaded'));
+        tileLayer.on('tileerror', () => updateStatus('❌ ERROR: Tiles blocked by Replit'));
+        
+        tileLayer.addTo(map);
+        
+        // Add marker
+        L.marker([25.6866, -100.3161])
+          .addTo(map)
+          .bindPopup('Monterrey, Mexico - MapTiler Test')
+          .openPopup();
+      </script>
+    </body>
+    </html>
+    `;
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  });
+
   // Tile proxy endpoint to bypass CORS restrictions
   app.get("/api/tiles/:style/:z/:x/:y", async (req, res) => {
     try {
