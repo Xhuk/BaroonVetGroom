@@ -1,0 +1,60 @@
+# Supabase Configuration for Veterinary Clinic Management SaaS
+# Local development configuration for Windows
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54320
+site_url = "http://localhost:5000"
+additional_redirect_urls = ["http://localhost:5000/auth/callback"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+security_update_password_require_reauthentication = true
+
+[auth.external.google]
+enabled = false
+
+[auth.external.github] 
+enabled = false
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[storage]
+enabled = true
+port = 54323
+file_size_limit = "50MB"
+buckets = [
+  { name = "avatars", public = true },
+  { name = "documents", public = false },
+  { name = "medical-records", public = false }
+]
+
+[edge_functions]
+enabled = true
+port = 54324
+import_map = "./functions/import_map.json"
+
+[analytics]
+enabled = false
+
+[inbound_emails]
+enabled = false
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://localhost:54321"
+
+# Local development overrides
+[local]
+# Use local PostgreSQL for development
+database_url = "postgresql://postgres:postgres@localhost:54322/postgres"
