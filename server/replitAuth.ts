@@ -10,18 +10,16 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-// Handle local development - skip Replit requirements for local machines
-const isLocalDevelopment = process.env.NODE_ENV === 'development' || process.env.LOCAL_DEVELOPMENT === 'true';
-
-if (!process.env.REPLIT_DOMAINS && !isLocalDevelopment) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
-}
+// Local development mode - completely skip Replit authentication
+const isLocalDevelopment = process.env.NODE_ENV === 'development' || process.env.LOCAL_DEVELOPMENT === 'true' || !process.env.REPLIT_DOMAINS;
 
 if (isLocalDevelopment) {
-  console.log('🔧 Running in local development mode - Replit authentication disabled');
-  // Set defaults only if needed for compatibility
-  process.env.REPLIT_DOMAINS = process.env.REPLIT_DOMAINS || 'localhost:5000';
-  process.env.REPL_ID = process.env.REPL_ID || 'local-development';
+  console.log('🔧 Local development mode - skipping Replit authentication');
+  // Set minimal defaults for compatibility
+  process.env.REPLIT_DOMAINS = 'localhost:5000';
+  process.env.REPL_ID = 'local-development';
+  process.env.REPL_SLUG = 'veterinary-clinic-local';
+  process.env.REPL_OWNER = 'local-user';
 }
 
 const getOidcConfig = memoize(
