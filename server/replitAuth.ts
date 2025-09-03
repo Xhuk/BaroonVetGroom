@@ -10,18 +10,18 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-// Handle local development - set default values if missing
-if (!process.env.REPLIT_DOMAINS) {
-  if (process.env.NODE_ENV === 'development' || process.env.LOCAL_DEVELOPMENT === 'true') {
-    console.log('🔧 Setting up default environment variables for local development...');
-    process.env.REPLIT_DOMAINS = process.env.REPLIT_DOMAINS || 'localhost:5000';
-    process.env.REPL_ID = process.env.REPL_ID || 'local-development';
-    process.env.REPL_SLUG = process.env.REPL_SLUG || 'veterinary-clinic-local';
-    process.env.REPL_OWNER = process.env.REPL_OWNER || 'local-user';
-    console.log('✅ Local development environment configured');
-  } else {
-    throw new Error("Environment variable REPLIT_DOMAINS not provided");
-  }
+// Handle local development - skip Replit requirements for local machines
+const isLocalDevelopment = process.env.NODE_ENV === 'development' || process.env.LOCAL_DEVELOPMENT === 'true';
+
+if (!process.env.REPLIT_DOMAINS && !isLocalDevelopment) {
+  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+}
+
+if (isLocalDevelopment) {
+  console.log('🔧 Running in local development mode - Replit authentication disabled');
+  // Set defaults only if needed for compatibility
+  process.env.REPLIT_DOMAINS = process.env.REPLIT_DOMAINS || 'localhost:5000';
+  process.env.REPL_ID = process.env.REPL_ID || 'local-development';
 }
 
 const getOidcConfig = memoize(
