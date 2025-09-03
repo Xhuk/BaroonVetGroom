@@ -130,8 +130,9 @@
     </div>
 
     <script>
-        // MapTiler API key - hardcoded for demo
-        const MAPTILER_API_KEY = '8QiHL60QHEh6e3pjSlhR';
+        // MapTiler API key - GET YOUR FREE KEY AT: https://www.maptiler.com/
+        // Replace 'YOUR_API_KEY_HERE' with your actual MapTiler API key
+        const MAPTILER_API_KEY = 'YOUR_API_KEY_HERE';
         
         // Veterinary clinic data
         const clinics = [
@@ -203,6 +204,23 @@
         function setMapTilerLayer(style) {
             console.log('🔄 Setting MapTiler style:', style);
             
+            // Check if API key is set
+            if (!MAPTILER_API_KEY || MAPTILER_API_KEY === 'YOUR_API_KEY_HERE') {
+                console.log('⚠️ No valid MapTiler API key - using OpenStreetMap fallback');
+                document.getElementById('api-status').textContent = 'API Key: ❌ Get free key at maptiler.com';
+                
+                // Use OpenStreetMap fallback
+                if (currentTileLayer) {
+                    map.removeLayer(currentTileLayer);
+                }
+                
+                currentTileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                });
+                currentTileLayer.addTo(map);
+                return;
+            }
+            
             try {
                 // Remove existing tile layer
                 if (currentTileLayer) {
@@ -210,9 +228,6 @@
                 }
 
                 // Add MapTiler layer
-                const styleUrl = `https://api.maptiler.com/maps/${style}/style.json?key=${MAPTILER_API_KEY}`;
-                
-                // For demo, use tile layer approach
                 currentTileLayer = L.tileLayer(`https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${MAPTILER_API_KEY}`, {
                     attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                     maxZoom: 18
@@ -220,9 +235,11 @@
                 
                 currentTileLayer.addTo(map);
                 console.log('✅ MapTiler style applied:', style);
+                document.getElementById('api-status').textContent = 'API Key: ✅ Valid';
                 
             } catch (error) {
                 console.error('❌ Error setting MapTiler layer:', error);
+                document.getElementById('api-status').textContent = 'API Key: ❌ Error loading tiles';
                 
                 // Fallback to OpenStreetMap
                 console.log('🔄 Falling back to OpenStreetMap...');
