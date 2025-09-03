@@ -200,6 +200,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple local login page for development
+  app.get("/login-local", (req, res) => {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Local Login - Veterinary Clinic</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body style="margin:0; padding:40px; font-family:system-ui; background:#1a1a1a; color:white; min-height:100vh;">
+      <div style="max-width:400px; margin:0 auto;">
+        <h1>🏥 Local Development Login</h1>
+        <p>Login with demo credentials to test the application:</p>
+        
+        <form id="loginForm" style="background:#333; padding:30px; border-radius:10px; margin:20px 0;">
+          <div style="margin-bottom:20px;">
+            <label style="display:block; margin-bottom:8px; font-weight:bold;">Email:</label>
+            <input type="email" id="email" name="email" value="admin@demo.com" 
+                   style="width:100%; padding:12px; border:1px solid #555; border-radius:5px; background:#222; color:white; box-sizing:border-box;">
+          </div>
+          
+          <div style="margin-bottom:20px;">
+            <label style="display:block; margin-bottom:8px; font-weight:bold;">Password:</label>
+            <input type="password" id="password" name="password" value="demo123" 
+                   style="width:100%; padding:12px; border:1px solid #555; border-radius:5px; background:#222; color:white; box-sizing:border-box;">
+          </div>
+          
+          <button type="submit" style="width:100%; padding:12px; background:#0066cc; color:white; border:none; border-radius:5px; font-size:16px; cursor:pointer;">
+            Login
+          </button>
+        </form>
+        
+        <div style="background:#333; padding:15px; border-radius:5px; margin-top:20px;">
+          <strong>Demo Accounts:</strong><br>
+          • admin@demo.com / demo123<br>
+          • user@demo.com / demo123<br>
+          • admin@vanilla.com / vanilla123
+        </div>
+        
+        <p style="margin-top:30px; text-align:center;">
+          <a href="/test-map" style="color:#66ccff;">Test MapTiler Integration</a>
+        </p>
+      </div>
+      
+      <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+          
+          try {
+            const response = await fetch('/api/login-local', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password })
+            });
+            
+            if (response.ok) {
+              window.location.href = '/';
+            } else {
+              const error = await response.json();
+              alert('Login failed: ' + error.error);
+            }
+          } catch (err) {
+            alert('Login failed: ' + err.message);
+          }
+        });
+      </script>
+    </body>
+    </html>
+    `;
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  });
+
   // Public test route for MapTiler - completely bypasses authentication
   app.get("/test-map", (req, res) => {
     const html = `

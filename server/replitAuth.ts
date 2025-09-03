@@ -14,7 +14,7 @@ import { storage } from "./storage";
 const isLocalDevelopment = process.env.NODE_ENV === 'development' || process.env.LOCAL_DEVELOPMENT === 'true' || !process.env.REPLIT_DOMAINS;
 
 if (isLocalDevelopment) {
-  console.log('🔧 Local development mode - skipping Replit authentication');
+  console.log('🔧 Local development mode - using local authentication only');
   // Set minimal defaults for compatibility
   process.env.REPLIT_DOMAINS = 'localhost:5000';
   process.env.REPL_ID = 'local-development';
@@ -45,6 +45,12 @@ const getOidcConfig = memoize(
 
 // Setup OIDC strategies asynchronously to avoid blocking server startup
 async function setupOidcStrategiesAsync() {
+  // Skip OIDC setup entirely in local development
+  if (isLocalDevelopment) {
+    console.log('🔧 Local development mode - skipping OIDC setup completely');
+    return;
+  }
+  
   try {
     console.log('🔐 Setting up OIDC authentication strategies...');
     const config = await getOidcConfig();
@@ -254,6 +260,12 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
+    // In local development mode, always use local authentication
+    if (isLocalDevelopment) {
+      console.log('🔧 Local development mode - redirecting to local login page');
+      return res.redirect('/login-local');
+    }
+    
     const strategyName = `replitauth:${req.hostname}`;
     
     // Try to authenticate with OIDC, fallback to local login if not available
