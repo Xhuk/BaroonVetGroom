@@ -190,13 +190,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to provide MapTiler API key for frontend
   app.get("/api/config/maptiler", (req, res) => {
     try {
-      const apiKey = (process.env.MAPTILER_API_KEY || '').trim();
+      const apiKey = process.env.MAPTILER_API_KEY;
+      
+      if (!apiKey) {
+        console.error('MAPTILER_API_KEY environment variable not configured');
+        return res.status(500).json({ 
+          error: "MapTiler API key not configured",
+          apiKey: '' 
+        });
+      }
+      
       res.json({ 
-        apiKey: apiKey 
+        apiKey: apiKey.trim() 
       });
     } catch (error) {
       console.error('Error providing MapTiler config:', error);
-      res.json({ apiKey: '' });
+      res.status(500).json({ 
+        error: "Failed to load MapTiler configuration",
+        apiKey: '' 
+      });
     }
   });
 
@@ -279,7 +291,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public test route for MapTiler - completely bypasses authentication
   app.get("/test-map", (req, res) => {
     const showKey = req.query.show === 'true';
-    const apiKey = process.env.MAPTILER_API_KEY || "8QiHL60QHEh6e3pjSlhR";
+    const apiKey = process.env.MAPTILER_API_KEY;
+    
+    if (!apiKey) {
+      return res.status(500).json({ error: "MapTiler API key not configured" });
+    }
     const currentDomain = req.hostname;
     const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
     
