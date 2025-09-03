@@ -1,0 +1,60 @@
+🔐 Setting up OIDC authentication strategies...
+Scalable appointment WebSocket service initialized
+node:events:496
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen ENOTSUP: operation not supported on socket 0.0.0.0:3000
+    at Server.setupListenHandle [as _listen2] (node:net:1918:21)
+    at listenInCluster (node:net:1997:12)
+    at node:net:2206:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+Emitted 'error' event on WebSocketServer instance at:
+    at Server.emit (node:events:518:28)
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'ENOTSUP',
+  errno: -4049,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 3000
+}
+
+Node.js v22.18.0
+   Failed with npx.cmd: Command '['npx.cmd', 'cross-env', 'NODE_ENV=development', 'LOCAL_DEVELOPMENT=true', 'REPLIT_DOMAINS=localhost:3000', 'REPL_ID=local-development', 'PORT=3000', 'npx.cmd', 'tsx', 'server/index.ts']' returned non-zero exit status 1.
+   Trying to start server with: npm...
+   Failed with npm: [WinError 2] The system cannot find the file specified
+   Trying to start server with: npm.cmd...
+Unknown command: "cross-env"
+
+To see a list of supported npm commands, run:
+  npm help
+   Failed with npm.cmd: Command '['npm.cmd', 'cross-env', 'NODE_ENV=development', 'LOCAL_DEVELOPMENT=true', 'REPLIT_DOMAINS=localhost:3000', 'REPL_ID=local-development', 'PORT=3000', 'npx.cmd', 'tsx', 'server/index.ts']' returned non-zero exit status 1.
+❌ Failed to start server with any npm command
+💡 Try running 'npm run dev' manually in your terminal
+C:\ReactProjects\VetgroomBaron\BaroonVetGroom [main ≡ +1 ~0 -0 !]> npm start cross-env
+
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js cross-env
+
+'NODE_ENV' is not recognized as an internal or external command,
+operable program or batch file.
+C:\ReactProjects\VetgroomBaron\BaroonVetGroom [main ≡ +1 ~0 -0 !]> node
+Welcome to Node.js v22.18.0.
+Type ".help" for more information.
+>
+(To exit, press Ctrl+C again or Ctrl+D or type .exit)
+>
+C:\ReactProjects\VetgroomBaron\BaroonVetGroom [main ≡ +1 ~0 -0 !]> npm install && npm run db:push && npx tsx server/index.ts
+At line:1 char:13
++ npm install && npm run db:push && npx tsx server/index.ts
++             ~~
+The token '&&' is not a valid statement separator in this version.
+At line:1 char:32
++ npm install && npm run db:push && npx tsx server/index.ts
++                                ~~
+The token '&&' is not a valid statement separator in this version.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : InvalidEndOfLine
+
+C:\ReactProjects\VetgroomBaron\BaroonVetGroom [main ≡ +1 ~0 -0 !]>

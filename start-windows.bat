@@ -14,7 +14,13 @@ set CORS_ORIGIN=http://localhost:3000
 
 echo ✅ Environment variables set for Windows development
 echo 🚀 Starting server on http://localhost:3000
+echo ✅ Server will bind to localhost (Windows compatible)
 echo Press Ctrl+C to stop the server
+echo.
+echo 📋 First run checklist:
+echo    1. Make sure you have your Supabase DATABASE_URL in .env
+echo    2. Run: npm install (if not done already)
+echo    3. Run: npm run db:push (to sync database schema)
 echo.
 
 REM Start the server with tsx
