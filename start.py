@@ -67,10 +67,10 @@ def setup_environment():
     """Set up environment variables for Windows development"""
     env_vars = {
         'NODE_ENV': 'development',
-        'PORT': '5000',
-        'CORS_ORIGIN': 'http://localhost:5000',
+        'PORT': '3000',
+        'CORS_ORIGIN': 'http://localhost:3000',
         # Replit environment variables for local development
-        'REPLIT_DOMAINS': 'localhost:5000',
+        'REPLIT_DOMAINS': 'localhost:3000',
         'REPL_ID': 'local-development',
         'REPL_SLUG': 'veterinary-clinic-local',
         'REPL_OWNER': 'local-user',
@@ -155,7 +155,7 @@ def setup_database():
 def start_development_server():
     """Start the development server with proper environment"""
     print("🚀 Starting development server...")
-    print("Server will be available at: http://localhost:5000")
+    print("Server will be available at: http://localhost:3000")
     print("Press Ctrl+C to stop the server\n")
     
     try:
@@ -191,7 +191,7 @@ def start_development_server():
                         npm_cmd, 'cross-env',
                         'NODE_ENV=development',
                         'LOCAL_DEVELOPMENT=true',
-                        'REPLIT_DOMAINS=localhost:5000',
+                        'REPLIT_DOMAINS=localhost:3000',
                         'REPL_ID=local-development',
                         npm_cmd, 'tsx', 'server/index.ts'
                     ], env=full_env, check=True)

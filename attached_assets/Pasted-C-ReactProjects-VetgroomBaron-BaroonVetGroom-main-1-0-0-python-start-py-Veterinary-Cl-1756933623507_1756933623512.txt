@@ -1,0 +1,65 @@
+C:\ReactProjects\VetgroomBaron\BaroonVetGroom [main ≡ +1 ~0 -0 !]> python start.py
+🏥 Veterinary Clinic Management SaaS - Windows Development Setup
+============================================================
+✅ node is installed (version: v22.18.0)
+❌ npm is required. Usually comes with Node.js
+   Debug: Failed to get version for npm
+✅ npm is installed via npm.cmd (version: 10.9.3)
+📄 Loading existing .env file...
+✅ Environment configured for Windows development
+📦 Installing npm dependencies...
+   Trying: npm install...
+   Failed with npm: [WinError 2] The system cannot find the file specified
+   Trying: npm.cmd install...
+✅ Dependencies installed successfully
+🗄️  Setting up database...
+   Trying: npx drizzle-kit push...
+   Failed with npx: [WinError 2] The system cannot find the file specified
+   Trying: npx.cmd drizzle-kit push...
+✅ Database schema pushed successfully
+🚀 Starting development server...
+Server will be available at: http://localhost:5000
+Press Ctrl+C to stop the server
+
+   Trying to start server with: npx...
+   Failed with npx: [WinError 2] The system cannot find the file specified
+   Trying to start server with: npx.cmd...
+🔧 Local development mode - skipping Replit authentication
+express-session deprecated req.secret; provide secret option file:\C:\ReactProjects\VetgroomBaron\BaroonVetGroom\server\replitAuth.ts:1:2270
+🔐 Setting up OIDC authentication strategies...
+Scalable appointment WebSocket service initialized
+node:events:496
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen ENOTSUP: operation not supported on socket 0.0.0.0:5000
+    at Server.setupListenHandle [as _listen2] (node:net:1918:21)
+    at listenInCluster (node:net:1997:12)
+    at node:net:2206:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+Emitted 'error' event on WebSocketServer instance at:
+    at Server.emit (node:events:518:28)
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'ENOTSUP',
+  errno: -4049,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 5000
+}
+
+Node.js v22.18.0
+   Failed with npx.cmd: Command '['npx.cmd', 'cross-env', 'NODE_ENV=development', 'LOCAL_DEVELOPMENT=true', 'REPLIT_DOMAINS=localhost:5000', 'REPL_ID=local-development', 'npx.cmd', 'tsx', 'server/index.ts']' returned non-zero exit status 1.
+   Trying to start server with: npm...
+   Failed with npm: [WinError 2] The system cannot find the file specified
+   Trying to start server with: npm.cmd...
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+'NODE_ENV' is not recognized as an internal or external command,
+operable program or batch file.
+   Failed with npm.cmd: Command '['npm.cmd', 'run', 'dev']' returned non-zero exit status 1.
+❌ Failed to start server with any npm command
+💡 Try running 'npm run dev' manually in your terminal
+C:\ReactProjects\VetgroomBaron\BaroonVetGroom [main ≡ +1 ~0 -0 !]>
