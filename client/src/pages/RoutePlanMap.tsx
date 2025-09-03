@@ -374,8 +374,9 @@ export default function RoutePlanMap() {
                   data-testid="route-map"
                 >
                   <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url={`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${(window as any).MAPTILER_API_KEY}`}
+                    maxZoom={18}
                   />
                   
                   {/* Clinic marker */}

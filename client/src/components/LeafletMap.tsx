@@ -53,11 +53,11 @@ export default function LeafletMap({
   const [serverErrorCounts, setServerErrorCounts] = useState<{[key: number]: number}>({});
   const [hasTriedAllServers, setHasTriedAllServers] = useState(false);
   
-  // Use OpenStreetMap with simpler configuration for development environment
+  // Use MapTiler with the working configuration
   const tileServers = [
     {
-      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      url: `https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${(window as any).MAPTILER_API_KEY}`,
+      attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       subdomains: []
     }
   ];
