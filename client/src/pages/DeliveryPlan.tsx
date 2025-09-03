@@ -715,8 +715,10 @@ export default function DeliveryPlan() {
                               className="rounded-br-lg"
                               ref={(mapRef) => {
                                 if (mapRef && mapApiKeyReady && window.MAPTILER_API_KEY) {
-                                  // Clear any existing map
-                                  mapRef.innerHTML = '';
+                                  // Properly cleanup existing Leaflet map
+                                  if (mapRef._leaflet_id) {
+                                    return; // Map already initialized
+                                  }
                                   
                                   console.log('🗺️ Creating route preview map with MapTiler');
                                   
@@ -771,8 +773,10 @@ export default function DeliveryPlan() {
                             className="rounded-r-lg"
                             ref={(mapRef) => {
                               if (mapRef && mapApiKeyReady && window.MAPTILER_API_KEY) {
-                                // Clear any existing map
-                                mapRef.innerHTML = '';
+                                // Properly cleanup existing Leaflet map
+                                if (mapRef._leaflet_id) {
+                                  return; // Map already initialized
+                                }
                                 
                                 console.log('🗺️ Creating fraccionamientos map with MapTiler');
                                 
