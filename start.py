@@ -140,11 +140,28 @@ def start_development_server():
     print("Press Ctrl+C to stop the server\n")
     
     try:
+        # Load environment variables from .env file and set them explicitly
+        env_file = Path('.env')
+        env_vars = {}
+        if env_file.exists():
+            with open(env_file, 'r') as f:
+                for line in f:
+                    if '=' in line and not line.strip().startswith('#'):
+                        key, value = line.strip().split('=', 1)
+                        env_vars[key] = value
+        
+        # Merge with system environment
+        full_env = {**os.environ, **env_vars}
+        
         # Use cross-env to ensure environment variables work on Windows
         result = subprocess.run([
-            'npx', 'cross-env', 'NODE_ENV=development', 
+            'npx', 'cross-env',
+            'NODE_ENV=development',
+            'LOCAL_DEVELOPMENT=true',
+            f'REPLIT_DOMAINS={env_vars.get("REPLIT_DOMAINS", "localhost:5000")}',
+            f'REPL_ID={env_vars.get("REPL_ID", "local-development")}',
             'npx', 'tsx', 'server/index.ts'
-        ], check=True)
+        ], env=full_env, check=True)
     except subprocess.CalledProcessError as e:
         print(f"❌ Server failed to start: {e}")
         return False
