@@ -182,19 +182,16 @@ def start_development_server():
         for npm_cmd in npm_commands:
             try:
                 print(f"   Trying to start server with: {npm_cmd}...")
-                if npm_cmd.startswith('npm'):
-                    result = subprocess.run([
-                        npm_cmd, 'run', 'dev'
-                    ], env=full_env, check=True)
-                else:
-                    result = subprocess.run([
-                        npm_cmd, 'cross-env',
-                        'NODE_ENV=development',
-                        'LOCAL_DEVELOPMENT=true',
-                        'REPLIT_DOMAINS=localhost:3000',
-                        'REPL_ID=local-development',
-                        npm_cmd, 'tsx', 'server/index.ts'
-                    ], env=full_env, check=True)
+                # Always use cross-env for Windows compatibility
+                result = subprocess.run([
+                    npm_cmd, 'cross-env',
+                    'NODE_ENV=development',
+                    'LOCAL_DEVELOPMENT=true',
+                    'REPLIT_DOMAINS=localhost:3000',
+                    'REPL_ID=local-development',
+                    'PORT=3000',
+                    'npx.cmd' if npm_cmd.endswith('.cmd') else 'npx', 'tsx', 'server/index.ts'
+                ], env=full_env, check=True)
                 server_started = True
                 break
             except (subprocess.CalledProcessError, FileNotFoundError) as e:
