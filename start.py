@@ -20,9 +20,17 @@ def check_requirements():
     missing = []
     for tool, message in required.items():
         try:
-            subprocess.run([tool, '--version'], capture_output=True, check=True)
-            print(f"✅ {tool} is installed")
-        except (subprocess.CalledProcessError, FileNotFoundError):
+            # Use different flag for npm on Windows
+            flag = '--version' if tool == 'node' else '-v'
+            result = subprocess.run([tool, flag], capture_output=True, text=True, check=False)
+            
+            if result.returncode == 0 and result.stdout.strip():
+                version = result.stdout.strip().split('\n')[0]
+                print(f"✅ {tool} is installed (version: {version})")
+            else:
+                print(f"❌ {message}")
+                missing.append(tool)
+        except FileNotFoundError:
             print(f"❌ {message}")
             missing.append(tool)
     
