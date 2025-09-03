@@ -110,28 +110,47 @@ def setup_environment():
 def install_dependencies():
     """Install npm dependencies"""
     print("📦 Installing npm dependencies...")
-    try:
-        result = subprocess.run(['npm', 'install'], capture_output=True, text=True, check=True)
-        print("✅ Dependencies installed successfully")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Failed to install dependencies: {e}")
-        print(f"Error output: {e.stderr}")
-        return False
+    
+    # Try different npm commands for Windows compatibility
+    npm_commands = ['npm', 'npm.cmd', 'npx', 'npx.cmd']
+    
+    for npm_cmd in npm_commands:
+        try:
+            print(f"   Trying: {npm_cmd} install...")
+            result = subprocess.run([npm_cmd, 'install'], capture_output=True, text=True, check=True, timeout=300)
+            print("✅ Dependencies installed successfully")
+            return True
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
+            print(f"   Failed with {npm_cmd}: {e}")
+            continue
+    
+    print("❌ Failed to install dependencies with any npm command")
+    print("💡 Try running 'npm install' manually in your terminal")
+    return False
 
 def setup_database():
     """Set up database for development"""
     print("🗄️  Setting up database...")
-    try:
-        # Push database schema
-        result = subprocess.run(['npx', 'drizzle-kit', 'push'], capture_output=True, text=True, check=True)
-        print("✅ Database schema pushed successfully")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"⚠️  Database setup failed: {e}")
-        print(f"Error: {e.stderr}")
-        print("You may need to configure your DATABASE_URL properly")
-        return False
+    
+    # Try different npm/npx commands for Windows
+    npx_commands = ['npx', 'npx.cmd', 'npm', 'npm.cmd']
+    
+    for npx_cmd in npx_commands:
+        try:
+            print(f"   Trying: {npx_cmd} drizzle-kit push...")
+            if npx_cmd.startswith('npm'):
+                result = subprocess.run([npx_cmd, 'run', 'db:push'], capture_output=True, text=True, check=True, timeout=120)
+            else:
+                result = subprocess.run([npx_cmd, 'drizzle-kit', 'push'], capture_output=True, text=True, check=True, timeout=120)
+            print("✅ Database schema pushed successfully")
+            return True
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
+            print(f"   Failed with {npx_cmd}: {e}")
+            continue
+    
+    print("⚠️  Database setup failed with all commands")
+    print("💡 Try running 'npm run db:push' manually in your terminal")
+    return False
 
 def start_development_server():
     """Start the development server with proper environment"""
@@ -155,14 +174,37 @@ def start_development_server():
         
         # Use cross-env to ensure environment variables work on Windows
         # Force local development mode to bypass Replit authentication
-        result = subprocess.run([
-            'npx', 'cross-env',
-            'NODE_ENV=development',
-            'LOCAL_DEVELOPMENT=true',
-            'REPLIT_DOMAINS=localhost:5000',
-            'REPL_ID=local-development',
-            'npx', 'tsx', 'server/index.ts'
-        ], env=full_env, check=True)
+        
+        # Try different npm/npx commands for Windows
+        npm_commands = ['npx', 'npx.cmd', 'npm', 'npm.cmd']
+        server_started = False
+        
+        for npm_cmd in npm_commands:
+            try:
+                print(f"   Trying to start server with: {npm_cmd}...")
+                if npm_cmd.startswith('npm'):
+                    result = subprocess.run([
+                        npm_cmd, 'run', 'dev'
+                    ], env=full_env, check=True)
+                else:
+                    result = subprocess.run([
+                        npm_cmd, 'cross-env',
+                        'NODE_ENV=development',
+                        'LOCAL_DEVELOPMENT=true',
+                        'REPLIT_DOMAINS=localhost:5000',
+                        'REPL_ID=local-development',
+                        npm_cmd, 'tsx', 'server/index.ts'
+                    ], env=full_env, check=True)
+                server_started = True
+                break
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                print(f"   Failed with {npm_cmd}: {e}")
+                continue
+        
+        if not server_started:
+            print("❌ Failed to start server with any npm command")
+            print("💡 Try running 'npm run dev' manually in your terminal")
+            return False
     except subprocess.CalledProcessError as e:
         print(f"❌ Server failed to start: {e}")
         return False
