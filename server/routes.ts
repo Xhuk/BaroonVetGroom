@@ -379,6 +379,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Demo endpoint that requires Replit OIDC authentication
+  app.get('/api/demo', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      console.log('🎯 Demo API accessed by authenticated user:', user?.claims?.email);
+      
+      res.json({
+        message: "🎉 Success! Replit OIDC authentication is working",
+        user: {
+          id: user?.claims?.sub,
+          email: user?.claims?.email,
+          firstName: user?.claims?.first_name,
+          lastName: user?.claims?.last_name,
+          profileImage: user?.claims?.profile_image_url,
+        },
+        timestamp: new Date().toISOString(),
+        replId: process.env.REPL_ID,
+        domain: req.hostname
+      });
+    } catch (error) {
+      console.error("Error in demo endpoint:", error);
+      res.status(500).json({ message: "Demo endpoint error" });
+    }
+  });
+
   // Marketing brochure editor routes
   app.get('/marketing/brochure.html', async (req, res) => {
     try {
