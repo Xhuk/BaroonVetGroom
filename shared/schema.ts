@@ -858,7 +858,7 @@ export const groomingRecords = pgTable("grooming_records", {
 // Pet Health Profiles - comprehensive health information
 export const petHealthProfiles = pgTable("pet_health_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  petId: varchar("pet_id").primaryKey().references(() => pets.id),
+  petId: varchar("pet_id").notNull().references(() => pets.id),
   tenantId: varchar("tenant_id").notNull().references(() => tenants.id),
   allergies: text("allergies").array().default(sql`ARRAY[]::text[]`),
   chronicConditions: text("chronic_conditions").array().default(sql`ARRAY[]::text[]`),
