@@ -12,30 +12,54 @@ from pathlib import Path
 
 def check_requirements():
     """Check if required tools are installed"""
-    required = {
-        'node': 'Node.js is required. Install from https://nodejs.org/',
-        'npm': 'npm is required. Usually comes with Node.js',
-    }
+    tools_to_check = [
+        ('node', '--version', 'Node.js is required. Install from https://nodejs.org/'),
+        ('npm', '--version', 'npm is required. Usually comes with Node.js'),
+    ]
     
     missing = []
-    for tool, message in required.items():
+    for tool, flag, message in tools_to_check:
         try:
-            # Use different flag for npm on Windows
-            flag = '--version' if tool == 'node' else '-v'
-            result = subprocess.run([tool, flag], capture_output=True, text=True, check=False)
+            # Try multiple common version flags on Windows
+            version_flags = ['--version', '-v', '-V']
+            detected = False
             
-            if result.returncode == 0 and result.stdout.strip():
-                version = result.stdout.strip().split('\n')[0]
-                print(f"✅ {tool} is installed (version: {version})")
-            else:
+            for vflag in version_flags:
+                try:
+                    result = subprocess.run([tool, vflag], capture_output=True, text=True, timeout=10)
+                    if result.returncode == 0 and result.stdout.strip():
+                        version = result.stdout.strip().split('\n')[0]
+                        print(f"✅ {tool} is installed (version: {version})")
+                        detected = True
+                        break
+                except subprocess.TimeoutExpired:
+                    continue
+                except:
+                    continue
+            
+            if not detected:
                 print(f"❌ {message}")
+                print(f"   Debug: Failed to get version for {tool}")
                 missing.append(tool)
+                
         except FileNotFoundError:
             print(f"❌ {message}")
             missing.append(tool)
     
+    # Special Windows npm check - try with .cmd extension
+    if 'npm' in missing:
+        try:
+            result = subprocess.run(['npm.cmd', '--version'], capture_output=True, text=True, timeout=10)
+            if result.returncode == 0 and result.stdout.strip():
+                version = result.stdout.strip().split('\n')[0]
+                print(f"✅ npm is installed via npm.cmd (version: {version})")
+                missing.remove('npm')
+        except:
+            pass
+    
     if missing:
         print(f"\n❌ Missing required tools: {', '.join(missing)}")
+        print("   💡 Tip: Try restarting your terminal or checking your PATH environment variable")
         return False
     return True
 
