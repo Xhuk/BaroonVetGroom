@@ -12,6 +12,9 @@ set REPL_SLUG=veterinary-clinic-local
 set REPL_OWNER=local-user
 set CORS_ORIGIN=http://localhost:3000
 
+REM TODO: Replace [YOUR-PASSWORD] with your actual Supabase password
+set DATABASE_URL=postgresql://postgres.sssexhgbxkvqmddozvqv:[YOUR-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+
 echo ✅ Environment variables set for Windows development
 echo 🚀 Starting server on http://localhost:3000
 echo ✅ Server will bind to localhost (Windows compatible)
