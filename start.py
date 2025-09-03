@@ -69,6 +69,13 @@ def setup_environment():
         'NODE_ENV': 'development',
         'PORT': '5000',
         'CORS_ORIGIN': 'http://localhost:5000',
+        # Replit environment variables for local development
+        'REPLIT_DOMAINS': 'localhost:5000',
+        'REPL_ID': 'local-development',
+        'REPL_SLUG': 'veterinary-clinic-local',
+        'REPL_OWNER': 'local-user',
+        # Local authentication bypass
+        'LOCAL_DEVELOPMENT': 'true',
     }
     
     # Load existing environment variables
