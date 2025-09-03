@@ -22,7 +22,7 @@ declare global {
   }
 }
 
-// MapTiler Layer Component using proper SDK
+// MapTiler Layer Component using WORKING tile layer approach (like demo)
 const MapTilerLayer = ({ apiKey, style, onReady }: { apiKey: string; style: string; onReady?: () => void }) => {
   const map = useMap();
   
@@ -32,36 +32,26 @@ const MapTilerLayer = ({ apiKey, style, onReady }: { apiKey: string; style: stri
       return;
     }
     
-    // Check if MapTiler SDK is loaded
-    if (!(window as any).L?.maptiler?.maptilerLayer) {
-      console.log('⏳ Waiting for MapTiler SDK...');
-      // Try to load it after a short delay
-      const timer = setTimeout(() => {
-        if ((window as any).L?.maptiler?.maptilerLayer) {
-          console.log('✅ MapTiler SDK loaded');
-        }
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-    
     console.log('🗺️ Creating MapTiler layer with style:', style);
     
     try {
-      // Remove existing MapTiler layers
+      // Remove existing tile layers
       map.eachLayer((layer: any) => {
-        if (layer._url?.includes('maptiler') || layer.options?.apiKey) {
+        if (layer._url?.includes('maptiler') || layer._url?.includes('openstreetmap')) {
           map.removeLayer(layer);
         }
       });
       
-      // Create MapTiler layer using the SDK
-      const mtLayer = new (window as any).L.maptiler.maptilerLayer({
-        apiKey: apiKey,
-        style: style,
+      // Create MapTiler layer using simple tile layer approach (WORKS!)
+      const tileUrl = `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${apiKey}`;
+      console.log('🔗 Tile URL:', tileUrl);
+      
+      const mtLayer = L.tileLayer(tileUrl, {
+        attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 18,
       });
       
       mtLayer.addTo(map);
-      
       console.log('✅ MapTiler layer added successfully');
       onReady?.();
       
