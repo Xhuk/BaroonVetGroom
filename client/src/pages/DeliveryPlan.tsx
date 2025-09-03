@@ -37,11 +37,17 @@ import {
   Navigation,
   RefreshCw
 } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import "@maptiler/leaflet-maptilersdk";
+import "leaflet/dist/leaflet.css";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Staff, Appointment } from "@shared/schema";
+
+// Extend Window interface for MapTiler API key
+declare global {
+  interface Window {
+    MAPTILER_API_KEY: string;
+  }
+}
 
 // Create priority-based icons for fraccionamientos
 const createPriorityIcon = (priority: 'Alta' | 'Media' | 'Baja', weight: number) => {
@@ -91,17 +97,19 @@ export default function DeliveryPlan() {
   const [selectedRouteForMap, setSelectedRouteForMap] = useState<any>(null);
   const [mapApiKeyReady, setMapApiKeyReady] = useState(false);
 
-  // Wait for MapTiler API key to be available
+  // Load MapTiler API key
   useEffect(() => {
-    const checkApiKey = () => {
-      if (window.MAPTILER_API_KEY && window.MAPTILER_API_KEY.length > 0) {
-        console.log('MapTiler API key ready:', window.MAPTILER_API_KEY.substring(0, 8) + '...');
+    fetch('/api/config/maptiler')
+      .then(res => res.json())
+      .then(data => {
+        console.log('✅ MapTiler API key loaded for delivery plan');
+        window.MAPTILER_API_KEY = data.apiKey;
         setMapApiKeyReady(true);
-      } else {
-        setTimeout(checkApiKey, 100);
-      }
-    };
-    checkApiKey();
+      })
+      .catch(err => {
+        console.error('❌ Failed to load MapTiler API key:', err);
+        setMapApiKeyReady(false);
+      });
   }, []);
   const [selectedDate, setSelectedDate] = useState("2025-08-25"); // Date with pickup appointments
   const [selectedMascots, setSelectedMascots] = useState<string[]>([]);
@@ -701,137 +709,120 @@ export default function DeliveryPlan() {
                             </Button>
                           </div>
                           <div className="h-[calc(100%-60px)] relative">
-                            <MapContainer
-                              center={[24.8066, -107.3938]}
-                              zoom={13}
+                            <div 
+                              id={`route-map-${selectedRouteForMap.id}`}
                               style={{ height: '100%', width: '100%', minHeight: '460px' }}
                               className="rounded-br-lg"
-                              key={`route-${selectedRouteForMap.id}`}
-                              whenCreated={(mapInstance) => {
-                                setTimeout(() => {
-                                  mapInstance.invalidateSize();
-                                }, 200);
+                              ref={(mapRef) => {
+                                if (mapRef && mapApiKeyReady && window.MAPTILER_API_KEY) {
+                                  // Clear any existing map
+                                  mapRef.innerHTML = '';
+                                  
+                                  console.log('🗺️ Creating route preview map with MapTiler');
+                                  
+                                  // Create map with working MapTiler approach
+                                  const map = L.map(mapRef).setView([24.8066, -107.3938], 13);
+                                  
+                                  const tileUrl = `https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY}`;
+                                  console.log('🔗 Route map tile URL:', tileUrl.substring(0, 80) + '...');
+                                  
+                                  const tileLayer = L.tileLayer(tileUrl, {
+                                    attribution: '&copy; MapTiler &copy; OpenStreetMap',
+                                    maxZoom: 18
+                                  });
+                                  
+                                  tileLayer.on('load', () => console.log('✅ Route map tiles loaded successfully'));
+                                  tileLayer.on('tileerror', (e) => console.error('❌ Route map tile error:', e));
+                                  
+                                  tileLayer.addTo(map);
+                                  
+                                  // Add clinic marker
+                                  L.marker([24.8066, -107.3938], { icon: clinicIcon })
+                                    .addTo(map)
+                                    .bindPopup(`<div class="text-center"><div class="font-semibold text-blue-600">Clínica Base</div><div class="text-sm">${currentTenant}</div></div>`);
+                                  
+                                  // Add route appointment markers
+                                  selectedRouteForMap.appointments?.forEach((apt: any, idx: number) => {
+                                    const coordinates: [number, number] = [
+                                      24.8066 + (Math.random() - 0.5) * 0.08,
+                                      -107.3938 + (Math.random() - 0.5) * 0.08
+                                    ];
+                                    
+                                    L.marker(coordinates, { icon: createPriorityIcon('Media', idx + 1) })
+                                      .addTo(map)
+                                      .bindPopup(`<div class="text-center"><div class="font-semibold">Parada #${idx + 1}</div><div class="text-sm">${apt.clientName || 'Cliente'}</div><div class="text-xs text-gray-500">${apt.petName || 'Mascota'}</div></div>`);
+                                  });
+                                  
+                                  // Force map resize after container is ready
+                                  setTimeout(() => {
+                                    map.invalidateSize();
+                                  }, 200);
+                                }
                               }}
-                            >
-                              <TileLayer
-                                attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                url={`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY}`}
-                                maxZoom={18}
-                                subdomains={['a', 'b', 'c', 'd']}
-                                onLoad={() => console.log('Route tile loaded successfully')}
-                                onError={(e) => console.error('Route tile loading error:', e)}
-                              />
-                              
-                              {/* Clinic Location */}
-                              <Marker position={[24.8066, -107.3938]} icon={clinicIcon}>
-                                <Popup>
-                                  <div className="text-center">
-                                    <div className="font-semibold text-blue-600">Clínica Base</div>
-                                    <div className="text-sm">{currentTenant}</div>
-                                  </div>
-                                </Popup>
-                              </Marker>
-                              
-                              {/* Route Appointments Markers */}
-                              {selectedRouteForMap.appointments?.map((apt: any, idx: number) => {
-                                const coordinates: [number, number] = [
-                                  24.8066 + (Math.random() - 0.5) * 0.08,
-                                  -107.3938 + (Math.random() - 0.5) * 0.08
-                                ];
-                                
-                                return (
-                                  <Marker
-                                    key={apt.id || idx}
-                                    position={coordinates}
-                                    icon={createPriorityIcon('Media', idx + 1)}
-                                  >
-                                    <Popup>
-                                      <div className="text-center">
-                                        <div className="font-semibold">Parada #{idx + 1}</div>
-                                        <div className="text-sm">{apt.clientName || 'Cliente'}</div>
-                                        <div className="text-xs text-gray-500">{apt.petName || 'Mascota'}</div>
-                                      </div>
-                                    </Popup>
-                                  </Marker>
-                                );
-                              })}
-                            </MapContainer>
+                            />
                           </div>
                         </div>
                       ) : (
                         /* Fraccionamientos Map */
                         <div className="relative bg-gray-100 dark:bg-gray-800 rounded-r-lg" style={{ height: '600px', width: '100%' }}>
-                          <MapContainer
-                            center={[24.8066, -107.3938]} // Culiacán center
-                            zoom={12}
+                          <div 
+                            id="fraccionamientos-map"
                             style={{ height: '100%', width: '100%', minHeight: '600px' }}
                             className="rounded-r-lg"
-                            key="fraccionamientos-map"
-                            whenCreated={(mapInstance) => {
-                              // Force map to invalidate size after container is ready
-                              setTimeout(() => {
-                                mapInstance.invalidateSize();
-                              }, 200);
+                            ref={(mapRef) => {
+                              if (mapRef && mapApiKeyReady && window.MAPTILER_API_KEY) {
+                                // Clear any existing map
+                                mapRef.innerHTML = '';
+                                
+                                console.log('🗺️ Creating fraccionamientos map with MapTiler');
+                                
+                                // Create map with working MapTiler approach
+                                const map = L.map(mapRef).setView([24.8066, -107.3938], 12);
+                                
+                                const tileUrl = `https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY}`;
+                                console.log('🔗 Fraccionamientos map tile URL:', tileUrl.substring(0, 80) + '...');
+                                
+                                const tileLayer = L.tileLayer(tileUrl, {
+                                  attribution: '&copy; MapTiler &copy; OpenStreetMap',
+                                  maxZoom: 18
+                                });
+                                
+                                tileLayer.on('load', () => console.log('✅ Fraccionamientos map tiles loaded successfully'));
+                                tileLayer.on('tileerror', (e) => console.error('❌ Fraccionamientos map tile error:', e));
+                                
+                                tileLayer.addTo(map);
+                                
+                                // Add clinic marker
+                                L.marker([24.8066, -107.3938], { icon: clinicIcon })
+                                  .addTo(map)
+                                  .bindPopup(`<div class="text-center"><div class="font-semibold text-blue-600">Clínica Veterinaria</div><div class="text-sm">${currentTenant}</div><div class="text-xs text-gray-500">Ubicación base</div></div>`);
+                                
+                                // Add fraccionamientos markers
+                                fraccionamientosWithWeights.slice(0, 6).forEach((frac, index) => {
+                                  const baseCoords = [
+                                    [24.8166, -107.4038], // Las Flores
+                                    [24.7966, -107.3838], // El Bosque
+                                    [24.8266, -107.3738], // Villa Real
+                                    [24.7866, -107.4138], // Los Pinos
+                                    [24.8366, -107.3638], // San Miguel
+                                    [24.7766, -107.3938]  // Centro
+                                  ];
+                                  const coordinates: [number, number] = (baseCoords[index] as [number, number]) || [24.8066, -107.3938];
+                                  
+                                  L.marker(coordinates, { icon: createPriorityIcon(frac.priority as 'Alta' | 'Media' | 'Baja', frac.weight) })
+                                    .addTo(map)
+                                    .bindPopup(`<div class="text-center"><div class="font-semibold text-gray-800">${frac.name}</div><div class="text-sm text-gray-600">${frac.appointments} entregas pendientes</div><div class="text-xs text-orange-600 font-medium">Peso: ${frac.weight} | Prioridad: ${frac.priority}
+                                    </div>
+</div><div class="text-xs text-gray-500 mt-1">Zona: ${frac.zone || 'Centro'}</div></div>`);
+                                });
+                                
+                                // Force map resize after container is ready
+                                setTimeout(() => {
+                                  map.invalidateSize();
+                                }, 200);
+                              }
                             }}
-                          >
-                            <TileLayer
-                              attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                              url={`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY}`}
-                              maxZoom={18}
-                              subdomains={['a', 'b', 'c', 'd']}
-                              onLoad={() => console.log('Tile loaded successfully')}
-                              onError={(e) => console.error('Tile loading error:', e)}
-                            />
-                          
-                          {/* Clinic Location */}
-                          <Marker 
-                            position={[24.8066, -107.3938]} 
-                            icon={clinicIcon}
-                          >
-                            <Popup>
-                              <div className="text-center">
-                                <div className="font-semibold text-blue-600">Clínica Veterinaria</div>
-                                <div className="text-sm">{currentTenant}</div>
-                                <div className="text-xs text-gray-500">Ubicación base</div>
-                              </div>
-                            </Popup>
-                          </Marker>
-                          
-                          {/* Fraccionamientos Markers */}
-                          {fraccionamientosWithWeights.slice(0, 6).map((frac, index) => {
-                            // Fixed coordinates for consistent display
-                            const baseCoords = [
-                              [24.8166, -107.4038], // Las Flores
-                              [24.7966, -107.3838], // El Bosque
-                              [24.8266, -107.3738], // Villa Real
-                              [24.7866, -107.4138], // Los Pinos
-                              [24.8366, -107.3638], // San Miguel
-                              [24.7766, -107.3938]  // Centro
-                            ];
-                            const coordinates: [number, number] = baseCoords[index] || [24.8066, -107.3938];
-                            
-                            return (
-                              <Marker
-                                key={frac.id || index}
-                                position={coordinates}
-                                icon={createPriorityIcon(frac.priority as 'Alta' | 'Media' | 'Baja', frac.weight)}
-                              >
-                                <Popup>
-                                  <div className="text-center">
-                                    <div className="font-semibold text-gray-800">{frac.name}</div>
-                                    <div className="text-sm text-gray-600">{frac.appointments} entregas pendientes</div>
-                                    <div className="text-xs text-orange-600 font-medium">
-                                      Peso: {frac.weight} | Prioridad: {frac.priority}
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-1">
-                                      Zona: {frac.zone || 'Centro'}
-                                    </div>
-                                  </div>
-                                </Popup>
-                              </Marker>
-                            );
-                          })}
-                          </MapContainer>
+                          />
                           
                           {/* Loading overlay for better UX */}
                           <div className="absolute inset-0 bg-gray-50 bg-opacity-75 flex items-center justify-center z-5 rounded-r-lg" 
