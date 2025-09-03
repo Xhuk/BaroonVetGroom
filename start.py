@@ -154,12 +154,13 @@ def start_development_server():
         full_env = {**os.environ, **env_vars}
         
         # Use cross-env to ensure environment variables work on Windows
+        # Force local development mode to bypass Replit authentication
         result = subprocess.run([
             'npx', 'cross-env',
             'NODE_ENV=development',
             'LOCAL_DEVELOPMENT=true',
-            f'REPLIT_DOMAINS={env_vars.get("REPLIT_DOMAINS", "localhost:5000")}',
-            f'REPL_ID={env_vars.get("REPL_ID", "local-development")}',
+            'REPLIT_DOMAINS=localhost:5000',
+            'REPL_ID=local-development',
             'npx', 'tsx', 'server/index.ts'
         ], env=full_env, check=True)
     except subprocess.CalledProcessError as e:
