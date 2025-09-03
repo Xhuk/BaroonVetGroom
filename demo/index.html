@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MapTiler Demo - Veterinary Clinics</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.umd.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1f2937;
+            color: white;
+        }
+        .container { 
+            display: flex; 
+            height: 100vh; 
+        }
+        .sidebar { 
+            width: 300px; 
+            background: #111827; 
+            padding: 20px; 
+            overflow-y: auto; 
+        }
+        .map-container { 
+            flex: 1; 
+            position: relative; 
+        }
+        #map { 
+            height: 100%; 
+            width: 100%; 
+        }
+        .clinic-card {
+            background: #374151;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .clinic-card:hover {
+            background: #4b5563;
+        }
+        .clinic-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .clinic-address {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+        .service-tag {
+            display: inline-block;
+            background: #6b7280;
+            color: #e5e7eb;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin: 2px;
+        }
+        .status {
+            background: #1f2937;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        .controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .control-button {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin: 3px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .control-button.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .control-button:not(.active) {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .control-button:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1 style="color: #14b8a6; text-align: center; margin-bottom: 10px;">🏥 Clínicas Veterinarias</h1>
+            <p style="color: #9ca3af; text-align: center; font-size: 14px; margin-bottom: 20px;">Monterrey, Nuevo León</p>
+            
+            <div class="status">
+                <div style="color: #10b981; font-weight: bold;">🗺️ MapTiler Status</div>
+                <div id="api-status">Loading API key...</div>
+                <div id="map-status">Initializing map...</div>
+            </div>
+            
+            <div id="clinics-list"></div>
+        </div>
+        
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="controls">
+                <div style="font-size: 12px; color: #374151; margin-bottom: 8px; font-weight: bold;">Map Style:</div>
+                <button class="control-button active" onclick="changeStyle('streets', 0)">Streets</button>
+                <button class="control-button" onclick="changeStyle('basic', 1)">Basic</button>
+                <button class="control-button" onclick="changeStyle('topo', 2)">Topo</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // MapTiler API key - hardcoded for demo
+        const MAPTILER_API_KEY = '8QiHL60QHEh6e3pjSlhR';
+        
+        // Veterinary clinic data
+        const clinics = [
+            {
+                id: 1,
+                name: "Clínica Veterinaria Principal",
+                address: "Av. Vasconcelos 1500, Del Valle, 66220 San Pedro Garza García, N.L.",
+                coordinates: [25.6866, -100.3161],
+                type: "main",
+                services: ["Consultas", "Emergencias", "Cirugías", "Laboratorio", "Hospitalización"]
+            },
+            {
+                id: 2,
+                name: "Sucursal San Jerónimo",
+                address: "Av. Puerta del Sol 400, Col. San Jerónimo, 64640 Monterrey, N.L.",
+                coordinates: [25.6791, -100.3541],
+                type: "branch",
+                services: ["Consultas", "Vacunación", "Estética"]
+            },
+            {
+                id: 3,
+                name: "Sucursal Cumbres",
+                address: "Av. Leones 300, Col. Cumbres 3er Sector, 64610 Monterrey, N.L.",
+                coordinates: [25.7505, -100.3475],
+                type: "branch",
+                services: ["Consultas", "Vacunación", "Estética", "Rayos X"]
+            },
+            {
+                id: 4,
+                name: "Sucursal Contry",
+                address: "Av. Eugenio Garza Sada 200, Col. Contry, 64860 Monterrey, N.L.",
+                coordinates: [25.6321, -100.2709],
+                type: "branch",
+                services: ["Consultas", "Vacunación", "Laboratorio"]
+            },
+            {
+                id: 5,
+                name: "Sucursal Centro",
+                address: "Calle Dr. Mier 500, Centro, 64000 Monterrey, N.L.",
+                coordinates: [25.6691, -100.3094],
+                type: "branch",
+                services: ["Consultas", "Vacunación"]
+            }
+        ];
+
+        let map;
+        let currentTileLayer;
+
+        // Initialize the map
+        function initMap() {
+            console.log('🗺️ Initializing demo map...');
+            
+            // Create map centered on Monterrey
+            map = L.map('map').setView([25.6866, -100.3161], 11);
+
+            // Set initial MapTiler layer
+            setMapTilerLayer('streets');
+            
+            // Add clinic markers
+            addClinicMarkers();
+            
+            // Update status
+            document.getElementById('api-status').textContent = 'API Key: ✅ Loaded';
+            document.getElementById('map-status').textContent = 'Map: ✅ Ready';
+            
+            console.log('✅ Demo map initialized');
+        }
+
+        function setMapTilerLayer(style) {
+            console.log('🔄 Setting MapTiler style:', style);
+            
+            try {
+                // Remove existing tile layer
+                if (currentTileLayer) {
+                    map.removeLayer(currentTileLayer);
+                }
+
+                // Add MapTiler layer
+                const styleUrl = `https://api.maptiler.com/maps/${style}/style.json?key=${MAPTILER_API_KEY}`;
+                
+                // For demo, use tile layer approach
+                currentTileLayer = L.tileLayer(`https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${MAPTILER_API_KEY}`, {
+                    attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    maxZoom: 18
+                });
+                
+                currentTileLayer.addTo(map);
+                console.log('✅ MapTiler style applied:', style);
+                
+            } catch (error) {
+                console.error('❌ Error setting MapTiler layer:', error);
+                
+                // Fallback to OpenStreetMap
+                console.log('🔄 Falling back to OpenStreetMap...');
+                currentTileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                });
+                currentTileLayer.addTo(map);
+            }
+        }
+
+        function addClinicMarkers() {
+            clinics.forEach(clinic => {
+                // Create custom icons
+                const iconColor = clinic.type === 'main' ? 'red' : 'blue';
+                const icon = L.divIcon({
+                    html: `<div style="background: ${iconColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>`,
+                    className: 'custom-marker',
+                    iconSize: [20, 20]
+                });
+
+                // Add marker
+                const marker = L.marker(clinic.coordinates, { icon }).addTo(map);
+
+                // Add popup
+                const servicesHtml = clinic.services.map(service => 
+                    `<span style="background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin: 2px;">${service}</span>`
+                ).join(' ');
+
+                marker.bindPopup(`
+                    <div style="font-family: 'Segoe UI', sans-serif;">
+                        <h3 style="margin: 0 0 8px 0; color: #111827;">${clinic.name}</h3>
+                        <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px;">${clinic.address}</p>
+                        <div>${servicesHtml}</div>
+                    </div>
+                `);
+            });
+        }
+
+        function changeStyle(style, buttonIndex) {
+            setMapTilerLayer(style);
+            
+            // Update button states
+            const buttons = document.querySelectorAll('.control-button');
+            buttons.forEach((btn, index) => {
+                if (index === buttonIndex) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function goToClinic(lat, lng) {
+            map.setView([lat, lng], 15);
+        }
+
+        // Populate clinic list
+        function populateClinicList() {
+            const listContainer = document.getElementById('clinics-list');
+            
+            clinics.forEach(clinic => {
+                const clinicElement = document.createElement('div');
+                clinicElement.className = 'clinic-card';
+                clinicElement.onclick = () => goToClinic(clinic.coordinates[0], clinic.coordinates[1]);
+                
+                const servicesHtml = clinic.services.map(service => 
+                    `<span class="service-tag">${service}</span>`
+                ).join('');
+                
+                clinicElement.innerHTML = `
+                    <div class="clinic-name">
+                        ${clinic.type === 'main' ? '🏥' : '🏢'} ${clinic.name}
+                    </div>
+                    <div class="clinic-address">${clinic.address}</div>
+                    <div>${servicesHtml}</div>
+                `;
+                
+                listContainer.appendChild(clinicElement);
+            });
+        }
+
+        // Initialize when page loads
+        window.onload = function() {
+            console.log('🚀 Starting MapTiler demo...');
+            populateClinicList();
+            initMap();
+        };
+    </script>
+</body>
+</html>
