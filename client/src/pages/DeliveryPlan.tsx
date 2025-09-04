@@ -44,7 +44,6 @@ import {
   TileLayer,
   Marker,
   Popup,
-  useMap,
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -52,53 +51,6 @@ import "leaflet/dist/leaflet.css";
 
 
 
-// MapTiler Layer Component
-const MapTilerLayer = ({ apiKey, style, onReady }: { apiKey: string; style: string; onReady?: () => void }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (!apiKey) {
-      console.log('⏳ Waiting for API key...');
-      return;
-    }
-    
-    console.log('🗺️ Creating MapTiler layer with style:', style);
-    
-    try {
-      // Remove existing tile layers
-      map.eachLayer((layer: any) => {
-        if (layer._url?.includes('maptiler') || layer._url?.includes('openstreetmap')) {
-          map.removeLayer(layer);
-        }
-      });
-      
-      // Create MapTiler layer using simple tile layer approach
-      const tileUrl = `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${apiKey}`;
-      console.log('🔗 Tile URL:', tileUrl);
-      
-      const mtLayer = L.tileLayer(tileUrl, {
-        attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 18,
-      });
-      
-      mtLayer.addTo(map);
-      console.log('✅ MapTiler layer added successfully');
-      onReady?.();
-      
-    } catch (error) {
-      console.error('❌ Error creating MapTiler layer:', error);
-      // Fallback to OpenStreetMap if MapTiler fails
-      console.log('🔄 Falling back to OpenStreetMap...');
-      const fallbackLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      });
-      fallbackLayer.addTo(map);
-      onReady?.();
-    }
-  }, [map, apiKey, style]);
-  
-  return null;
-};
 
 // Create priority-based icons for fraccionamientos
 const createPriorityIcon = (priority: 'Alta' | 'Media' | 'Baja', weight: number) => {
@@ -675,7 +627,10 @@ export default function DeliveryPlan() {
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => setSelectedRouteForMap(route)}
+                            onClick={() => {
+                              // Route preview functionality can be added here
+                              console.log('Route selected:', route);
+                            }}
                             className="flex-1"
                           >
                             <Map className="w-4 h-4 mr-1" />
@@ -759,17 +714,22 @@ export default function DeliveryPlan() {
                             <MapContainer
                               center={[24.8066, -107.3938]}
                               zoom={12}
-                              className="h-full w-full rounded-br-lg"
-                              zoomControl={false}
+                              style={{ height: '100%', width: '100%' }}
+                              className="rounded-br-lg"
+                              zoomControl={true}
                             >
-                              <MapTilerLayer apiKey={mapApiKey} style="streets" />
+                              <TileLayer
+                                url={`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${mapApiKey}`}
+                                attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                maxZoom={18}
+                              />
                               
                               {/* Clinic marker */}
                               <Marker position={[24.8066, -107.3938]} icon={clinicIcon}>
                                 <Popup>
                                   <div className="text-center">
                                     <div className="font-semibold text-blue-600">Clínica Veterinaria</div>
-                                    <div className="text-sm">{currentTenant}</div>
+                                    <div className="text-sm">{currentTenant?.name || currentTenant?.id}</div>
                                     <div className="text-xs text-gray-500">Ubicación base</div>
                                   </div>
                                 </Popup>
