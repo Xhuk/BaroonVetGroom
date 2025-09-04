@@ -210,11 +210,11 @@ function useCspBadge(setBadge: (s: string) => void) {
 function MapTilerRaster({
   apiKey,
   onBadTiles,
-  style = "streets-v2",
+  style = "streets",
 }: {
   apiKey: string;
   onBadTiles: (reason: string) => void;
-  style?: "streets-v2" | "basic-v2" | "topo-v2";
+  style?: "streets" | "basic" | "topo";
 }) {
   const map = useMap();
   useEffect(() => {
@@ -223,65 +223,42 @@ function MapTilerRaster({
       if (layer instanceof L.TileLayer) map.removeLayer(layer);
     });
 
-    // Use the current v2 raster endpoint (no /tiles). This matters.
+    // Use basic streets style with standard 256px tiles
     const url = `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${apiKey}`;
     dbg.info("Tile URL:", url);
 
     let inspected = false,
       errCount = 0;
     const layer = L.tileLayer(url, {
-      attribution:
-        '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      tileSize: 512,
-      zoomOffset: -1,
-      minZoom: 1,
-      // crossOrigin intentionally omitted
+      attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a>',
+      maxZoom: 18,
+      // Standard 256px tiles, no zoom offset
     });
 
-    const tileLoad = (e: any) => {
-      if (inspected) return;
-      inspected = true;
-      const img: HTMLImageElement | undefined = e?.tile;
-      if (img) {
-        dbg.info("First tile dims:", {
-          w: img.naturalWidth,
-          h: img.naturalHeight,
-          src: img.currentSrc || img.src,
-        });
-        if (
-          !img.naturalWidth ||
-          !img.naturalHeight ||
-          (img.naturalWidth <= 1 && img.naturalHeight <= 1)
-        ) {
-          errCount++;
-          onBadTiles("Tile decoded as 1×1 or 0×0 (blocked/placeholder).");
-        }
-      }
-    };
+    // Simplified error handling - fallback after first error
     const tileError = (e: any) => {
       errCount++;
       const src = e?.tile?.src || e;
       dbg.error("tileerror", src);
-      if (typeof src === "string") {
-        fetch(src, { method: "HEAD" })
-          .then((res) => {
-            dbg.info(
-              "HEAD probe",
-              src,
-              res.status,
-              res.headers.get("content-type"),
-              res.headers.get("content-length"),
-            );
-          })
-          .catch((er) => dbg.error("HEAD probe failed", er));
+      
+      // Immediate fallback on any error
+      if (errCount >= 1) {
+        onBadTiles("MapTiler tiles failed, switching to OpenStreetMap");
+        map.removeLayer(layer);
+        
+        // Add OpenStreetMap fallback directly
+        const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19,
+        });
+        osmLayer.addTo(map);
+        dbg.log("Added OSM fallback layer");
       }
-      if (errCount >= 3)
-        onBadTiles("Multiple tile errors (policy/domain/extension).");
     };
 
-    layer.on("tileload", tileLoad);
     layer.on("tileerror", tileError);
     layer.addTo(map);
+    dbg.log("MapTiler layer added");
 
     // Sanity HEAD on one sample tile
     const sample = url
@@ -606,12 +583,6 @@ export default function DeliveryPlanWorking() {
                           setBadge(`Fallback: ${reason}`);
                         }}
                       />
-                      {badge && (
-                        <TileLayer
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-                      )}
 
                       <InvalidateOnMount />
                       <MapResizeObserver targetId="delivery-map-box-working" />
