@@ -190,27 +190,29 @@ export default function DeliveryPlan() {
                 <div className="h-[500px] w-full relative">
                   {mapApiKey ? (
                     <MapContainer
-                      center={[24.8066, -107.3938]}
-                      zoom={12}
+                      center={[25.6866, -100.3161]}
+                      zoom={11}
                       style={{ height: '100%', width: '100%' }}
                       className="rounded-lg"
                       zoomControl={true}
                       scrollWheelZoom={true}
+                      key={mapApiKey}
                     >
                       <TileLayer
-                        url={`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${mapApiKey}`}
-                        attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        maxZoom={18}
+                        url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${mapApiKey}`}
+                        attribution='© MapTiler © OpenStreetMap contributors'
+                        maxZoom={20}
+                        tileSize={256}
                       />
                       <MapResizer />
                       
                       {/* Clinic marker */}
-                      <Marker position={[24.8066, -107.3938]} icon={clinicIcon}>
+                      <Marker position={[25.6866, -100.3161]} icon={clinicIcon}>
                         <Popup>
                           <div className="text-center">
                             <div className="font-semibold text-blue-600">Clínica Veterinaria</div>
                             <div className="text-sm">{currentTenant?.name || 'Vetgroom1'}</div>
-                            <div className="text-xs text-gray-500">Ubicación principal</div>
+                            <div className="text-xs text-gray-500">Monterrey, México</div>
                           </div>
                         </Popup>
                       </Marker>
