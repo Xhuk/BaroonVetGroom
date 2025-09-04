@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Navigation, BarChart3, Truck, Users, MapPin, Route } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -17,6 +17,54 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
+
+// MapTiler Layer Component using WORKING tile layer approach (imported from test page)
+const MapTilerLayer = ({ apiKey, style, onReady }: { apiKey: string; style: string; onReady?: () => void }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (!apiKey) {
+      console.log('⏳ Waiting for API key...');
+      return;
+    }
+    
+    console.log('🗺️ Creating MapTiler layer with style:', style);
+    
+    try {
+      // Remove existing tile layers
+      map.eachLayer((layer: any) => {
+        if (layer._url?.includes('maptiler') || layer._url?.includes('openstreetmap')) {
+          map.removeLayer(layer);
+        }
+      });
+      
+      // Create MapTiler layer using simple tile layer approach (WORKS!)
+      const tileUrl = `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${apiKey}`;
+      console.log('🔗 Tile URL:', tileUrl);
+      
+      const mtLayer = L.tileLayer(tileUrl, {
+        attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 18,
+      });
+      
+      mtLayer.addTo(map);
+      console.log('✅ MapTiler layer added successfully');
+      onReady?.();
+      
+    } catch (error) {
+      console.error('❌ Error creating MapTiler layer:', error);
+      // Fallback to OpenStreetMap if MapTiler fails
+      console.log('🔄 Falling back to OpenStreetMap...');
+      const fallbackLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      });
+      fallbackLayer.addTo(map);
+      onReady?.();
+    }
+  }, [map, apiKey, style]);
+  
+  return null;
+};
 
 // Map resizer component for proper sizing
 function MapResizer() {
@@ -196,13 +244,19 @@ export default function DeliveryPlan() {
                       className="rounded-lg"
                       zoomControl={true}
                       scrollWheelZoom={true}
-                      key={mapApiKey}
+                      whenReady={() => {
+                        console.log('🗺️ Route planning map is ready, forcing tile refresh');
+                        setTimeout(() => {
+                          window.dispatchEvent(new Event('resize'));
+                        }, 500);
+                      }}
                     >
-                      <TileLayer
-                        url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${mapApiKey}`}
-                        attribution='© MapTiler © OpenStreetMap contributors'
-                        maxZoom={20}
-                        tileSize={256}
+                      {/* MapTiler Layer - using working implementation from test page */}
+                      <MapTilerLayer 
+                        key={`maptiler-delivery-${Date.now()}`}
+                        apiKey={mapApiKey} 
+                        style="streets"
+                        onReady={() => console.log('✅ Route planning MapTiler layer ready')}
                       />
                       <MapResizer />
                       
