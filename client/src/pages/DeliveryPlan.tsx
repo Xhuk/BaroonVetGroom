@@ -206,15 +206,15 @@ function useCspBadge(setBadge: (s: string) => void) {
   }, [setBadge]);
 }
 
-/* ── MapTiler raster (streets-v2) + diagnostics + OSM fallback ─────────── */
+/* ── MapTiler raster with official settings + OSM fallback ─────────────── */
 function MapTilerRaster({
   apiKey,
   onBadTiles,
-  style = "streets",
+  style = "streets-v2",
 }: {
   apiKey: string;
   onBadTiles: (reason: string) => void;
-  style?: "streets" | "basic" | "topo";
+  style?: "streets-v2" | "basic-v2" | "topo-v2";
 }) {
   const map = useMap();
   useEffect(() => {
@@ -223,19 +223,20 @@ function MapTilerRaster({
       if (layer instanceof L.TileLayer) map.removeLayer(layer);
     });
 
-    // Use basic streets style with standard 256px tiles
+    // Official MapTiler settings from documentation
     const url = `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${apiKey}`;
     dbg.info("Tile URL:", url);
 
-    let inspected = false,
-      errCount = 0;
+    let errCount = 0;
     const layer = L.tileLayer(url, {
-      attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a>',
-      maxZoom: 18,
-      // Standard 256px tiles, no zoom offset
+      tileSize: 512,
+      zoomOffset: -1,
+      minZoom: 1,
+      attribution: '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>',
+      crossOrigin: true
     });
 
-    // Simplified error handling - fallback after first error
+    // Error handling with OSM fallback
     const tileError = (e: any) => {
       errCount++;
       const src = e?.tile?.src || e;
@@ -258,9 +259,9 @@ function MapTilerRaster({
 
     layer.on("tileerror", tileError);
     layer.addTo(map);
-    dbg.log("MapTiler layer added");
+    dbg.log("MapTiler layer added with official settings");
 
-    // Sanity HEAD on one sample tile
+    // Test sample tile
     const sample = url
       .replace("{z}", "11")
       .replace("{x}", "453")
@@ -275,9 +276,9 @@ function MapTilerRaster({
       })
       .catch((err) => dbg.error("HEAD failed", err));
 
+    // Cleanup function
     return () => {
       dbg.seg("MAPTILER LAYER UNMOUNT");
-      layer.off("tileload", tileLoad);
       layer.off("tileerror", tileError);
       map.removeLayer(layer);
     };
