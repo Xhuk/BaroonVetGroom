@@ -37,56 +37,11 @@ import {
   Navigation,
   RefreshCw
 } from "lucide-react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Staff, Appointment } from "@shared/schema";
 
-// Extend Window interface for MapTiler API key
-declare global {
-  interface Window {
-    MAPTILER_API_KEY: string;
-  }
-}
 
-// Create priority-based icons for fraccionamientos
-const createPriorityIcon = (priority: 'Alta' | 'Media' | 'Baja', weight: number) => {
-  const color = priority === 'Alta' ? '#dc2626' : priority === 'Media' ? '#ea580c' : '#16a34a';
-  const bgColor = priority === 'Alta' ? '#fef2f2' : priority === 'Media' ? '#fff7ed' : '#f0fdf4';
-  
-  return L.divIcon({
-    html: `
-      <div style="
-        width: 32px; 
-        height: 32px; 
-        background-color: ${color}; 
-        border: 2px solid white; 
-        border-radius: 50%; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        font-weight: bold; 
-        font-size: 12px; 
-        color: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      ">${weight.toFixed(1)}</div>
-    `,
-    className: 'custom-priority-marker',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16]
-  });
-};
 
-// Clinic location icon (blue)
-const clinicIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
 
 export default function DeliveryPlan() {
   // ALL HOOKS MUST BE CALLED AT THE TOP LEVEL - NO EARLY RETURNS BEFORE THIS POINT
@@ -94,23 +49,7 @@ export default function DeliveryPlan() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showRouteForm, setShowRouteForm] = useState(false);
-  const [selectedRouteForMap, setSelectedRouteForMap] = useState<any>(null);
-  const [mapApiKeyReady, setMapApiKeyReady] = useState(false);
 
-  // Load MapTiler API key
-  useEffect(() => {
-    fetch('/api/config/maptiler')
-      .then(res => res.json())
-      .then(data => {
-        console.log('✅ MapTiler API key loaded for delivery plan');
-        window.MAPTILER_API_KEY = data.apiKey;
-        setMapApiKeyReady(true);
-      })
-      .catch(err => {
-        console.error('❌ Failed to load MapTiler API key:', err);
-        setMapApiKeyReady(false);
-      });
-  }, []);
   const [selectedDate, setSelectedDate] = useState("2025-08-25"); // Date with pickup appointments
   const [selectedMascots, setSelectedMascots] = useState<string[]>([]);
   const [searchMascots, setSearchMascots] = useState("");
@@ -689,172 +628,45 @@ export default function DeliveryPlan() {
                       </div>
                     </div>
                     
-                    {/* Map View - 4/5 width */}
+                    {/* MapTiler Integration Test - 4/5 width */}
                     <div className="col-span-4 relative">
-                      {selectedRouteForMap ? (
-                        /* Route Preview Map */
-                        <div className="h-full bg-white dark:bg-gray-900 rounded-r-lg border border-gray-200 dark:border-gray-600">
-                          <div className="p-3 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Route className="w-4 h-4 text-blue-600" />
-                              <span className="font-medium text-sm">Vista Previa: {selectedRouteForMap.name}</span>
-                            </div>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={() => setSelectedRouteForMap(null)}
-                              className="h-6 w-6 p-0"
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </Button>
+                      <div className="h-full bg-white dark:bg-gray-900 rounded-r-lg border border-gray-200 dark:border-gray-600">
+                        <div className="p-3 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Map className="w-4 h-4 text-blue-600" />
+                            <span className="font-medium text-sm">MapTiler Integration Test</span>
                           </div>
-                          <div className="h-[calc(100%-60px)] relative">
-                            <div 
-                              id={`route-map-${selectedRouteForMap.id}`}
-                              style={{ height: '100%', width: '100%', minHeight: '460px' }}
-                              className="rounded-br-lg"
-                              ref={(mapRef) => {
-                                if (mapRef && mapApiKeyReady && window.MAPTILER_API_KEY) {
-                                  // Properly cleanup existing Leaflet map
-                                  if (mapRef._leaflet_id) {
-                                    return; // Map already initialized
-                                  }
-                                  
-                                  console.log('🗺️ Creating route preview map with MapTiler');
-                                  
-                                  // Create map with working MapTiler approach
-                                  const map = L.map(mapRef).setView([24.8066, -107.3938], 13);
-                                  
-                                  const tileUrl = `https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY}`;
-                                  console.log('🔗 Route map tile URL:', tileUrl.substring(0, 80) + '...');
-                                  
-                                  const tileLayer = L.tileLayer(tileUrl, {
-                                    attribution: '&copy; MapTiler &copy; OpenStreetMap',
-                                    maxZoom: 18
-                                  });
-                                  
-                                  tileLayer.on('load', () => console.log('✅ Route map tiles loaded successfully'));
-                                  tileLayer.on('tileerror', (e) => console.error('❌ Route map tile error:', e));
-                                  
-                                  tileLayer.addTo(map);
-                                  
-                                  // Add clinic marker
-                                  L.marker([24.8066, -107.3938], { icon: clinicIcon })
-                                    .addTo(map)
-                                    .bindPopup(`<div class="text-center"><div class="font-semibold text-blue-600">Clínica Base</div><div class="text-sm">${currentTenant}</div></div>`);
-                                  
-                                  // Add route appointment markers
-                                  selectedRouteForMap.appointments?.forEach((apt: any, idx: number) => {
-                                    const coordinates: [number, number] = [
-                                      24.8066 + (Math.random() - 0.5) * 0.08,
-                                      -107.3938 + (Math.random() - 0.5) * 0.08
-                                    ];
-                                    
-                                    L.marker(coordinates, { icon: createPriorityIcon('Media', idx + 1) })
-                                      .addTo(map)
-                                      .bindPopup(`<div class="text-center"><div class="font-semibold">Parada #${idx + 1}</div><div class="text-sm">${apt.clientName || 'Cliente'}</div><div class="text-xs text-gray-500">${apt.petName || 'Mascota'}</div></div>`);
-                                  });
-                                  
-                                  // Force map resize after container is ready
-                                  setTimeout(() => {
-                                    map.invalidateSize();
-                                  }, 200);
-                                }
-                              }}
-                            />
-                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => window.open('/test-map', '_blank')}
+                            className="h-8"
+                          >
+                            Test MapTiler
+                          </Button>
                         </div>
-                      ) : (
-                        /* Fraccionamientos Map */
-                        <div className="relative bg-gray-100 dark:bg-gray-800 rounded-r-lg" style={{ height: '600px', width: '100%' }}>
-                          <div 
-                            id="fraccionamientos-map"
-                            style={{ height: '100%', width: '100%', minHeight: '600px' }}
-                            className="rounded-r-lg"
-                            ref={(mapRef) => {
-                              if (mapRef && mapApiKeyReady && window.MAPTILER_API_KEY) {
-                                // Properly cleanup existing Leaflet map
-                                if (mapRef._leaflet_id) {
-                                  return; // Map already initialized
-                                }
-                                
-                                console.log('🗺️ Creating fraccionamientos map with MapTiler');
-                                
-                                // Create map with working MapTiler approach
-                                const map = L.map(mapRef).setView([24.8066, -107.3938], 12);
-                                
-                                const tileUrl = `https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${window.MAPTILER_API_KEY}`;
-                                console.log('🔗 Fraccionamientos map tile URL:', tileUrl.substring(0, 80) + '...');
-                                
-                                const tileLayer = L.tileLayer(tileUrl, {
-                                  attribution: '&copy; MapTiler &copy; OpenStreetMap',
-                                  maxZoom: 18
-                                });
-                                
-                                tileLayer.on('load', () => console.log('✅ Fraccionamientos map tiles loaded successfully'));
-                                tileLayer.on('tileerror', (e) => console.error('❌ Fraccionamientos map tile error:', e));
-                                
-                                tileLayer.addTo(map);
-                                
-                                // Add clinic marker
-                                L.marker([24.8066, -107.3938], { icon: clinicIcon })
-                                  .addTo(map)
-                                  .bindPopup(`<div class="text-center"><div class="font-semibold text-blue-600">Clínica Veterinaria</div><div class="text-sm">${currentTenant}</div><div class="text-xs text-gray-500">Ubicación base</div></div>`);
-                                
-                                // Add fraccionamientos markers
-                                fraccionamientosWithWeights.slice(0, 6).forEach((frac, index) => {
-                                  const baseCoords = [
-                                    [24.8166, -107.4038], // Las Flores
-                                    [24.7966, -107.3838], // El Bosque
-                                    [24.8266, -107.3738], // Villa Real
-                                    [24.7866, -107.4138], // Los Pinos
-                                    [24.8366, -107.3638], // San Miguel
-                                    [24.7766, -107.3938]  // Centro
-                                  ];
-                                  const coordinates: [number, number] = (baseCoords[index] as [number, number]) || [24.8066, -107.3938];
-                                  
-                                  L.marker(coordinates, { icon: createPriorityIcon(frac.priority as 'Alta' | 'Media' | 'Baja', frac.weight) })
-                                    .addTo(map)
-                                    .bindPopup(`<div class="text-center"><div class="font-semibold text-gray-800">${frac.name}</div><div class="text-sm text-gray-600">${frac.appointments} entregas pendientes</div><div class="text-xs text-orange-600 font-medium">Peso: ${frac.weight} | Prioridad: ${frac.priority}
-                                    </div>
-</div><div class="text-xs text-gray-500 mt-1">Zona: ${frac.zone || 'Centro'}</div></div>`);
-                                });
-                                
-                                // Force map resize after container is ready
-                                setTimeout(() => {
-                                  map.invalidateSize();
-                                }, 200);
-                              }
-                            }}
-                          />
-                          
-                          {/* Loading overlay for better UX */}
-                          <div className="absolute inset-0 bg-gray-50 bg-opacity-75 flex items-center justify-center z-5 rounded-r-lg" 
-                               style={{ display: 'none' }} 
-                               id="map-loading">
-                            <div className="text-center">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                              <p className="text-sm text-gray-700">Cargando mapa...</p>
+                        <div className="h-[calc(100%-60px)] p-6 flex flex-col items-center justify-center space-y-4">
+                          <div className="text-center space-y-3">
+                            <div className="w-16 h-16 mx-auto bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                              <Map className="w-8 h-8 text-blue-600" />
                             </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Map Legend */}
-                      <div className="absolute bottom-2 left-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 z-[1000]">
-                        <div className="text-xs font-semibold mb-1">Leyenda</div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1 text-xs">
-                            <div className="w-3 h-3 bg-red-600 rounded-full"></div>
-                            <span>Alta prioridad (7-10)</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-xs">
-                            <div className="w-3 h-3 bg-orange-600 rounded-full"></div>
-                            <span>Media prioridad (4-7)</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-xs">
-                            <div className="w-3 h-3 bg-green-600 rounded-full"></div>
-                            <span>Baja prioridad (1-4)</span>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                              MapTiler Integration Test
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">
+                              Maps have been removed from this page. Use the test page to verify MapTiler integration with our secure API key management.
+                            </p>
+                            <div className="space-y-2">
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                • Uses environment secrets (no hardcoded keys)
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                • Clean test implementation
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                • Domain configuration debugging
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
