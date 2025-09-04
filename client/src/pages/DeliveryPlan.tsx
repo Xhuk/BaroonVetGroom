@@ -188,7 +188,7 @@ function MapTilerLayer({
   apiKey: string;
   style?: "streets" | "basic" | "topo";
   onReady?: () => void;
-  onBadTiles?: (reason: string) => void;
+  onBadTiles?: (reason: string, mapInstance?: L.Map) => void;
 }) {
   const map = useMap();
   useEffect(() => {
@@ -244,6 +244,7 @@ function MapTilerLayer({
           badCount++;
           onBadTiles?.(
             "Tile decoded as 1×1 or 0×0 (proxy or CSP/referrer issue).",
+            map
           );
         }
       }
@@ -253,7 +254,7 @@ function MapTilerLayer({
       const src = e?.tile?.src || e;
       dbg.error("tileerror", src);
       badCount++;
-      if (badCount >= 3) onBadTiles?.("Multiple tile errors from host.");
+      if (badCount >= 3) onBadTiles?.("Multiple tile errors from host.", map);
     };
 
     layer.on("load", onLoad);
@@ -275,7 +276,7 @@ function MapTilerLayer({
         dbg.info(`HEAD ${res.status} • content-type=${ct} • length=${cl}`);
         // If HEAD returns text/html or tiny length, warn
         if (ct && !/image\//i.test(ct)) {
-          onBadTiles?.(`HEAD content-type is ${ct} (expected image/*).`);
+          onBadTiles?.(`HEAD content-type is ${ct} (expected image/*).`, map);
         }
       })
       .catch((e) => dbg.error("HEAD preflight failed", e));
@@ -542,35 +543,32 @@ export default function DeliveryPlanWorking() {
                             apiKey={mapApiKey}
                             style="streets"
                             onReady={() => dbg.log("MapTiler layer ready")}
-                            onBadTiles={(reason) => {
+                            onBadTiles={(reason, mapInstance) => {
                               dbg.warn(
                                 "Bad tiles detected → fallback:",
                                 reason,
                               );
                               setFallbackOSM(reason);
-                              // mount OSM fallback
-                              const osm = L.tileLayer(
-                                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                                {
-                                  attribution:
-                                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                                  maxZoom: 19,
-                                },
-                              );
-                              osm.addTo(
-                                (window as any)._leaflet_map_instance ??
-                                  ({} as any),
-                              );
+                              // Add OSM fallback using the provided map instance
+                              if (mapInstance) {
+                                const osm = L.tileLayer(
+                                  "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                                  {
+                                    attribution:
+                                      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                                    maxZoom: 19,
+                                  },
+                                );
+                                osm.addTo(mapInstance);
+                                dbg.log("OpenStreetMap fallback layer added");
+                              }
                             }}
                           />
                         ) : null}
 
-                        {/* If falling back, add OSM via React too (double guard) */}
+                        {/* Fallback message only - OSM is added via imperative API in onBadTiles */}
                         {fallbackOSM && (
-                          <React.Fragment>
-                            {/*@ts-ignore*/}
-                            <L.TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                          </React.Fragment>
+                          <WarningBadge text={`MapTiler failed: ${fallbackOSM}. Using OpenStreetMap.`} />
                         )}
 
                         {/* size helpers */}
