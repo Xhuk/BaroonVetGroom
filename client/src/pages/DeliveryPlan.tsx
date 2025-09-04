@@ -591,7 +591,7 @@ export default function DeliveryPlan() {
               <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
               <span className="ml-2">Cargando rutas...</span>
             </div>
-          ) : routes && routes.length > 0 ? (
+          ) : deliveryRoutes && deliveryRoutes.length > 0 ? (
             <div className="space-y-6">
               {/* Header with Route Dropdown */}
               <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
@@ -608,7 +608,7 @@ export default function DeliveryPlan() {
                             // Active routes first, then by scheduled time
                             if (a.status === 'in_progress' && b.status !== 'in_progress') return -1;
                             if (b.status === 'in_progress' && a.status !== 'in_progress') return 1;
-                            return a.scheduledTime.localeCompare(b.scheduledTime);
+                            return (a.scheduledTime || '').localeCompare(b.scheduledTime || '');
                           })
                           .map((route) => (
                             <SelectItem key={route.id} value={route.id}>
