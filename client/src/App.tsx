@@ -124,6 +124,8 @@ function Router() {
       <Route path="/disclaimers/sign/:disclaimerId/:appointmentId" component={MobileDisclaimerSign} />
       {/* Demo map - publicly accessible for testing MapTiler integration */}
       <Route path="/demo-map" component={DemoMap} />
+      {/* Delivery plan - publicly accessible for testing */}
+      <Route path="/delivery-plan" component={DeliveryPlan} />
       {isAuthenticated && (
         <>
           <Route path="/booking" component={BookingWizard} />
@@ -150,7 +152,6 @@ function Router() {
           )} />
           <Route path="/follow-up-tasks" component={() => <FollowUpTasks tenantId="vetgroom1" />} />
           <Route path="/inventory" component={Inventory} />
-          <Route path="/delivery-plan" component={DeliveryPlan} />
           <Route path="/route-map" component={RoutePlanMap} />
           <Route path="/sales-delivery" component={SalesDelivery} />
           <Route path="/billing" component={Billing} />
