@@ -129,6 +129,7 @@ export default function DeliveryPlan() {
   const [customHour, setCustomHour] = useState("13:00");
   const [activeTab, setActiveTab] = useState("inbound");
   const [routeType, setRouteType] = useState<"inbound" | "outbound">("inbound");
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   
   // Load MapTiler API key
   useEffect(() => {
@@ -192,6 +193,17 @@ export default function DeliveryPlan() {
     queryKey: ["/api/inventory", currentTenant?.id, "vehicle"],
     enabled: !!currentTenant?.id,
   });
+
+  // Get delivery routes with computed structure  
+  const deliveryRoutes = routesResponse?.routes?.map((route: any) => ({
+    id: route.id,
+    name: route.title,
+    status: route.status,
+    estimatedTime: route.estimatedTime,
+    startTime: route.startTime,
+    appointments: route.appointments || []
+  })) || [];
+  
 
   const createRouteMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -580,839 +592,223 @@ export default function DeliveryPlan() {
               <span className="ml-2">Cargando rutas...</span>
             </div>
           ) : routes && routes.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Route List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Route className="w-5 h-5" />
-                    Rutas Optimizadas VRP
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="max-h-96 overflow-y-auto">
-                  <div className="space-y-3">
-                    {routes.map((route: any, index: number) => (
-                      <div 
-                        key={route.id || index} 
-                        className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
-                        data-testid={`route-card-${index}`}
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Truck className="w-5 h-5 text-blue-600" />
-                              <span className="font-semibold text-blue-800">
-                                {route.name || `Ruta ${index + 1}`}
-                              </span>
-                            </div>
-                            <div className="space-y-1 text-sm text-gray-600">
-                              <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4" />
-                                <span>{route.startTime || "Programada"}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <User className="w-4 h-4" />
-                                <span>{route.driverName || "Por asignar"}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Package className="w-4 h-4" />
-                                <span>{route.appointments?.length || 0} entregas</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <Badge className={getStatusColor(route.status || 'scheduled')}>
-                              {getStatusIcon(route.status || 'scheduled')}
-                              {route.status || 'scheduled'}
-                            </Badge>
-                            <div className="text-right text-sm">
-                              <p className="font-medium text-green-600">
-                                {route.efficiency ? `${route.efficiency}% eficiencia` : 'VRP optimizado'}
-                              </p>
-                              <p className="text-gray-500">
-                                {route.totalDistance ? `${route.totalDistance.toFixed(1)} km` : 'Calculando...'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-2 mt-3">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => generateDriverLink(route)}
-                            className="flex-1"
-                            data-testid={`button-generate-driver-link-${index}`}
-                          >
-                            <Navigation className="w-4 h-4 mr-1" />
-                            Conductor
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              // Route preview functionality can be added here
-                              console.log('Route selected:', route);
-                            }}
-                            className="flex-1"
-                          >
-                            <Map className="w-4 h-4 mr-1" />
-                            Vista Previa
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Neighborhood Optimization with Map */}
-              <Card className="h-[600px]">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="w-5 h-5" />
-                    Optimización por Fraccionamiento
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="h-[calc(100%-70px)] p-0">
-                  <div className="grid grid-cols-5 h-full">
-                    {/* Fraccionamientos List - 1/5 width */}
-                    <div className="col-span-1 p-2 overflow-y-auto border-r border-gray-200 dark:border-gray-600">
-                      <div className="space-y-2">
-                        {fraccionamientosWithWeights.slice(0, 6).map((frac, index) => (
-                          <div 
-                            key={frac.id || index}
-                            className="p-1 bg-gray-50 dark:bg-gray-800 rounded text-xs"
-                          >
-                            <div className="flex items-center gap-2 mb-1">
-                              <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                                <span className="text-xs font-bold text-blue-600">{index + 1}</span>
-                              </div>
-                              <p className="font-medium text-gray-800 dark:text-gray-200 text-sm">
-                                {frac.name}
-                              </p>
-                            </div>
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-gray-600">{frac.appointments} entregas</span>
-                              <div className="flex items-center gap-1">
-                                <Weight className="w-3 h-3 text-orange-500" />
-                                <span className="font-medium text-orange-600">
-                                  {frac.weight}
-                                </span>
-                                <Badge 
-                                  className={`text-xs px-1 py-0 ${
-                                    frac.priority === 'Alta' ? 'bg-red-100 text-red-800' :
-                                    frac.priority === 'Media' ? 'bg-orange-100 text-orange-800' :
-                                    'bg-green-100 text-green-800'
-                                  }`}
-                                >
-                                  {frac.priority}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* MapTiler Integration Test - 4/5 width */}
-                    <div className="col-span-4 relative">
-                      <div className="h-full bg-white dark:bg-gray-900 rounded-r-lg border border-gray-200 dark:border-gray-600">
-                        <div className="p-3 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Map className="w-4 h-4 text-blue-600" />
-                            <span className="font-medium text-sm">MapTiler Integration Test</span>
-                          </div>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => window.open('/test-map', '_blank')}
-                            className="h-8"
-                          >
-                            Test MapTiler
-                          </Button>
-                        </div>
-                        <div className="h-[calc(100%-60px)] relative">
-                          {mapApiKey ? (
-                            <MapContainer
-                              center={[24.8066, -107.3938]}
-                              zoom={12}
-                              style={{ height: '100%', width: '100%', minHeight: '400px' }}
-                              className="w-full h-full rounded-br-lg"
-                              zoomControl={true}
-                              scrollWheelZoom={true}
-                            >
-                              <TileLayer
-                                url={`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${mapApiKey}`}
-                                attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                maxZoom={18}
-                              />
-                              <MapResizer />
-                              
-                              {/* Clinic marker */}
-                              <Marker position={[24.8066, -107.3938]} icon={clinicIcon}>
-                                <Popup>
-                                  <div className="text-center">
-                                    <div className="font-semibold text-blue-600">Clínica Veterinaria</div>
-                                    <div className="text-sm">{currentTenant?.name || currentTenant?.id}</div>
-                                    <div className="text-xs text-gray-500">Ubicación base</div>
-                                  </div>
-                                </Popup>
-                              </Marker>
-
-                              {/* Fraccionamientos markers */}
-                              {fraccionamientosWithWeights.slice(0, 6).map((frac, index) => {
-                                const baseCoords = [
-                                  [24.8166, -107.4038], // Las Flores
-                                  [24.7966, -107.3838], // El Bosque
-                                  [24.8266, -107.3738], // Villa Real
-                                  [24.7866, -107.4138], // Los Pinos
-                                  [24.8366, -107.3638], // San Miguel
-                                  [24.7766, -107.3938]  // Centro
-                                ];
-                                const coordinates = (baseCoords[index] as [number, number]) || [24.8066, -107.3938];
-                                
-                                return (
-                                  <Marker 
-                                    key={frac.id || index}
-                                    position={coordinates}
-                                    icon={createPriorityIcon(frac.priority as 'Alta' | 'Media' | 'Baja', frac.weight)}
-                                  >
-                                    <Popup>
-                                      <div className="text-center">
-                                        <div className="font-semibold text-gray-800">{frac.name}</div>
-                                        <div className="text-sm text-gray-600">{frac.appointments} entregas pendientes</div>
-                                        <div className="text-xs text-orange-600 font-medium">Peso: {frac.weight} | Prioridad: {frac.priority}</div>
-                                        <div className="text-xs text-gray-500 mt-1">Zona: {frac.zone || 'Centro'}</div>
-                                      </div>
-                                    </Popup>
-                                  </Marker>
-                                );
-                              })}
-                            </MapContainer>
-                          ) : (
-                            <div className="w-full h-full min-h-[400px] flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-br-lg">
-                              <div className="text-center">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                                <p className="text-sm text-gray-700 dark:text-gray-300">Cargando mapa...</p>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Map Legend */}
-                          <div className="absolute bottom-2 left-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 z-[1000]">
-                            <div className="text-xs font-semibold mb-1">Leyenda</div>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-1 text-xs">
-                                <div className="w-3 h-3 bg-red-600 rounded-full"></div>
-                                <span>Alta prioridad (7-10)</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs">
-                                <div className="w-3 h-3 bg-orange-600 rounded-full"></div>
-                                <span>Media prioridad (4-7)</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs">
-                                <div className="w-3 h-3 bg-green-600 rounded-full"></div>
-                                <span>Baja prioridad (1-4)</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="text-center py-12">
-                <MapPin className="w-16 h-16 mx-auto mb-4 text-green-400" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  No hay pickups inbound programados para {selectedDate}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Crea una nueva ruta de recolección para mascotas de clientes registrados
-                </p>
-                <Button 
-                  onClick={() => {
-                    setRouteType("inbound");
-                    setShowRouteForm(true);
-                  }}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Crear Ruta Inbound
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="tracking" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Driver Tracking Panel */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="w-5 h-5" />
-                  Driver Tracking Dashboard
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {deliveryTracking?.length ? (
-                  <div className="space-y-4">
-                    {deliveryTracking.map((tracking: any) => (
-                      <div key={tracking.id} className="p-4 border rounded-lg">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-3 h-3 rounded-full ${
-                              tracking.status === 'active' ? 'bg-green-500' : 
-                              tracking.status === 'in_progress' ? 'bg-blue-500' : 'bg-gray-400'
-                            }`} />
-                            <div>
-                              <p className="font-medium">{tracking.driverName}</p>
-                              <p className="text-sm text-gray-600">{tracking.vanName}</p>
-                            </div>
-                          </div>
-                          <Badge className={getStatusColor(tracking.status)}>
-                            {tracking.status}
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-500">Tipo de Ruta</p>
-                            <p className="font-medium">{tracking.routeType || 'Mixed'}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Paradas</p>
-                            <p className="font-medium">{tracking.route?.completedStops || 0}/{tracking.route?.totalStops || 0}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-2 mt-4">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              // Generate driver-specific mobile link
-                              const driverLink = `/driver-dashboard/${tracking.id}`;
-                              navigator.clipboard.writeText(`${window.location.origin}${driverLink}`);
-                              toast({
-                                title: "Enlace copiado",
-                                description: "Link del dashboard móvil copiado para el conductor",
-                              });
-                            }}
-                            className="flex-1"
-                          >
-                            <Navigation className="w-4 h-4 mr-1" />
-                            Mobile Link
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              // Generate Waze/Google Maps export
-                              const wazeUrl = `https://waze.com/ul?navigate=yes&ll=${tracking.currentLocation?.lat || 25.6866},${tracking.currentLocation?.lng || -100.3161}`;
-                              window.open(wazeUrl, '_blank');
-                            }}
-                            className="flex-1"
-                          >
-                            <Map className="w-4 h-4 mr-1" />
-                            Waze
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Truck className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>No hay conductores activos en este momento</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Route Export Panel */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Navigation className="w-5 h-5" />
-                  Route Export Tools
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                  <h4 className="font-medium mb-2">Inbound Routes (Pickup)</h4>
-                  <p className="text-sm text-gray-600 mb-3">Export pickup routes to driver mobile apps</p>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      Google Maps
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Navigation className="w-4 h-4 mr-1" />
-                      Waze
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="p-4 border rounded-lg bg-orange-50 dark:bg-orange-900/20">
-                  <h4 className="font-medium mb-2">Outbound Routes (Delivery)</h4>
-                  <p className="text-sm text-gray-600 mb-3">Export delivery routes to driver mobile apps</p>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      Google Maps
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Navigation className="w-4 h-4 mr-1" />
-                      Waze
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">Driver Mobile Dashboard</h4>
-                  <p className="text-sm text-gray-600 mb-3">Generate mobile-friendly tracking links for drivers</p>
-                  <Button 
-                    className="w-full" 
-                    onClick={() => {
-                      const mobileUrl = `/driver-mobile`;
-                      navigator.clipboard.writeText(`${window.location.origin}${mobileUrl}`);
-                      toast({
-                        title: "Link móvil copiado",
-                        description: "Dashboard móvil para conductores copiado al clipboard",
-                      });
-                    }}
-                  >
-                    <Activity className="w-4 h-4 mr-2" />
-                    Generate Mobile Link
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="schedules" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Programación de Entregas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {deliverySchedules?.length ? (
-                <div className="space-y-4">
-                  {deliverySchedules.map((schedule: any) => (
-                    <div key={schedule.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Clock className="w-6 h-6 text-green-600" />
-                        <div>
-                          <p className="font-medium">{schedule.name}</p>
-                          <p className="text-sm text-gray-600">{schedule.scheduledDate}</p>
-                        </div>
-                      </div>
-                      <Badge className={getStatusColor(schedule.status)}>
-                        {schedule.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No hay programaciones de entrega disponibles</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  Rendimiento de Entregas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span>Entregas completadas hoy</span>
-                    <span className="font-bold text-green-600">{deliveryTracking?.filter((d: any) => d.status === 'completed').length || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Entregas en progreso</span>
-                    <span className="font-bold text-blue-600">{deliveryTracking?.filter((d: any) => d.status === 'in_progress').length || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Eficiencia promedio</span>
-                    <span className="font-bold text-purple-600">87%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Navigation className="w-5 h-5" />
-                  Optimización VRP
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span>Distancia ahorrada</span>
-                    <span className="font-bold text-green-600">23.4 km</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tiempo ahorrado</span>
-                    <span className="font-bold text-blue-600">45 min</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Costos reducidos</span>
-                    <span className="font-bold text-purple-600">$180</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                Configuración de Entregas
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Capacidad de Van por Defecto</Label>
-                  <Select defaultValue="medium">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="small">Pequeña (8 mascotas)</SelectItem>
-                      <SelectItem value="medium">Mediana (15 mascotas)</SelectItem>
-                      <SelectItem value="large">Grande (25 mascotas)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label>Zona de Cobertura</Label>
-                  <Select defaultValue="monterrey">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="monterrey">Monterrey Metro</SelectItem>
-                      <SelectItem value="extended">Área Extendida</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="pt-4">
-                <Button className="w-full">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Guardar Configuración
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Enhanced Wave-Based Route Form */}
-      {showRouteForm && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {routeType === "inbound" ? (
-                <>
-                  <MapPin className="w-5 h-5 text-green-600" />
-                  Crear Ruta Inbound (Pickup)
-                </>
-              ) : (
-                <>
-                  <Navigation className="w-5 h-5 text-orange-600" />
-                  Crear Ruta Outbound (Delivery)
-                </>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreateRoute} className="space-y-6">
-              {/* Delivery Mode Selection */}
-              <div className="border rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
-                <div className="flex items-center gap-2 mb-4">
-                  <Timer className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-semibold">Modo de Entrega</h3>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div
-                    className={`p-3 border rounded-md cursor-pointer transition-colors ${
-                      deliveryMode === "wave"
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
-                        : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
-                    }`}
-                    onClick={() => setDeliveryMode("wave")}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${
-                        deliveryMode === "wave" ? 'bg-blue-500' : 'bg-gray-300'
-                      }`} />
-                      <div>
-                        <p className="font-medium">Ondas Programadas</p>
-                        <p className="text-sm text-gray-600">Wave 1-5 (1PM-5PM)</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div
-                    className={`p-3 border rounded-md cursor-pointer transition-colors ${
-                      deliveryMode === "free"
-                        ? 'border-green-500 bg-green-50 dark:bg-green-900/30'
-                        : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
-                    }`}
-                    onClick={() => setDeliveryMode("free")}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${
-                        deliveryMode === "free" ? 'bg-green-500' : 'bg-gray-300'
-                      }`} />
-                      <div>
-                        <p className="font-medium">Horario Libre</p>
-                        <p className="text-sm text-gray-600">Cualquier hora</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Basic Route Info */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="name">Nombre de la Ruta</Label>
-                  <Input 
-                    name="name" 
-                    required 
-                    placeholder={
-                      routeType === "inbound" 
-                        ? (deliveryMode === "wave" ? "Ej: Wave 1 - Pickup Tarde" : "Ej: Pickup Flexible Norte")
-                        : (deliveryMode === "wave" ? "Ej: Wave 1 - Entrega Tarde" : "Ej: Entrega Flexible Centro")
-                    } 
-                  />
-                </div>
-
-                {deliveryMode === "wave" ? (
-                  <div>
-                    <Label htmlFor="wave">Onda de Entrega</Label>
-                    <Select name="wave" value={selectedWave} onValueChange={setSelectedWave}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar onda" />
+            <div className="space-y-6">
+              {/* Header with Route Dropdown */}
+              <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Planificación de Rutas</h2>
+                    <Select value={selectedRouteId || ""} onValueChange={setSelectedRouteId}>
+                      <SelectTrigger className="w-80">
+                        <SelectValue placeholder="Selecciona una ruta para ver en el mapa" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1">Wave 1 - 1:00 PM</SelectItem>
-                        <SelectItem value="2">Wave 2 - 2:00 PM</SelectItem>
-                        <SelectItem value="3">Wave 3 - 3:00 PM</SelectItem>
-                        <SelectItem value="4">Wave 4 - 4:00 PM</SelectItem>
-                        <SelectItem value="5">Wave 5 - 5:00 PM</SelectItem>
+                        {deliveryRoutes
+                          .sort((a, b) => {
+                            // Active routes first, then by scheduled time
+                            if (a.status === 'in_progress' && b.status !== 'in_progress') return -1;
+                            if (b.status === 'in_progress' && a.status !== 'in_progress') return 1;
+                            return a.scheduledTime.localeCompare(b.scheduledTime);
+                          })
+                          .map((route) => (
+                            <SelectItem key={route.id} value={route.id}>
+                              <div className="flex items-center gap-2">
+                                {route.status === 'in_progress' && <div className="w-2 h-2 bg-green-500 rounded-full" />}
+                                {route.status === 'scheduled' && <div className="w-2 h-2 bg-blue-500 rounded-full" />}
+                                <span>{route.name} - {route.scheduledTime} ({route.appointments.length} entregas)</span>
+                              </div>
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
-                ) : (
-                  <div>
-                    <Label htmlFor="customHour">Hora de Entrega</Label>
-                    <Input
-                      type="time"
-                      value={customHour}
-                      onChange={(e) => setCustomHour(e.target.value)}
-                      className="w-full"
-                      min="08:00"
-                      max="20:00"
-                    />
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => window.open('/test-map', '_blank')}
+                    >
+                      Test MapTiler
+                    </Button>
                   </div>
-                )}
-
-                <div>
-                  <Label htmlFor="driverId">Conductor Asignado</Label>
-                  <Select name="driverId">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar conductor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {staff?.filter(s => s.role === "driver" || s.role === "technician").map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.name} ({member.role})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
-              {/* Mascot Selection Section */}
-              <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Package className="w-5 h-5 text-blue-600" />
-                    <h3 className="font-semibold">Seleccionar Mascotas para Entrega</h3>
-                    <Badge variant="outline">{selectedMascots.length} seleccionadas</Badge>
-                  </div>
-                  
-                  {deliveryMode === "free" && (
-                    <div className="flex items-center gap-2 text-sm text-green-600">
-                      <Star className="w-4 h-4" />
-                      <span>Sugerencias por peso de fraccionamiento</span>
+              {/* Full Width Map */}
+              <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600 h-[calc(100vh-300px)]">
+                <div className="h-full relative">
+                  {mapApiKey ? (
+                    <MapContainer
+                      center={[24.8066, -107.3938]}
+                      zoom={12}
+                      style={{ height: '100%', width: '100%', minHeight: '400px' }}
+                      className="w-full h-full rounded-lg"
+                      zoomControl={true}
+                      scrollWheelZoom={true}
+                    >
+                      <TileLayer
+                        url={`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${mapApiKey}`}
+                        attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        maxZoom={18}
+                      />
+                      <MapResizer />
+                      
+                      {/* Clinic marker */}
+                      <Marker position={[24.8066, -107.3938]} icon={clinicIcon}>
+                        <Popup>
+                          <div className="text-center">
+                            <div className="font-semibold text-blue-600">Clínica Veterinaria</div>
+                            <div className="text-sm">{currentTenant?.name || currentTenant?.id}</div>
+                            <div className="text-xs text-gray-500">Ubicación base</div>
+                          </div>
+                        </Popup>
+                      </Marker>
+
+                      {/* Route-specific markers */}
+                      {selectedRouteId && (() => {
+                        const selectedRoute = deliveryRoutes.find(r => r.id === selectedRouteId);
+                        if (!selectedRoute) return null;
+                        
+                        return selectedRoute.appointments.map((appointment, index) => {
+                          // Generate coordinates based on client address or use default positions
+                          const baseCoords = [
+                            [24.8166, -107.4038], // Position 1
+                            [24.7966, -107.3838], // Position 2
+                            [24.8266, -107.3738], // Position 3
+                            [24.7866, -107.4138], // Position 4
+                            [24.8366, -107.3638], // Position 5
+                            [24.7766, -107.3938], // Position 6
+                            [24.8466, -107.4238], // Position 7
+                            [24.7666, -107.3538]  // Position 8
+                          ];
+                          const coordinates = (baseCoords[index % baseCoords.length] as [number, number]) || [24.8066, -107.3938];
+                          
+                          // Create delivery marker icon
+                          const deliveryIcon = L.divIcon({
+                            html: `
+                              <div style="
+                                width: 28px; 
+                                height: 28px; 
+                                background-color: #10b981; 
+                                border: 2px solid white; 
+                                border-radius: 50%; 
+                                display: flex; 
+                                align-items: center; 
+                                justify-content: center; 
+                                font-weight: bold; 
+                                font-size: 12px; 
+                                color: white;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                              ">${index + 1}</div>
+                            `,
+                            className: 'custom-delivery-marker',
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 14],
+                            popupAnchor: [0, -14]
+                          });
+                          
+                          return (
+                            <Marker 
+                              key={appointment.id}
+                              position={coordinates}
+                              icon={deliveryIcon}
+                            >
+                              <Popup>
+                                <div className="text-center min-w-[200px]">
+                                  <div className="font-semibold text-gray-800 mb-1">Entrega #{index + 1}</div>
+                                  <div className="text-sm text-gray-600 mb-1">{appointment.client?.name}</div>
+                                  <div className="text-xs text-gray-500 mb-2">{appointment.client?.address}</div>
+                                  <div className="text-xs text-blue-600 font-medium">Mascota: {appointment.pet?.name}</div>
+                                  <div className="text-xs text-green-600">Hora: {appointment.scheduledTime}</div>
+                                </div>
+                              </Popup>
+                            </Marker>
+                          );
+                        });
+                      })()}
+                      
+                      {/* Show all fraccionamientos when no route selected */}
+                      {!selectedRouteId && fraccionamientosWithWeights.slice(0, 6).map((frac, index) => {
+                        const baseCoords = [
+                          [24.8166, -107.4038], // Las Flores
+                          [24.7966, -107.3838], // El Bosque
+                          [24.8266, -107.3738], // Villa Real
+                          [24.7866, -107.4138], // Los Pinos
+                          [24.8366, -107.3638], // San Miguel
+                          [24.7766, -107.3938]  // Centro
+                        ];
+                        const coordinates = (baseCoords[index] as [number, number]) || [24.8066, -107.3938];
+                        
+                        return (
+                          <Marker 
+                            key={frac.id || index}
+                            position={coordinates}
+                            icon={createPriorityIcon(frac.priority as 'Alta' | 'Media' | 'Baja', frac.weight)}
+                          >
+                            <Popup>
+                              <div className="text-center">
+                                <div className="font-semibold text-gray-800">{frac.name}</div>
+                                <div className="text-sm text-gray-600">{frac.appointments} entregas pendientes</div>
+                                <div className="text-xs text-orange-600 font-medium">Peso: {frac.weight} | Prioridad: {frac.priority}</div>
+                                <div className="text-xs text-gray-500 mt-1">Zona: {frac.zone || 'Centro'}</div>
+                              </div>
+                            </Popup>
+                          </Marker>
+                        );
+                      })}
+                    </MapContainer>
+                  ) : (
+                    <div className="w-full h-full min-h-[400px] flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">Cargando mapa...</p>
+                      </div>
                     </div>
                   )}
-                </div>
-
-                {deliveryMode === "free" && (
-                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 mb-4">
-                    <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">
-                      Fraccionamientos Sugeridos (por peso)
-                    </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {fraccionamientosWithWeights
-                        .sort((a, b) => a.weight - b.weight) // Lower weight = higher priority
-                        .slice(0, 6)
-                        .map((frac, index) => (
-                          <div key={frac.id} className="flex items-center gap-2">
-                            <Badge 
-                              variant={index < 2 ? "default" : "outline"} 
-                              className={index < 2 ? "bg-green-600" : ""}
-                            >
-                              #{index + 1}
-                            </Badge>
-                            <span className="text-sm">{frac.name}</span>
-                            <span className="text-xs text-gray-500">({frac.appointments} mascotas)</span>
+                
+                  {/* Legend */}
+                  <div className="absolute bottom-4 right-4 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
+                    <h4 className="font-semibold text-sm mb-2">Leyenda</h4>
+                    <div className="space-y-1 text-xs">
+                      {selectedRouteId ? (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                            <span>Clínica Veterinaria</span>
                           </div>
-                        ))}
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                            <span>Puntos de entrega</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                            <span>Alta prioridad (7-10)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-orange-600 rounded-full"></div>
+                            <span>Media prioridad (4-7)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                            <span>Baja prioridad (1-4)</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
-                )}
-
-                {/* Search Mascots */}
-                <div className="relative mb-4">
-                  <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar mascotas por nombre, cliente o fraccionamiento..."
-                    value={searchMascots}
-                    onChange={(e) => setSearchMascots(e.target.value)}
-                    className="pl-10"
-                  />
                 </div>
-
-                {/* Available Mascots List */}
-                <div className="max-h-64 overflow-y-auto space-y-2">
-                  {appointments
-                    ?.filter(apt => 
-                      apt.status === 'completed' && 
-                      apt.logistics === 'pickup' &&
-                      (searchMascots === '' || 
-                       apt.petId?.toLowerCase().includes(searchMascots.toLowerCase()) ||
-                       apt.clientId?.toLowerCase().includes(searchMascots.toLowerCase()))
-                    )
-                    .map(apt => (
-                      <div
-                        key={apt.id}
-                        className={`flex items-center justify-between p-3 border rounded-md cursor-pointer transition-colors ${
-                          selectedMascots.includes(apt.id)
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
-                        }`}
-                        onClick={() => {
-                          setSelectedMascots(prev => 
-                            prev.includes(apt.id)
-                              ? prev.filter(id => id !== apt.id)
-                              : [...prev, apt.id]
-                          );
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${
-                            selectedMascots.includes(apt.id) ? 'bg-blue-500' : 'bg-gray-300'
-                          }`} />
-                          <div>
-                            <p className="font-medium">Mascota ID: {apt.petId}</p>
-                            <p className="text-sm text-gray-600">Cliente: {apt.clientId}</p>
-                            <p className="text-sm text-gray-500">Completado: {apt.scheduledDate}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {selectedMascots.includes(apt.id) && (
-                            <Star className="w-4 h-4 text-blue-500 fill-blue-500" />
-                          )}
-                          <Badge variant="outline" className="text-xs">
-                            Pickup
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-
-                {selectedMascots.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <Package className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                    <p>No hay mascotas seleccionadas</p>
-                    <p className="text-sm">Selecciona mascotas completadas para añadir a esta ruta de entrega</p>
-                  </div>
-                )}
               </div>
-
-              {/* Form Actions */}
-              <div className="flex gap-3">
-                <Button 
-                  type="submit" 
-                  disabled={createRouteMutation.isPending || selectedMascots.length === 0}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Timer className="w-4 h-4 mr-2" />
-                  {createRouteMutation.isPending 
-                    ? "Creando..." 
-                    : deliveryMode === "wave"
-                      ? `Crear Wave ${selectedWave} (${selectedMascots.length} mascotas)`
-                      : `Crear Entrega ${customHour} (${selectedMascots.length} mascotas)`
-                  }
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowRouteForm(false);
-                    setSelectedMascots([]);
-                    setSearchMascots("");
-                    setDeliveryMode("wave");
-                    setSelectedWave("1");
-                    setCustomHour("13:00");
-                  }}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-
-
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No hay rutas disponibles para mostrar.</p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
