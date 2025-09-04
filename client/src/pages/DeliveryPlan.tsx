@@ -178,17 +178,13 @@ function WarningBadge({ text }: { text: string }) {
 
 /* ── EXACT working raster approach with diagnostics & auto-fallback ────── */
 function MapTilerLayer({
-  host,
   apiKey,
   style = "streets",
   onReady,
-  onBadTiles,
 }: {
-  host: string;
   apiKey: string;
   style?: "streets" | "basic" | "topo";
   onReady?: () => void;
-  onBadTiles?: (reason: string, mapInstance?: L.Map) => void;
 }) {
   const map = useMap();
   useEffect(() => {
@@ -212,82 +208,26 @@ function MapTilerLayer({
       }
     });
 
-    const tileUrl = `${host.replace(/\/+$/, "")}/maps/${style}/{z}/{x}/{y}.png?key=${apiKey}`;
-    dbg.info("Using raster URL:", tileUrl);
+    // Simplified approach - bypass proxy
+    const host = "https://api.maptiler.com";
+    const tileUrl = `${host}/maps/${style}/{z}/{x}/{y}.png?key=${apiKey}`;
+    dbg.info("Using direct URL:", tileUrl);
 
-    let firstTileChecked = false;
-    let badCount = 0;
-
-    const layer = L.tileLayer(tileUrl, {
+    const mtLayer = L.tileLayer(tileUrl, {
       attribution:
         '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 18,
-      crossOrigin: true,
     });
-
-    const onLoad = (e: any) => {
-      dbg.log("Tiles loaded");
-      // inspect the first tile that loads
-      const img: HTMLImageElement | undefined = e?.tile;
-      if (img && !firstTileChecked) {
-        firstTileChecked = true;
-        dbg.info("First tile dims:", {
-          w: img.naturalWidth,
-          h: img.naturalHeight,
-          src: img.currentSrc || img.src,
-        });
-        if (
-          !img.naturalWidth ||
-          !img.naturalHeight ||
-          (img.naturalWidth === 1 && img.naturalHeight === 1)
-        ) {
-          badCount++;
-          onBadTiles?.(
-            "Tile decoded as 1×1 or 0×0 (proxy or CSP/referrer issue).",
-            map
-          );
-        }
-      }
-    };
-
-    const onErr = (e: any) => {
-      const src = e?.tile?.src || e;
-      dbg.error("tileerror", src);
-      badCount++;
-      if (badCount >= 3) onBadTiles?.("Multiple tile errors from host.", map);
-    };
-
-    layer.on("load", onLoad);
-    layer.on("tileerror", onErr);
-    layer.addTo(map);
+    
+    mtLayer.addTo(map);
+    dbg.log("MapTiler layer added successfully");
     onReady?.();
-
-    // HEAD preflight one sample tile for headers
-    const sample = tileUrl
-      .replace("{z}", "11")
-      .replace("{x}", "453")
-      .replace("{y}", "872");
-    dbg.seg("HEAD PREFLIGHT");
-    dbg.info("Sample tile", sample);
-    fetch(sample, { method: "HEAD" })
-      .then((res) => {
-        const ct = res.headers.get("content-type");
-        const cl = res.headers.get("content-length");
-        dbg.info(`HEAD ${res.status} • content-type=${ct} • length=${cl}`);
-        // If HEAD returns text/html or tiny length, warn
-        if (ct && !/image\//i.test(ct)) {
-          onBadTiles?.(`HEAD content-type is ${ct} (expected image/*).`, map);
-        }
-      })
-      .catch((e) => dbg.error("HEAD preflight failed", e));
 
     return () => {
       dbg.seg("MAPTILER LAYER UNMOUNT");
-      layer.off("load", onLoad);
-      layer.off("tileerror", onErr);
-      map.removeLayer(layer);
+      map.removeLayer(mtLayer);
     };
-  }, [map, host, apiKey, style, onReady, onBadTiles]);
+  }, [map, apiKey, style, onReady]);
 
   return null;
 }
@@ -304,7 +244,7 @@ const clinicIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
-/* ── key/host fetch ─────────────────────────────────────────────────────── */
+/* ── key fetch ─────────────────────────────────────────────────────── */
 async function fetchMaptilerKey(): Promise<string> {
   try {
     const res = await fetch("/api/config/maptiler");
@@ -313,27 +253,7 @@ async function fetchMaptilerKey(): Promise<string> {
       if (j?.apiKey) return j.apiKey as string;
     }
   } catch {}
-  // env fallbacks (Vite / Next)
-  // @ts-ignore
-  return (
-    import.meta?.env?.VITE_MAPTILER_KEY ||
-    // @ts-ignore
-    (typeof process !== "undefined"
-      ? process.env.NEXT_PUBLIC_MAPTILER_KEY || process.env.VITE_MAPTILER_KEY
-      : "") ||
-    ""
-  );
-}
-function getHost(): string {
-  // Prefer env; default to MapTiler official host
-  // @ts-ignore
-  const envVite = import.meta?.env?.VITE_MAPTILER_HOST as string | undefined;
-  // @ts-ignore
-  const envNext =
-    typeof process !== "undefined"
-      ? process.env.NEXT_PUBLIC_MAPTILER_HOST || process.env.VITE_MAPTILER_HOST
-      : undefined;
-  return (envVite || envNext || "https://api.maptiler.com").replace(/\/+$/, "");
+  return "";
 }
 
 /* ── page ──────────────────────────────────────────────────────────────── */
@@ -343,8 +263,6 @@ export default function DeliveryPlanWorking() {
   const [selectedRoute, setSelectedRoute] = useState<string>("");
 
   const [mapApiKey, setMapApiKey] = useState<string>("");
-  const [host, setHost] = useState<string>(getHost());
-  const [fallbackOSM, setFallbackOSM] = useState<string | null>(null);
 
   // Load key & log origin info
   useEffect(() => {
@@ -376,7 +294,7 @@ export default function DeliveryPlanWorking() {
   ];
   const mapBoxId = "delivery-map-box-working";
 
-  const isOfficialHost = /^https:\/\/api\.maptiler\.com$/i.test(host);
+  const isOfficialHost = true; // Always using official host now
 
   return (
     <div className="space-y-6 p-6">
@@ -510,15 +428,6 @@ export default function DeliveryPlanWorking() {
             <Card className="w-full">
               <CardContent className="p-0">
                 <div id={mapBoxId} className="h-[500px] w-full relative">
-                  {!isOfficialHost && (
-                    <WarningBadge
-                      text={`Using non-official host: ${host}. If this is a proxy, ensure it returns real image/png tiles.`}
-                    />
-                  )}
-
-                  {fallbackOSM && (
-                    <WarningBadge text={`Fallback active: ${fallbackOSM}`} />
-                  )}
 
                   {activeTab === "inbound" && mapApiKey ? (
                     <>
@@ -537,39 +446,12 @@ export default function DeliveryPlanWorking() {
                           );
                         }}
                       >
-                        {!fallbackOSM ? (
-                          <MapTilerLayer
-                            host={host}
-                            apiKey={mapApiKey}
-                            style="streets"
-                            onReady={() => dbg.log("MapTiler layer ready")}
-                            onBadTiles={(reason, mapInstance) => {
-                              dbg.warn(
-                                "Bad tiles detected → fallback:",
-                                reason,
-                              );
-                              setFallbackOSM(reason);
-                              // Add OSM fallback using the provided map instance
-                              if (mapInstance) {
-                                const osm = L.tileLayer(
-                                  "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                                  {
-                                    attribution:
-                                      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                                    maxZoom: 19,
-                                  },
-                                );
-                                osm.addTo(mapInstance);
-                                dbg.log("OpenStreetMap fallback layer added");
-                              }
-                            }}
-                          />
-                        ) : null}
+                        <MapTilerLayer
+                          apiKey={mapApiKey}
+                          style="streets"
+                          onReady={() => dbg.log("MapTiler layer ready")}
+                        />
 
-                        {/* Fallback message only - OSM is added via imperative API in onBadTiles */}
-                        {fallbackOSM && (
-                          <WarningBadge text={`MapTiler failed: ${fallbackOSM}. Using OpenStreetMap.`} />
-                        )}
 
                         {/* size helpers */}
                         <InvalidateOnMount delay={120} />
