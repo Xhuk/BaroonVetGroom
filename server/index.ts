@@ -11,6 +11,22 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Security headers - Allow MapTiler in CSP
+app.use((req, res, next) => {
+  // Content Security Policy to allow MapTiler
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    "img-src 'self' data: https://api.maptiler.com https://cloud.maptiler.com https://cdn.maptiler.com https://raw.githubusercontent.com https://cdnjs.cloudflare.com",
+    "connect-src 'self' https://api.maptiler.com https://cloud.maptiler.com wss:",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self' data:",
+    "frame-src 'self'"
+  ].join('; '));
+  
+  next();
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

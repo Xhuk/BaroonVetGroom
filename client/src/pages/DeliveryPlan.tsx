@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapContainer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import {
   Navigation,
   BarChart3,
@@ -22,14 +22,6 @@ import {
 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "@maptiler/leaflet-maptilersdk";
-
-// Type augment (optional)
-declare global {
-  interface Window {
-    L: typeof L & { maptiler?: { maptilerLayer: any; MapStyle?: any } };
-  }
-}
 
 /* ── segmented console logger ───────────────────────────────────────────── */
 const STYLE = {
@@ -40,9 +32,11 @@ const STYLE = {
   warn: "background:#f59e0b;color:#4a2a00;",
   err: "background:#ef4444;color:#3b0606;",
 };
-function makeLog(ns: string) {
-  const tag = `%c${ns}`;
-  const tagStyle = `${STYLE.base}${STYLE.tag}`;
+function mk(ns: string) {
+  const tag = `%c${ns}`,
+    tagStyle = `${STYLE.base}${STYLE.tag}`;
+  const tone = (lvl: "log" | "info" | "warn" | "error") =>
+    lvl === "log" ? "ok" : lvl === "error" ? "err" : lvl;
   const fx = (
     lvl: "log" | "info" | "warn" | "error",
     label: string,
@@ -51,7 +45,7 @@ function makeLog(ns: string) {
     console[lvl](
       `${tag} %c${label}`,
       tagStyle,
-      `${STYLE.base}${STYLE[lvl === "log" ? "ok" : lvl === "error" ? "err" : lvl]}`,
+      `${STYLE.base}${STYLE[tone(lvl)]}`,
       ...rest,
     );
   return {
@@ -63,9 +57,9 @@ function makeLog(ns: string) {
     error: (...r: any[]) => fx("error", "ERROR", ...r),
   };
 }
-const dbg = makeLog("DeliveryPlanWorking");
+const dbg = mk("DeliveryPlanWorking");
 
-/* ── leaflet default markers fix ────────────────────────────────────────── */
+/* ── fix default markers ───────────────────────────────────────────────── */
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -76,8 +70,8 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-/* ── helpers for sizing inside Tabs/Cards ───────────────────────────────── */
-function InvalidateOnMount({ delay = 100 }: { delay?: number }) {
+/* ── sizing helpers ────────────────────────────────────────────────────── */
+function InvalidateOnMount({ delay = 120 }: { delay?: number }) {
   const map = useMap();
   useEffect(() => {
     const t = setTimeout(() => {
@@ -97,7 +91,7 @@ function MapResizeObserver({ targetId }: { targetId: string }) {
     if (!el) return;
     const ro = new ResizeObserver(() => {
       const now = performance.now();
-      if (now - lastTs.current < 120) {
+      if (now - lastTs.current < 100) {
         if (rafRef.current == null) {
           rafRef.current = requestAnimationFrame(() => {
             map.invalidateSize();
@@ -119,120 +113,203 @@ function MapResizeObserver({ targetId }: { targetId: string }) {
   return null;
 }
 
-/* ── on-map badges ─────────────────────────────────────────────────────── */
-function OriginBadge() {
-  if (typeof window === "undefined") return null;
-  const origin = window.location.origin;
-  const refMeta = document.querySelector(
-    'meta[name="referrer"]',
-  ) as HTMLMetaElement | null;
-  const refPolicy = refMeta?.content || "(default)";
+/* ── debug overlay ─────────────────────────────────────────────────────── */
+function DebugOverlay(props: {
+  activeTab: string;
+  mapApiKey: string;
+  tenantName?: string;
+  containerId: string;
+  sampleUrl?: string;
+}) {
+  const [dims, setDims] = useState<{ w: number; h: number; visible: boolean }>({
+    w: 0,
+    h: 0,
+    visible: false,
+  });
+  useEffect(() => {
+    const el = document.getElementById(props.containerId);
+    if (!el) return;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      const hidden = getComputedStyle(el).display === "none";
+      setDims({
+        w: Math.round(r.width),
+        h: Math.round(r.height),
+        visible: !hidden,
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    const id = setInterval(measure, 600);
+    return () => {
+      ro.disconnect();
+      clearInterval(id);
+    };
+  }, [props.containerId]);
   return (
     <div
       style={{
         position: "absolute",
-        bottom: 12,
-        left: 12,
+        right: 12,
+        top: 12,
         zIndex: 1000,
         background: "#111827",
-        color: "white",
-        padding: "6px 10px",
+        color: "#e5e7eb",
+        padding: "8px 10px",
         borderRadius: 8,
         fontSize: 12,
-        boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
-        maxWidth: "80%",
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-      }}
-      title={`Origin: ${origin} • Referrer-Policy: ${refPolicy}`}
-    >
-      <span style={{ opacity: 0.8 }}>Origin:</span> <strong>{origin}</strong>
-      <span style={{ opacity: 0.6, marginLeft: 8 }}>
-        Referrer-Policy: {refPolicy}
-      </span>
-    </div>
-  );
-}
-function WarningBadge({ text }: { text: string }) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: 12,
-        left: 12,
-        zIndex: 1000,
-        background: "#b91c1c",
-        color: "white",
-        padding: "6px 10px",
-        borderRadius: 8,
-        fontSize: 12,
-        boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
-        maxWidth: "90%",
+        lineHeight: 1.25,
+        maxWidth: 360,
       }}
     >
-      {text}
+      <div style={{ fontWeight: 700, marginBottom: 6 }}>Map Debug</div>
+      <div>
+        activeTab: <b>{props.activeTab}</b>
+      </div>
+      <div>
+        apiKey:{" "}
+        <b>{props.mapApiKey ? `****${props.mapApiKey.slice(-4)}` : "(none)"}</b>
+      </div>
+      <div>
+        tenant: <b>{props.tenantName || "(unset)"}</b>
+      </div>
+      <div>
+        container:{" "}
+        <b>
+          {dims.w}×{dims.h}
+        </b>{" "}
+        • visible: <b>{String(dims.visible)}</b>
+      </div>
+      {props.sampleUrl && (
+        <div
+          style={{ marginTop: 6, overflow: "hidden", textOverflow: "ellipsis" }}
+        >
+          sample: <code>{props.sampleUrl}</code>
+        </div>
+      )}
     </div>
   );
 }
 
-/* ── EXACT working raster approach with diagnostics & auto-fallback ────── */
-function MapTilerLayer({
+/* ── CSP listener ──────────────────────────────────────────────────────── */
+function useCspBadge(setBadge: (s: string) => void) {
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (e?.blockedURI?.includes("api.maptiler.com")) {
+        setBadge(`CSP blocked ${e.violatedDirective} • ${e.blockedURI}`);
+        dbg.error("CSP violation", e);
+      }
+    };
+    window.addEventListener("securitypolicyviolation", handler);
+    return () => window.removeEventListener("securitypolicyviolation", handler);
+  }, [setBadge]);
+}
+
+/* ── MapTiler raster (streets-v2) + diagnostics + OSM fallback ─────────── */
+function MapTilerRaster({
   apiKey,
-  style = "streets",
-  onReady,
+  onBadTiles,
+  style = "streets-v2",
 }: {
   apiKey: string;
-  style?: "streets" | "basic" | "topo";
-  onReady?: () => void;
+  onBadTiles: (reason: string) => void;
+  style?: "streets-v2" | "basic-v2" | "topo-v2";
 }) {
   const map = useMap();
   useEffect(() => {
-    if (!apiKey) {
-      dbg.warn("No MapTiler API key; skipping");
-      return;
-    }
     dbg.seg("MAPTILER LAYER MOUNT");
-
-    // remove MapTiler/OSM tile layers only
     map.eachLayer((layer: any) => {
-      if (layer instanceof L.TileLayer) {
-        const u = (layer as any)._url as string | undefined;
-        if (
-          u?.includes("maptiler") ||
-          u?.includes("openstreetmap") ||
-          u?.includes("test-map")
-        ) {
-          map.removeLayer(layer);
-        }
-      }
+      if (layer instanceof L.TileLayer) map.removeLayer(layer);
     });
 
-    // Simplified approach - bypass proxy
-    const host = "https://api.maptiler.com";
-    const tileUrl = `${host}/maps/${style}/{z}/{x}/{y}.png?key=${apiKey}`;
-    dbg.info("Using direct URL:", tileUrl);
+    // Use the current v2 raster endpoint (no /tiles). This matters.
+    const url = `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${apiKey}`;
+    dbg.info("Tile URL:", url);
 
-    const mtLayer = L.tileLayer(tileUrl, {
+    let inspected = false,
+      errCount = 0;
+    const layer = L.tileLayer(url, {
       attribution:
         '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 18,
+      tileSize: 512,
+      zoomOffset: -1,
+      minZoom: 1,
+      // crossOrigin intentionally omitted
     });
-    
-    mtLayer.addTo(map);
-    dbg.log("MapTiler layer added successfully");
-    onReady?.();
+
+    const tileLoad = (e: any) => {
+      if (inspected) return;
+      inspected = true;
+      const img: HTMLImageElement | undefined = e?.tile;
+      if (img) {
+        dbg.info("First tile dims:", {
+          w: img.naturalWidth,
+          h: img.naturalHeight,
+          src: img.currentSrc || img.src,
+        });
+        if (
+          !img.naturalWidth ||
+          !img.naturalHeight ||
+          (img.naturalWidth <= 1 && img.naturalHeight <= 1)
+        ) {
+          errCount++;
+          onBadTiles("Tile decoded as 1×1 or 0×0 (blocked/placeholder).");
+        }
+      }
+    };
+    const tileError = (e: any) => {
+      errCount++;
+      const src = e?.tile?.src || e;
+      dbg.error("tileerror", src);
+      if (typeof src === "string") {
+        fetch(src, { method: "HEAD" })
+          .then((res) => {
+            dbg.info(
+              "HEAD probe",
+              src,
+              res.status,
+              res.headers.get("content-type"),
+              res.headers.get("content-length"),
+            );
+          })
+          .catch((er) => dbg.error("HEAD probe failed", er));
+      }
+      if (errCount >= 3)
+        onBadTiles("Multiple tile errors (policy/domain/extension).");
+    };
+
+    layer.on("tileload", tileLoad);
+    layer.on("tileerror", tileError);
+    layer.addTo(map);
+
+    // Sanity HEAD on one sample tile
+    const sample = url
+      .replace("{z}", "11")
+      .replace("{x}", "453")
+      .replace("{y}", "872");
+    dbg.seg("HEAD PREFLIGHT");
+    dbg.info("Sample tile", sample);
+    fetch(sample, { method: "HEAD" })
+      .then((res) => {
+        dbg.info(
+          `HEAD ${res.status} • content-type=${res.headers.get("content-type")} • length=${res.headers.get("content-length")}`,
+        );
+      })
+      .catch((err) => dbg.error("HEAD failed", err));
 
     return () => {
       dbg.seg("MAPTILER LAYER UNMOUNT");
-      map.removeLayer(mtLayer);
+      layer.off("tileload", tileLoad);
+      layer.off("tileerror", tileError);
+      map.removeLayer(layer);
     };
-  }, [map, apiKey, style, onReady]);
+  }, [apiKey, style, map, onBadTiles]);
 
   return null;
 }
 
-/* ── clinic marker ─────────────────────────────────────────────────────── */
+/* ── clinic icon ───────────────────────────────────────────────────────── */
 const clinicIcon = new L.Icon({
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
@@ -244,7 +321,7 @@ const clinicIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
-/* ── key fetch ─────────────────────────────────────────────────────── */
+/* ── key fetch with explicit logs ──────────────────────────────────────── */
 async function fetchMaptilerKey(): Promise<string> {
   try {
     const res = await fetch("/api/config/maptiler");
@@ -252,8 +329,20 @@ async function fetchMaptilerKey(): Promise<string> {
       const j = await res.json();
       if (j?.apiKey) return j.apiKey as string;
     }
-  } catch {}
-  return "";
+    dbg.warn("Key endpoint non-200:", res.status);
+  } catch (e) {
+    dbg.error("Key fetch failed:", e);
+  }
+  // Env fallbacks if you expose it (optional)
+  // @ts-ignore
+  return (
+    import.meta?.env?.VITE_MAPTILER_KEY ||
+    // @ts-ignore
+    (typeof process !== "undefined"
+      ? process.env.NEXT_PUBLIC_MAPTILER_KEY || process.env.VITE_MAPTILER_KEY
+      : "") ||
+    ""
+  );
 }
 
 /* ── page ──────────────────────────────────────────────────────────────── */
@@ -261,13 +350,31 @@ export default function DeliveryPlanWorking() {
   const { currentTenant } = useTenant();
   const [activeTab, setActiveTab] = useState("inbound");
   const [selectedRoute, setSelectedRoute] = useState<string>("");
-
   const [mapApiKey, setMapApiKey] = useState<string>("");
+  const [badge, setBadge] = useState<string | null>(null);
+  const mapBoxId = "delivery-map-box-working";
 
-  // Load key & log origin info
+  useCspBadge(setBadge);
+
+  // Ensure we have a referrer (helpful if a privacy extension stripped it)
+  useEffect(() => {
+    const meta = document.querySelector(
+      'meta[name="referrer"]',
+    ) as HTMLMetaElement | null;
+    if (!meta) {
+      const m = document.createElement("meta");
+      m.setAttribute("name", "referrer");
+      m.setAttribute("content", "strict-origin-when-cross-origin");
+      document.head.appendChild(m);
+      dbg.warn(
+        "Injected temporary <meta name='referrer' content='strict-origin-when-cross-origin'>",
+      );
+    }
+  }, []);
+
   useEffect(() => {
     const origin = window.location.origin;
-    const metaRef = document.querySelector(
+    const meta = document.querySelector(
       'meta[name="referrer"]',
     ) as HTMLMetaElement | null;
     dbg.seg("ENV / ORIGIN");
@@ -275,12 +382,22 @@ export default function DeliveryPlanWorking() {
       "origin:",
       origin,
       "referrer-policy:",
-      metaRef?.content || "(default)",
+      meta?.content || "(default)",
     );
     fetchMaptilerKey().then((k) => setMapApiKey(k || ""));
   }, []);
 
-  // Stats & routes
+  useEffect(() => {
+    dbg.info(
+      "mapApiKey =",
+      mapApiKey ? `****${mapApiKey.slice(-4)}` : "(none)",
+    );
+  }, [mapApiKey]);
+  useEffect(() => {
+    dbg.seg("GATES");
+    dbg.info("activeTab =", activeTab);
+  }, [activeTab]);
+
   const stats = {
     pickupsScheduled: 0,
     clientsRegistered: 0,
@@ -292,13 +409,14 @@ export default function DeliveryPlanWorking() {
     { id: "route-2", name: "Ruta Norte - Tarde", time: "14:00", stops: 3 },
     { id: "route-3", name: "Ruta Sur - Noche", time: "18:00", stops: 7 },
   ];
-  const mapBoxId = "delivery-map-box-working";
 
-  const isOfficialHost = true; // Always using official host now
+  // A visible sample image to confirm raw <img> rendering
+  const sampleUrl = mapApiKey
+    ? `https://api.maptiler.com/maps/streets-v2/11/453/872.png?key=${mapApiKey}`
+    : undefined;
 
   return (
     <div className="space-y-6 p-6">
-      {/* Tabs header */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="inbound" className="flex items-center gap-2">
@@ -319,7 +437,6 @@ export default function DeliveryPlanWorking() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Inbound */}
         <TabsContent value="inbound" className="space-y-6">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -396,7 +513,7 @@ export default function DeliveryPlanWorking() {
             </Card>
           </div>
 
-          {/* Route planning */}
+          {/* Planner */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -427,59 +544,94 @@ export default function DeliveryPlanWorking() {
             {/* Map */}
             <Card className="w-full">
               <CardContent className="p-0">
-                <div id={mapBoxId} className="h-[500px] w-full relative">
+                <div
+                  id="delivery-map-box-working"
+                  className="h-[500px] w-full relative"
+                >
+                  {/* visible sample tile (to prove raw <img> works) */}
+                  {sampleUrl && (
+                    <img
+                      src={sampleUrl}
+                      alt="sample"
+                      onLoad={() => dbg.info("Sample <img> loaded OK")}
+                      onError={(e) =>
+                        dbg.error(
+                          "Sample <img> error",
+                          (e as any)?.currentTarget?.src,
+                        )
+                      }
+                      style={{
+                        position: "absolute",
+                        bottom: 12,
+                        right: 12,
+                        zIndex: 1000,
+                        width: 96,
+                        height: 96,
+                        border: "2px solid #111827",
+                        borderRadius: 8,
+                        background: "#fff",
+                      }}
+                    />
+                  )}
+
+                  <DebugOverlay
+                    activeTab={activeTab}
+                    mapApiKey={mapApiKey}
+                    tenantName={(currentTenant as any)?.name || "Vetgroom1"}
+                    containerId="delivery-map-box-working"
+                    sampleUrl={sampleUrl}
+                  />
 
                   {activeTab === "inbound" && mapApiKey ? (
-                    <>
-                      <MapContainer
-                        center={[25.6866, -100.3161]}
-                        zoom={11}
-                        style={{ height: "100%", width: "100%" }}
-                        className="rounded-lg"
-                        zoomControl
-                        scrollWheelZoom
-                        whenReady={() => {
-                          dbg.seg("MAP READY");
-                          setTimeout(
-                            () => window.dispatchEvent(new Event("resize")),
-                            50,
-                          );
+                    <MapContainer
+                      center={[25.6866, -100.3161]}
+                      zoom={11}
+                      style={{ height: "100%", width: "100%" }}
+                      className="rounded-lg"
+                      zoomControl
+                      scrollWheelZoom
+                      whenReady={() => {
+                        dbg.seg("MAP READY");
+                        setTimeout(
+                          () => window.dispatchEvent(new Event("resize")),
+                          50,
+                        );
+                      }}
+                    >
+                      {/* Try MapTiler first; fall back to OSM if tiles misbehave */}
+                      <MapTilerRaster
+                        apiKey={mapApiKey}
+                        onBadTiles={(reason) => {
+                          dbg.warn("Falling back to OSM:", reason);
+                          setBadge(`Fallback: ${reason}`);
                         }}
-                      >
-                        <MapTilerLayer
-                          apiKey={mapApiKey}
-                          style="streets"
-                          onReady={() => dbg.log("MapTiler layer ready")}
+                      />
+                      {badge && (
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
+                      )}
 
+                      <InvalidateOnMount />
+                      <MapResizeObserver targetId="delivery-map-box-working" />
 
-                        {/* size helpers */}
-                        <InvalidateOnMount delay={120} />
-                        <MapResizeObserver targetId={mapBoxId} />
-
-                        {/* marker */}
-                        <Marker
-                          position={[25.6866, -100.3161]}
-                          icon={clinicIcon}
-                        >
-                          <Popup>
-                            <div className="text-center">
-                              <div className="font-semibold text-blue-600">
-                                Clínica Veterinaria
-                              </div>
-                              <div className="text-sm">
-                                {(currentTenant as any)?.name || "Vetgroom1"}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                Monterrey, México
-                              </div>
+                      <Marker position={[25.6866, -100.3161]} icon={clinicIcon}>
+                        <Popup>
+                          <div className="text-center">
+                            <div className="font-semibold text-blue-600">
+                              Clínica Veterinaria
                             </div>
-                          </Popup>
-                        </Marker>
-                      </MapContainer>
-
-                      <OriginBadge />
-                    </>
+                            <div className="text-sm">
+                              {(currentTenant as any)?.name || "Vetgroom1"}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Monterrey, México
+                            </div>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    </MapContainer>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
                       <div className="text-center">
@@ -498,7 +650,6 @@ export default function DeliveryPlanWorking() {
           </div>
         </TabsContent>
 
-        {/* Outbound */}
         <TabsContent value="outbound" className="space-y-6">
           <Card>
             <CardContent className="p-6">
@@ -515,7 +666,6 @@ export default function DeliveryPlanWorking() {
           </Card>
         </TabsContent>
 
-        {/* Tracking */}
         <TabsContent value="tracking" className="space-y-6">
           <Card>
             <CardContent className="p-6">
@@ -532,7 +682,6 @@ export default function DeliveryPlanWorking() {
           </Card>
         </TabsContent>
 
-        {/* Analytics */}
         <TabsContent value="analytics" className="space-y-6">
           <Card>
             <CardContent className="p-6">
@@ -549,6 +698,18 @@ export default function DeliveryPlanWorking() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* safety: ensure no global CSS mutes tiles */}
+      <style>{`
+        .leaflet-tile,
+        .leaflet-container img.leaflet-image-layer,
+        .leaflet-container .leaflet-marker-icon,
+        .leaflet-container .leaflet-marker-shadow {
+          filter: none !important;
+          opacity: 1 !important;
+          mix-blend-mode: normal !important;
+        }
+      `}</style>
     </div>
   );
 }
