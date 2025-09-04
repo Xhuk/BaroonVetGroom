@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Popup, useMap } from "react-leaflet";
 import {
   Navigation,
   BarChart3,
@@ -206,83 +206,126 @@ function useCspBadge(setBadge: (s: string) => void) {
   }, [setBadge]);
 }
 
-/* ── MapTiler raster with official settings + OSM fallback ─────────────── */
-function MapTilerRaster({
+/* ── MapTiler raster: try classic streets (512/zoomOffset-1), then /256/ ─ */
+function MapTilerSmart({
   apiKey,
-  onBadTiles,
-  style = "streets-v2",
+  onFallback,
 }: {
   apiKey: string;
-  onBadTiles: (reason: string) => void;
-  style?: "streets-v2" | "basic-v2" | "topo-v2";
+  onFallback: (reason: string) => void;
 }) {
   const map = useMap();
+
   useEffect(() => {
     dbg.seg("MAPTILER LAYER MOUNT");
     map.eachLayer((layer: any) => {
       if (layer instanceof L.TileLayer) map.removeLayer(layer);
     });
 
-    // Official MapTiler settings from documentation
-    const url = `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${apiKey}`;
-    dbg.info("Tile URL:", url);
-
-    let errCount = 0;
-    const layer = L.tileLayer(url, {
+    // Strategy A (classic): streets + tileSize 512 + zoomOffset -1
+    const urlA = `https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${apiKey}`;
+    dbg.info("Strategy A URL:", urlA);
+    const layerA = L.tileLayer(urlA, {
       tileSize: 512,
       zoomOffset: -1,
-      minZoom: 1,
-      attribution: '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>',
-      crossOrigin: true
+      crossOrigin: true,
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="https://www.maptiler.com/" target="_blank">MapTiler</a> &copy; ' +
+        '<a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>',
     });
 
-    // Error handling with OSM fallback
-    const tileError = (e: any) => {
-      errCount++;
-      const src = e?.tile?.src || e;
-      dbg.error("tileerror", src);
-      
-      // Immediate fallback on any error
-      if (errCount >= 1) {
-        onBadTiles("MapTiler tiles failed, switching to OpenStreetMap");
-        map.removeLayer(layer);
-        
-        // Add OpenStreetMap fallback directly
-        const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19,
-        });
-        osmLayer.addTo(map);
-        dbg.log("Added OSM fallback layer");
+    let aErrors = 0;
+    const onAError = (e: any) => {
+      aErrors++;
+      dbg.error("tileerror (A)", e?.tile?.src || e);
+      if (aErrors === 3) {
+        // Switch to Strategy B once we see a few errors quickly
+        map.removeLayer(layerA);
+        tryB();
       }
     };
+    const onALoad = (e: any) => {
+      dbg.log("tileload (A)", e?.tile?.src || "(img)");
+    };
 
-    layer.on("tileerror", tileError);
-    layer.addTo(map);
-    dbg.log("MapTiler layer added with official settings");
+    const tryB = () => {
+      const px = 256; // explicit 256 path (Leaflet defaults)
+      const urlB = `https://api.maptiler.com/maps/streets/${px}/{z}/{x}/{y}.png?key=${apiKey}`;
+      dbg.info("Strategy B URL:", urlB);
+      const layerB = L.tileLayer(urlB, {
+        crossOrigin: true,
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="https://www.maptiler.com/" target="_blank">MapTiler</a> &copy; ' +
+          '<a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>',
+      });
 
-    // Test sample tile
-    const sample = url
+      let bErrors = 0;
+      const onBError = (e: any) => {
+        bErrors++;
+        dbg.error("tileerror (B)", e?.tile?.src || e);
+        if (bErrors >= 3) {
+          map.removeLayer(layerB);
+          onFallback("MapTiler failed in both modes → OSM");
+          L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+          }).addTo(map);
+        }
+      };
+      const onBLoad = (e: any) => {
+        dbg.log("tileload (B)", e?.tile?.src || "(img)");
+      };
+
+      layerB.on("tileerror", onBError);
+      layerB.on("tileload", onBLoad);
+      layerB.addTo(map);
+
+      // Probe one sample on B
+      const sampleB = urlB
+        .replace("{z}", "11")
+        .replace("{x}", "453")
+        .replace("{y}", "872");
+      dbg.seg("HEAD PREFLIGHT (B)");
+      dbg.info("Sample tile", sampleB);
+      fetch(sampleB, { method: "HEAD" })
+        .then((res) =>
+          dbg.info(
+            `HEAD ${res.status} • content-type=${res.headers.get("content-type")} • length=${res.headers.get("content-length")}`,
+          ),
+        )
+        .catch((err) => dbg.error("HEAD failed", err));
+    };
+
+    layerA.on("tileerror", onAError);
+    layerA.on("tileload", onALoad);
+    layerA.addTo(map);
+    dbg.log("MapTiler Strategy A added");
+
+    // Probe one sample on A
+    const sampleA = urlA
       .replace("{z}", "11")
       .replace("{x}", "453")
       .replace("{y}", "872");
-    dbg.seg("HEAD PREFLIGHT");
-    dbg.info("Sample tile", sample);
-    fetch(sample, { method: "HEAD" })
-      .then((res) => {
+    dbg.seg("HEAD PREFLIGHT (A)");
+    dbg.info("Sample tile", sampleA);
+    fetch(sampleA, { method: "HEAD" })
+      .then((res) =>
         dbg.info(
           `HEAD ${res.status} • content-type=${res.headers.get("content-type")} • length=${res.headers.get("content-length")}`,
-        );
-      })
+        ),
+      )
       .catch((err) => dbg.error("HEAD failed", err));
 
-    // Cleanup function
     return () => {
       dbg.seg("MAPTILER LAYER UNMOUNT");
-      layer.off("tileerror", tileError);
-      map.removeLayer(layer);
+      layerA.off("tileerror", onAError);
+      layerA.off("tileload", onALoad);
+      map.removeLayer(layerA);
     };
-  }, [apiKey, style, map, onBadTiles]);
+  }, [apiKey, map, onFallback]);
 
   return null;
 }
@@ -306,12 +349,13 @@ async function fetchMaptilerKey(): Promise<string> {
     if (res.ok) {
       const j = await res.json();
       if (j?.apiKey) return j.apiKey as string;
+    } else {
+      dbg.warn("Key endpoint non-200:", res.status);
     }
-    dbg.warn("Key endpoint non-200:", res.status);
   } catch (e) {
     dbg.error("Key fetch failed:", e);
   }
-  // Env fallbacks if you expose it (optional)
+  // env fallbacks if you expose it
   // @ts-ignore
   return (
     import.meta?.env?.VITE_MAPTILER_KEY ||
@@ -324,7 +368,7 @@ async function fetchMaptilerKey(): Promise<string> {
 }
 
 /* ── page ──────────────────────────────────────────────────────────────── */
-export default function DeliveryPlanWorking() {
+export default function DeliveryPlan() {
   const { currentTenant } = useTenant();
   const [activeTab, setActiveTab] = useState("inbound");
   const [selectedRoute, setSelectedRoute] = useState<string>("");
@@ -334,7 +378,7 @@ export default function DeliveryPlanWorking() {
 
   useCspBadge(setBadge);
 
-  // Ensure we have a referrer (helpful if a privacy extension stripped it)
+  // ensure a referrer-policy exists
   useEffect(() => {
     const meta = document.querySelector(
       'meta[name="referrer"]',
@@ -345,7 +389,7 @@ export default function DeliveryPlanWorking() {
       m.setAttribute("content", "strict-origin-when-cross-origin");
       document.head.appendChild(m);
       dbg.warn(
-        "Injected temporary <meta name='referrer' content='strict-origin-when-cross-origin'>",
+        "Injected <meta name='referrer' content='strict-origin-when-cross-origin'>",
       );
     }
   }, []);
@@ -388,9 +432,9 @@ export default function DeliveryPlanWorking() {
     { id: "route-3", name: "Ruta Sur - Noche", time: "18:00", stops: 7 },
   ];
 
-  // A visible sample image to confirm raw <img> rendering
+  // visible sample (classic streets, same as Strategy A)
   const sampleUrl = mapApiKey
-    ? `https://api.maptiler.com/maps/streets-v2/11/453/872.png?key=${mapApiKey}`
+    ? `https://api.maptiler.com/maps/streets/11/453/872.png?key=${mapApiKey}`
     : undefined;
 
   return (
@@ -503,7 +547,26 @@ export default function DeliveryPlanWorking() {
                     <SelectValue placeholder="Selecciona una ruta para ver en el mapa" />
                   </SelectTrigger>
                   <SelectContent>
-                    {deliveryRoutes.map((r) => (
+                    {[
+                      {
+                        id: "route-1",
+                        name: "Ruta Centro - Mañana",
+                        time: "08:00",
+                        stops: 5,
+                      },
+                      {
+                        id: "route-2",
+                        name: "Ruta Norte - Tarde",
+                        time: "14:00",
+                        stops: 3,
+                      },
+                      {
+                        id: "route-3",
+                        name: "Ruta Sur - Noche",
+                        time: "18:00",
+                        stops: 7,
+                      },
+                    ].map((r) => (
                       <SelectItem key={r.id} value={r.id}>
                         {r.name} - {r.time} ({r.stops} paradas)
                       </SelectItem>
@@ -522,14 +585,11 @@ export default function DeliveryPlanWorking() {
             {/* Map */}
             <Card className="w-full">
               <CardContent className="p-0">
-                <div
-                  id="delivery-map-box-working"
-                  className="h-[500px] w-full relative"
-                >
-                  {/* visible sample tile (to prove raw <img> works) */}
-                  {sampleUrl && (
+                <div id={mapBoxId} className="h-[500px] w-full relative">
+                  {/* raw sample <img> using Strategy A URL to prove image loading */}
+                  {mapApiKey && (
                     <img
-                      src={sampleUrl}
+                      src={`https://api.maptiler.com/maps/streets/11/453/872.png?key=${mapApiKey}`}
                       alt="sample"
                       onLoad={() => dbg.info("Sample <img> loaded OK")}
                       onError={(e) =>
@@ -556,8 +616,12 @@ export default function DeliveryPlanWorking() {
                     activeTab={activeTab}
                     mapApiKey={mapApiKey}
                     tenantName={(currentTenant as any)?.name || "Vetgroom1"}
-                    containerId="delivery-map-box-working"
-                    sampleUrl={sampleUrl}
+                    containerId={mapBoxId}
+                    sampleUrl={
+                      mapApiKey
+                        ? `https://api.maptiler.com/maps/streets/11/453/872.png?key=${mapApiKey}`
+                        : undefined
+                    }
                   />
 
                   {activeTab === "inbound" && mapApiKey ? (
@@ -576,17 +640,15 @@ export default function DeliveryPlanWorking() {
                         );
                       }}
                     >
-                      {/* Try MapTiler first; fall back to OSM if tiles misbehave */}
-                      <MapTilerRaster
+                      <MapTilerSmart
                         apiKey={mapApiKey}
-                        onBadTiles={(reason) => {
-                          dbg.warn("Falling back to OSM:", reason);
-                          setBadge(`Fallback: ${reason}`);
-                        }}
+                        onFallback={(reason) =>
+                          dbg.warn("Falling back:", reason)
+                        }
                       />
 
                       <InvalidateOnMount />
-                      <MapResizeObserver targetId="delivery-map-box-working" />
+                      <MapResizeObserver targetId={mapBoxId} />
 
                       <Marker position={[25.6866, -100.3161]} icon={clinicIcon}>
                         <Popup>
