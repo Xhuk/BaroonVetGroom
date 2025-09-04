@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -66,14 +66,29 @@ const MapTilerLayer = ({ apiKey, style, onReady }: { apiKey: string; style: stri
   return null;
 };
 
-// Map resizer component for proper sizing
-function MapResizer() {
+// Helper that invalidates size reliably for Tabs/Card layout
+function UseInvalidateOnVisible({ deps = [] }: { deps?: any[] }) {
+  const map = useMap();
   useEffect(() => {
-    const timer = setTimeout(() => {
-      window.dispatchEvent(new Event('resize'));
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
+    // Small delay lets layout settle (Tabs/Card animations)
+    const t = setTimeout(() => map.invalidateSize(), 150);
+    return () => clearTimeout(t);
+  }, deps);
+  return null;
+}
+
+// Stronger resizer using ResizeObserver
+function MapResizeObserver({ targetId }: { targetId: string }) {
+  const map = useMap();
+  useEffect(() => {
+    const el = document.getElementById(targetId);
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [map, targetId]);
   return null;
 }
 
@@ -92,6 +107,7 @@ export default function DeliveryPlan() {
   const [activeTab, setActiveTab] = useState("inbound");
   const [selectedRoute, setSelectedRoute] = useState<string>("");
   const [mapApiKey, setMapApiKey] = useState<string>("");
+  const mapBoxId = "delivery-map-box"; // unique id for observer
 
   // Load MapTiler API key
   useEffect(() => {
@@ -235,37 +251,43 @@ export default function DeliveryPlan() {
             {/* Full Width Map */}
             <Card className="w-full">
               <CardContent className="p-0">
-                <div className="h-[500px] w-full relative">
+                {/* IMPORTANT: give the container a stable id and a firm height */}
+                <div id={mapBoxId} className="h-[500px] w-full relative">
                   {mapApiKey ? (
                     <MapContainer
                       center={[25.6866, -100.3161]}
                       zoom={11}
-                      style={{ height: '100%', width: '100%' }}
                       className="rounded-lg"
-                      zoomControl={true}
-                      scrollWheelZoom={true}
+                      style={{ height: "100%", width: "100%" }}
+                      zoomControl
+                      scrollWheelZoom
                       whenReady={() => {
-                        console.log('🗺️ Route planning map is ready, forcing tile refresh');
+                        // First paint fix
                         setTimeout(() => {
-                          window.dispatchEvent(new Event('resize'));
-                        }, 500);
+                          const evt = new Event("resize");
+                          window.dispatchEvent(evt);
+                        }, 50);
                       }}
                     >
-                      {/* MapTiler Layer - using working implementation from test page */}
-                      <MapTilerLayer 
-                        key={`maptiler-delivery-${Date.now()}`}
-                        apiKey={mapApiKey} 
+                      {/* Invalidate size when: 1) tab changes to inbound, 2) apiKey ready */}
+                      <UseInvalidateOnVisible deps={[activeTab === "inbound", mapApiKey]} />
+                      {/* Observe container resizes (Tabs/Card/layout changes) */}
+                      <MapResizeObserver targetId={mapBoxId} />
+
+                      {/* Use a stable key (avoid Date.now()) */}
+                      <MapTilerLayer
+                        key={`maptiler-delivery-streets`}
+                        apiKey={mapApiKey}
                         style="streets"
-                        onReady={() => console.log('✅ Route planning MapTiler layer ready')}
+                        onReady={() => console.log("✅ Route planning MapTiler layer ready")}
                       />
-                      <MapResizer />
-                      
+
                       {/* Clinic marker */}
                       <Marker position={[25.6866, -100.3161]} icon={clinicIcon}>
                         <Popup>
                           <div className="text-center">
                             <div className="font-semibold text-blue-600">Clínica Veterinaria</div>
-                            <div className="text-sm">{currentTenant?.name || 'Vetgroom1'}</div>
+                            <div className="text-sm">{currentTenant?.name || "Vetgroom1"}</div>
                             <div className="text-xs text-gray-500">Monterrey, México</div>
                           </div>
                         </Popup>

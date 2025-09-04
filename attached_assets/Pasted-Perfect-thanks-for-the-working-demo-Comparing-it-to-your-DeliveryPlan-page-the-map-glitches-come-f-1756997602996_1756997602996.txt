@@ -1,0 +1,159 @@
+Perfect—thanks for the working demo. Comparing it to your DeliveryPlan page, the map glitches come from **initializing Leaflet inside complex layout (Tabs/Card)** and not invalidating the map size at the right moments. The demo renders full-screen and stays mounted, while DeliveryPlan is inside shadcn Tabs + Cards (which toggle visibility and sizes), so Leaflet computes a bad size and tiles don’t paint correctly.
+
+Here’s a tight fix set that makes DeliveryPlan behave like your demo:
+
+## What’s different / what to fix
+
+1. **Invalidate size when the container becomes visible**
+   In Tabs, content may be hidden (or resized) when the map mounts. Calling `window.dispatchEvent(new Event('resize'))` is hit-or-miss. Use `map.invalidateSize()`:
+
+   * on `whenReady`
+   * when `activeTab` becomes `"inbound"`
+   * when the map container’s size changes (ResizeObserver)
+
+2. **Don’t remount layers every render**
+   `key={\`maptiler-delivery-\${Date.now()}\`}\` forces remounts and can leave the map blank for a frame. Make the key stable (e.g., style name).
+
+3. **Ensure a solid height on the actual `.leaflet-container` parent**
+   You already have `h-[500px]`, which is fine—just keep it on the **direct** parent of `MapContainer`.
+
+4. **Import Leaflet CSS once** (ideally in your app root). Multiple injects can cause oddities in certain build chains.
+
+## Drop-in patch (minimal edits)
+
+```tsx
+// 1) Add imports
+import { useRef } from "react";
+
+// 2) Add a helper that invalidates size reliably
+function UseInvalidateOnVisible({
+  deps = [],
+}: { deps?: any[] }) {
+  const map = useMap();
+  useEffect(() => {
+    // small delay lets layout settle (Tabs/Card animations)
+    const t = setTimeout(() => map.invalidateSize(), 150);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  return null;
+}
+
+// 3) Stronger resizer using ResizeObserver
+function MapResizeObserver({ targetId }: { targetId: string }) {
+  const map = useMap();
+  useEffect(() => {
+    const el = document.getElementById(targetId);
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [map, targetId]);
+  return null;
+}
+```
+
+Now apply in your component:
+
+```tsx
+export default function DeliveryPlan() {
+  // ...
+  const [activeTab, setActiveTab] = useState("inbound");
+  const [mapApiKey, setMapApiKey] = useState<string>("");
+  const mapBoxId = "delivery-map-box"; // <-- unique id for observer
+
+  // ... keep your API key fetch
+
+  return (
+    <div className="space-y-6 p-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {/* ... tabs header */}
+
+        <TabsContent value="inbound" className="space-y-6">
+          {/* ... stats */}
+
+          <Card className="w-full">
+            <CardContent className="p-0">
+              {/* IMPORTANT: give the container a stable id and a firm height */}
+              <div id={mapBoxId} className="h-[500px] w-full relative">
+                {mapApiKey ? (
+                  <MapContainer
+                    center={[25.6866, -100.3161]}
+                    zoom={11}
+                    className="rounded-lg"
+                    style={{ height: "100%", width: "100%" }}
+                    zoomControl
+                    scrollWheelZoom
+                    whenReady={() => {
+                      // First paint fix
+                      setTimeout(() => {
+                        const evt = new Event("resize");
+                        window.dispatchEvent(evt);
+                      }, 50);
+                    }}
+                  >
+                    {/* Invalidate size when: 1) tab changes to inbound, 2) apiKey ready */}
+                    <UseInvalidateOnVisible deps={[activeTab === "inbound", mapApiKey]} />
+                    {/* Observe container resizes (Tabs/Card/layout changes) */}
+                    <MapResizeObserver targetId={mapBoxId} />
+
+                    {/* Use a stable key (avoid Date.now()) */}
+                    <MapTilerLayer
+                      key={`maptiler-delivery-streets`}
+                      apiKey={mapApiKey}
+                      style="streets"
+                      onReady={() => console.log("✅ Route planning MapTiler layer ready")}
+                    />
+
+                    <Marker position={[25.6866, -100.3161]} icon={clinicIcon}>
+                      <Popup>
+                        <div className="text-center">
+                          <div className="font-semibold text-blue-600">Clínica Veterinaria</div>
+                          <div className="text-sm">{currentTenant?.name || "Vetgroom1"}</div>
+                          <div className="text-xs text-gray-500">Monterrey, México</div>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  </MapContainer>
+                ) : (
+                  // ... your loading skeleton
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">Cargando mapa...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ... other tabs */}
+      </Tabs>
+    </div>
+  );
+}
+```
+
+### Optional cleanups (nice to have)
+
+* In `MapTilerLayer`, keep the removal predicate narrow to avoid nuking unrelated layers:
+
+  ```ts
+  map.eachLayer((layer: any) => {
+    if (layer instanceof L.TileLayer && (layer.getAttribution?.()?.includes("MapTiler"))) {
+      map.removeLayer(layer);
+    }
+  });
+  ```
+* Move `import "leaflet/dist/leaflet.css"` to your app entry (e.g., `main.tsx`) so it’s loaded once.
+* If you ever render the map in a **hidden** tab initially, delay mount until visible:
+
+  ```tsx
+  {activeTab === "inbound" && <MapContainer .../>}
+  ```
+
+With these tweaks your DeliveryPlan map should behave like the demo: tiles paint immediately, no gray/half-render states after tab switches, and no flicker from remounting layers.
