@@ -1,20 +1,18 @@
 🗺️ MapTiler Demo - Setup Instructions
 =========================================
 
-✅ CURRENT STATUS: Demo will work with OpenStreetMap fallback, but needs valid MapTiler API key for full testing.
+✅ CURRENT STATUS: Demo uses OpenStreetMap tiles by default and falls back to them if MapTiler is unavailable.
 
 📋 QUICK START:
-1. Double-click "start-demo.bat" 
+1. From this folder run `npm run dev` (or double-click `start-demo.bat` on Windows)
 2. Open browser to http://localhost:8080
-3. Map will load with OpenStreetMap tiles (works immediately)
+3. Map will load with OpenStreetMap tiles immediately
 
 🔑 TO GET MAPTILER TILES WORKING:
-1. Go to https://www.maptiler.com/ 
-2. Create FREE account
-3. Get your API key from dashboard
-4. Open demo/index.html in a text editor
-5. Replace 'YOUR_API_KEY_HERE' with your actual key
-6. Restart the demo
+1. Create a free account at https://www.maptiler.com/ and copy your API key
+2. Create a `.env` file in this directory based on `.env.example`
+3. Set `VITE_MAPTILER_API_KEY=YOUR_KEY` inside that file or export the variable before running `npm run dev`
+4. Restart the demo
 
 🎯 WHAT YOU'LL TEST:
 ✅ Map loads and displays Monterrey veterinary clinics
@@ -24,8 +22,9 @@
 🔄 MapTiler style switching (needs valid API key)
 
 📁 DEMO FILES:
-- index.html = Complete standalone demo
+- index.html = Vite entry point
 - start-demo.bat = Windows launcher
+- .env.example = Example environment file
 - README.txt = This file
 
 🚀 Zero dependencies, no database, no authentication needed!

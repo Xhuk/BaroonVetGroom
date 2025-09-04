@@ -67,15 +67,33 @@ const MapTilerLayer = ({
       // Create standard tile layer for MapTiler
       const tileUrl = `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${apiKey}`
       console.log('🔗 Tile URL:', tileUrl)
-      
+
       const mtLayer = L.tileLayer(tileUrl, {
         attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 18,
       })
-      
+
+      const fallbackToOSM = () => {
+        console.warn('⚠️ MapTiler tiles failed. Falling back to OpenStreetMap...')
+        mtLayer.off('load', handleLoad)
+        map.removeLayer(mtLayer)
+        const fallbackLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        })
+        fallbackLayer.addTo(map)
+        onReady?.()
+      }
+
+      const handleLoad = () => {
+        console.log('✅ MapTiler layer added successfully')
+        mtLayer.off('load', handleLoad)
+        onReady?.()
+      }
+
+      mtLayer.on('tileerror', fallbackToOSM)
+      mtLayer.on('load', handleLoad)
+
       mtLayer.addTo(map)
-      console.log('✅ MapTiler layer added successfully')
-      onReady?.()
       
     } catch (error) {
       console.error('❌ Error creating MapTiler layer:', error)
@@ -132,7 +150,7 @@ const MapTilerDemo = () => {
   const [currentStyle, setCurrentStyle] = useState(0)
   const [mapCenter, setMapCenter] = useState<[number, number]>([25.6866, -100.3161])
   const [mapZoom, setMapZoom] = useState(11)
-  const [apiKey] = useState('8QiHL60QHEh6e3pjSlhR') // Your MapTiler API key
+  const [apiKey] = useState<string>(import.meta.env.VITE_MAPTILER_API_KEY || '')
   const [mapReady, setMapReady] = useState(false)
   
   // Log style changes
