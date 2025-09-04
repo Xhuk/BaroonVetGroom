@@ -44,6 +44,7 @@ import {
   TileLayer,
   Marker,
   Popup,
+  useMap,
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -51,6 +52,28 @@ import "leaflet/dist/leaflet.css";
 
 
 
+
+// Map resize component to handle container size changes
+const MapResizer = () => {
+  const map = useMap();
+  
+  useEffect(() => {
+    const resizeMap = () => {
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+    };
+    
+    resizeMap();
+    window.addEventListener('resize', resizeMap);
+    
+    return () => {
+      window.removeEventListener('resize', resizeMap);
+    };
+  }, [map]);
+  
+  return null;
+};
 
 // Create priority-based icons for fraccionamientos
 const createPriorityIcon = (priority: 'Alta' | 'Media' | 'Baja', weight: number) => {
@@ -714,15 +737,17 @@ export default function DeliveryPlan() {
                             <MapContainer
                               center={[24.8066, -107.3938]}
                               zoom={12}
-                              style={{ height: '100%', width: '100%' }}
-                              className="rounded-br-lg"
+                              style={{ height: '100%', width: '100%', minHeight: '400px' }}
+                              className="w-full h-full rounded-br-lg"
                               zoomControl={true}
+                              scrollWheelZoom={true}
                             >
                               <TileLayer
                                 url={`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${mapApiKey}`}
                                 attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                 maxZoom={18}
                               />
+                              <MapResizer />
                               
                               {/* Clinic marker */}
                               <Marker position={[24.8066, -107.3938]} icon={clinicIcon}>
@@ -766,7 +791,7 @@ export default function DeliveryPlan() {
                               })}
                             </MapContainer>
                           ) : (
-                            <div className="h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-br-lg">
+                            <div className="w-full h-full min-h-[400px] flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-br-lg">
                               <div className="text-center">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
                                 <p className="text-sm text-gray-700 dark:text-gray-300">Cargando mapa...</p>
